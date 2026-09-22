@@ -24,13 +24,13 @@ public sealed class SupabaseAuthService : ISupabaseAuthService
             data = new { full_name = fullName, phone_number = $"+91{phoneNumber}" }
         }, cancellationToken);
 
-        return await ReadResultAsync(response, cancellationToken);
+        return await ReadResultAsync(response, requireAccessToken: false, cancellationToken);
     }
 
     public async Task<SupabaseAuthResult> LoginAsync(string email, string password, CancellationToken cancellationToken = default)
     {
         var response = await SendAsync("/auth/v1/token?grant_type=password", new { email, password }, cancellationToken);
-        return await ReadResultAsync(response, cancellationToken);
+        return await ReadResultAsync(response, requireAccessToken: true, cancellationToken);
     }
 
     public string GetGoogleLoginUrl(string redirectUri)
@@ -39,9 +39,10 @@ public sealed class SupabaseAuthService : ISupabaseAuthService
         return $"{baseUrl}/auth/v1/authorize?provider=google&redirect_to={Uri.EscapeDataString(redirectUri)}";
     }
 
-    private async Task<SupabaseAuthResult> ReadResultAsync(HttpResponseMessage response, CancellationToken cancellationToken)
+    private async Task<SupabaseAuthResult> ReadResultAsync(HttpResponseMessage response, bool requireAccessToken, CancellationToken cancellationToken)
     {
         var body = await response.Content.ReadAsStringAsync(cancellationToken);
+
         if (!response.IsSuccessStatusCode)
         {
             try
@@ -58,12 +59,19 @@ public sealed class SupabaseAuthService : ISupabaseAuthService
             }
         }
 
-        using var document = JsonDocument.Parse(body);
-        var accessToken = document.RootElement.TryGetProperty("access_token", out var tokenElement)
-            ? tokenElement.GetString()
-            : null;
+        string? accessToken = null;
+        if (!string.IsNullOrWhiteSpace(body))
+        {
+            using var document = JsonDocument.Parse(body);
+            accessToken = document.RootElement.TryGetProperty("access_token", out var tokenElement)
+                ? tokenElement.GetString()
+                : null;
+        }
 
-        return new(accessToken is not null, accessToken, accessToken is null ? "Authentication response was incomplete." : null);
+        if (requireAccessToken && string.IsNullOrWhiteSpace(accessToken))
+            return new(false, Error: "Authentication response was incomplete.");
+
+        return new(true, accessToken);
     }
 
     private async Task<HttpResponseMessage> SendAsync(string path, object body, CancellationToken cancellationToken)
