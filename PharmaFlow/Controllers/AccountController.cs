@@ -49,6 +49,15 @@ public class AccountController : Controller
         return RedirectAfterAuthentication(profile.BusinessName);
     }
 
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult Logout()
+    {
+        HttpContext.Session.Clear();
+        TempData["AuthMessage"] = "You have been logged out successfully.";
+        return RedirectToAction(nameof(Login));
+    }
+
     [HttpGet]
     public IActionResult Signup() => View(new SignupViewModel());
 
