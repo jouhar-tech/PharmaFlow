@@ -94,3 +94,7 @@ body { margin: 0; background: #f5f7fb; color: #1f2937; }
   .metric-card { padding: 1rem; }
   .topbar-business { display: none; }
 }
+
+.sidebar-logout-form { margin: 0; padding: 0; }
+.sidebar-logout-button { width: 100%; border: 0; background: transparent; text-align: left; cursor: pointer; font-family: inherit; }
+.sidebar-logout-button:hover { color: #fff; }
