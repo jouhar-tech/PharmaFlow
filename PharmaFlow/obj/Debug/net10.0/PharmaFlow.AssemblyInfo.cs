@@ -11,10 +11,11 @@
 using System;
 using System.Reflection;
 
+[assembly: Microsoft.Extensions.Configuration.UserSecrets.UserSecretsIdAttribute("0070d77c-e6e7-4caf-84cf-15e93b2658fa")]
 [assembly: System.Reflection.AssemblyCompanyAttribute("PharmaFlow")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+23e7fa82bfb56a30a115e2c115f602aa2527aed4")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4dd0719d5e35c3c4f42911cb513da8e7af45a869")]
 [assembly: System.Reflection.AssemblyProductAttribute("PharmaFlow")]
 [assembly: System.Reflection.AssemblyTitleAttribute("PharmaFlow")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
