@@ -18,35 +18,14 @@ public class AccountController : Controller
     public async Task<IActionResult> Login(LoginViewModel model, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid) return View(model);
-        var sent = await _authService.SendPhoneOtpAsync(model.PhoneNumber, cancellationToken);
-        if (!sent)
-        {
-            ModelState.AddModelError(string.Empty, "Unable to send OTP. Please try again later.");
-            return View(model);
-        }
-        TempData["OtpPhoneNumber"] = model.PhoneNumber;
-        return RedirectToAction(nameof(VerifyOtp));
-    }
 
-    [HttpGet]
-    public IActionResult VerifyOtp()
-    {
-        var phone = TempData.Peek("OtpPhoneNumber") as string;
-        if (string.IsNullOrWhiteSpace(phone)) return RedirectToAction(nameof(Login));
-        return View(new OtpViewModel { PhoneNumber = phone });
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> VerifyOtp(OtpViewModel model, CancellationToken cancellationToken)
-    {
-        if (!ModelState.IsValid) return View(model);
-        var result = await _authService.VerifyPhoneOtpAsync(model.PhoneNumber, model.Otp, cancellationToken);
+        var result = await _authService.LoginAsync(model.Email.Trim(), model.Password, cancellationToken);
         if (!result.Success)
         {
-            ModelState.AddModelError(string.Empty, "Invalid or expired OTP.");
+            ModelState.AddModelError(string.Empty, "Invalid email or password.");
             return View(model);
         }
+
         HttpContext.Session.SetString("SupabaseAccessToken", result.AccessToken!);
         return RedirectToAction("Index", "Home");
     }
@@ -59,15 +38,25 @@ public class AccountController : Controller
     public async Task<IActionResult> Signup(SignupViewModel model, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid) return View(model);
-        var sent = await _authService.SendPhoneOtpAsync(model.PhoneNumber, cancellationToken);
-        if (!sent)
+
+        var result = await _authService.SignUpAsync(
+            model.Email.Trim(),
+            model.Password,
+            model.FullName.Trim(),
+            model.PhoneNumber,
+            cancellationToken);
+
+        if (!result.Success)
         {
-            ModelState.AddModelError(string.Empty, "Unable to start signup. Please try again later.");
+            ModelState.AddModelError(string.Empty, result.Error ?? "Unable to create account.");
             return View(model);
         }
-        TempData["OtpPhoneNumber"] = model.PhoneNumber;
-        TempData["SignupFullName"] = model.FullName.Trim();
-        return RedirectToAction(nameof(VerifyOtp));
+
+        if (!string.IsNullOrWhiteSpace(result.AccessToken))
+            HttpContext.Session.SetString("SupabaseAccessToken", result.AccessToken);
+
+        TempData["AuthMessage"] = "Account created successfully. Please check your email if verification is required.";
+        return RedirectToAction(nameof(Login));
     }
 
     [HttpGet]
