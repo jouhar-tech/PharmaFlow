@@ -7,4 +7,8 @@ public interface ISupabaseAuthService
     string GetGoogleLoginUrl(string redirectUri);
 }
 
-public sealed record SupabaseAuthResult(bool Success, string? AccessToken = null, string? Error = null);
+public sealed record SupabaseAuthResult(
+    bool Success,
+    string? AccessToken = null,
+    string? UserId = null,
+    string? Error = null);
