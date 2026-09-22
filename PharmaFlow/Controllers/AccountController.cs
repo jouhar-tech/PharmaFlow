@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PharmaFlow.Data;
+using PharmaFlow.Models;
 using PharmaFlow.Models.ViewModels;
 using PharmaFlow.Services;
 
@@ -38,15 +39,13 @@ public class AccountController : Controller
         }
 
         var result = await _authService.LoginAsync(profile.Email, model.Password, cancellationToken);
-        if (!result.Success || string.IsNullOrWhiteSpace(result.UserId) || !Guid.TryParse(result.UserId, out var userId))
+        if (!result.Success || string.IsNullOrWhiteSpace(result.UserId) || !Guid.TryParse(result.UserId, out _))
         {
             ModelState.AddModelError(string.Empty, "Invalid username or password.");
             return View(model);
         }
 
-        HttpContext.Session.SetString("SupabaseAccessToken", result.AccessToken!);
-        HttpContext.Session.SetString("SupabaseUserId", result.UserId);
-        HttpContext.Session.SetString("ProfileId", profile.Id.ToString());
+        SetAuthenticatedSession(result, profile.Id);
         return RedirectToAction("Index", "Home");
     }
 
@@ -94,15 +93,94 @@ public class AccountController : Controller
     public IActionResult GoogleLogin()
     {
         var redirectUri = Url.Action(nameof(GoogleCallback), "Account", null, Request.Scheme)!;
-        return Redirect(_authService.GetGoogleLoginUrl(redirectUri));
+        var codeVerifier = SupabaseAuthService.CreateCodeVerifier();
+        var codeChallenge = SupabaseAuthService.CreateCodeChallenge(codeVerifier);
+
+        HttpContext.Session.SetString("GoogleCodeVerifier", codeVerifier);
+        return Redirect(_authService.GetGoogleLoginUrl(redirectUri, codeChallenge));
     }
 
     [HttpGet]
-    public IActionResult GoogleCallback(string? code, string? error)
+    public async Task<IActionResult> GoogleCallback(string? code, string? error, CancellationToken cancellationToken)
     {
-        TempData["AuthError"] = string.IsNullOrWhiteSpace(error) && !string.IsNullOrWhiteSpace(code)
-            ? "Google authorization received. Token exchange configuration is still required."
-            : "Google sign-in could not be completed.";
-        return RedirectToAction(nameof(Login));
+        if (!string.IsNullOrWhiteSpace(error) || string.IsNullOrWhiteSpace(code))
+        {
+            TempData["AuthError"] = "Google sign-in could not be completed.";
+            return RedirectToAction(nameof(Login));
+        }
+
+        var codeVerifier = HttpContext.Session.GetString("GoogleCodeVerifier");
+        HttpContext.Session.Remove("GoogleCodeVerifier");
+
+        if (string.IsNullOrWhiteSpace(codeVerifier))
+        {
+            TempData["AuthError"] = "Google sign-in session expired. Please try again.";
+            return RedirectToAction(nameof(Login));
+        }
+
+        var result = await _authService.ExchangeGoogleCodeAsync(code, codeVerifier, cancellationToken);
+        if (!result.Success || string.IsNullOrWhiteSpace(result.UserId) || !Guid.TryParse(result.UserId, out var userId))
+        {
+            TempData["AuthError"] = result.Error ?? "Google sign-in failed. Please try again.";
+            return RedirectToAction(nameof(Login));
+        }
+
+        var profile = await _dbContext.Profiles
+            .SingleOrDefaultAsync(p => p.UserId == userId, cancellationToken);
+
+        if (profile is null)
+        {
+            if (string.IsNullOrWhiteSpace(result.Email))
+            {
+                TempData["AuthError"] = "Google account email could not be retrieved.";
+                return RedirectToAction(nameof(Login));
+            }
+
+            var username = await CreateUniqueUsernameAsync(result.Email, cancellationToken);
+            profile = new Profile
+            {
+                UserId = userId,
+                Username = username,
+                Email = result.Email,
+                CreatedAt = DateTime.UtcNow
+            };
+            _dbContext.Profiles.Add(profile);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+        else if (string.IsNullOrWhiteSpace(profile.Email) && !string.IsNullOrWhiteSpace(result.Email))
+        {
+            profile.Email = result.Email;
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+
+        SetAuthenticatedSession(result, profile.Id);
+        return RedirectToAction("Index", "Home");
+    }
+
+    private void SetAuthenticatedSession(SupabaseAuthResult result, long profileId)
+    {
+        HttpContext.Session.SetString("SupabaseAccessToken", result.AccessToken!);
+        HttpContext.Session.SetString("SupabaseUserId", result.UserId!);
+        HttpContext.Session.SetString("ProfileId", profileId.ToString());
+    }
+
+    private async Task<string> CreateUniqueUsernameAsync(string email, CancellationToken cancellationToken)
+    {
+        var localPart = email.Split('@')[0];
+        var baseUsername = new string(localPart
+            .Where(char.IsLetterOrDigit)
+            .ToArray())
+            .ToLowerInvariant();
+
+        if (string.IsNullOrWhiteSpace(baseUsername))
+            baseUsername = "user";
+
+        var username = baseUsername;
+        var suffix = 1;
+
+        while (await _dbContext.Profiles.AnyAsync(p => p.Username == username, cancellationToken))
+            username = $"{baseUsername}{suffix++}";
+
+        return username;
     }
 }
