@@ -13,44 +13,72 @@
     <link rel="stylesheet" href="~/PharmaFlow.styles.css" asp-append-version="true" />
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" asp-area="" asp-controller="Home" asp-action="Index">
-                    <span class="rounded-3 bg-primary text-white px-2 py-1">✚</span>
-                    <span>@businessName</span>
+    <div class="app-shell">
+        <aside class="app-sidebar" id="appSidebar" aria-label="Main navigation">
+            <div class="sidebar-brand">
+                <a asp-area="" asp-controller="Home" asp-action="Index" class="brand-link">
+                    <span class="brand-mark">✚</span>
+                    <span class="brand-name">@businessName</span>
                 </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse" id="mainNavbar">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Dashboard</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
-                </div>
+                <button class="sidebar-close d-lg-none" type="button" id="sidebarClose" aria-label="Close navigation">&times;</button>
             </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
+
+            <div class="sidebar-caption">Workspace</div>
+            <nav class="sidebar-nav">
+                <a class="sidebar-link active" asp-area="" asp-controller="Home" asp-action="Index"><span class="sidebar-icon">▦</span><span>Dashboard</span></a>
+                <a class="sidebar-link" href="#"><span class="sidebar-icon">↗</span><span>Top Selling / Low Selling</span></a>
+                <a class="sidebar-link" href="#"><span class="sidebar-icon">▤</span><span>Low Stock Details</span><span class="sidebar-badge">Voice</span></a>
+                <a class="sidebar-link" href="#"><span class="sidebar-icon">⌛</span><span>Expiring Details</span><span class="sidebar-badge">Voice</span></a>
+                <a class="sidebar-link" href="#"><span class="sidebar-icon">▥</span><span>Daily Sales Reports</span></a>
+                <a class="sidebar-link" href="#"><span class="sidebar-icon">♙</span><span>Customer Management</span><span class="sidebar-badge">Voice</span></a>
+                <a class="sidebar-link" href="#"><span class="sidebar-icon">⌂</span><span>Low Outlet</span><span class="sidebar-badge">Category / Shop</span></a>
+                <a class="sidebar-link" href="#"><span class="sidebar-icon">⚙</span><span>Settings</span><span class="sidebar-badge">Category / Shop</span></a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="sidebar-footer-label">Pharmacy management</div>
+                <small>More modules will be enabled as backend features are added.</small>
+            </div>
+        </aside>
+
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+        <div class="app-main">
+            <header class="app-topbar">
+                <button class="sidebar-toggle d-lg-none" type="button" id="sidebarToggle" aria-label="Open navigation">☰</button>
+                <div class="topbar-title">@ViewData["Title"]</div>
+                <div class="topbar-business"><span class="status-dot"></span>@businessName</div>
+            </header>
+
+            <main role="main" class="app-content">
+                @RenderBody()
+            </main>
+
+            <footer class="app-footer">
+                <span>&copy; 2026 - @businessName</span>
+                <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            </footer>
+        </div>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - @businessName - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
-    </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        (() => {
+            const sidebar = document.getElementById('appSidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            const toggle = document.getElementById('sidebarToggle');
+            const close = document.getElementById('sidebarClose');
+            const setOpen = (open) => {
+                sidebar?.classList.toggle('is-open', open);
+                overlay?.classList.toggle('is-visible', open);
+                document.body.classList.toggle('sidebar-open', open);
+            };
+            toggle?.addEventListener('click', () => setOpen(true));
+            close?.addEventListener('click', () => setOpen(false));
+            overlay?.addEventListener('click', () => setOpen(false));
+        })();
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
