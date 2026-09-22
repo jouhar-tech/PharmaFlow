@@ -15,36 +15,55 @@ public sealed class SupabaseAuthService : ISupabaseAuthService
         _configuration = configuration;
     }
 
-    public async Task<bool> SendPhoneOtpAsync(string phoneNumber, CancellationToken cancellationToken = default)
+    public async Task<SupabaseAuthResult> SignUpAsync(string email, string password, string fullName, string phoneNumber, CancellationToken cancellationToken = default)
     {
-        var response = await SendAsync("/auth/v1/otp", new { phone = $"+91{phoneNumber}" }, cancellationToken);
-        return response.IsSuccessStatusCode;
-    }
-
-    public async Task<SupabaseAuthResult> VerifyPhoneOtpAsync(string phoneNumber, string token, CancellationToken cancellationToken = default)
-    {
-        var response = await SendAsync("/auth/v1/verify", new
+        var response = await SendAsync("/auth/v1/signup", new
         {
-            phone = $"+91{phoneNumber}",
-            token,
-            type = "sms"
+            email,
+            password,
+            data = new { full_name = fullName, phone_number = $"+91{phoneNumber}" }
         }, cancellationToken);
 
-        if (!response.IsSuccessStatusCode)
-            return new(false, Error: await response.Content.ReadAsStringAsync(cancellationToken));
+        return await ReadResultAsync(response, cancellationToken);
+    }
 
-        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync(cancellationToken));
-        var accessToken = document.RootElement.TryGetProperty("access_token", out var tokenElement)
-            ? tokenElement.GetString()
-            : null;
-
-        return new(accessToken is not null, accessToken, accessToken is null ? "Verification failed." : null);
+    public async Task<SupabaseAuthResult> LoginAsync(string email, string password, CancellationToken cancellationToken = default)
+    {
+        var response = await SendAsync("/auth/v1/token?grant_type=password", new { email, password }, cancellationToken);
+        return await ReadResultAsync(response, cancellationToken);
     }
 
     public string GetGoogleLoginUrl(string redirectUri)
     {
         var baseUrl = Required("Supabase:Url").TrimEnd('/');
         return $"{baseUrl}/auth/v1/authorize?provider=google&redirect_to={Uri.EscapeDataString(redirectUri)}";
+    }
+
+    private async Task<SupabaseAuthResult> ReadResultAsync(HttpResponseMessage response, CancellationToken cancellationToken)
+    {
+        var body = await response.Content.ReadAsStringAsync(cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            try
+            {
+                using var errorDocument = JsonDocument.Parse(body);
+                var message = errorDocument.RootElement.TryGetProperty("msg", out var msg) ? msg.GetString()
+                    : errorDocument.RootElement.TryGetProperty("message", out var errorMessage) ? errorMessage.GetString()
+                    : "Authentication request failed.";
+                return new(false, Error: message);
+            }
+            catch (JsonException)
+            {
+                return new(false, Error: "Authentication request failed.");
+            }
+        }
+
+        using var document = JsonDocument.Parse(body);
+        var accessToken = document.RootElement.TryGetProperty("access_token", out var tokenElement)
+            ? tokenElement.GetString()
+            : null;
+
+        return new(accessToken is not null, accessToken, accessToken is null ? "Authentication response was incomplete." : null);
     }
 
     private async Task<HttpResponseMessage> SendAsync(string path, object body, CancellationToken cancellationToken)
