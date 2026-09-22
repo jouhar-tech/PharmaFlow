@@ -22,7 +22,8 @@ public class ApplicationDbContext : DbContext
             entity.HasKey(p => p.Id);
             entity.Property(p => p.Id).HasColumnName("id");
             entity.Property(p => p.UserId).HasColumnName("user_id");
-            entity.Property(p => p.FullName).HasColumnName("full_name");
+            entity.Property(p => p.Username).HasColumnName("username");
+            entity.Property(p => p.Email).HasColumnName("email");
             entity.Property(p => p.PhoneNumber).HasColumnName("phone_number");
             entity.Property(p => p.CreatedAt).HasColumnName("created_at");
         });
