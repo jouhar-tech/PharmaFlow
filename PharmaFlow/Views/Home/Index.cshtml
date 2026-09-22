@@ -1,8 +1,87 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Dashboard";
+    var businessName = Context.Session.GetString("BusinessName") ?? "PharmaFlow";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="dashboard-page">
+    <div class="dashboard-header">
+        <div>
+            <span class="dashboard-eyebrow">Welcome back</span>
+            <h1 class="dashboard-title">@businessName Dashboard</h1>
+            <p class="dashboard-subtitle">Monitor your pharmacy activity at a glance.</p>
+        </div>
+        <div class="dashboard-date">@DateTime.Now.ToString("dd MMM yyyy")</div>
+    </div>
+
+    <form class="dashboard-filters" method="get">
+        <div class="filter-field">
+            <label for="dashboardPeriod">Period</label>
+            <select id="dashboardPeriod" name="period" class="form-select">
+                <option>Today</option>
+                <option>Last 7 days</option>
+                <option>Last 30 days</option>
+                <option>This year</option>
+            </select>
+        </div>
+        <div class="filter-field">
+            <label for="dashboardBranch">Branch</label>
+            <select id="dashboardBranch" name="branch" class="form-select">
+                <option>All branches</option>
+                <option>Main branch</option>
+            </select>
+        </div>
+        <button type="submit" class="btn dashboard-filter-button">Apply filters</button>
+    </form>
+
+    <section class="dashboard-grid" aria-label="Pharmacy overview">
+        <article class="dashboard-card metric-card metric-warning">
+            <div class="metric-icon">⌛</div>
+            <div><span class="metric-label">Products expiring soon</span><strong class="metric-value">—</strong><span class="metric-note">Review upcoming expiries</span></div>
+        </article>
+        <article class="dashboard-card metric-card metric-info">
+            <div class="metric-icon">▤</div>
+            <div><span class="metric-label">Low stock details</span><strong class="metric-value">—</strong><span class="metric-note">Items below reorder level</span></div>
+        </article>
+        <article class="dashboard-card metric-card metric-danger">
+            <div class="metric-icon">!</div>
+            <div><span class="metric-label">Out-of-stock items</span><strong class="metric-value">—</strong><span class="metric-note">Products needing replenishment</span></div>
+        </article>
+        <article class="dashboard-card metric-card metric-expired">
+            <div class="metric-icon">⟳</div>
+            <div><span class="metric-label">Products already expired</span><strong class="metric-value">—</strong><span class="metric-note">Check and quarantine stock</span></div>
+        </article>
+        <article class="dashboard-card metric-card metric-success">
+            <div class="metric-icon">₹</div>
+            <div><span class="metric-label">Today's sales</span><strong class="metric-value">₹ —</strong><span class="metric-note">Total sales for today</span></div>
+        </article>
+        <article class="dashboard-card metric-card metric-purple">
+            <div class="metric-icon">⇄</div>
+            <div><span class="metric-label">Customer debit / credit</span><strong class="metric-value">₹ —</strong><span class="metric-note">Pending customer balances</span></div>
+        </article>
+    </section>
+
+    <section class="dashboard-section-grid">
+        <article class="dashboard-card detail-card">
+            <div class="card-heading"><div><span class="section-kicker">Payables</span><h2>Supplier pending payments</h2></div><span class="heading-icon">▣</span></div>
+            <div class="empty-state"><span>₹</span><p>No supplier payment data available yet.</p></div>
+        </article>
+        <article class="dashboard-card detail-card">
+            <div class="card-heading"><div><span class="section-kicker">Inventory trends</span><h2>Fast-moving products</h2></div><span class="heading-icon">↗</span></div>
+            <div class="empty-state"><span>↗</span><p>Fast-moving product insights will appear here.</p></div>
+        </article>
+        <article class="dashboard-card detail-card">
+            <div class="card-heading"><div><span class="section-kicker">Inventory trends</span><h2>Slow-moving products</h2></div><span class="heading-icon">↘</span></div>
+            <div class="empty-state"><span>↘</span><p>Slow-moving product insights will appear here.</p></div>
+        </article>
+    </section>
+
+    <section class="dashboard-card activity-card">
+        <div class="card-heading"><div><span class="section-kicker">Activity</span><h2>Recent sales and payments</h2></div><span class="heading-icon">☷</span></div>
+        <div class="table-responsive">
+            <table class="table dashboard-table align-middle mb-0">
+                <thead><tr><th>Activity</th><th>Reference</th><th>Date</th><th class="text-end">Amount</th></tr></thead>
+                <tbody><tr><td colspan="4" class="empty-table">No recent activity available yet.</td></tr></tbody>
+            </table>
+        </div>
+    </section>
 </div>
