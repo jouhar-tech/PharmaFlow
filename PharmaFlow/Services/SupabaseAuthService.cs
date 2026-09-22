@@ -60,18 +60,27 @@ public sealed class SupabaseAuthService : ISupabaseAuthService
         }
 
         string? accessToken = null;
+        string? userId = null;
+
         if (!string.IsNullOrWhiteSpace(body))
         {
             using var document = JsonDocument.Parse(body);
-            accessToken = document.RootElement.TryGetProperty("access_token", out var tokenElement)
+            var root = document.RootElement;
+
+            accessToken = root.TryGetProperty("access_token", out var tokenElement)
                 ? tokenElement.GetString()
+                : null;
+
+            userId = root.TryGetProperty("user", out var userElement) &&
+                     userElement.TryGetProperty("id", out var idElement)
+                ? idElement.GetString()
                 : null;
         }
 
         if (requireAccessToken && string.IsNullOrWhiteSpace(accessToken))
             return new(false, Error: "Authentication response was incomplete.");
 
-        return new(true, accessToken);
+        return new(true, accessToken, userId);
     }
 
     private async Task<HttpResponseMessage> SendAsync(string path, object body, CancellationToken cancellationToken)
