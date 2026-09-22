@@ -26,27 +26,27 @@ public class AccountController : Controller
     {
         if (!ModelState.IsValid) return View(model);
 
-        var result = await _authService.LoginAsync(model.Email.Trim(), model.Password, cancellationToken);
-        if (!result.Success || string.IsNullOrWhiteSpace(result.UserId) || !Guid.TryParse(result.UserId, out var userId))
+        var username = model.Username.Trim();
+        var profile = await _dbContext.Profiles
+            .AsNoTracking()
+            .SingleOrDefaultAsync(p => p.Username == username, cancellationToken);
+
+        if (profile is null || string.IsNullOrWhiteSpace(profile.Email))
         {
-            ModelState.AddModelError(string.Empty, "Invalid email or password.");
+            ModelState.AddModelError(string.Empty, "Invalid username or password.");
             return View(model);
         }
 
-        var profile = await _dbContext.Profiles
-            .AsNoTracking()
-            .SingleOrDefaultAsync(p => p.UserId == userId, cancellationToken);
-
-        if (profile is null)
+        var result = await _authService.LoginAsync(profile.Email, model.Password, cancellationToken);
+        if (!result.Success || string.IsNullOrWhiteSpace(result.UserId) || !Guid.TryParse(result.UserId, out var userId))
         {
-            ModelState.AddModelError(string.Empty, "User profile was not found.");
+            ModelState.AddModelError(string.Empty, "Invalid username or password.");
             return View(model);
         }
 
         HttpContext.Session.SetString("SupabaseAccessToken", result.AccessToken!);
         HttpContext.Session.SetString("SupabaseUserId", result.UserId);
         HttpContext.Session.SetString("ProfileId", profile.Id.ToString());
-
         return RedirectToAction("Index", "Home");
     }
 
@@ -59,10 +59,21 @@ public class AccountController : Controller
     {
         if (!ModelState.IsValid) return View(model);
 
+        var username = model.Username.Trim();
+        var usernameExists = await _dbContext.Profiles
+            .AsNoTracking()
+            .AnyAsync(p => p.Username == username, cancellationToken);
+
+        if (usernameExists)
+        {
+            ModelState.AddModelError(nameof(model.Username), "This username is already taken.");
+            return View(model);
+        }
+
         var result = await _authService.SignUpAsync(
             model.Email.Trim(),
             model.Password,
-            model.FullName.Trim(),
+            username,
             model.PhoneNumber,
             cancellationToken);
 
