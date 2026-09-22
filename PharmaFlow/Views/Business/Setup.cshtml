@@ -1,0 +1,33 @@
+@model PharmaFlow.Models.ViewModels.BusinessSetupViewModel
+@{
+    ViewData["Title"] = "Set up your business";
+}
+
+<div class="row justify-content-center py-5">
+    <div class="col-12 col-sm-10 col-md-7 col-lg-5">
+        <div class="card border-0 shadow-sm rounded-4">
+            <div class="card-body p-4 p-md-5">
+                <div class="text-center mb-4">
+                    <div class="display-6 mb-3">🏥</div>
+                    <h1 class="h3 fw-bold">Set up your pharmacy</h1>
+                    <p class="text-muted mb-0">Enter your business name. It will appear across your PharmaFlow dashboard.</p>
+                </div>
+
+                <form asp-action="Setup" method="post">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                    <div class="mb-4">
+                        <label asp-for="BusinessName" class="form-label fw-semibold"></label>
+                        <input asp-for="BusinessName" class="form-control form-control-lg" placeholder="e.g. City Medical" maxlength="120" autofocus />
+                        <span asp-validation-for="BusinessName" class="text-danger"></span>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg w-100">Continue to dashboard</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
