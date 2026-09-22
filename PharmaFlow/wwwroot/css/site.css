@@ -19,6 +19,8 @@ html {
 
 body {
   margin-bottom: 60px;
+  background: #f5f7fb;
+  color: #1f2937;
 }
 
 .form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
@@ -28,4 +30,90 @@ body {
 
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
   text-align: start;
+}
+
+.dashboard-page {
+  padding: 1rem 0 2rem;
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.dashboard-eyebrow, .section-kicker {
+  display: block;
+  color: #64748b;
+  font-size: .75rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.dashboard-title {
+  margin: .25rem 0;
+  font-size: clamp(1.5rem, 3vw, 2.25rem);
+  font-weight: 750;
+  letter-spacing: -.04em;
+}
+
+.dashboard-subtitle { margin: 0; color: #64748b; }
+.dashboard-date { color: #64748b; font-size: .9rem; white-space: nowrap; }
+
+.dashboard-filters {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: .75rem;
+  padding: 1rem;
+  margin-bottom: 1.25rem;
+  background: #fff;
+  border: 1px solid #e5eaf2;
+  border-radius: 1rem;
+}
+
+.filter-field { min-width: 165px; flex: 1; }
+.filter-field label { display: block; margin-bottom: .35rem; color: #475569; font-size: .8rem; font-weight: 600; }
+.dashboard-filter-button { background: #2563eb; color: #fff; border: 0; min-height: 38px; }
+.dashboard-filter-button:hover { background: #1d4ed8; color: #fff; }
+
+.dashboard-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+.dashboard-card { background: #fff; border: 1px solid #e5eaf2; border-radius: 1rem; box-shadow: 0 4px 18px rgba(15, 23, 42, .035); }
+.metric-card { display: flex; align-items: flex-start; gap: .85rem; padding: 1.15rem; border-left: 4px solid #94a3b8; }
+.metric-icon { display: grid; place-items: center; width: 42px; height: 42px; flex: 0 0 42px; border-radius: .75rem; background: #eef2ff; color: #4338ca; font-size: 1.25rem; font-weight: 800; }
+.metric-label { display: block; color: #64748b; font-size: .8rem; font-weight: 650; }
+.metric-value { display: block; margin: .25rem 0; font-size: 1.55rem; letter-spacing: -.03em; }
+.metric-note { display: block; color: #94a3b8; font-size: .75rem; }
+.metric-warning { border-left-color: #f59e0b; } .metric-info { border-left-color: #3b82f6; } .metric-danger { border-left-color: #ef4444; } .metric-expired { border-left-color: #7c3aed; } .metric-success { border-left-color: #10b981; } .metric-purple { border-left-color: #8b5cf6; }
+
+.dashboard-section-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin-top: 1rem; }
+.detail-card, .activity-card { padding: 1.25rem; }
+.card-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
+.card-heading h2 { margin: .2rem 0 0; font-size: 1.05rem; font-weight: 750; }
+.heading-icon { color: #64748b; font-size: 1.25rem; }
+.empty-state { display: grid; place-items: center; min-height: 150px; padding: 1rem; text-align: center; color: #94a3b8; }
+.empty-state span { font-size: 1.8rem; color: #cbd5e1; }
+.empty-state p { margin: .5rem 0 0; font-size: .85rem; }
+.activity-card { margin-top: 1rem; }
+.dashboard-table { margin-top: 1rem; }
+.dashboard-table th { color: #64748b; font-size: .75rem; font-weight: 700; text-transform: uppercase; white-space: nowrap; }
+.dashboard-table td { color: #475569; font-size: .875rem; }
+.empty-table { padding: 2rem !important; text-align: center; color: #94a3b8 !important; }
+
+@media (max-width: 991.98px) {
+  .dashboard-grid, .dashboard-section-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 575.98px) {
+  .dashboard-page { padding-top: .5rem; }
+  .dashboard-header { align-items: flex-start; flex-direction: column; }
+  .dashboard-date { font-size: .8rem; }
+  .dashboard-filters { align-items: stretch; flex-direction: column; }
+  .filter-field { min-width: 100%; }
+  .dashboard-filter-button { width: 100%; }
+  .dashboard-grid, .dashboard-section-grid { grid-template-columns: 1fr; }
+  .metric-card { padding: 1rem; }
 }
