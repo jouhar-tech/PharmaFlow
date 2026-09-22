@@ -31,7 +31,10 @@
                 <a class="sidebar-link" href="#"><span class="sidebar-icon">⌛</span><span>Expiring Details</span><span class="sidebar-badge">Voice</span></a>
                 <a class="sidebar-link" href="#"><span class="sidebar-icon">▥</span><span>Daily Sales Reports</span></a>
                 <a class="sidebar-link" href="#"><span class="sidebar-icon">♙</span><span>Customer Management</span><span class="sidebar-badge">Voice</span></a>
-                <form asp-area="" asp-controller="Account" asp-action="Logout" method="post" class="sidebar-logout-form">\n                    @Html.AntiForgeryToken()\n                    <button type="submit" class="sidebar-link sidebar-logout-button"><span class="sidebar-icon">↪</span><span>Log Out</span></button>\n                </form>
+                <form asp-area="" asp-controller="Account" asp-action="Logout" method="post" class="sidebar-logout-form">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="sidebar-link sidebar-logout-button"><span class="sidebar-icon">↪</span><span>Log Out</span></button>
+                </form>
                 <a class="sidebar-link" href="#"><span class="sidebar-icon">⚙</span><span>Settings</span><span class="sidebar-badge">Category / Shop</span></a>
             </nav>
 
