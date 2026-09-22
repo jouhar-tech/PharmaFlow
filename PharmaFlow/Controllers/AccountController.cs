@@ -45,8 +45,8 @@ public class AccountController : Controller
             return View(model);
         }
 
-        SetAuthenticatedSession(result, profile.Id);
-        return RedirectToAction("Index", "Home");
+        SetAuthenticatedSession(result, profile.Id, profile.BusinessName);
+        return RedirectAfterAuthentication(profile.BusinessName);
     }
 
     [HttpGet]
@@ -70,11 +70,7 @@ public class AccountController : Controller
         }
 
         var result = await _authService.SignUpAsync(
-            model.Email.Trim(),
-            model.Password,
-            username,
-            model.PhoneNumber,
-            cancellationToken);
+            model.Email.Trim(), model.Password, username, model.PhoneNumber, cancellationToken);
 
         if (!result.Success)
         {
@@ -125,8 +121,7 @@ public class AccountController : Controller
             return RedirectToAction(nameof(Login));
         }
 
-        var profile = await _dbContext.Profiles
-            .SingleOrDefaultAsync(p => p.UserId == userId, cancellationToken);
+        var profile = await _dbContext.Profiles.SingleOrDefaultAsync(p => p.UserId == userId, cancellationToken);
 
         if (profile is null)
         {
@@ -136,11 +131,10 @@ public class AccountController : Controller
                 return RedirectToAction(nameof(Login));
             }
 
-            var username = await CreateUniqueUsernameAsync(result.Email, cancellationToken);
             profile = new Profile
             {
                 UserId = userId,
-                Username = username,
+                Username = await CreateUniqueUsernameAsync(result.Email, cancellationToken),
                 Email = result.Email,
                 CreatedAt = DateTime.UtcNow
             };
@@ -153,31 +147,35 @@ public class AccountController : Controller
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
 
-        SetAuthenticatedSession(result, profile.Id);
-        return RedirectToAction("Index", "Home");
+        SetAuthenticatedSession(result, profile.Id, profile.BusinessName);
+        return RedirectAfterAuthentication(profile.BusinessName);
     }
 
-    private void SetAuthenticatedSession(SupabaseAuthResult result, long profileId)
+    private void SetAuthenticatedSession(SupabaseAuthResult result, long profileId, string? businessName)
     {
         HttpContext.Session.SetString("SupabaseAccessToken", result.AccessToken!);
         HttpContext.Session.SetString("SupabaseUserId", result.UserId!);
         HttpContext.Session.SetString("ProfileId", profileId.ToString());
+
+        if (!string.IsNullOrWhiteSpace(businessName))
+            HttpContext.Session.SetString("BusinessName", businessName);
+        else
+            HttpContext.Session.Remove("BusinessName");
     }
+
+    private IActionResult RedirectAfterAuthentication(string? businessName) =>
+        string.IsNullOrWhiteSpace(businessName)
+            ? RedirectToAction("Setup", "Business")
+            : RedirectToAction("Index", "Home");
 
     private async Task<string> CreateUniqueUsernameAsync(string email, CancellationToken cancellationToken)
     {
         var localPart = email.Split('@')[0];
-        var baseUsername = new string(localPart
-            .Where(char.IsLetterOrDigit)
-            .ToArray())
-            .ToLowerInvariant();
-
-        if (string.IsNullOrWhiteSpace(baseUsername))
-            baseUsername = "user";
+        var baseUsername = new string(localPart.Where(char.IsLetterOrDigit).ToArray()).ToLowerInvariant();
+        if (string.IsNullOrWhiteSpace(baseUsername)) baseUsername = "user";
 
         var username = baseUsername;
         var suffix = 1;
-
         while (await _dbContext.Profiles.AnyAsync(p => p.Username == username, cancellationToken))
             username = $"{baseUsername}{suffix++}";
 
