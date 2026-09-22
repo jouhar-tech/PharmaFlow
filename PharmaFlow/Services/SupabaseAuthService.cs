@@ -15,13 +15,18 @@ public sealed class SupabaseAuthService : ISupabaseAuthService
         _configuration = configuration;
     }
 
-    public async Task<SupabaseAuthResult> SignUpAsync(string email, string password, string fullName, string phoneNumber, CancellationToken cancellationToken = default)
+    public async Task<SupabaseAuthResult> SignUpAsync(string email, string password, string username, string phoneNumber, CancellationToken cancellationToken = default)
     {
         var response = await SendAsync("/auth/v1/signup", new
         {
             email,
             password,
-            data = new { full_name = fullName, phone_number = $"+91{phoneNumber}" }
+            data = new
+            {
+                username,
+                full_name = username,
+                phone_number = $"+91{phoneNumber}"
+            }
         }, cancellationToken);
 
         return await ReadResultAsync(response, requireAccessToken: false, cancellationToken);
