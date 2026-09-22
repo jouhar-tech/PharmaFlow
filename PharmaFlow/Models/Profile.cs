@@ -19,6 +19,9 @@ public sealed class Profile
     [Column("email")]
     public string? Email { get; set; }
 
+    [Column("business_name")]
+    public string? BusinessName { get; set; }
+
     [Column("phone_number")]
     public string? PhoneNumber { get; set; }
 
