@@ -1,0 +1,75 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\MhmdA\\source\\repos\\PharmaFlow\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{1895BB3A-3434-4F8A-EA68-18E037DEA80B}|PharmaFlow\\PharmaFlow.csproj|c:\\users\\mhmda\\source\\repos\\pharmaflow\\pharmaflow\\views\\account\\login.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{1895BB3A-3434-4F8A-EA68-18E037DEA80B}|PharmaFlow\\PharmaFlow.csproj|solutionrelative:pharmaflow\\views\\account\\login.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{1895BB3A-3434-4F8A-EA68-18E037DEA80B}|PharmaFlow\\PharmaFlow.csproj|c:\\users\\mhmda\\source\\repos\\pharmaflow\\pharmaflow\\models\\viewmodels\\loginviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{1895BB3A-3434-4F8A-EA68-18E037DEA80B}|PharmaFlow\\PharmaFlow.csproj|solutionrelative:pharmaflow\\models\\viewmodels\\loginviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{1895BB3A-3434-4F8A-EA68-18E037DEA80B}|PharmaFlow\\PharmaFlow.csproj|c:\\users\\mhmda\\source\\repos\\pharmaflow\\pharmaflow\\controllers\\accountcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{1895BB3A-3434-4F8A-EA68-18E037DEA80B}|PharmaFlow\\PharmaFlow.csproj|solutionrelative:pharmaflow\\controllers\\accountcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 1,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{c6f34f0d-7ae5-4f3a-be61-fe0c21ae9eb8}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Login.cshtml",
+              "DocumentMoniker": "C:\\Users\\MhmdA\\source\\repos\\PharmaFlow\\PharmaFlow\\Views\\Account\\Login.cshtml",
+              "RelativeDocumentMoniker": "PharmaFlow\\Views\\Account\\Login.cshtml",
+              "ToolTip": "C:\\Users\\MhmdA\\source\\repos\\PharmaFlow\\PharmaFlow\\Views\\Account\\Login.cshtml",
+              "RelativeToolTip": "PharmaFlow\\Views\\Account\\Login.cshtml",
+              "ViewState": "AgIAAGAAAAAAAAAAAAAAAGcAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-09-22T07:28:47.589Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "AccountController.cs",
+              "DocumentMoniker": "C:\\Users\\MhmdA\\source\\repos\\PharmaFlow\\PharmaFlow\\Controllers\\AccountController.cs",
+              "RelativeDocumentMoniker": "PharmaFlow\\Controllers\\AccountController.cs",
+              "ToolTip": "C:\\Users\\MhmdA\\source\\repos\\PharmaFlow\\PharmaFlow\\Controllers\\AccountController.cs",
+              "RelativeToolTip": "PharmaFlow\\Controllers\\AccountController.cs",
+              "ViewState": "AgIAAAcAAAAAAAAAAAAgwBQAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-22T07:26:48.926Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "LoginViewModel.cs",
+              "DocumentMoniker": "C:\\Users\\MhmdA\\source\\repos\\PharmaFlow\\PharmaFlow\\Models\\ViewModels\\LoginViewModel.cs",
+              "RelativeDocumentMoniker": "PharmaFlow\\Models\\ViewModels\\LoginViewModel.cs",
+              "ToolTip": "C:\\Users\\MhmdA\\source\\repos\\PharmaFlow\\PharmaFlow\\Models\\ViewModels\\LoginViewModel.cs",
+              "RelativeToolTip": "PharmaFlow\\Models\\ViewModels\\LoginViewModel.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAfAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-09-22T07:25:19.543Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
