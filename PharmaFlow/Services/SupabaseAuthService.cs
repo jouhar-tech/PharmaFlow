@@ -1,5 +1,7 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 
 namespace PharmaFlow.Services;
@@ -38,10 +40,32 @@ public sealed class SupabaseAuthService : ISupabaseAuthService
         return await ReadResultAsync(response, requireAccessToken: true, cancellationToken);
     }
 
-    public string GetGoogleLoginUrl(string redirectUri)
+    public string GetGoogleLoginUrl(string redirectUri, string codeChallenge)
     {
         var baseUrl = Required("Supabase:Url").TrimEnd('/');
-        return $"{baseUrl}/auth/v1/authorize?provider=google&redirect_to={Uri.EscapeDataString(redirectUri)}";
+        return $"{baseUrl}/auth/v1/authorize?provider=google&redirect_to={Uri.EscapeDataString(redirectUri)}&code_challenge={Uri.EscapeDataString(codeChallenge)}&code_challenge_method=S256";
+    }
+
+    public async Task<SupabaseAuthResult> ExchangeGoogleCodeAsync(string code, string codeVerifier, CancellationToken cancellationToken = default)
+    {
+        var response = await SendAsync(
+            "/auth/v1/token?grant_type=pkce",
+            new { auth_code = code, code_verifier = codeVerifier },
+            cancellationToken);
+
+        return await ReadResultAsync(response, requireAccessToken: true, cancellationToken);
+    }
+
+    public static string CreateCodeVerifier()
+    {
+        var bytes = RandomNumberGenerator.GetBytes(32);
+        return Base64UrlEncode(bytes);
+    }
+
+    public static string CreateCodeChallenge(string codeVerifier)
+    {
+        var hash = SHA256.HashData(Encoding.ASCII.GetBytes(codeVerifier));
+        return Base64UrlEncode(hash);
     }
 
     private async Task<SupabaseAuthResult> ReadResultAsync(HttpResponseMessage response, bool requireAccessToken, CancellationToken cancellationToken)
@@ -66,6 +90,7 @@ public sealed class SupabaseAuthService : ISupabaseAuthService
 
         string? accessToken = null;
         string? userId = null;
+        string? email = null;
 
         if (!string.IsNullOrWhiteSpace(body))
         {
@@ -76,16 +101,17 @@ public sealed class SupabaseAuthService : ISupabaseAuthService
                 ? tokenElement.GetString()
                 : null;
 
-            userId = root.TryGetProperty("user", out var userElement) &&
-                     userElement.TryGetProperty("id", out var idElement)
-                ? idElement.GetString()
-                : null;
+            if (root.TryGetProperty("user", out var userElement))
+            {
+                userId = userElement.TryGetProperty("id", out var idElement) ? idElement.GetString() : null;
+                email = userElement.TryGetProperty("email", out var emailElement) ? emailElement.GetString() : null;
+            }
         }
 
         if (requireAccessToken && string.IsNullOrWhiteSpace(accessToken))
             return new(false, Error: "Authentication response was incomplete.");
 
-        return new(true, accessToken, userId);
+        return new(true, accessToken, userId, email);
     }
 
     private async Task<HttpResponseMessage> SendAsync(string path, object body, CancellationToken cancellationToken)
@@ -98,6 +124,12 @@ public sealed class SupabaseAuthService : ISupabaseAuthService
         request.Content = JsonContent.Create(body);
         return await _httpClient.SendAsync(request, cancellationToken);
     }
+
+    private static string Base64UrlEncode(byte[] bytes) =>
+        Convert.ToBase64String(bytes)
+            .TrimEnd('=')
+            .Replace('+', '-')
+            .Replace('/', '_');
 
     private string Required(string key) =>
         _configuration[key] ?? throw new InvalidOperationException($"Missing configuration: {key}");
