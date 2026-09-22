@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using PharmaFlow.Data;
 using PharmaFlow.Models.ViewModels;
 using PharmaFlow.Services;
 
@@ -7,8 +9,13 @@ namespace PharmaFlow.Controllers;
 public class AccountController : Controller
 {
     private readonly ISupabaseAuthService _authService;
+    private readonly ApplicationDbContext _dbContext;
 
-    public AccountController(ISupabaseAuthService authService) => _authService = authService;
+    public AccountController(ISupabaseAuthService authService, ApplicationDbContext dbContext)
+    {
+        _authService = authService;
+        _dbContext = dbContext;
+    }
 
     [HttpGet]
     public IActionResult Login() => View(new LoginViewModel());
@@ -20,13 +27,26 @@ public class AccountController : Controller
         if (!ModelState.IsValid) return View(model);
 
         var result = await _authService.LoginAsync(model.Email.Trim(), model.Password, cancellationToken);
-        if (!result.Success)
+        if (!result.Success || string.IsNullOrWhiteSpace(result.UserId) || !Guid.TryParse(result.UserId, out var userId))
         {
             ModelState.AddModelError(string.Empty, "Invalid email or password.");
             return View(model);
         }
 
+        var profile = await _dbContext.Profiles
+            .AsNoTracking()
+            .SingleOrDefaultAsync(p => p.UserId == userId, cancellationToken);
+
+        if (profile is null)
+        {
+            ModelState.AddModelError(string.Empty, "User profile was not found.");
+            return View(model);
+        }
+
         HttpContext.Session.SetString("SupabaseAccessToken", result.AccessToken!);
+        HttpContext.Session.SetString("SupabaseUserId", result.UserId);
+        HttpContext.Session.SetString("ProfileId", profile.Id.ToString());
+
         return RedirectToAction("Index", "Home");
     }
 
