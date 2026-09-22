@@ -2,8 +2,8 @@ namespace PharmaFlow.Services;
 
 public interface ISupabaseAuthService
 {
-    Task<bool> SendPhoneOtpAsync(string phoneNumber, CancellationToken cancellationToken = default);
-    Task<SupabaseAuthResult> VerifyPhoneOtpAsync(string phoneNumber, string token, CancellationToken cancellationToken = default);
+    Task<SupabaseAuthResult> SignUpAsync(string email, string password, string fullName, string phoneNumber, CancellationToken cancellationToken = default);
+    Task<SupabaseAuthResult> LoginAsync(string email, string password, CancellationToken cancellationToken = default);
     string GetGoogleLoginUrl(string redirectUri);
 }
 
