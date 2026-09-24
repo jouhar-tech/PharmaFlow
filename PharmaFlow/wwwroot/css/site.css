@@ -98,3 +98,66 @@ body { margin: 0; background: #f5f7fb; color: #1f2937; }
 .sidebar-logout-form { margin: 0; padding: 0; }
 .sidebar-logout-button { width: 100%; border: 0; background: transparent; text-align: left; cursor: pointer; font-family: inherit; }
 .sidebar-logout-button:hover { color: #fff; }
+
+
+.profile-menu { position: relative; }
+.profile-trigger { display: flex; align-items: center; gap: .65rem; border: 1px solid transparent; background: transparent; border-radius: 12px; padding: .35rem .5rem; color: #334155; cursor: pointer; }
+.profile-trigger:hover, .profile-trigger[aria-expanded="true"] { background: #f8fafc; border-color: #e2e8f0; }
+.profile-avatar { display: grid; place-items: center; width: 36px; height: 36px; flex: 0 0 36px; border-radius: 50%; background: #2563eb; color: #fff; font-size: .82rem; font-weight: 800; text-transform: uppercase; }
+.profile-avatar-sm { width: 38px; height: 38px; }
+.profile-trigger-text { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.15; }
+.profile-trigger-text strong { max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .78rem; }
+.profile-trigger-text small { margin-top: .18rem; color: #64748b; font-size: .68rem; }
+.profile-chevron { color: #64748b; font-size: 1rem; }
+.profile-dropdown { position: absolute; top: calc(100% + .55rem); right: 0; z-index: 1100; width: 270px; padding: .55rem; background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; box-shadow: 0 16px 40px rgba(15,23,42,.14); }
+.profile-dropdown[hidden], .appearance-panel[hidden] { display: none; }
+.profile-dropdown-head { display: flex; align-items: center; gap: .65rem; padding: .55rem .55rem .7rem; }
+.profile-dropdown-head > div { min-width: 0; display: flex; flex-direction: column; }
+.profile-dropdown-head strong { font-size: .82rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.profile-dropdown-head small { margin-top: .15rem; color: #64748b; font-size: .7rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.profile-dropdown-divider { height: 1px; margin: .35rem 0; background: #e5eaf2; }
+.profile-menu-item { display: flex; align-items: center; width: 100%; gap: .7rem; padding: .65rem .7rem; border: 0; border-radius: 9px; background: transparent; color: #334155; text-decoration: none; font: inherit; font-size: .8rem; text-align: left; cursor: pointer; }
+.profile-menu-item:hover { background: #f1f5f9; color: #0f172a; }
+.profile-menu-item > span:first-child { width: 20px; text-align: center; }
+.profile-menu-logout { color: #dc2626; }
+.menu-item-arrow { margin-left: auto; color: #94a3b8; font-size: 1rem; }
+.appearance-panel { display: grid; grid-template-columns: repeat(3, 1fr); gap: .3rem; padding: .35rem .4rem .45rem 2.1rem; }
+.appearance-panel button { border: 1px solid #e2e8f0; border-radius: 7px; background: #fff; padding: .4rem .25rem; color: #475569; font-size: .68rem; cursor: pointer; }
+.appearance-panel button:hover, .appearance-panel button.is-selected { border-color: #2563eb; color: #2563eb; background: #eff6ff; }
+
+.profile-page { padding: 1.5rem 0 2.5rem; max-width: 980px; }
+.profile-header { display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; margin-bottom: 1.25rem; }
+.profile-back { border: 1px solid #e2e8f0; }
+.profile-card { padding: 1.5rem; }
+.profile-card-head { display: flex; align-items: center; gap: .9rem; padding-bottom: 1.25rem; border-bottom: 1px solid #e5eaf2; margin-bottom: 1.25rem; }
+.profile-avatar-large { display: grid; place-items: center; width: 58px; height: 58px; border-radius: 16px; background: #2563eb; color: #fff; font-size: 1.2rem; font-weight: 800; }
+.profile-card-head h2 { margin: 0; font-size: 1.1rem; }
+.profile-card-head p { margin: .2rem 0 0; color: #64748b; font-size: .8rem; }
+.profile-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.profile-form .form-label { color: #475569; font-size: .8rem; font-weight: 650; }
+.profile-actions { display: flex; justify-content: flex-end; margin-top: 1.25rem; padding-top: 1.1rem; border-top: 1px solid #e5eaf2; }
+.feedback-card { max-width: 680px; text-align: center; padding: 3rem 2rem; }
+.feedback-icon { font-size: 2.5rem; margin-bottom: .7rem; }
+.feedback-card h2 { font-size: 1.3rem; }
+.feedback-card p { max-width: 520px; margin: 0 auto 1.25rem; }
+
+body.theme-dark { background: #0f172a; color: #e2e8f0; }
+body.theme-dark .app-topbar, body.theme-dark .dashboard-card, body.theme-dark .dashboard-filters, body.theme-dark .profile-dropdown { background: #111c2e; border-color: #263449; color: #e2e8f0; }
+body.theme-dark .topbar-title, body.theme-dark .dashboard-title, body.theme-dark .card-heading h2, body.theme-dark .profile-card-head h2 { color: #f8fafc; }
+body.theme-dark .dashboard-subtitle, body.theme-dark .dashboard-date, body.theme-dark .dashboard-eyebrow, body.theme-dark .section-kicker, body.theme-dark .metric-label, body.theme-dark .metric-note, body.theme-dark .profile-card-head p, body.theme-dark .profile-trigger-text small { color: #94a3b8; }
+body.theme-dark .form-control, body.theme-dark .form-select { background: #0f172a; border-color: #334155; color: #e2e8f0; }
+body.theme-dark .profile-trigger:hover, body.theme-dark .profile-trigger[aria-expanded="true"] { background: #1e293b; border-color: #334155; }
+body.theme-dark .profile-menu-item { color: #cbd5e1; }
+body.theme-dark .profile-menu-item:hover { background: #1e293b; color: #fff; }
+body.theme-dark .profile-dropdown-divider, body.theme-dark .profile-card-head, body.theme-dark .profile-actions { border-color: #263449; }
+body.theme-dark .appearance-panel button { background: #0f172a; border-color: #334155; color: #cbd5e1; }
+body.theme-dark .appearance-panel button:hover, body.theme-dark .appearance-panel button.is-selected { background: #172554; border-color: #3b82f6; color: #93c5fd; }
+body.theme-dark .profile-back { background: #1e293b; color: #e2e8f0; border-color: #334155; }
+
+@media (max-width: 575.98px) {
+  .profile-trigger-text, .profile-chevron { display: none; }
+  .profile-trigger { padding: .15rem; }
+  .profile-dropdown { right: -.5rem; width: 250px; }
+  .profile-header { align-items: flex-start; flex-direction: column; }
+  .profile-form-grid { grid-template-columns: 1fr; }
+}
