@@ -1,10 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PharmaFlow.Data;
+using PharmaFlow.Filters;
+using PharmaFlow.Models;
 using PharmaFlow.Models.ViewModels;
 
 namespace PharmaFlow.Controllers;
 
+[SessionAuthorize]
 public sealed class ProfileController : Controller
 {
     private readonly ApplicationDbContext _dbContext;
@@ -68,7 +71,32 @@ public sealed class ProfileController : Controller
     }
 
     [HttpGet]
-    public IActionResult Feedback() => View();
+    public IActionResult Feedback() => View(new FeedbackViewModel());
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Feedback(FeedbackViewModel model, CancellationToken cancellationToken)
+    {
+        if (!ModelState.IsValid)
+            return View(model);
+
+        var profile = await GetCurrentProfileAsync(cancellationToken);
+        if (profile is null)
+            return RedirectToAction("Login", "Account");
+
+        var feedback = new Feedback
+        {
+            ProfileId = profile.Id,
+            Message = model.Message.Trim(),
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _dbContext.Set<Feedback>().Add(feedback);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        TempData["FeedbackMessage"] = "Thank you. Your feedback has been submitted.";
+        return RedirectToAction(nameof(Feedback));
+    }
 
     private async Task<Models.Profile?> GetCurrentProfileAsync(CancellationToken cancellationToken)
     {
