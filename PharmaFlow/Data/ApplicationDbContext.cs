@@ -41,6 +41,9 @@ public class ApplicationDbContext : DbContext
             entity.Property(p => p.Email).HasColumnName("email");
             entity.Property(p => p.BusinessName).HasColumnName("business_name");
             entity.Property(p => p.PhoneNumber).HasColumnName("phone_number");
+            entity.Property(p => p.ActiveStatus).HasColumnName("active_status");
+            entity.Property(p => p.LastLoginAt).HasColumnName("last_login_at");
+            entity.Property(p => p.LastLogoutAt).HasColumnName("last_logout_at");
             entity.Property(p => p.CreatedAt).HasColumnName("created_at");
         });
     }
