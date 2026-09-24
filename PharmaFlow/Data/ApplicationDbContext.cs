@@ -20,8 +20,8 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<Feedback>(entity =>
         {
             entity.ToTable("feedback", "public");
-            entity.HasKey(f => f.Id);
-            entity.Property(f => f.Id).HasColumnName("id");
+            entity.HasKey(f => f.FeedBackID);
+            entity.Property(f => f.FeedBackID).HasColumnName("FeedBackID");
             entity.Property(f => f.ProfileId).HasColumnName("profile_id");
             entity.Property(f => f.Message).HasColumnName("message");
             entity.Property(f => f.CreatedAt).HasColumnName("created_at");
