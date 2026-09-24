@@ -1,0 +1,66 @@
+@model PharmaFlow.Models.ViewModels.ProfileViewModel
+@{
+    ViewData["Title"] = "My Profile";
+}
+
+<div class="profile-page">
+    <div class="profile-header">
+        <div>
+            <span class="dashboard-eyebrow">Account</span>
+            <h1 class="dashboard-title">My Profile</h1>
+            <p class="dashboard-subtitle">Manage your account and pharmacy details.</p>
+        </div>
+        <a asp-controller="Home" asp-action="Index" class="btn btn-light profile-back">Back to dashboard</a>
+    </div>
+
+    @if (TempData["ProfileMessage"] is string message)
+    {
+        <div class="alert alert-success border-0 shadow-sm">@message</div>
+    }
+
+    <div class="profile-card dashboard-card">
+        <div class="profile-card-head">
+            <div class="profile-avatar-large">@((Model.Username.Length > 0 ? Model.Username[0] : 'U').ToString().ToUpperInvariant())</div>
+            <div>
+                <h2>@Model.Username</h2>
+                <p>@Model.Email</p>
+            </div>
+        </div>
+
+        <form asp-action="Index" method="post" class="profile-form">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+            <div class="profile-form-grid">
+                <div>
+                    <label asp-for="BusinessName" class="form-label"></label>
+                    <input asp-for="BusinessName" class="form-control" maxlength="120" />
+                    <span asp-validation-for="BusinessName" class="text-danger"></span>
+                </div>
+                <div>
+                    <label asp-for="Username" class="form-label"></label>
+                    <input asp-for="Username" class="form-control" maxlength="50" autocomplete="username" />
+                    <span asp-validation-for="Username" class="text-danger"></span>
+                </div>
+                <div>
+                    <label asp-for="PhoneNumber" class="form-label"></label>
+                    <input asp-for="PhoneNumber" class="form-control" maxlength="20" autocomplete="tel" placeholder="Enter mobile number" />
+                    <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                </div>
+                <div>
+                    <label asp-for="Email" class="form-label"></label>
+                    <input asp-for="Email" class="form-control" readonly />
+                    <small class="text-muted">Email is managed by your sign-in provider.</small>
+                </div>
+            </div>
+
+            <div class="profile-actions">
+                <button type="submit" class="btn btn-primary px-4">Save changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
