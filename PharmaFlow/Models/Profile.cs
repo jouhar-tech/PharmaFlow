@@ -28,11 +28,6 @@ public sealed class Profile
     [Column("active_status")]
     public short ActiveStatus { get; set; }
 
-    [Column("last_login_at")]
-    public DateTime? LastLoginAt { get; set; }
-
-    [Column("last_logout_at")]
-    public DateTime? LastLogoutAt { get; set; }
 
     [Column("created_at")]
     public DateTime CreatedAt { get; set; }
