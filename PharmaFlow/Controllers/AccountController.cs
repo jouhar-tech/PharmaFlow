@@ -131,6 +131,7 @@ public class AccountController : Controller
         }
 
         var profile = await _dbContext.Profiles.SingleOrDefaultAsync(p => p.UserId == userId, cancellationToken);
+        var isNewGoogleProfile = profile is null;
 
         if (profile is null)
         {
@@ -157,10 +158,14 @@ public class AccountController : Controller
         }
 
         SetAuthenticatedSession(
-        result,
-        profile.Id,
-        profile.BusinessName,
-        profile.Username);
+            result,
+            profile.Id,
+            profile.BusinessName,
+            profile.Username);
+
+        if (isNewGoogleProfile)
+            HttpContext.Session.SetString("GoogleProfileSetupRequired", "true");
+
         return RedirectAfterAuthentication(profile.BusinessName);
     }
 
