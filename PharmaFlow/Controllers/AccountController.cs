@@ -225,7 +225,8 @@ public class AccountController : Controller
         await _dbContext.Profiles
             .Where(p => p.Id == profileId)
             .ExecuteUpdateAsync(setters => setters
-                .SetProperty(p => p.ActiveStatus, (short)0), cancellationToken);
+                .SetProperty(p => p.ActiveStatus, (short)0)
+                .SetProperty(p => p.LastLogoutAt, DateTime.UtcNow), cancellationToken);
     }
 
     private IActionResult RedirectAfterAuthentication(string? businessName) =>
