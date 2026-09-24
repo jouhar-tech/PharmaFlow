@@ -156,7 +156,11 @@ public class AccountController : Controller
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
 
-        SetAuthenticatedSession(result, profile.Id, profile.BusinessName);
+        SetAuthenticatedSession(
+        result,
+        profile.Id,
+        profile.BusinessName,
+        profile.Username);
         return RedirectAfterAuthentication(profile.BusinessName);
     }
 
