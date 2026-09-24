@@ -28,7 +28,10 @@ public sealed class BusinessController : Controller
         if (!string.IsNullOrWhiteSpace(profile.BusinessName))
             return RedirectToAction("Index", "Home");
 
-        return View(new BusinessSetupViewModel());
+        return View(new BusinessSetupViewModel
+        {
+            PhoneNumber = profile.PhoneNumber
+        });
     }
 
     [HttpPost]
@@ -46,10 +49,23 @@ public sealed class BusinessController : Controller
         if (profile is null)
             return RedirectToAction("Login", "Account");
 
+        var googlePhoneRequired = HttpContext.Session.GetString("GoogleProfileSetupRequired") == "true";
+
+        if (googlePhoneRequired && string.IsNullOrWhiteSpace(model.PhoneNumber))
+        {
+            ModelState.AddModelError(nameof(model.PhoneNumber), "Mobile number is required for Google sign-in.");
+            return View(model);
+        }
+
         profile.BusinessName = model.BusinessName.Trim();
+
+        if (googlePhoneRequired)
+            profile.PhoneNumber = model.PhoneNumber!.Trim();
+
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         HttpContext.Session.SetString("BusinessName", profile.BusinessName);
+        HttpContext.Session.Remove("GoogleProfileSetupRequired");
         return RedirectToAction("Index", "Home");
     }
 }
