@@ -7,7 +7,8 @@ namespace PharmaFlow.Models;
 public sealed class Feedback
 {
     [Key]
-    public long Id { get; set; }
+    [Column("FeedBackID")]
+    public long FeedBackID { get; set; }
 
     [Column("profile_id")]
     public long ProfileId { get; set; }
