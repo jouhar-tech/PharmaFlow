@@ -1,0 +1,21 @@
+@{
+    ViewData["Title"] = "Send Feedback";
+}
+
+<div class="profile-page">
+    <div class="profile-header">
+        <div>
+            <span class="dashboard-eyebrow">Help & Support</span>
+            <h1 class="dashboard-title">Send Feedback</h1>
+            <p class="dashboard-subtitle">Tell us what would make PharmaFlow better for your pharmacy.</p>
+        </div>
+        <a asp-controller="Home" asp-action="Index" class="btn btn-light profile-back">Back to dashboard</a>
+    </div>
+
+    <div class="profile-card dashboard-card feedback-card">
+        <div class="feedback-icon">💬</div>
+        <h2>We'd like to hear from you</h2>
+        <p class="text-muted">Feedback submission will be connected to the PharmaFlow support backend next.</p>
+        <a class="btn btn-primary" href="mailto:support@pharmaflow.app?subject=PharmaFlow%20Feedback">Open email to send feedback</a>
+    </div>
+</div>
