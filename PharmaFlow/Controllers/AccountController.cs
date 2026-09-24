@@ -208,14 +208,10 @@ public class AccountController : Controller
     {
         try
         {
-            var loginTime = DateTime.UtcNow;
-
             await _dbContext.Profiles
                 .Where(p => p.Id == profileId)
                 .ExecuteUpdateAsync(setters => setters
-                    .SetProperty(p => p.ActiveStatus, (short)1)
-                    .SetProperty(p => p.LastLoginAt, loginTime)
-                    .SetProperty(p => p.LastLogoutAt, (DateTime?)null), cancellationToken);
+                    .SetProperty(p => p.ActiveStatus, (short)1), cancellationToken);
         }
         catch (Exception ex)
         {
@@ -225,13 +221,10 @@ public class AccountController : Controller
 
     private async Task MarkProfileInactiveAsync(long profileId, CancellationToken cancellationToken)
     {
-        var logoutTime = DateTime.UtcNow;
-
         await _dbContext.Profiles
             .Where(p => p.Id == profileId)
             .ExecuteUpdateAsync(setters => setters
-                .SetProperty(p => p.ActiveStatus, (short)0)
-                .SetProperty(p => p.LastLogoutAt, logoutTime), cancellationToken);
+                .SetProperty(p => p.ActiveStatus, (short)0), cancellationToken);
     }
 
     private IActionResult RedirectAfterAuthentication(string? businessName) =>
