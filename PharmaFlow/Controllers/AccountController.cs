@@ -45,7 +45,7 @@ public class AccountController : Controller
             return View(model);
         }
 
-        SetAuthenticatedSession(result, profile.Id, profile.BusinessName);
+        SetAuthenticatedSession(result, profile.Id, profile.BusinessName, profile.Username);
         return RedirectAfterAuthentication(profile.BusinessName);
     }
 
@@ -160,11 +160,12 @@ public class AccountController : Controller
         return RedirectAfterAuthentication(profile.BusinessName);
     }
 
-    private void SetAuthenticatedSession(SupabaseAuthResult result, long profileId, string? businessName)
+    private void SetAuthenticatedSession(SupabaseAuthResult result, long profileId, string? businessName, string username)
     {
         HttpContext.Session.SetString("SupabaseAccessToken", result.AccessToken!);
         HttpContext.Session.SetString("SupabaseUserId", result.UserId!);
         HttpContext.Session.SetString("ProfileId", profileId.ToString());
+        HttpContext.Session.SetString("Username", username);
 
         if (!string.IsNullOrWhiteSpace(businessName))
             HttpContext.Session.SetString("BusinessName", businessName);
