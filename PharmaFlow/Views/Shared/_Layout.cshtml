@@ -49,7 +49,39 @@
             <header class="app-topbar">
                 <button class="sidebar-toggle d-lg-none" type="button" id="sidebarToggle" aria-label="Open navigation">☰</button>
                 <div class="topbar-title">@ViewData["Title"]</div>
-                <div class="topbar-business"><span class="status-dot"></span>@businessName</div>
+                <div class="profile-menu">
+                    <button type="button" class="profile-trigger" id="profileTrigger" aria-expanded="false" aria-controls="profileMenu">
+                        <span class="profile-avatar">@((Context.Session.GetString("Username") ?? businessName).FirstOrDefault().ToString().ToUpperInvariant())</span>
+                        <span class="profile-trigger-text">
+                            <strong>@businessName</strong>
+                            <small>@(Context.Session.GetString("Username") ?? "Account")</small>
+                        </span>
+                        <span class="profile-chevron">⌄</span>
+                    </button>
+                    <div class="profile-dropdown" id="profileMenu" hidden>
+                        <div class="profile-dropdown-head">
+                            <span class="profile-avatar profile-avatar-sm">@((Context.Session.GetString("Username") ?? businessName).FirstOrDefault().ToString().ToUpperInvariant())</span>
+                            <div>
+                                <strong>@(Context.Session.GetString("Username") ?? "Account")</strong>
+                                <small>@businessName</small>
+                            </div>
+                        </div>
+                        <div class="profile-dropdown-divider"></div>
+                        <a asp-controller="Profile" asp-action="Index" class="profile-menu-item"><span>👤</span><span>Edit Profile</span></a>
+                        <button type="button" class="profile-menu-item profile-appearance-toggle" id="appearanceToggle"><span>◐</span><span>Appearance</span><span class="menu-item-arrow">›</span></button>
+                        <div class="appearance-panel" id="appearancePanel" hidden>
+                            <button type="button" data-theme-choice="light">Light</button>
+                            <button type="button" data-theme-choice="dark">Dark</button>
+                            <button type="button" data-theme-choice="system">System</button>
+                        </div>
+                        <a asp-controller="Profile" asp-action="Feedback" class="profile-menu-item"><span>💬</span><span>Send Feedback</span></a>
+                        <div class="profile-dropdown-divider"></div>
+                        <form asp-area="" asp-controller="Account" asp-action="Logout" method="post">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="profile-menu-item profile-menu-logout"><span>↪</span><span>Log Out</span></button>
+                        </form>
+                    </div>
+                </div>
             </header>
 
             <main role="main" class="app-content">
