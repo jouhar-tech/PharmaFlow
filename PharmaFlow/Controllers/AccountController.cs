@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using PharmaFlow.Data;
 using PharmaFlow.Models;
 using PharmaFlow.Models.ViewModels;
@@ -11,11 +12,16 @@ public class AccountController : Controller
 {
     private readonly ISupabaseAuthService _authService;
     private readonly ApplicationDbContext _dbContext;
+    private readonly ILogger<AccountController> _logger;
 
-    public AccountController(ISupabaseAuthService authService, ApplicationDbContext dbContext)
+    public AccountController(
+        ISupabaseAuthService authService,
+        ApplicationDbContext dbContext,
+        ILogger<AccountController> logger)
     {
         _authService = authService;
         _dbContext = dbContext;
+        _logger = logger;
     }
 
     [HttpGet]
@@ -46,14 +52,28 @@ public class AccountController : Controller
         }
 
         SetAuthenticatedSession(result, profile.Id, profile.BusinessName, profile.Username);
+        await MarkProfileActiveAsync(profile.Id, cancellationToken);
         return RedirectAfterAuthentication(profile.BusinessName);
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Logout()
+    public async Task<IActionResult> Logout(CancellationToken cancellationToken)
     {
-        HttpContext.Session.Clear();
+        try
+        {
+            if (long.TryParse(HttpContext.Session.GetString("ProfileId"), out var profileId))
+                await MarkProfileInactiveAsync(profileId, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Could not update profile active status during logout.");
+        }
+        finally
+        {
+            HttpContext.Session.Clear();
+        }
+
         TempData["AuthMessage"] = "You have been logged out successfully.";
         return RedirectToAction(nameof(Login));
     }
@@ -163,6 +183,8 @@ public class AccountController : Controller
             profile.BusinessName,
             profile.Username);
 
+        await MarkProfileActiveAsync(profile.Id, cancellationToken);
+
         if (isNewGoogleProfile)
             HttpContext.Session.SetString("GoogleProfileSetupRequired", "true");
 
@@ -180,6 +202,36 @@ public class AccountController : Controller
             HttpContext.Session.SetString("BusinessName", businessName);
         else
             HttpContext.Session.Remove("BusinessName");
+    }
+
+    private async Task MarkProfileActiveAsync(long profileId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var loginTime = DateTime.UtcNow;
+
+            await _dbContext.Profiles
+                .Where(p => p.Id == profileId)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(p => p.ActiveStatus, (short)1)
+                    .SetProperty(p => p.LastLoginAt, loginTime)
+                    .SetProperty(p => p.LastLogoutAt, (DateTime?)null), cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Could not update profile active status during login for profile {ProfileId}.", profileId);
+        }
+    }
+
+    private async Task MarkProfileInactiveAsync(long profileId, CancellationToken cancellationToken)
+    {
+        var logoutTime = DateTime.UtcNow;
+
+        await _dbContext.Profiles
+            .Where(p => p.Id == profileId)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(p => p.ActiveStatus, (short)0)
+                .SetProperty(p => p.LastLogoutAt, logoutTime), cancellationToken);
     }
 
     private IActionResult RedirectAfterAuthentication(string? businessName) =>
