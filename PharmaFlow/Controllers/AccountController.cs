@@ -211,7 +211,8 @@ public class AccountController : Controller
             await _dbContext.Profiles
                 .Where(p => p.Id == profileId)
                 .ExecuteUpdateAsync(setters => setters
-                    .SetProperty(p => p.ActiveStatus, (short)1), cancellationToken);
+                    .SetProperty(p => p.ActiveStatus, (short)1)
+                    .SetProperty(p => p.LastLoginAt, DateTime.UtcNow), cancellationToken);
         }
         catch (Exception ex)
         {
