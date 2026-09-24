@@ -114,6 +114,60 @@
             overlay?.addEventListener('click', () => setOpen(false));
         })();
     </script>
+    <script>
+        (() => {
+            const trigger = document.getElementById('profileTrigger');
+            const menu = document.getElementById('profileMenu');
+            const appearanceToggle = document.getElementById('appearanceToggle');
+            const appearancePanel = document.getElementById('appearancePanel');
+
+            const applyTheme = (theme) => {
+                const root = document.body;
+                root.classList.remove('theme-dark');
+                if (theme === 'dark') root.classList.add('theme-dark');
+                if (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+                    root.classList.add('theme-dark');
+
+                localStorage.setItem('pharmaflow-theme', theme);
+                document.querySelectorAll('[data-theme-choice]').forEach(button => {
+                    button.classList.toggle('is-selected', button.dataset.themeChoice === theme);
+                });
+            };
+
+            applyTheme(localStorage.getItem('pharmaflow-theme') || 'system');
+
+            trigger?.addEventListener('click', (event) => {
+                event.stopPropagation();
+                const open = menu?.hasAttribute('hidden');
+                if (open) menu?.removeAttribute('hidden');
+                else menu?.setAttribute('hidden', '');
+                trigger.setAttribute('aria-expanded', String(open));
+            });
+
+            appearanceToggle?.addEventListener('click', (event) => {
+                event.stopPropagation();
+                const open = appearancePanel?.hasAttribute('hidden');
+                if (open) appearancePanel?.removeAttribute('hidden');
+                else appearancePanel?.setAttribute('hidden', '');
+            });
+
+            document.querySelectorAll('[data-theme-choice]').forEach(button => {
+                button.addEventListener('click', () => applyTheme(button.dataset.themeChoice));
+            });
+
+            document.addEventListener('click', (event) => {
+                if (!event.target.closest('.profile-menu')) {
+                    menu?.setAttribute('hidden', '');
+                    trigger?.setAttribute('aria-expanded', 'false');
+                }
+            });
+
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+                if ((localStorage.getItem('pharmaflow-theme') || 'system') === 'system')
+                    applyTheme('system');
+            });
+        })();
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
