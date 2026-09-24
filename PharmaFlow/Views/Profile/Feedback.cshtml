@@ -1,3 +1,4 @@
+@model PharmaFlow.Models.ViewModels.FeedbackViewModel
 @{
     ViewData["Title"] = "Send Feedback";
 }
@@ -12,13 +13,32 @@
         <a asp-controller="Home" asp-action="Index" class="btn btn-light profile-back">Back to dashboard</a>
     </div>
 
+    @if (TempData["FeedbackMessage"] is string message)
+    {
+        <div class="alert alert-success border-0 shadow-sm">@message</div>
+    }
+
     <div class="profile-card dashboard-card feedback-card">
         <div class="feedback-icon">💬</div>
         <h2>We'd like to hear from you</h2>
-        <p class="text-muted">The feedback form UI is ready. We will connect it to the support backend when the feedback module is implemented.</p>
-        <div class="feedback-form-placeholder">
-            <textarea class="form-control" rows="5" placeholder="Write your feedback..." disabled></textarea>
-            <button type="button" class="btn btn-primary mt-3" disabled>Send Feedback</button>
-        </div>
+        <p class="text-muted">Share a suggestion, report an issue, or tell us what you would like to see next.</p>
+
+        <form asp-action="Feedback" method="post" class="text-start feedback-form-placeholder">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+            <label asp-for="Message" class="form-label fw-semibold">Your feedback</label>
+            <textarea asp-for="Message" class="form-control" rows="6" maxlength="2000"
+                      placeholder="Write your feedback here..."></textarea>
+            <span asp-validation-for="Message" class="text-danger"></span>
+
+            <div class="d-flex justify-content-end mt-3">
+                <button type="submit" class="btn btn-primary px-4">Send Feedback</button>
+            </div>
+        </form>
     </div>
 </div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
