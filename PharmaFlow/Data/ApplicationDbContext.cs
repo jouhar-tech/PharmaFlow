@@ -11,10 +11,25 @@ public class ApplicationDbContext : DbContext
     }
 
     public DbSet<Profile> Profiles => Set<Profile>();
+    public DbSet<Feedback> Feedback => Set<Feedback>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<Feedback>(entity =>
+        {
+            entity.ToTable("feedback", "public");
+            entity.HasKey(f => f.Id);
+            entity.Property(f => f.Id).HasColumnName("id");
+            entity.Property(f => f.ProfileId).HasColumnName("profile_id");
+            entity.Property(f => f.Message).HasColumnName("message");
+            entity.Property(f => f.CreatedAt).HasColumnName("created_at");
+            entity.HasOne<Profile>()
+                .WithMany()
+                .HasForeignKey(f => f.ProfileId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
 
         modelBuilder.Entity<Profile>(entity =>
         {
