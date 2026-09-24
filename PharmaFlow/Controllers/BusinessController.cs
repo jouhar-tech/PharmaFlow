@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PharmaFlow.Data;
+using PharmaFlow.Filters;
 using PharmaFlow.Models.ViewModels;
 
 namespace PharmaFlow.Controllers;
 
+[SessionAuthorize]
 public sealed class BusinessController : Controller
 {
     private readonly ApplicationDbContext _dbContext;
