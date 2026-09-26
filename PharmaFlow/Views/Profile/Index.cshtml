@@ -27,7 +27,7 @@
             </div>
         </div>
 
-        <form asp-action="Index" method="post" class="profile-form">
+        <form asp-action="Index" method="post" class="profile-form" data-online-required="true">
             @Html.AntiForgeryToken()
             <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
