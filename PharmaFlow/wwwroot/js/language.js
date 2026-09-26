@@ -26,6 +26,12 @@
             closeNavigation: "Close navigation",
             openNavigation: "Open navigation",
             privacy: "Privacy",
+            offlineTitle: "You're offline",
+            offlineMessage: "You're viewing saved data. Internet connection is required to add or update information.",
+            onlineTitle: "You're back online",
+            onlineMessage: "All features are available again.",
+            onlineRequiredTitle: "Internet connection required",
+            onlineRequiredMessage: "This action cannot be completed while you are offline.",
 
             valueKicker: "Your PharmaFlow value",
             valueHeading: "See how much money PharmaFlow protects for your pharmacy",
@@ -127,6 +133,12 @@
             closeNavigation: "ನ್ಯಾವಿಗೇಶನ್ ಮುಚ್ಚಿ",
             openNavigation: "ನ್ಯಾವಿಗೇಶನ್ ತೆರೆಯಿರಿ",
             privacy: "ಗೌಪ್ಯತೆ",
+            offlineTitle: "ನೀವು ಆಫ್‌ಲೈನ್‌ನಲ್ಲಿದ್ದೀರಿ",
+            offlineMessage: "ನೀವು ಉಳಿಸಿದ ಡೇಟಾವನ್ನು ನೋಡುತ್ತಿದ್ದೀರಿ. ಮಾಹಿತಿ ಸೇರಿಸಲು ಅಥವಾ ನವೀಕರಿಸಲು ಇಂಟರ್ನೆಟ್ ಸಂಪರ್ಕ ಅಗತ್ಯವಿದೆ.",
+            onlineTitle: "ನೀವು ಮತ್ತೆ ಆನ್‌ಲೈನ್‌ನಲ್ಲಿದ್ದೀರಿ",
+            onlineMessage: "ಎಲ್ಲಾ ವೈಶಿಷ್ಟ್ಯಗಳು ಮತ್ತೆ ಲಭ್ಯವಿವೆ.",
+            onlineRequiredTitle: "ಇಂಟರ್ನೆಟ್ ಸಂಪರ್ಕ ಅಗತ್ಯವಿದೆ",
+            onlineRequiredMessage: "ನೀವು ಆಫ್‌ಲೈನ್‌ನಲ್ಲಿರುವಾಗ ಈ ಕ್ರಿಯೆಯನ್ನು ಪೂರ್ಣಗೊಳಿಸಲು ಸಾಧ್ಯವಿಲ್ಲ.",
 
             valueKicker: "ನಿಮ್ಮ PharmaFlow ಮೌಲ್ಯ",
             valueHeading: "PharmaFlow ನಿಮ್ಮ ಫಾರ್ಮಸಿಗಾಗಿ ಎಷ್ಟು ಹಣವನ್ನು ಉಳಿಸುತ್ತದೆ ನೋಡಿ",
@@ -228,6 +240,12 @@
             closeNavigation: "नेविगेशन बंद करें",
             openNavigation: "नेविगेशन खोलें",
             privacy: "गोपनीयता",
+            offlineTitle: "आप ऑफ़लाइन हैं",
+            offlineMessage: "आप सहेजे गए डेटा को देख रहे हैं। जानकारी जोड़ने या अपडेट करने के लिए इंटरनेट कनेक्शन आवश्यक है।",
+            onlineTitle: "आप फिर से ऑनलाइन हैं",
+            onlineMessage: "सभी सुविधाएँ फिर से उपलब्ध हैं।",
+            onlineRequiredTitle: "इंटरनेट कनेक्शन आवश्यक है",
+            onlineRequiredMessage: "ऑफ़लाइन होने पर यह कार्य पूरा नहीं किया जा सकता।",
 
             valueKicker: "आपका PharmaFlow मूल्य",
             valueHeading: "देखें कि PharmaFlow आपकी फार्मेसी के लिए कितना पैसा बचाता है",
@@ -353,6 +371,10 @@
             button.classList.toggle("is-selected", button.dataset.languageChoice === selected);
             button.setAttribute("aria-pressed", String(button.dataset.languageChoice === selected));
         });
+
+        window.dispatchEvent(new CustomEvent("pharmaflow:language-changed", {
+            detail: { language: selected }
+        }));
     };
 
     window.pharmaFlowLanguage = {
