@@ -15,7 +15,7 @@ public sealed class ExpiryProductItemViewModel
     public long BatchId { get; init; }
     public string ProductName { get; init; } = string.Empty;
     public string BatchNumber { get; init; } = string.Empty;
-    public DateTime ExpiryDate { get; init; }
+    public DateOnly ExpiryDate { get; init; }
     public int DaysLeft { get; init; }
     public decimal Quantity { get; init; }
     public decimal PurchaseUnitPrice { get; init; }
