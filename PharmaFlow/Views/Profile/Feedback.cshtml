@@ -15,7 +15,7 @@
 
     @if (TempData["FeedbackMessage"] is string message)
     {
-        <div class="alert alert-success border-0 shadow-sm">@message</div>
+        <div class="alert alert-success border-0 shadow-sm" data-i18n-message="feedbackSubmitted">@message</div>
     }
 
     <div class="profile-card dashboard-card feedback-card">

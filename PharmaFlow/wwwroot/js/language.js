@@ -71,6 +71,12 @@
             noRecentActivity: "No recent activity available yet.",
 
             account: "Account",
+            businessNameField: "Business Name",
+            usernameField: "Username",
+            phoneNumberField: "Phone Number",
+            emailField: "Email",
+            profileUpdated: "Profile updated successfully.",
+            feedbackSubmitted: "Thank you. Your feedback has been submitted.",
             myProfile: "My Profile",
             manageAccount: "Manage your account and pharmacy details.",
             backToDashboard: "Back to dashboard",
@@ -166,6 +172,12 @@
             noRecentActivity: "ಇತ್ತೀಚಿನ ಚಟುವಟಿಕೆ ಇನ್ನೂ ಲಭ್ಯವಿಲ್ಲ.",
 
             account: "ಖಾತೆ",
+            businessNameField: "ವ್ಯವಹಾರದ ಹೆಸರು",
+            usernameField: "ಬಳಕೆದಾರ ಹೆಸರು",
+            phoneNumberField: "ದೂರವಾಣಿ ಸಂಖ್ಯೆ",
+            emailField: "ಇಮೇಲ್",
+            profileUpdated: "ಪ್ರೊಫೈಲ್ ಯಶಸ್ವಿಯಾಗಿ ನವೀಕರಿಸಲಾಗಿದೆ.",
+            feedbackSubmitted: "ಧನ್ಯವಾದಗಳು. ನಿಮ್ಮ ಪ್ರತಿಕ್ರಿಯೆಯನ್ನು ಸಲ್ಲಿಸಲಾಗಿದೆ.",
             myProfile: "ನನ್ನ ಪ್ರೊಫೈಲ್",
             manageAccount: "ನಿಮ್ಮ ಖಾತೆ ಮತ್ತು ಫಾರ್ಮಸಿ ವಿವರಗಳನ್ನು ನಿರ್ವಹಿಸಿ.",
             backToDashboard: "ಡ್ಯಾಶ್‌ಬೋರ್ಡ್‌ಗೆ ಹಿಂತಿರುಗಿ",
@@ -261,6 +273,12 @@
             noRecentActivity: "हाल की गतिविधि अभी उपलब्ध नहीं है।",
 
             account: "खाता",
+            businessNameField: "व्यवसाय का नाम",
+            usernameField: "उपयोगकर्ता नाम",
+            phoneNumberField: "फ़ोन नंबर",
+            emailField: "ईमेल",
+            profileUpdated: "प्रोफ़ाइल सफलतापूर्वक अपडेट की गई।",
+            feedbackSubmitted: "धन्यवाद। आपकी प्रतिक्रिया सबमिट कर दी गई है।",
             myProfile: "मेरी प्रोफ़ाइल",
             manageAccount: "अपना खाता और फार्मेसी विवरण प्रबंधित करें।",
             backToDashboard: "डैशबोर्ड पर वापस जाएँ",
@@ -297,6 +315,11 @@
 
         document.querySelectorAll("[data-i18n]").forEach(element => {
             const key = element.dataset.i18n;
+            if (dictionary[key]) element.textContent = dictionary[key];
+        });
+
+        document.querySelectorAll("[data-i18n-message]").forEach(element => {
+            const key = element.dataset.i18nMessage;
             if (dictionary[key]) element.textContent = dictionary[key];
         });
 

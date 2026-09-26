@@ -15,7 +15,7 @@
 
     @if (TempData["ProfileMessage"] is string message)
     {
-        <div class="alert alert-success border-0 shadow-sm">@message</div>
+        <div class="alert alert-success border-0 shadow-sm" data-i18n-message="profileUpdated">@message</div>
     }
 
     <div class="profile-card dashboard-card">
@@ -33,22 +33,22 @@
 
             <div class="profile-form-grid">
                 <div>
-                    <label asp-for="BusinessName" class="form-label"></label>
+                    <label asp-for="BusinessName" class="form-label" data-i18n="businessNameField"></label>
                     <input asp-for="BusinessName" class="form-control" maxlength="120" />
                     <span asp-validation-for="BusinessName" class="text-danger"></span>
                 </div>
                 <div>
-                    <label asp-for="Username" class="form-label"></label>
+                    <label asp-for="Username" class="form-label" data-i18n="usernameField"></label>
                     <input asp-for="Username" class="form-control" maxlength="50" autocomplete="username" />
                     <span asp-validation-for="Username" class="text-danger"></span>
                 </div>
                 <div>
-                    <label asp-for="PhoneNumber" class="form-label"></label>
+                    <label asp-for="PhoneNumber" class="form-label" data-i18n="phoneNumberField"></label>
                     <input asp-for="PhoneNumber" class="form-control" maxlength="20" autocomplete="tel" placeholder="Enter mobile number" data-i18n-placeholder="phonePlaceholder" />
                     <span asp-validation-for="PhoneNumber" class="text-danger"></span>
                 </div>
                 <div>
-                    <label asp-for="Email" class="form-label"></label>
+                    <label asp-for="Email" class="form-label" data-i18n="emailField"></label>
                     <input asp-for="Email" class="form-control" readonly />
                     <small class="text-muted" data-i18n="emailManagedByProvider">Email is managed by your sign-in provider.</small>
                 </div>
