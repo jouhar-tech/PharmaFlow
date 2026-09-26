@@ -81,7 +81,7 @@ public sealed class ExpiryProductsController : Controller
         if (!long.TryParse(profileIdValue, out var profileId))
             return new ExpiryData();
 
-        var today = DateTime.Today;
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
         var ninetyDaysFromToday = today.AddDays(90);
 
         var rows = await _dbContext.ProductBatches
@@ -92,8 +92,8 @@ public sealed class ExpiryProductsController : Controller
                 batch.IsActive &&
                 !batch.IsQuarantined &&
                 batch.QuantityOnHand > 0 &&
-                batch.ExpiryDate.Date >= today &&
-                batch.ExpiryDate.Date <= ninetyDaysFromToday)
+                batch.ExpiryDate >= today &&
+                batch.ExpiryDate <= ninetyDaysFromToday)
             .OrderBy(batch => batch.ExpiryDate)
             .Select(batch => new
             {
@@ -115,7 +115,7 @@ public sealed class ExpiryProductsController : Controller
                 ProductName = row.ProductName,
                 BatchNumber = row.BatchNumber,
                 ExpiryDate = row.ExpiryDate,
-                DaysLeft = (row.ExpiryDate.Date - today).Days,
+                DaysLeft = row.ExpiryDate.DayNumber - today.DayNumber,
                 Quantity = row.Quantity,
                 PurchaseUnitPrice = row.PurchaseUnitPrice,
                 TotalValue = row.Quantity * row.PurchaseUnitPrice
