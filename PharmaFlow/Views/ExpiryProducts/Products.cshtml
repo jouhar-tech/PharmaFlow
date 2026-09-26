@@ -1,0 +1,86 @@
+@model PharmaFlow.Models.ViewModels.ExpiringProductsViewModel
+
+@{
+    var isCritical = Model.ViewMode == "critical";
+    var isUpcoming = Model.ViewMode == "upcoming";
+    var titleKey = isCritical ? "criticalExpiryProducts" : isUpcoming ? "upcomingExpiryProducts" : "atRiskExpiryProducts";
+    var title = isCritical ? "Critical Expiry Products" : isUpcoming ? "Upcoming Expiry Products" : "At-Risk Expiry Inventory";
+}
+
+<div class="expiry-page">
+    <div class="expiry-page-header">
+        <div>
+            <span class="dashboard-eyebrow" data-i18n="expiryManagement">Expiry Management</span>
+            <h1 class="dashboard-title" data-i18n="@titleKey">@title</h1>
+            <p class="dashboard-subtitle">
+                @if (isCritical)
+                {
+                    <span data-i18n="criticalExpirySubtitle">Products with stock expiring within the next 30 days.</span>
+                }
+                else if (isUpcoming)
+                {
+                    <span data-i18n="upcomingExpirySubtitle">Products with stock expiring in 31–90 days.</span>
+                }
+                else
+                {
+                    <span data-i18n="atRiskExpirySubtitle">All non-expired stock with an expiry date within 90 days.</span>
+                }
+            </p>
+        </div>
+        <a asp-controller="ExpiryProducts" asp-action="Index" class="btn btn-light border expiry-back-link" data-i18n="backToExpiry">Back to expiry overview</a>
+    </div>
+
+    @if (Model.ViewMode == "at-risk")
+    {
+        <section class="expiry-total-card">
+            <div>
+                <span class="expiry-total-label" data-i18n="totalAtRiskValue">Total At-Risk Value</span>
+                <strong>₹ @Model.AtRiskValue.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</strong>
+                <span data-i18n="atRiskValueSubtext">Cost value of stock expiring within 90 days</span>
+            </div>
+            <div class="expiry-total-icon">₹</div>
+        </section>
+    }
+    else
+    {
+        <section class="expiry-count-bar">
+            <span>
+                <strong>@Model.Products.Count</strong>
+                <span data-i18n="productsFound">products found</span>
+            </span>
+        </section>
+    }
+
+    <section class="expiry-products-section" aria-label="Expiring products">
+        @if (Model.Products.Count == 0)
+        {
+            <div class="dashboard-card expiry-empty-state">
+                <div class="expiry-empty-icon">✓</div>
+                <h2 data-i18n="noExpiringProducts">No expiring products found</h2>
+                <p>
+                    @if (isCritical)
+                    {
+                        <span data-i18n="noCriticalProducts">There are no in-stock products expiring within 30 days.</span>
+                    }
+                    else if (isUpcoming)
+                    {
+                        <span data-i18n="noUpcomingProducts">There are no in-stock products expiring in 31–90 days.</span>
+                    }
+                    else
+                    {
+                        <span data-i18n="noAtRiskProducts">There are no in-stock products expiring within 90 days.</span>
+                    }
+                </p>
+            </div>
+        }
+        else
+        {
+            <div class="expiry-products-grid">
+                @foreach (var product in Model.Products)
+                {
+                    <partial name="_ExpiryProductCard" model="product" />
+                }
+            </div>
+        }
+    </section>
+</div>
