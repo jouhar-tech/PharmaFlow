@@ -8,30 +8,60 @@
         <div>
             <span class="dashboard-eyebrow">Welcome back</span>
             <h1 class="dashboard-title">@businessName Dashboard</h1>
-            <p class="dashboard-subtitle">Monitor your pharmacy activity at a glance.</p>
+            <p class="dashboard-subtitle">Monitor your pharmacy activity and the value PharmaFlow creates for your business.</p>
         </div>
         <div class="dashboard-date">@DateTime.Now.ToString("dd MMM yyyy")</div>
     </div>
 
-    <form class="dashboard-filters" method="get">
-        <div class="filter-field">
-            <label for="dashboardPeriod">Period</label>
-            <select id="dashboardPeriod" name="period" class="form-select">
-                <option>Today</option>
-                <option>Last 7 days</option>
-                <option>Last 30 days</option>
-                <option>This year</option>
-            </select>
+    <section class="dashboard-value-card" aria-label="PharmaFlow business value">
+        <div class="value-card-main">
+            <div>
+                <span class="section-kicker value-kicker">Your PharmaFlow value</span>
+                <h2>See how much money PharmaFlow protects for your pharmacy</h2>
+                <p class="value-description">
+                    As your sales, purchases, inventory and payment data grows, PharmaFlow will calculate the
+                    estimated money saved or protected through better stock control, expiry prevention and payment follow-up.
+                </p>
+            </div>
+            <div class="value-total">
+                <span class="value-total-label">Estimated money saved</span>
+                <strong>₹ —</strong>
+                <small>Value will appear automatically from your actual business data.</small>
+            </div>
         </div>
-        <div class="filter-field">
-            <label for="dashboardBranch">Branch</label>
-            <select id="dashboardBranch" name="branch" class="form-select">
-                <option>All branches</option>
-                <option>Main branch</option>
-            </select>
+
+        <div class="value-proof-grid">
+            <div class="value-proof">
+                <span class="value-proof-icon">⌛</span>
+                <div>
+                    <strong>Expiry loss prevented</strong>
+                    <span>Potential loss avoided from better expiry tracking</span>
+                </div>
+                <b>₹ —</b>
+            </div>
+            <div class="value-proof">
+                <span class="value-proof-icon">↗</span>
+                <div>
+                    <strong>Cash recovered</strong>
+                    <span>Outstanding customer payments followed up faster</span>
+                </div>
+                <b>₹ —</b>
+            </div>
+            <div class="value-proof">
+                <span class="value-proof-icon">▤</span>
+                <div>
+                    <strong>Inventory loss reduced</strong>
+                    <span>Better stock visibility helps reduce avoidable holding losses</span>
+                </div>
+                <b>₹ —</b>
+            </div>
         </div>
-        <button type="submit" class="btn dashboard-filter-button">Apply filters</button>
-    </form>
+
+        <div class="value-card-footer">
+            <span>PharmaFlow should show business impact, not just business data.</span>
+            <span>Calculated from your real records</span>
+        </div>
+    </section>
 
     <section class="dashboard-grid" aria-label="Pharmacy overview">
         <article class="dashboard-card metric-card metric-warning">
