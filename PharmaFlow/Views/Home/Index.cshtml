@@ -1,4 +1,6 @@
-﻿@{
+@model PharmaFlow.Models.ViewModels.DashboardViewModel
+
+@{
     ViewData["Title"] = "Dashboard";
     var businessName = Context.Session.GetString("BusinessName") ?? "PharmaFlow";
 }
@@ -13,55 +15,58 @@
         <div class="dashboard-date">@DateTime.Now.ToString("dd MMM yyyy")</div>
     </div>
 
-    <section class="dashboard-value-card" aria-label="PharmaFlow business value">
-        <div class="value-card-main">
-            <div>
-                <span class="section-kicker value-kicker">Your PharmaFlow value</span>
-                <h2>See how much money PharmaFlow protects for your pharmacy</h2>
-                <p class="value-description">
-                    As your sales, purchases, inventory and payment data grows, PharmaFlow will calculate the
-                    estimated money saved or protected through better stock control, expiry prevention and payment follow-up.
-                </p>
+    @if (Model.HasPharmaFlowValue)
+    {
+        <section class="dashboard-value-card" aria-label="PharmaFlow business value">
+            <div class="value-card-main">
+                <div>
+                    <span class="section-kicker value-kicker">Your PharmaFlow value</span>
+                    <h2>See how much money PharmaFlow protects for your pharmacy</h2>
+                    <p class="value-description">
+                        As your sales, purchases, inventory and payment data grows, PharmaFlow will calculate the
+                        estimated money saved or protected through better stock control, expiry prevention and payment follow-up.
+                    </p>
+                </div>
+                <div class="value-total">
+                    <span class="value-total-label">Estimated money saved</span>
+                    <strong>₹ @Model.EstimatedMoneySaved.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</strong>
+                    <small>Calculated from your actual business data.</small>
+                </div>
             </div>
-            <div class="value-total">
-                <span class="value-total-label">Estimated money saved</span>
-                <strong>₹ —</strong>
-                <small>Value will appear automatically from your actual business data.</small>
-            </div>
-        </div>
 
-        <div class="value-proof-grid">
-            <div class="value-proof">
-                <span class="value-proof-icon">⌛</span>
-                <div>
-                    <strong>Expiry loss prevented</strong>
-                    <span>Potential loss avoided from better expiry tracking</span>
+            <div class="value-proof-grid">
+                <div class="value-proof">
+                    <span class="value-proof-icon">⌛</span>
+                    <div>
+                        <strong>Expiry loss prevented</strong>
+                        <span>Potential loss avoided from better expiry tracking</span>
+                    </div>
+                    <b>₹ @Model.ExpiryLossPrevented.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</b>
                 </div>
-                <b>₹ —</b>
-            </div>
-            <div class="value-proof">
-                <span class="value-proof-icon">↗</span>
-                <div>
-                    <strong>Cash recovered</strong>
-                    <span>Outstanding customer payments followed up faster</span>
+                <div class="value-proof">
+                    <span class="value-proof-icon">↗</span>
+                    <div>
+                        <strong>Cash recovered</strong>
+                        <span>Outstanding customer payments followed up faster</span>
+                    </div>
+                    <b>₹ @Model.CashRecovered.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</b>
                 </div>
-                <b>₹ —</b>
-            </div>
-            <div class="value-proof">
-                <span class="value-proof-icon">▤</span>
-                <div>
-                    <strong>Inventory loss reduced</strong>
-                    <span>Better stock visibility helps reduce avoidable holding losses</span>
+                <div class="value-proof">
+                    <span class="value-proof-icon">▤</span>
+                    <div>
+                        <strong>Inventory loss reduced</strong>
+                        <span>Better stock visibility helps reduce avoidable holding losses</span>
+                    </div>
+                    <b>₹ @Model.InventoryLossReduced.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</b>
                 </div>
-                <b>₹ —</b>
             </div>
-        </div>
 
-        <div class="value-card-footer">
-            <span>PharmaFlow should show business impact, not just business data.</span>
-            <span>Calculated from your real records</span>
-        </div>
-    </section>
+            <div class="value-card-footer">
+                <span>PharmaFlow should show business impact, not just business data.</span>
+                <span>Calculated from your real records</span>
+            </div>
+        </section>
+    }
 
     <section class="dashboard-grid" aria-label="Pharmacy overview">
         <article class="dashboard-card metric-card metric-warning">

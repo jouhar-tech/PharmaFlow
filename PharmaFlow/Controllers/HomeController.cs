@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using PharmaFlow.Filters;
 using PharmaFlow.Models;
+using PharmaFlow.Models.ViewModels;
 using System.Diagnostics;
 
 namespace PharmaFlow.Controllers
@@ -11,7 +12,9 @@ namespace PharmaFlow.Controllers
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Index()
         {
-            return View();
+            var dashboard = new DashboardViewModel();
+
+            return View(dashboard);
         }
 
         public IActionResult Privacy()
