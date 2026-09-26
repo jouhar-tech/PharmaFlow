@@ -297,7 +297,19 @@ body.theme-dark .expiry-total-icon { background: #1e3a8a; color: #bfdbfe; }
   .expiry-page-header { align-items: flex-start; flex-direction: column; }
   .expiry-back-link { width: 100%; }
   .expiry-summary-grid,
-  .expiry-products-grid { grid-template-columns: 1fr; }
-  .expiry-summary-card { min-height: 155px; }
+  .expiry-products-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
+  .expiry-summary-card { min-height: 145px; padding: 1rem; }
+  .expiry-summary-icon { width: 36px; height: 36px; margin-bottom: .75rem; }
+  .expiry-summary-card > strong { font-size: 1.35rem; }
+  .expiry-summary-card > span:not(.expiry-summary-icon):not(.expiry-summary-label):not(.expiry-summary-arrow) { font-size: .68rem; }
+  .expiry-summary-arrow { right: .75rem; bottom: .75rem; font-size: 1rem; }
+  .expiry-product-card { padding: .9rem; }
+  .expiry-product-card-top { gap: .6rem; padding-bottom: .75rem; }
+  .expiry-product-icon { width: 34px; height: 34px; flex-basis: 34px; font-size: .68rem; }
+  .expiry-product-heading h3 { font-size: .8rem; }
+  .expiry-product-heading span { font-size: .64rem; }
+  .expiry-product-details { gap: .65rem .55rem; padding-top: .75rem; }
+  .expiry-detail-label { font-size: .58rem; }
+  .expiry-product-details strong { font-size: .7rem; }
   .expiry-total-card { align-items: flex-start; }
 }
