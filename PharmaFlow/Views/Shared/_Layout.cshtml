@@ -154,6 +154,30 @@
     </script>
     <script>
         (() => {
+            const dropdowns = document.querySelectorAll('.sidebar-dropdown-toggle');
+
+            dropdowns.forEach(trigger => {
+                const menu = document.getElementById(trigger.getAttribute('aria-controls'));
+                trigger.addEventListener('click', () => {
+                    const willOpen = trigger.getAttribute('aria-expanded') !== 'true';
+
+                    dropdowns.forEach(other => {
+                        const otherMenu = document.getElementById(other.getAttribute('aria-controls'));
+                        if (other !== trigger) {
+                            other.setAttribute('aria-expanded', 'false');
+                            otherMenu?.setAttribute('hidden', '');
+                        }
+                    });
+
+                    trigger.setAttribute('aria-expanded', String(willOpen));
+                    if (willOpen) menu?.removeAttribute('hidden');
+                    else menu?.setAttribute('hidden', '');
+                });
+            });
+        })();
+    </script>
+    <script>
+        (() => {
             const trigger = document.getElementById('profileTrigger');
             const menu = document.getElementById('profileMenu');
             const appearanceToggle = document.getElementById('appearanceToggle');
