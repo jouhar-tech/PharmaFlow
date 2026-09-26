@@ -46,6 +46,24 @@ body { margin: 0; background: #f5f7fb; color: #1f2937; }
 .dashboard-title { margin: .25rem 0; font-size: clamp(1.5rem, 3vw, 2.25rem); font-weight: 750; letter-spacing: -.04em; }
 .dashboard-subtitle { margin: 0; color: #64748b; }
 .dashboard-date { color: #64748b; font-size: .9rem; white-space: nowrap; }
+
+.dashboard-value-card { margin-bottom: 1.25rem; padding: 1.35rem; background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%); border: 1px solid #dbe6f4; border-radius: 1rem; box-shadow: 0 8px 24px rgba(37, 99, 235, .07); }
+.value-card-main { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(250px, .75fr); gap: 1.5rem; align-items: center; }
+.value-kicker { color: #2563eb; }
+.value-card-main h2 { margin: .3rem 0 .45rem; font-size: clamp(1.2rem, 2.2vw, 1.65rem); font-weight: 800; letter-spacing: -.025em; }
+.value-description { max-width: 760px; margin: 0; color: #64748b; line-height: 1.6; font-size: .86rem; }
+.value-total { padding: 1rem 1.1rem; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: .85rem; text-align: right; }
+.value-total-label { display: block; color: #475569; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+.value-total strong { display: block; margin: .2rem 0; color: #1d4ed8; font-size: 2rem; line-height: 1.1; letter-spacing: -.04em; }
+.value-total small { display: block; color: #64748b; font-size: .7rem; line-height: 1.45; }
+.value-proof-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .75rem; margin-top: 1rem; }
+.value-proof { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: .65rem; align-items: center; padding: .8rem; border: 1px solid #e5eaf2; border-radius: .8rem; background: rgba(255,255,255,.8); }
+.value-proof-icon { display: grid; place-items: center; width: 34px; height: 34px; border-radius: .65rem; background: #eef2ff; color: #4338ca; font-size: .95rem; font-weight: 800; }
+.value-proof div { min-width: 0; }
+.value-proof strong { display: block; color: #334155; font-size: .74rem; }
+.value-proof span { display: block; margin-top: .15rem; color: #94a3b8; font-size: .66rem; line-height: 1.35; }
+.value-proof b { color: #1e293b; font-size: .9rem; white-space: nowrap; }
+.value-card-footer { display: flex; justify-content: space-between; gap: 1rem; margin-top: .9rem; padding-top: .8rem; border-top: 1px solid #e5eaf2; color: #64748b; font-size: .68rem; }
 .dashboard-filters { display: flex; align-items: flex-end; flex-wrap: wrap; gap: .75rem; padding: 1rem; margin-bottom: 1.25rem; background: #fff; border: 1px solid #e5eaf2; border-radius: 1rem; }
 .filter-field { min-width: 165px; flex: 1; }
 .filter-field label { display: block; margin-bottom: .35rem; color: #475569; font-size: .8rem; font-weight: 600; }
