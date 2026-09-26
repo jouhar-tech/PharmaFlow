@@ -31,7 +31,7 @@
                 <a class="sidebar-link" href="#"><span class="sidebar-icon">▥</span><span data-i18n="dailySalesReports">Daily Sales Reports</span></a>
                 <a class="sidebar-link" href="#"><span class="sidebar-icon">♙</span><span data-i18n="customerManagement">Customer Management</span><span class="sidebar-badge">Voice</span></a>
                 <a class="sidebar-link" href="#"><span class="sidebar-icon">↗</span><span data-i18n="topSellingLowSelling">Top Selling / Low Selling</span></a>
-            </nav>      </nav>
+            </nav>
 
             <div class="sidebar-footer">
                 <div class="sidebar-footer-label" data-i18n="pharmacyManagement">Pharmacy management</div>
@@ -78,13 +78,15 @@
                         <a asp-controller="Profile" asp-action="Feedback" class="profile-menu-item"><span>💬</span><span data-i18n="sendFeedback">Send Feedback</span></a>
                         <a class="profile-menu-item" href="#"><span>⚙</span><span data-i18n="settings">Settings</span></a>
                         <div class="profile-dropdown-divider"></div>
-                        <form asp-area="" asp-controller="Account" asp-action="Logout" method="post">
+                        <form asp-area="" asp-controller="Account" asp-action="Logout" method="post" data-online-required="true">
                             @Html.AntiForgeryToken()
                             <button type="submit" class="profile-menu-item profile-menu-logout"><span>↪</span><span data-i18n="logOut">Log Out</span></button>
                         </form>
                     </div>
                 </div>
             </header>
+
+            <div class="pharmaflow-connectivity-banner" id="pharmaflowConnectivityBanner" hidden role="status" aria-live="polite"></div>
 
             <main role="main" class="app-content">
                 @RenderBody()
@@ -101,6 +103,8 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="~/js/language.js" asp-append-version="true"></script>
+    <script src="~/js/offline-store.js" asp-append-version="true"></script>
+    <script src="~/js/offline.js" asp-append-version="true"></script>
     <script>
         (() => {
             const sidebar = document.getElementById('appSidebar');
