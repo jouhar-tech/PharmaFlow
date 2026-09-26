@@ -8,9 +8,9 @@
 <div class="dashboard-page">
     <div class="dashboard-header">
         <div>
-            <span class="dashboard-eyebrow">Welcome back</span>
-            <h1 class="dashboard-title">@businessName Dashboard</h1>
-            <p class="dashboard-subtitle">Monitor your pharmacy activity and the value PharmaFlow creates for your business.</p>
+            <span class="dashboard-eyebrow" data-i18n="welcomeBack">Welcome back</span>
+            <h1 class="dashboard-title">@businessName <span data-i18n="dashboard">Dashboard</span></h1>
+            <p class="dashboard-subtitle"> <span data-i18n="dashboardSubtitle">Monitor your pharmacy activity and the value PharmaFlow creates for your business.</span></p>
         </div>
         <div class="dashboard-date">@DateTime.Now.ToString("dd MMM yyyy")</div>
     </div>
@@ -20,17 +20,14 @@
         <section class="dashboard-value-card" aria-label="PharmaFlow business value">
             <div class="value-card-main">
                 <div>
-                    <span class="section-kicker value-kicker">Your PharmaFlow value</span>
-                    <h2>See how much money PharmaFlow protects for your pharmacy</h2>
-                    <p class="value-description">
-                        As your sales, purchases, inventory and payment data grows, PharmaFlow will calculate the
-                        estimated money saved or protected through better stock control, expiry prevention and payment follow-up.
-                    </p>
+                    <span class="section-kicker value-kicker" data-i18n="valueKicker">Your PharmaFlow value</span>
+                    <h2 data-i18n="valueHeading">See how much money PharmaFlow protects for your pharmacy</h2>
+                    <p class="value-description" data-i18n="valueDescription">As your sales, purchases, inventory and payment data grows, PharmaFlow will calculate the estimated money saved or protected through better stock control, expiry prevention and payment follow-up.</p>
                 </div>
                 <div class="value-total">
-                    <span class="value-total-label">Estimated money saved</span>
+                    <span class="value-total-label" data-i18n="estimatedMoneySaved">Estimated money saved</span>
                     <strong>₹ @Model.EstimatedMoneySaved.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</strong>
-                    <small>Calculated from your actual business data.</small>
+                    <small data-i18n="calculatedFromActualData">Calculated from your actual business data.</small>
                 </div>
             </div>
 
@@ -38,32 +35,32 @@
                 <div class="value-proof">
                     <span class="value-proof-icon">⌛</span>
                     <div>
-                        <strong>Expiry loss prevented</strong>
-                        <span>Potential loss avoided from better expiry tracking</span>
+                        <strong data-i18n="expiryLossPrevented">Expiry loss prevented</strong>
+                        <span data-i18n="expiryDescription">Potential loss avoided from better expiry tracking</span>
                     </div>
                     <b>₹ @Model.ExpiryLossPrevented.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</b>
                 </div>
                 <div class="value-proof">
                     <span class="value-proof-icon">↗</span>
                     <div>
-                        <strong>Cash recovered</strong>
-                        <span>Outstanding customer payments followed up faster</span>
+                        <strong data-i18n="cashRecovered">Cash recovered</strong>
+                        <span data-i18n="cashDescription">Outstanding customer payments followed up faster</span>
                     </div>
                     <b>₹ @Model.CashRecovered.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</b>
                 </div>
                 <div class="value-proof">
                     <span class="value-proof-icon">▤</span>
                     <div>
-                        <strong>Inventory loss reduced</strong>
-                        <span>Better stock visibility helps reduce avoidable holding losses</span>
+                        <strong data-i18n="inventoryLossReduced">Inventory loss reduced</strong>
+                        <span data-i18n="inventoryDescription">Better stock visibility helps reduce avoidable holding losses</span>
                     </div>
                     <b>₹ @Model.InventoryLossReduced.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</b>
                 </div>
             </div>
 
             <div class="value-card-footer">
-                <span>PharmaFlow should show business impact, not just business data.</span>
-                <span>Calculated from your real records</span>
+                <span data-i18n="businessImpact">PharmaFlow should show business impact, not just business data.</span>
+                <span data-i18n="calculatedFromRecords">Calculated from your real records</span>
             </div>
         </section>
     }
@@ -71,51 +68,51 @@
     <section class="dashboard-grid" aria-label="Pharmacy overview">
         <article class="dashboard-card metric-card metric-warning">
             <div class="metric-icon">⌛</div>
-            <div><span class="metric-label">Products expiring soon</span><strong class="metric-value">—</strong><span class="metric-note">Review upcoming expiries</span></div>
+            <div><span class="metric-label" data-i18n="productsExpiringSoon">Products expiring soon</span><strong class="metric-value">—</strong><span class="metric-note" data-i18n="reviewUpcomingExpiries">Review upcoming expiries</span></div>
         </article>
         <article class="dashboard-card metric-card metric-info">
             <div class="metric-icon">▤</div>
-            <div><span class="metric-label">Low stock details</span><strong class="metric-value">—</strong><span class="metric-note">Items below reorder level</span></div>
+            <div><span class="metric-label" data-i18n="lowStockDetailsMetric">Low stock details</span><strong class="metric-value">—</strong><span class="metric-note" data-i18n="itemsBelowReorderLevel">Items below reorder level</span></div>
         </article>
         <article class="dashboard-card metric-card metric-danger">
             <div class="metric-icon">!</div>
-            <div><span class="metric-label">Out-of-stock items</span><strong class="metric-value">—</strong><span class="metric-note">Products needing replenishment</span></div>
+            <div><span class="metric-label" data-i18n="outOfStockItems">Out-of-stock items</span><strong class="metric-value">—</strong><span class="metric-note" data-i18n="productsNeedingReplenishment">Products needing replenishment</span></div>
         </article>
         <article class="dashboard-card metric-card metric-expired">
             <div class="metric-icon">⟳</div>
-            <div><span class="metric-label">Products already expired</span><strong class="metric-value">—</strong><span class="metric-note">Check and quarantine stock</span></div>
+            <div><span class="metric-label" data-i18n="productsAlreadyExpired">Products already expired</span><strong class="metric-value">—</strong><span class="metric-note" data-i18n="checkAndQuarantineStock">Check and quarantine stock</span></div>
         </article>
         <article class="dashboard-card metric-card metric-success">
             <div class="metric-icon">₹</div>
-            <div><span class="metric-label">Today's sales</span><strong class="metric-value">₹ —</strong><span class="metric-note">Total sales for today</span></div>
+            <div><span class="metric-label" data-i18n="todaysSales">Today's sales</span><strong class="metric-value">₹ —</strong><span class="metric-note" data-i18n="totalSalesForToday">Total sales for today</span></div>
         </article>
         <article class="dashboard-card metric-card metric-purple">
             <div class="metric-icon">⇄</div>
-            <div><span class="metric-label">Customer debit / credit</span><strong class="metric-value">₹ —</strong><span class="metric-note">Pending customer balances</span></div>
+            <div><span class="metric-label" data-i18n="customerDebitCredit">Customer debit / credit</span><strong class="metric-value">₹ —</strong><span class="metric-note" data-i18n="pendingCustomerBalances">Pending customer balances</span></div>
         </article>
     </section>
 
     <section class="dashboard-section-grid">
         <article class="dashboard-card detail-card">
-            <div class="card-heading"><div><span class="section-kicker">Payables</span><h2>Supplier pending payments</h2></div><span class="heading-icon">▣</span></div>
-            <div class="empty-state"><span>₹</span><p>No supplier payment data available yet.</p></div>
+            <div class="card-heading"><div><span class="section-kicker" data-i18n="payables">Payables</span><h2 data-i18n="supplierPendingPayments">Supplier pending payments</h2></div><span class="heading-icon">▣</span></div>
+            <div class="empty-state"><span>₹</span><p data-i18n="noSupplierPaymentData">No supplier payment data available yet.</p></div>
         </article>
         <article class="dashboard-card detail-card">
-            <div class="card-heading"><div><span class="section-kicker">Inventory trends</span><h2>Fast-moving products</h2></div><span class="heading-icon">↗</span></div>
-            <div class="empty-state"><span>↗</span><p>Fast-moving product insights will appear here.</p></div>
+            <div class="card-heading"><div><span class="section-kicker" data-i18n="inventoryTrends">Inventory trends</span><h2 data-i18n="fastMovingProducts">Fast-moving products</h2></div><span class="heading-icon">↗</span></div>
+            <div class="empty-state"><span>↗</span><p data-i18n="fastMovingInsights">Fast-moving product insights will appear here.</p></div>
         </article>
         <article class="dashboard-card detail-card">
-            <div class="card-heading"><div><span class="section-kicker">Inventory trends</span><h2>Slow-moving products</h2></div><span class="heading-icon">↘</span></div>
-            <div class="empty-state"><span>↘</span><p>Slow-moving product insights will appear here.</p></div>
+            <div class="card-heading"><div><span class="section-kicker" data-i18n="inventoryTrends">Inventory trends</span><h2 data-i18n="slowMovingProducts">Slow-moving products</h2></div><span class="heading-icon">↘</span></div>
+            <div class="empty-state"><span>↘</span><p data-i18n="slowMovingInsights">Slow-moving product insights will appear here.</p></div>
         </article>
     </section>
 
     <section class="dashboard-card activity-card">
-        <div class="card-heading"><div><span class="section-kicker">Activity</span><h2>Recent sales and payments</h2></div><span class="heading-icon">☷</span></div>
+        <div class="card-heading"><div><span class="section-kicker" data-i18n="activity">Activity</span><h2 data-i18n="recentSalesPayments">Recent sales and payments</h2></div><span class="heading-icon">☷</span></div>
         <div class="table-responsive">
             <table class="table dashboard-table align-middle mb-0">
-                <thead><tr><th>Activity</th><th>Reference</th><th>Date</th><th class="text-end">Amount</th></tr></thead>
-                <tbody><tr><td colspan="4" class="empty-table">No recent activity available yet.</td></tr></tbody>
+                <thead><tr><th data-i18n="activityHeader">Activity</th><th data-i18n="reference">Reference</th><th data-i18n="date">Date</th><th class="text-end" data-i18n="amount">Amount</th></tr></thead>
+                <tbody><tr><td colspan="4" class="empty-table" data-i18n="noRecentActivity">No recent activity available yet.</td></tr></tbody>
             </table>
         </div>
     </section>

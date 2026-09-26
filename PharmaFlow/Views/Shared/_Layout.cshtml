@@ -20,35 +20,35 @@
                     <span class="brand-mark">✚</span>
                     <span class="brand-name">@businessName</span>
                 </a>
-                <button class="sidebar-close d-lg-none" type="button" id="sidebarClose" aria-label="Close navigation">&times;</button>
+                <button class="sidebar-close d-lg-none" type="button" id="sidebarClose" data-i18n-attr="aria-label:closeNavigation">&times;</button>
             </div>
 
-            <div class="sidebar-caption">Workspace</div>
+            <div class="sidebar-caption" data-i18n="workspace">Workspace</div>
             <nav class="sidebar-nav">
-                <a class="sidebar-link active" asp-area="" asp-controller="Home" asp-action="Index"><span class="sidebar-icon">▦</span><span>Dashboard</span></a>
-                <a class="sidebar-link" href="#"><span class="sidebar-icon">↗</span><span>Top Selling / Low Selling</span></a>
-                <a class="sidebar-link" href="#"><span class="sidebar-icon">▤</span><span>Low Stock Details</span><span class="sidebar-badge">Voice</span></a>
-                <a class="sidebar-link" href="#"><span class="sidebar-icon">⌛</span><span>Expiring Details</span><span class="sidebar-badge">Voice</span></a>
-                <a class="sidebar-link" href="#"><span class="sidebar-icon">▥</span><span>Daily Sales Reports</span></a>
-                <a class="sidebar-link" href="#"><span class="sidebar-icon">♙</span><span>Customer Management</span><span class="sidebar-badge">Voice</span></a>
+                <a class="sidebar-link active" asp-area="" asp-controller="Home" asp-action="Index"><span class="sidebar-icon">▦</span><span data-i18n="dashboard">Dashboard</span></a>
+                <a class="sidebar-link" href="#"><span class="sidebar-icon">↗</span><span data-i18n="topSellingLowSelling">Top Selling / Low Selling</span></a>
+                <a class="sidebar-link" href="#"><span class="sidebar-icon">▤</span><span data-i18n="lowStockDetails">Low Stock Details</span><span class="sidebar-badge" data-i18n="voice">Voice</span></a>
+                <a class="sidebar-link" href="#"><span class="sidebar-icon">⌛</span><span data-i18n="expiringDetails">Expiring Details</span><span class="sidebar-badge" data-i18n="voice">Voice</span></a>
+                <a class="sidebar-link" href="#"><span class="sidebar-icon">▥</span><span data-i18n="dailySalesReports">Daily Sales Reports</span></a>
+                <a class="sidebar-link" href="#"><span class="sidebar-icon">♙</span><span data-i18n="customerManagement">Customer Management</span><span class="sidebar-badge" data-i18n="voice">Voice</span></a>
                 <form asp-area="" asp-controller="Account" asp-action="Logout" method="post" class="sidebar-logout-form">
                     @Html.AntiForgeryToken()
-                    <button type="submit" class="sidebar-link sidebar-logout-button"><span class="sidebar-icon">↪</span><span>Log Out</span></button>
+                    <button type="submit" class="sidebar-link sidebar-logout-button"><span class="sidebar-icon">↪</span><span data-i18n="logOut">Log Out</span></button>
                 </form>
-                <a class="sidebar-link" href="#"><span class="sidebar-icon">⚙</span><span>Settings</span><span class="sidebar-badge">Category / Shop</span></a>
+                <a class="sidebar-link" href="#"><span class="sidebar-icon">⚙</span><span data-i18n="settings">Settings</span><span class="sidebar-badge" data-i18n="categoryShop">Category / Shop</span></a>
             </nav>
 
             <div class="sidebar-footer">
-                <div class="sidebar-footer-label">Pharmacy management</div>
-                <small>More modules will be enabled as backend features are added.</small>
+                <div class="sidebar-footer-label" data-i18n="pharmacyManagement">Pharmacy management</div>
+                <small data-i18n="moreModules">More modules will be enabled as backend features are added.</small>
             </div>
         </aside>
 
         <div class="sidebar-overlay" id="sidebarOverlay"></div>
         <div class="app-main">
             <header class="app-topbar">
-                <button class="sidebar-toggle d-lg-none" type="button" id="sidebarToggle" aria-label="Open navigation">☰</button>
-                <div class="topbar-title">@ViewData["Title"]</div>
+                <button class="sidebar-toggle d-lg-none" type="button" id="sidebarToggle" data-i18n-attr="aria-label:openNavigation">☰</button>
+                <div class="topbar-title" data-page-title-key="@ViewData["Title"]">@ViewData["Title"]</div>
                 <div class="profile-menu">
                     <button type="button" class="profile-trigger" id="profileTrigger" aria-expanded="false" aria-controls="profileMenu">
                         <span class="profile-avatar">@((Context.Session.GetString("Username") ?? businessName).FirstOrDefault().ToString().ToUpperInvariant())</span>
@@ -67,18 +67,24 @@
                             </div>
                         </div>
                         <div class="profile-dropdown-divider"></div>
-                        <a asp-controller="Profile" asp-action="Index" class="profile-menu-item"><span>👤</span><span>Edit Profile</span></a>
-                        <button type="button" class="profile-menu-item profile-appearance-toggle" id="appearanceToggle"><span>◐</span><span>Appearance</span><span class="menu-item-arrow">›</span></button>
+                        <a asp-controller="Profile" asp-action="Index" class="profile-menu-item"><span>👤</span><span data-i18n="editProfile">Edit Profile</span></a>
+                        <button type="button" class="profile-menu-item profile-appearance-toggle" id="appearanceToggle" aria-expanded="false"><span>◐</span><span data-i18n="appearance">Appearance</span><span class="menu-item-arrow">›</span></button>
                         <div class="appearance-panel" id="appearancePanel" hidden>
-                            <button type="button" data-theme-choice="light">Light</button>
-                            <button type="button" data-theme-choice="dark">Dark</button>
-                            <button type="button" data-theme-choice="system">System</button>
+                            <button type="button" data-theme-choice="light" data-i18n="light">Light</button>
+                            <button type="button" data-theme-choice="dark" data-i18n="dark">Dark</button>
+                            <button type="button" data-theme-choice="system" data-i18n="system">System</button>
                         </div>
-                        <a asp-controller="Profile" asp-action="Feedback" class="profile-menu-item"><span>💬</span><span>Send Feedback</span></a>
+                        <button type="button" class="profile-menu-item profile-language-toggle" id="languageToggle" aria-expanded="false"><span>文</span><span data-i18n="language">Language</span><span class="menu-item-arrow">›</span></button>
+                        <div class="appearance-panel language-panel" id="languagePanel" hidden>
+                            <button type="button" data-language-choice="en">English</button>
+                            <button type="button" data-language-choice="kn">ಕನ್ನಡ</button>
+                            <button type="button" data-language-choice="hi">हिन्दी</button>
+                        </div>
+                        <a asp-controller="Profile" asp-action="Feedback" class="profile-menu-item"><span>💬</span><span data-i18n="sendFeedback">Send Feedback</span></a>
                         <div class="profile-dropdown-divider"></div>
                         <form asp-area="" asp-controller="Account" asp-action="Logout" method="post">
                             @Html.AntiForgeryToken()
-                            <button type="submit" class="profile-menu-item profile-menu-logout"><span>↪</span><span>Log Out</span></button>
+                            <button type="submit" class="profile-menu-item profile-menu-logout"><span>↪</span><span data-i18n="logOut">Log Out</span></button>
                         </form>
                     </div>
                 </div>
@@ -90,7 +96,7 @@
 
             <footer class="app-footer">
                 <span>&copy; 2026 - @businessName</span>
-                <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                <a asp-area="" asp-controller="Home" asp-action="Privacy" data-i18n="privacy">Privacy</a>
             </footer>
         </div>
     </div>
@@ -98,6 +104,7 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/language.js" asp-append-version="true"></script>
     <script>
         (() => {
             const sidebar = document.getElementById('appSidebar');
@@ -120,6 +127,8 @@
             const menu = document.getElementById('profileMenu');
             const appearanceToggle = document.getElementById('appearanceToggle');
             const appearancePanel = document.getElementById('appearancePanel');
+            const languageToggle = document.getElementById('languageToggle');
+            const languagePanel = document.getElementById('languagePanel');
 
             const applyTheme = (theme) => {
                 const root = document.body;
@@ -134,6 +143,16 @@
                 });
             };
 
+            const togglePanel = (panel, otherPanel) => {
+                const open = panel?.hasAttribute('hidden');
+                if (open) {
+                    panel?.removeAttribute('hidden');
+                    otherPanel?.setAttribute('hidden', '');
+                } else {
+                    panel?.setAttribute('hidden', '');
+                }
+            };
+
             applyTheme(localStorage.getItem('pharmaflow-theme') || 'system');
 
             trigger?.addEventListener('click', (event) => {
@@ -146,19 +165,38 @@
 
             appearanceToggle?.addEventListener('click', (event) => {
                 event.stopPropagation();
-                const open = appearancePanel?.hasAttribute('hidden');
-                if (open) appearancePanel?.removeAttribute('hidden');
-                else appearancePanel?.setAttribute('hidden', '');
+                togglePanel(appearancePanel, languagePanel);
+                appearanceToggle.setAttribute('aria-expanded', String(!appearancePanel?.hasAttribute('hidden')));
+                languageToggle?.setAttribute('aria-expanded', 'false');
+            });
+
+            languageToggle?.addEventListener('click', (event) => {
+                event.stopPropagation();
+                togglePanel(languagePanel, appearancePanel);
+                languageToggle.setAttribute('aria-expanded', String(!languagePanel?.hasAttribute('hidden')));
+                appearanceToggle?.setAttribute('aria-expanded', 'false');
             });
 
             document.querySelectorAll('[data-theme-choice]').forEach(button => {
                 button.addEventListener('click', () => applyTheme(button.dataset.themeChoice));
             });
 
+            document.querySelectorAll('[data-language-choice]').forEach(button => {
+                button.addEventListener('click', () => {
+                    const language = button.dataset.languageChoice;
+                    localStorage.setItem('pharmaflow-language', language);
+                    window.pharmaFlowLanguage?.apply(language);
+                });
+            });
+
             document.addEventListener('click', (event) => {
                 if (!event.target.closest('.profile-menu')) {
                     menu?.setAttribute('hidden', '');
                     trigger?.setAttribute('aria-expanded', 'false');
+                    appearancePanel?.setAttribute('hidden', '');
+                    languagePanel?.setAttribute('hidden', '');
+                    appearanceToggle?.setAttribute('aria-expanded', 'false');
+                    languageToggle?.setAttribute('aria-expanded', 'false');
                 }
             });
 
