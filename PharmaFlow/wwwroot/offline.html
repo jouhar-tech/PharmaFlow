@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>PharmaFlow - Offline</title>
+    <style>
+        :root{font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#1f2937;background:#f5f7fb}
+        *{box-sizing:border-box}
+        body{margin:0;min-height:100vh;background:#f5f7fb}
+        .offline-page{min-height:100vh;padding:24px;display:flex;justify-content:center;align-items:flex-start}
+        .offline-shell{width:min(1100px,100%)}
+        .offline-banner{padding:14px 16px;border:1px solid #fecaca;border-radius:14px;background:#fff7f7;color:#991b1b;box-shadow:0 8px 20px rgba(15,23,42,.06)}
+        .offline-banner strong{display:block;font-size:14px}.offline-banner span{display:block;margin-top:4px;font-size:12px;line-height:1.5}
+        .offline-card{margin-top:16px;padding:22px;background:#fff;border:1px solid #e5eaf2;border-radius:16px;box-shadow:0 8px 24px rgba(15,23,42,.05)}
+        .offline-meta{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:18px}
+        .offline-meta h1{margin:0;font-size:24px}.offline-meta p{margin:5px 0 0;color:#64748b;font-size:13px}.offline-saved{color:#64748b;font-size:12px;white-space:nowrap}
+        .offline-empty{padding:50px 20px;text-align:center;color:#64748b}.offline-empty h2{margin:0 0 8px;font-size:20px;color:#334155}.offline-empty p{margin:0;line-height:1.6;font-size:13px}
+        .offline-actions{margin-top:18px;display:flex;justify-content:flex-end}.offline-actions button{border:0;border-radius:10px;background:#2563eb;color:#fff;padding:10px 16px;font-weight:700;cursor:pointer}
+        body.dark{background:#0f172a;color:#e2e8f0}.dark .offline-banner{background:#2a1518;border-color:#7f1d1d;color:#fecaca}.dark .offline-card{background:#111c2e;border-color:#263449}
+        .dark .offline-meta p,.dark .offline-saved{color:#94a3b8}.dark .offline-empty{color:#94a3b8}.dark .offline-empty h2{color:#f8fafc}
+        @media (max-width:640px){.offline-page{padding:14px}.offline-card{padding:16px}.offline-meta{flex-direction:column}.offline-saved{white-space:normal}}
+    </style>
+</head>
+<body>
+<div class="offline-page">
+    <div class="offline-shell">
+        <div class="offline-banner">
+            <strong id="offlineTitle">You're offline</strong>
+            <span id="offlineMessage">You're viewing saved data. Internet connection is required to add or update information.</span>
+        </div>
+        <div class="offline-card" id="offlineCard">
+            <div class="offline-meta">
+                <div>
+                    <h1 id="offlineHeading">Dashboard</h1>
+                    <p id="offlineSubheading">Showing the last dashboard data saved on this device.</p>
+                </div>
+                <div class="offline-saved" id="offlineSavedAt"></div>
+            </div>
+            <div id="offlineDashboard"></div>
+            <div class="offline-empty" id="offlineEmpty" hidden>
+                <h2 id="emptyTitle">Offline data isn't ready yet</h2>
+                <p id="emptyMessage">Connect to the internet once and open your dashboard. PharmaFlow will save the latest dashboard data for offline viewing.</p>
+                <div class="offline-actions">
+                    <button type="button" id="retryButton">Try again</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+(() => {
+    const t = {
+        en: {
+            title: "You're offline",
+            message: "You're viewing saved data. Internet connection is required to add or update information.",
+            dashboard: "Dashboard",
+            showing: "Showing the last dashboard data saved on this device.",
+            emptyTitle: "Offline data isn't ready yet",
+            emptyMessage: "Connect to the internet once and open your dashboard. PharmaFlow will save the latest dashboard data for offline viewing.",
+            retry: "Try again",
+            unavailableTitle: "This page isn't available offline yet",
+            unavailableMessage: "Your saved dashboard can still be viewed offline."
+        },
+        kn: {
+            title: "ನೀವು ಆಫ್‌ಲೈನ್‌ನಲ್ಲಿದ್ದೀರಿ",
+            message: "ನೀವು ಉಳಿಸಿದ ಡೇಟಾವನ್ನು ನೋಡುತ್ತಿದ್ದೀರಿ. ಮಾಹಿತಿ ಸೇರಿಸಲು ಅಥವಾ ನವೀಕರಿಸಲು ಇಂಟರ್ನೆಟ್ ಸಂಪರ್ಕ ಅಗತ್ಯವಿದೆ.",
+            dashboard: "ಡ್ಯಾಶ್‌ಬೋರ್ಡ್",
+            showing: "ಈ ಸಾಧನದಲ್ಲಿ ಕೊನೆಯದಾಗಿ ಉಳಿಸಿದ ಡ್ಯಾಶ್‌ಬೋರ್ಡ್ ಡೇಟಾವನ್ನು ತೋರಿಸಲಾಗುತ್ತಿದೆ.",
+            emptyTitle: "ಆಫ್‌ಲೈನ್ ಡೇಟಾ ಇನ್ನೂ ಸಿದ್ಧವಾಗಿಲ್ಲ",
+            emptyMessage: "ಒಮ್ಮೆ ಇಂಟರ್ನೆಟ್‌ಗೆ ಸಂಪರ್ಕಿಸಿ ಮತ್ತು ನಿಮ್ಮ ಡ್ಯಾಶ್‌ಬೋರ್ಡ್ ತೆರೆಯಿರಿ. PharmaFlow ಇತ್ತೀಚಿನ ಡ್ಯಾಶ್‌ಬೋರ್ಡ್ ಡೇಟಾವನ್ನು ಆಫ್‌ಲೈನ್ ವೀಕ್ಷಣೆಗೆ ಉಳಿಸುತ್ತದೆ.",
+            retry: "ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ",
+            unavailableTitle: "ಈ ಪುಟವು ಇನ್ನೂ ಆಫ್‌ಲೈನ್‌ನಲ್ಲಿ ಲಭ್ಯವಿಲ್ಲ",
+            unavailableMessage: "ನಿಮ್ಮ ಉಳಿಸಿದ ಡ್ಯಾಶ್‌ಬೋರ್ಡ್ ಅನ್ನು ಇನ್ನೂ ಆಫ್‌ಲೈನ್‌ನಲ್ಲಿ ನೋಡಬಹುದು."
+        },
+        hi: {
+            title: "आप ऑफ़लाइन हैं",
+            message: "आप सहेजे गए डेटा को देख रहे हैं। जानकारी जोड़ने या अपडेट करने के लिए इंटरनेट कनेक्शन आवश्यक है।",
+            dashboard: "डैशबोर्ड",
+            showing: "इस डिवाइस पर सहेजे गए अंतिम डैशबोर्ड डेटा को दिखाया जा रहा है।",
+            emptyTitle: "ऑफ़लाइन डेटा अभी तैयार नहीं है",
+            emptyMessage: "एक बार इंटरनेट से कनेक्ट करें और अपना डैशबोर्ड खोलें। PharmaFlow नवीनतम डैशबोर्ड डेटा को ऑफ़लाइन देखने के लिए सहेज देगा।",
+            retry: "फिर से प्रयास करें",
+            unavailableTitle: "यह पेज अभी ऑफ़लाइन उपलब्ध नहीं है",
+            unavailableMessage: "आपका सहेजा गया डैशबोर्ड अभी भी ऑफ़लाइन देखा जा सकता है।"
+        }
+    };
+
+    const language = localStorage.getItem("pharmaflow-language") || "en";
+    const text = t[language] || t.en;
+    const path = location.pathname.toLowerCase();
+    const isDashboard = path === "/" || path === "/home" || path === "/home/index";
+
+    document.documentElement.lang =
+        language === "kn" ? "kn" :
+        language === "hi" ? "hi" : "en";
+
+    document.body.classList.toggle(
+        "dark",
+        localStorage.getItem("pharmaflow-theme") === "dark"
+    );
+
+    document.getElementById("offlineTitle").textContent = text.title;
+    document.getElementById("offlineMessage").textContent = text.message;
+    document.getElementById("offlineHeading").textContent = text.dashboard;
+    document.getElementById("offlineSubheading").textContent = text.showing;
+    document.getElementById("emptyTitle").textContent = text.emptyTitle;
+    document.getElementById("emptyMessage").textContent = text.emptyMessage;
+    document.getElementById("retryButton").textContent = text.retry;
+
+    const dashboard = document.getElementById("offlineDashboard");
+    const empty = document.getElementById("offlineEmpty");
+    const retry = document.getElementById("retryButton");
+
+    if (!isDashboard) {
+        dashboard.innerHTML = "";
+        empty.hidden = false;
+        document.getElementById("emptyTitle").textContent = text.unavailableTitle;
+        document.getElementById("emptyMessage").textContent = text.unavailableMessage;
+        retry.onclick = () => { location.href = "/Home/Index"; };
+        return;
+    }
+
+    retry.onclick = () => location.reload();
+
+    try {
+        const request = indexedDB.open("PharmaFlowOffline", 1);
+
+        request.onupgradeneeded = () => {
+            if (!request.result.objectStoreNames.contains("snapshots")) {
+                request.result.createObjectStore("snapshots", { keyPath: "id" });
+            }
+        };
+
+        request.onsuccess = () => {
+            const db = request.result;
+            const get = db
+                .transaction("snapshots", "readonly")
+                .objectStore("snapshots")
+                .get("dashboard-current");
+
+            get.onsuccess = () => {
+                const data = get.result;
+
+                if (!data?.html) {
+                    empty.hidden = false;
+                    return;
+                }
+
+                dashboard.innerHTML = data.html;
+
+                if (data.savedAt) {
+                    document.getElementById("offlineSavedAt").textContent =
+                        new Date(data.savedAt).toLocaleString(
+                            language === "kn" ? "kn-IN" :
+                            language === "hi" ? "hi-IN" : "en-IN"
+                        );
+                }
+            };
+
+            get.onerror = () => { empty.hidden = false; };
+            window.setTimeout(() => db.close(), 0);
+        };
+
+        request.onerror = () => { empty.hidden = false; };
+    } catch {
+        empty.hidden = false;
+    }
+})();
+</script>
+</body>
+</html>
