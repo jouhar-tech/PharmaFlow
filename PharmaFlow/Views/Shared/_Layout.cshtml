@@ -26,17 +26,16 @@
             <div class="sidebar-caption" data-i18n="workspace">Workspace</div>
             <nav class="sidebar-nav">
                 <a class="sidebar-link active" asp-area="" asp-controller="Home" asp-action="Index"><span class="sidebar-icon">▦</span><span data-i18n="dashboard">Dashboard</span></a>
-                <a class="sidebar-link" href="#"><span class="sidebar-icon">↗</span><span data-i18n="topSellingLowSelling">Top Selling / Low Selling</span></a>
-                <a class="sidebar-link" href="#"><span class="sidebar-icon">▤</span><span data-i18n="lowStockDetails">Low Stock Details</span><span class="sidebar-badge" data-i18n="voice">Voice</span></a>
-                <a class="sidebar-link" href="#"><span class="sidebar-icon">⌛</span><span data-i18n="expiringDetails">Expiring Details</span><span class="sidebar-badge" data-i18n="voice">Voice</span></a>
+                <a class="sidebar-link" href="#"><span class="sidebar-icon">⌛</span><span data-i18n="expiringDetails">Expiring Details</span><span class="sidebar-badge">Voice</span></a>
+                <a class="sidebar-link" href="#"><span class="sidebar-icon">▤</span><span data-i18n="lowStockDetails">Low Stock Details</span><span class="sidebar-badge">Voice</span></a>
                 <a class="sidebar-link" href="#"><span class="sidebar-icon">▥</span><span data-i18n="dailySalesReports">Daily Sales Reports</span></a>
-                <a class="sidebar-link" href="#"><span class="sidebar-icon">♙</span><span data-i18n="customerManagement">Customer Management</span><span class="sidebar-badge" data-i18n="voice">Voice</span></a>
+                <a class="sidebar-link" href="#"><span class="sidebar-icon">♙</span><span data-i18n="customerManagement">Customer Management</span><span class="sidebar-badge">Voice</span></a>
+                <a class="sidebar-link" href="#"><span class="sidebar-icon">↗</span><span data-i18n="topSellingLowSelling">Top Selling / Low Selling</span></a>
                 <form asp-area="" asp-controller="Account" asp-action="Logout" method="post" class="sidebar-logout-form">
                     @Html.AntiForgeryToken()
                     <button type="submit" class="sidebar-link sidebar-logout-button"><span class="sidebar-icon">↪</span><span data-i18n="logOut">Log Out</span></button>
                 </form>
-                <a class="sidebar-link" href="#"><span class="sidebar-icon">⚙</span><span data-i18n="settings">Settings</span><span class="sidebar-badge" data-i18n="categoryShop">Category / Shop</span></a>
-            </nav>
+            </nav>      </nav>
 
             <div class="sidebar-footer">
                 <div class="sidebar-footer-label" data-i18n="pharmacyManagement">Pharmacy management</div>
@@ -81,6 +80,7 @@
                             <button type="button" data-language-choice="hi">हिन्दी</button>
                         </div>
                         <a asp-controller="Profile" asp-action="Feedback" class="profile-menu-item"><span>💬</span><span data-i18n="sendFeedback">Send Feedback</span></a>
+                        <a class="profile-menu-item" href="#"><span>⚙</span><span data-i18n="settings">Settings</span></a>
                         <div class="profile-dropdown-divider"></div>
                         <form asp-area="" asp-controller="Account" asp-action="Logout" method="post">
                             @Html.AntiForgeryToken()
