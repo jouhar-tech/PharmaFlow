@@ -1,0 +1,50 @@
+@model PharmaFlow.Models.ViewModels.ExpiringProductsViewModel
+
+@{
+    ViewData["Title"] = "Products Expiring Soon";
+}
+
+<div class="expiry-page">
+    <div class="expiry-page-header">
+        <div>
+            <span class="dashboard-eyebrow" data-i18n="expiryManagement">Expiry Management</span>
+            <h1 class="dashboard-title" data-i18n="productsExpiringSoonPage">Products Expiring Soon</h1>
+            <p class="dashboard-subtitle" data-i18n="expiryPageSubtitle">Track medicines nearing expiry before they become avoidable stock losses.</p>
+        </div>
+        <a asp-controller="Home" asp-action="Index" class="btn btn-light border expiry-back-link" data-i18n="backToDashboard">Back to dashboard</a>
+    </div>
+
+    <section class="expiry-summary-grid" aria-label="Expiry summary">
+        <a asp-controller="ExpiryProducts" asp-action="Critical" class="expiry-summary-card expiry-summary-critical">
+            <span class="expiry-summary-icon">!</span>
+            <span class="expiry-summary-label" data-i18n="criticalExpiry">Critical</span>
+            <strong>@Model.CriticalCount</strong>
+            <span data-i18n="expiringWithin30Days">Expiring within 30 days</span>
+            <span class="expiry-summary-arrow">→</span>
+        </a>
+
+        <a asp-controller="ExpiryProducts" asp-action="Upcoming" class="expiry-summary-card expiry-summary-upcoming">
+            <span class="expiry-summary-icon">⌛</span>
+            <span class="expiry-summary-label" data-i18n="upcomingExpiry">Upcoming</span>
+            <strong>@Model.UpcomingCount</strong>
+            <span data-i18n="expiringWithin31To90Days">Expiring within 31–90 days</span>
+            <span class="expiry-summary-arrow">→</span>
+        </a>
+
+        <a asp-controller="ExpiryProducts" asp-action="AtRisk" class="expiry-summary-card expiry-summary-value">
+            <span class="expiry-summary-icon">₹</span>
+            <span class="expiry-summary-label" data-i18n="atRiskValue">At-Risk Value</span>
+            <strong>₹ @Model.AtRiskValue.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</strong>
+            <span data-i18n="expiryAtRiskDescription">Cost value of stock expiring within 90 days</span>
+            <span class="expiry-summary-arrow">→</span>
+        </a>
+    </section>
+
+    <section class="dashboard-card expiry-info-card">
+        <div class="expiry-info-icon">⌛</div>
+        <div>
+            <h2 data-i18n="expiryPageNextStep">Select a category above to review the affected batches.</h2>
+            <p data-i18n="expiryPageNextStepDescription">Critical shows products expiring within 30 days. Upcoming shows products expiring from 31 to 90 days. At-Risk Value includes both groups.</p>
+        </div>
+    </section>
+</div>
