@@ -13,6 +13,18 @@
         .login-card{background:#fff;border-radius:20px;padding:30px;box-shadow:0 5px 25px rgba(0,0,0,.08)}
         .form-control,.btn{height:55px;border-radius:12px}.password-wrapper{position:relative}.password-wrapper .form-control{padding-right:50px}
         .toggle-password{position:absolute;right:12px;top:50%;transform:translateY(-50%);border:0;background:transparent;font-size:20px}
+        .login-loading-overlay{position:fixed;inset:0;z-index:2000;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(248,249,252,.86);backdrop-filter:blur(5px)}
+        .login-loading-overlay[hidden]{display:none}
+        .login-loading-card{width:min(100%,360px);padding:30px 26px;background:#fff;border:1px solid #e7eaf0;border-radius:20px;box-shadow:0 18px 50px rgba(15,23,42,.16);text-align:center}
+        .login-loading-card h4{margin:18px 0 8px;color:#172033;font-size:20px;font-weight:700}
+        .login-loading-card p{margin:0;color:#6b7280;font-size:14px;line-height:1.5}
+        .login-spinner,.button-spinner{display:inline-block;border-style:solid;border-color:#dbeafe;border-top-color:#2563eb;border-radius:50%;animation:login-spin .75s linear infinite}
+        .login-spinner{width:44px;height:44px;border-width:4px}
+        .button-spinner{width:16px;height:16px;margin-right:8px;vertical-align:-3px;border-width:2px;border-color:rgba(255,255,255,.35);border-top-color:#fff}
+        #loginButton:disabled{cursor:wait;opacity:.9}
+        body.login-loading{overflow:hidden}
+        @keyframes login-spin{to{transform:rotate(360deg)}}
+        @media (prefers-reduced-motion:reduce){.login-spinner,.button-spinner{animation:none}}
     </style>
 </head>
 <body>
@@ -20,7 +32,7 @@
     <div class="text-center mb-4"><div class="logo">PharmaFlow</div><p class="text-muted mt-2">Your pharmacy, simplified.</p></div>
     <div class="login-card">
         <h3 class="text-center fw-bold mb-2">Welcome Back</h3><p class="text-center text-muted mb-4">Login with your username</p>
-        <form asp-controller="Account" asp-action="Login" method="post">
+        <form asp-controller="Account" asp-action="Login" method="post" id="loginForm">
             @Html.AntiForgeryToken()
             <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
             <label asp-for="Username" class="form-label fw-semibold"></label>
@@ -32,7 +44,7 @@
                 <button type="button" class="toggle-password" onclick="togglePassword('loginPassword', this)" aria-label="Show password">👁</button>
             </div>
             <span asp-validation-for="Password" class="text-danger"></span>
-            <button type="submit" class="btn btn-primary w-100 mt-3">Login</button>
+            <button type="submit" class="btn btn-primary w-100 mt-3" id="loginButton">Login</button>
         </form>
         <div class="text-center my-4 text-muted">OR</div>
         <a asp-action="GoogleLogin" class="btn btn-light border w-100">🔵 Continue with Google</a>
@@ -40,6 +52,15 @@
     </div>
     <p class="text-center text-muted small mt-4">By continuing, you agree to our Terms and Privacy Policy.</p>
 </div>
+
+<div class="login-loading-overlay" id="loginLoadingOverlay" hidden aria-hidden="true">
+    <div class="login-loading-card" role="status" aria-live="polite">
+        <div class="login-spinner" aria-hidden="true"></div>
+        <h4>We're getting things ready for you</h4>
+        <p>Signing you in and preparing your pharmacy dashboard...</p>
+    </div>
+</div>
+
 <script>
     function togglePassword(id, button) {
         const input = document.getElementById(id);
@@ -48,6 +69,22 @@
         button.textContent = isHidden ? '🙈' : '👁';
         button.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
     }
+
+    (() => {
+        const form = document.getElementById('loginForm');
+        const button = document.getElementById('loginButton');
+        const overlay = document.getElementById('loginLoadingOverlay');
+
+        if (!form || !button || !overlay) return;
+
+        form.addEventListener('submit', () => {
+            overlay.hidden = false;
+            overlay.setAttribute('aria-hidden', 'false');
+            button.disabled = true;
+            button.innerHTML = '<span class="button-spinner" aria-hidden="true"></span> Signing in...';
+            document.body.classList.add('login-loading');
+        });
+    })();
 </script>
 <partial name="_ValidationScriptsPartial" />
 </body>
