@@ -299,6 +299,7 @@ body.theme-dark .expiry-total-icon { background: #1e3a8a; color: #bfdbfe; }
   .expiry-summary-grid,
   .expiry-products-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
   .expiry-summary-card { min-height: 145px; padding: 1rem; }
+  .expiry-summary-value { order: -1; grid-column: 1 / -1; min-height: 125px; }
   .expiry-summary-icon { width: 36px; height: 36px; margin-bottom: .75rem; }
   .expiry-summary-card > strong { font-size: 1.35rem; }
   .expiry-summary-card > span:not(.expiry-summary-icon):not(.expiry-summary-label):not(.expiry-summary-arrow) { font-size: .68rem; }
