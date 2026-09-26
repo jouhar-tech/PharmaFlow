@@ -17,6 +17,15 @@ namespace PharmaFlow.Controllers
             return View(dashboard);
         }
 
+        [HttpGet]
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        public IActionResult Ping()
+        {
+            return long.TryParse(HttpContext.Session.GetString("ProfileId"), out _)
+                ? Ok()
+                : Unauthorized();
+        }
+
         public IActionResult Privacy()
         {
             return View();
