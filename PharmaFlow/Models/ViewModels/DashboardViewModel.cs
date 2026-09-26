@@ -2,6 +2,8 @@ namespace PharmaFlow.Models.ViewModels
 {
     public sealed class DashboardViewModel
     {
+        public int ProductsExpiringSoonCount { get; init; }
+
         public decimal EstimatedMoneySaved { get; init; }
 
         public decimal ExpiryLossPrevented { get; init; }
