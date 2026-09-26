@@ -5,8 +5,8 @@ public sealed class ProductBatch
     public long BatchId { get; set; }
     public long ProductId { get; set; }
     public string BatchNumber { get; set; } = string.Empty;
-    public DateTime? ManufacturingDate { get; set; }
-    public DateTime ExpiryDate { get; set; }
+    public DateOnly? ManufacturingDate { get; set; }
+    public DateOnly ExpiryDate { get; set; }
     public decimal QuantityOnHand { get; set; }
     public decimal PurchaseUnitPrice { get; set; }
     public decimal SellingUnitPrice { get; set; }
