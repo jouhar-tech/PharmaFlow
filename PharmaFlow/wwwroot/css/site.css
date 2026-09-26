@@ -195,3 +195,12 @@ body.theme-dark .value-card-footer { border-color: #263449; }
   .profile-header { align-items: flex-start; flex-direction: column; }
   .profile-form-grid { grid-template-columns: 1fr; }
 }
+
+.pharmaflow-connectivity-banner { position: fixed; top: 12px; left: 50%; transform: translateX(-50%); z-index: 3000; width: min(92vw, 520px); padding: .8rem 1rem; border: 1px solid #fecaca; border-radius: 12px; background: #fff; box-shadow: 0 12px 30px rgba(15,23,42,.14); }
+.pharmaflow-connectivity-banner[hidden] { display: none; }
+.pharmaflow-connectivity-banner.is-offline { border-color: #fecaca; background: #fff7f7; color: #991b1b; }
+.pharmaflow-connectivity-banner.is-online { border-color: #bbf7d0; background: #f0fdf4; color: #166534; }
+.pharmaflow-connectivity-banner-title { display: block; font-size: .8rem; font-weight: 800; }
+.pharmaflow-connectivity-banner-message { display: block; margin-top: .15rem; font-size: .72rem; line-height: 1.45; }
+body.theme-dark .pharmaflow-connectivity-banner.is-offline { background: #2a1518; border-color: #7f1d1d; color: #fecaca; }
+body.theme-dark .pharmaflow-connectivity-banner.is-online { background: #10251a; border-color: #166534; color: #bbf7d0; }
