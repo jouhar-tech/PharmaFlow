@@ -95,25 +95,38 @@ public sealed class ExpiryProductsController : Controller
                 batch.ExpiryDate.Date >= today &&
                 batch.ExpiryDate.Date <= ninetyDaysFromToday)
             .OrderBy(batch => batch.ExpiryDate)
-            .Select(batch => new ExpiryProductItemViewModel
+            .Select(batch => new
             {
                 ProductId = batch.ProductId,
                 BatchId = batch.BatchId,
                 ProductName = batch.Product.ProductName,
                 BatchNumber = batch.BatchNumber,
                 ExpiryDate = batch.ExpiryDate,
-                DaysLeft = EF.Functions.DateDiffDay(today, batch.ExpiryDate.Date),
                 Quantity = batch.QuantityOnHand,
-                PurchaseUnitPrice = batch.PurchaseUnitPrice,
-                TotalValue = batch.QuantityOnHand * batch.PurchaseUnitPrice
+                PurchaseUnitPrice = batch.PurchaseUnitPrice
             })
             .ToListAsync(cancellationToken);
 
-        var critical = rows
+        var expiryItems = rows
+            .Select(row => new ExpiryProductItemViewModel
+            {
+                ProductId = row.ProductId,
+                BatchId = row.BatchId,
+                ProductName = row.ProductName,
+                BatchNumber = row.BatchNumber,
+                ExpiryDate = row.ExpiryDate,
+                DaysLeft = (row.ExpiryDate.Date - today).Days,
+                Quantity = row.Quantity,
+                PurchaseUnitPrice = row.PurchaseUnitPrice,
+                TotalValue = row.Quantity * row.PurchaseUnitPrice
+            })
+            .ToList();
+
+        var critical = expiryItems
             .Where(row => row.DaysLeft >= 0 && row.DaysLeft <= 30)
             .ToList();
 
-        var upcoming = rows
+        var upcoming = expiryItems
             .Where(row => row.DaysLeft > 30 && row.DaysLeft <= 90)
             .ToList();
 
@@ -121,10 +134,10 @@ public sealed class ExpiryProductsController : Controller
         {
             CriticalCount = critical.Count,
             UpcomingCount = upcoming.Count,
-            AtRiskValue = rows.Sum(row => row.TotalValue),
+            AtRiskValue = expiryItems.Sum(row => row.TotalValue),
             CriticalProducts = critical,
             UpcomingProducts = upcoming,
-            AtRiskProducts = rows
+            AtRiskProducts = expiryItems
         };
     }
 
