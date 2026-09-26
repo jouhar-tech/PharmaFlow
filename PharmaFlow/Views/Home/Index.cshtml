@@ -66,10 +66,10 @@
     }
 
     <section class="dashboard-grid" aria-label="Pharmacy overview">
-        <article class="dashboard-card metric-card metric-warning">
+        <a asp-controller="ExpiryProducts" asp-action="AtRisk" class="dashboard-card metric-card metric-warning metric-card-link">
             <div class="metric-icon">⌛</div>
-            <div><span class="metric-label" data-i18n="productsExpiringSoon">Products expiring soon</span><strong class="metric-value">—</strong><span class="metric-note" data-i18n="reviewUpcomingExpiries">Review upcoming expiries</span></div>
-        </article>
+            <div><span class="metric-label" data-i18n="productsExpiringSoon">Products expiring soon</span><strong class="metric-value">@Model.ProductsExpiringSoonCount</strong><span class="metric-note" data-i18n="reviewUpcomingExpiries">Critical + upcoming stock</span></div>
+        </a>
         <article class="dashboard-card metric-card metric-info">
             <div class="metric-icon">▤</div>
             <div><span class="metric-label" data-i18n="lowStockDetailsMetric">Low stock details</span><strong class="metric-value">—</strong><span class="metric-note" data-i18n="itemsBelowReorderLevel">Items below reorder level</span></div>
