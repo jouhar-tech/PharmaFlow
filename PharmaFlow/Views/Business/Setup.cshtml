@@ -13,7 +13,7 @@
                     <p class="text-muted mb-0">Enter your business name. It will appear across your PharmaFlow dashboard.</p>
                 </div>
 
-                <form asp-action="Setup" method="post">
+                <form asp-action="Setup" method="post" data-online-required="true">
                     @Html.AntiForgeryToken()
                     <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
                     <div class="mb-3">
