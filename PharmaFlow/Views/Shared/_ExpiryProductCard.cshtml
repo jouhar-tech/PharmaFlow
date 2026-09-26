@@ -1,0 +1,30 @@
+@model PharmaFlow.Models.ViewModels.ExpiryProductItemViewModel
+
+<article class="expiry-product-card">
+    <div class="expiry-product-card-top">
+        <div class="expiry-product-icon">Rx</div>
+        <div class="expiry-product-heading">
+            <h3>@Model.ProductName</h3>
+            <span data-i18n="batchNumber">Batch: @Model.BatchNumber</span>
+        </div>
+    </div>
+
+    <div class="expiry-product-details">
+        <div>
+            <span class="expiry-detail-label" data-i18n="expiryDate">Expiry Date</span>
+            <strong>@Model.ExpiryDate.ToString("dd MMM yyyy")</strong>
+        </div>
+        <div>
+            <span class="expiry-detail-label" data-i18n="daysLeft">Days Left</span>
+            <strong class="expiry-days">@Model.DaysLeft</strong>
+        </div>
+        <div>
+            <span class="expiry-detail-label" data-i18n="quantity">Qty</span>
+            <strong>@Model.Quantity.ToString("0.##")</strong>
+        </div>
+        <div>
+            <span class="expiry-detail-label" data-i18n="totalValue">Total Value</span>
+            <strong>₹ @Model.TotalValue.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</strong>
+        </div>
+    </div>
+</article>
