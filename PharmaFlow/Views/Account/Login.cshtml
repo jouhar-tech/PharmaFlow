@@ -23,8 +23,8 @@
         .button-spinner{width:16px;height:16px;margin-right:8px;vertical-align:-3px;border-width:2px;border-color:rgba(255,255,255,.35);border-top-color:#fff}
         #loginButton:disabled{cursor:wait;opacity:.9}
         body.login-loading{overflow:hidden}
-        @keyframes login-spin{to{transform:rotate(360deg)}}
-        @media (prefers-reduced-motion:reduce){.login-spinner,.button-spinner{animation:none}}
+        @@keyframes login-spin{to{transform:rotate(360deg)}}
+        @@media (prefers-reduced-motion:reduce){.login-spinner,.button-spinner{animation:none}}
     </style>
 </head>
 <body>
