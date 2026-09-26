@@ -111,7 +111,8 @@ body { margin: 0; background: #f5f7fb; color: #1f2937; }
   .dashboard-filters { align-items: stretch; flex-direction: column; }
   .filter-field { min-width: 100%; }
   .dashboard-filter-button { width: 100%; }
-  .dashboard-grid, .dashboard-section-grid { grid-template-columns: 1fr; }
+  .dashboard-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
+  .dashboard-section-grid { grid-template-columns: 1fr; }
   .value-card-main h2 { font-size: 1.2rem; }
   .value-card-footer { flex-direction: column; gap: .25rem; }
   .metric-card { padding: 1rem; }
