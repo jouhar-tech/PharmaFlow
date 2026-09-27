@@ -1,0 +1,7 @@
+# Direct local inference with the PaddleOCR-VL pipeline.
+# PaddleOCR's current documentation recommends Python 3.9-3.13.
+paddlepaddle>=3.2.1
+paddleocr[doc-parser]
+fastapi>=0.115
+uvicorn[standard]>=0.34
+python-multipart>=0.0.20
