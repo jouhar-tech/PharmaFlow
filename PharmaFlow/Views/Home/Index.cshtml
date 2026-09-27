@@ -441,14 +441,60 @@
         });
 
         const collectOcrLines = (data) => {
-            if (!Array.isArray(data?.lines)) return [];
+            if (Array.isArray(data?.lines)) {
+                return data.lines
+                    .map(line => ({
+                        text: String(line?.text || "").trim(),
+                        confidence: Number(line?.confidence || 0)
+                    }))
+                    .filter(line => line.text.length >= 2);
+            }
 
-            return data.lines
-                .map(line => ({
-                    text: String(line?.text || "").trim(),
-                    confidence: Number(line?.confidence || 0)
-                }))
+            return String(data?.text || "")
+                .split(/\\r?\\n/)
+                .map(text => ({ text: text.trim(), confidence: Number(data?.confidence || 0) }))
                 .filter(line => line.text.length >= 2);
+        };
+
+        const collectOcrWords = (data, pageNumber = 1) => {
+            const words = [];
+
+            const visitBlocks = blocks => {
+                if (!Array.isArray(blocks)) return;
+
+                for (const block of blocks) {
+                    if (Array.isArray(block?.paragraphs)) {
+                        for (const paragraph of block.paragraphs) {
+                            if (!Array.isArray(paragraph?.lines)) continue;
+
+                            for (const line of paragraph.lines) {
+                                if (!Array.isArray(line?.words)) continue;
+
+                                for (const word of line.words) {
+                                    const text = String(word?.text || "").trim();
+                                    const bbox = word?.bbox;
+
+                                    if (!text || !bbox) continue;
+                                    if (![bbox.x0, bbox.y0, bbox.x1, bbox.y1].every(Number.isFinite)) continue;
+
+                                    words.push({
+                                        text,
+                                        confidence: Number(word?.confidence || 0),
+                                        x0: Math.round(bbox.x0),
+                                        y0: Math.round(bbox.y0),
+                                        x1: Math.round(bbox.x1),
+                                        y1: Math.round(bbox.y1),
+                                        page: pageNumber
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+
+            visitBlocks(data?.blocks);
+            return words;
         };
 
         const configureWorker = async () => {
@@ -487,17 +533,22 @@
 
             try {
                 updateOcrStatus("Reading invoice...", "Processing the invoice image.", 10);
-                const result = await worker.recognize(file);
+                const result = await worker.recognize(
+                    file,
+                    {},
+                    { blocks: true }
+                );
 
                 const text = String(result?.data?.text || "").trim();
                 const confidence = Number(result?.data?.confidence || 0);
                 const lines = collectOcrLines(result?.data);
+                const words = collectOcrWords(result?.data, 1);
 
                 if (!text) {
                     throw new Error("No readable text was detected in this invoice image.");
                 }
 
-                return { text, confidence, lines };
+                return { text, confidence, lines, words };
             } finally {
                 await worker.terminate();
             }
@@ -517,6 +568,7 @@
             const worker = await configureWorker();
             const pageTexts = [];
             const allLines = [];
+            const allWords = [];
             const pageConfidences = [];
 
             try {
@@ -546,7 +598,11 @@
                     await page.render({ canvasContext: context, viewport }).promise;
 
                     const blob = await canvasToBlob(canvas);
-                    const result = await worker.recognize(blob);
+                    const result = await worker.recognize(
+                        blob,
+                        {},
+                        { blocks: true }
+                    );
 
                     const pageText = String(result?.data?.text || "").trim();
                     if (pageText) {
@@ -554,6 +610,7 @@
                     }
 
                     allLines.push(...collectOcrLines(result?.data));
+                    allWords.push(...collectOcrWords(result?.data, pageNumber));
                     pageConfidences.push(Number(result?.data?.confidence || 0));
 
                     const localProgress = (pageNumber / pageCount) * 100;
@@ -577,7 +634,7 @@
                 throw new Error("No readable text was detected in this PDF.");
             }
 
-            return { text, confidence, lines: allLines };
+            return { text, confidence, lines: allLines, words: allWords };
         };
 
         const postOcrForParsing = async ({ text, confidence, lines }) => {
@@ -602,7 +659,8 @@
                     sourceType: pendingSourceType,
                     ocrConfidence: Math.max(0, Math.min(100, confidence)),
                     ocrText: text.slice(0, 200000),
-                    lines: lines.slice(0, 2000)
+                    lines: lines.slice(0, 2000),
+                    words: (words || []).slice(0, 15000)
                 })
             });
 
