@@ -52,7 +52,7 @@
 
     @if (canEdit)
     {
-        <form asp-controller="InvoiceCapture" asp-action="Save" method="post" id="invoiceReviewForm">
+        <form asp-controller="InvoiceCapture" asp-action="Save" method="post" id="invoiceReviewForm" data-online-required="true">
             @Html.AntiForgeryToken()
             <input type="hidden" asp-for="ImportId" />
             <input type="hidden" asp-for="OriginalFileName" />
