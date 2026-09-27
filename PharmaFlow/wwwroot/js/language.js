@@ -46,15 +46,7 @@
             status: "Status",
             saved: "Saved",
             savedRows: "Rows saved",
-            reviewAgain: "Import ID"
-            scanInvoicePreview: "Review invoice scan",
-            closeScanner: "Close scanner",
-            rotateInvoice: "Rotate",
-            enhanceForOcr: "Enhance text",
-            scannerPreviewHint: "Make sure the full invoice is visible and the text is sharp before continuing.",
-            retakeInvoice: "Retake / Choose another",
-            useThisScan: "Use this scan",
-            pdfReadyForProcessing: "PDF selected and ready for processing.",
+            reviewAgain: "Import ID",
 
             dashboardSubtitle: "Monitor your pharmacy activity and the value PharmaFlow creates for your business.",
             welcomeBack: "Welcome back",
@@ -246,15 +238,7 @@
             status: "ಸ್ಥಿತಿ",
             saved: "ಉಳಿಸಲಾಗಿದೆ",
             savedRows: "ಉಳಿಸಿದ ಸಾಲುಗಳು",
-            reviewAgain: "ಇಂಪೋರ್ಟ್ ID"
-            scanInvoicePreview: "ಇನ್‌ವಾಯ್ಸ್ ಸ್ಕ್ಯಾನ್ ಪರಿಶೀಲಿಸಿ",
-            closeScanner: "ಸ್ಕ್ಯಾನರ್ ಮುಚ್ಚಿ",
-            rotateInvoice: "ತಿರುಗಿಸಿ",
-            enhanceForOcr: "ಪಠ್ಯವನ್ನು ಸ್ಪಷ್ಟಗೊಳಿಸಿ",
-            scannerPreviewHint: "ಮುಂದುವರಿಯುವ ಮೊದಲು ಸಂಪೂರ್ಣ ಇನ್‌ವಾಯ್ಸ್ ಕಾಣಿಸುತ್ತಿದೆಯೇ ಮತ್ತು ಪಠ್ಯ ಸ್ಪಷ್ಟವಾಗಿದೆಯೇ ಎಂದು ಖಚಿತಪಡಿಸಿಕೊಳ್ಳಿ.",
-            retakeInvoice: "ಮತ್ತೆ ಸ್ಕ್ಯಾನ್ / ಮತ್ತೊಂದು ಆಯ್ಕೆ",
-            useThisScan: "ಈ ಸ್ಕ್ಯಾನ್ ಬಳಸಿ",
-            pdfReadyForProcessing: "PDF ಆಯ್ಕೆ ಮಾಡಲಾಗಿದೆ ಮತ್ತು ಪ್ರಕ್ರಿಯೆಗೆ ಸಿದ್ಧವಾಗಿದೆ.",
+            reviewAgain: "ಇಂಪೋರ್ಟ್ ID",
 
             dashboardSubtitle: "ನಿಮ್ಮ ಫಾರ್ಮಸಿ ಚಟುವಟಿಕೆ ಮತ್ತು PharmaFlow ನಿಮ್ಮ ವ್ಯವಹಾರಕ್ಕೆ ನೀಡುವ ಮೌಲ್ಯವನ್ನು ಮೇಲ್ವಿಚಾರಣೆ ಮಾಡಿ.",
             welcomeBack: "ಮರಳಿ ಸ್ವಾಗತ",
