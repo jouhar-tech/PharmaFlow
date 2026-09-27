@@ -637,7 +637,7 @@
             return { text, confidence, lines: allLines, words: allWords };
         };
 
-        const postOcrForParsing = async ({ text, confidence, lines }) => {
+        const postOcrForParsing = async ({ text, confidence, lines, words }) => {
             const token = document.querySelector(
                 '#invoiceCaptureAntiForgeryToken input[name="__RequestVerificationToken"]'
             )?.value;
