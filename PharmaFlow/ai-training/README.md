@@ -106,3 +106,18 @@ Records that fail the quality gate belong in a review/quarantine queue, not the 
 - `examples/sample-record.json` — synthetic example
 - `n8n/step1-dataset-builder.md` — n8n workflow to create/validate records
 - `manifests/manifest.template.json` — training run manifest
+
+
+## Step 2 — Gemini-assisted draft labeling
+
+Step 2 adds a secure `POST /InvoiceTraining/DraftLabel` bridge for n8n. It accepts a private invoice image/PDF and uses the existing Gemini vision service to create a **draft** label containing the four required stock fields plus row confidence.
+
+The draft must still be human-verified before it becomes a training label.
+
+See:
+- `n8n/step2-gemini-draft-labeling.md`
+- `Controllers/InvoiceTrainingController.cs`
+
+Required runtime secrets:
+- `PHARMAFLOW_TRAINING_API_KEY`
+- `GEMINI_API_KEY`
