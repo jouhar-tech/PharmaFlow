@@ -2,6 +2,16 @@
     const translations = {
         en: {
             dashboard: "Dashboard",
+            addStock: "Add stock",
+            stockCaptureHeading: "Capture an invoice in seconds",
+            stockCaptureDescription: "Scan a printed pharmacy invoice with your camera or upload a document from your device.",
+            scanInvoice: "Scan Invoice",
+            scanInvoiceHint: "Use camera",
+            uploadInvoice: "Upload Invoice",
+            uploadInvoiceHint: "From device",
+            invoiceSelected: "Invoice selected",
+            chooseAnother: "Choose another",
+
             dashboardSubtitle: "Monitor your pharmacy activity and the value PharmaFlow creates for your business.",
             welcomeBack: "Welcome back",
             workspace: "Workspace",
@@ -148,6 +158,16 @@
 
         kn: {
             dashboard: "ಡ್ಯಾಶ್‌ಬೋರ್ಡ್",
+            addStock: "ಸ್ಟಾಕ್ ಸೇರಿಸಿ",
+            stockCaptureHeading: "ಕೆಲವೇ ಸೆಕೆಂಡುಗಳಲ್ಲಿ ಇನ್‌ವಾಯ್ಸ್ ಸೆರೆಹಿಡಿಯಿರಿ",
+            stockCaptureDescription: "ನಿಮ್ಮ ಕ್ಯಾಮೆರಾದಿಂದ ಫಾರ್ಮಸಿ ಇನ್‌ವಾಯ್ಸ್ ಸ್ಕ್ಯಾನ್ ಮಾಡಿ ಅಥವಾ ಸಾಧನದಿಂದ ಡಾಕ್ಯುಮೆಂಟ್ ಅಪ್‌ಲೋಡ್ ಮಾಡಿ.",
+            scanInvoice: "ಇನ್‌ವಾಯ್ಸ್ ಸ್ಕ್ಯಾನ್ ಮಾಡಿ",
+            scanInvoiceHint: "ಕ್ಯಾಮೆರಾ ಬಳಸಿ",
+            uploadInvoice: "ಇನ್‌ವಾಯ್ಸ್ ಅಪ್‌ಲೋಡ್ ಮಾಡಿ",
+            uploadInvoiceHint: "ಸಾಧನದಿಂದ",
+            invoiceSelected: "ಇನ್‌ವಾಯ್ಸ್ ಆಯ್ಕೆ ಮಾಡಲಾಗಿದೆ",
+            chooseAnother: "ಮತ್ತೊಂದು ಆಯ್ಕೆಮಾಡಿ",
+
             dashboardSubtitle: "ನಿಮ್ಮ ಫಾರ್ಮಸಿ ಚಟುವಟಿಕೆ ಮತ್ತು PharmaFlow ನಿಮ್ಮ ವ್ಯವಹಾರಕ್ಕೆ ನೀಡುವ ಮೌಲ್ಯವನ್ನು ಮೇಲ್ವಿಚಾರಣೆ ಮಾಡಿ.",
             welcomeBack: "ಮರಳಿ ಸ್ವಾಗತ",
             workspace: "ಕಾರ್ಯಕ್ಷೇತ್ರ",
@@ -294,6 +314,16 @@
 
         hi: {
             dashboard: "डैशबोर्ड",
+            addStock: "स्टॉक जोड़ें",
+            stockCaptureHeading: "कुछ सेकंड में इनवॉइस कैप्चर करें",
+            stockCaptureDescription: "अपने कैमरे से फार्मेसी इनवॉइस स्कैन करें या डिवाइस से दस्तावेज़ अपलोड करें।",
+            scanInvoice: "इनवॉइस स्कैन करें",
+            scanInvoiceHint: "कैमरा उपयोग करें",
+            uploadInvoice: "इनवॉइस अपलोड करें",
+            uploadInvoiceHint: "डिवाइस से",
+            invoiceSelected: "इनवॉइस चुना गया",
+            chooseAnother: "दूसरा चुनें",
+
             dashboardSubtitle: "अपनी फार्मेसी की गतिविधि और PharmaFlow द्वारा आपके व्यवसाय के लिए बनाए गए मूल्य की निगरानी करें।",
             welcomeBack: "वापसी पर स्वागत है",
             workspace: "कार्य क्षेत्र",
