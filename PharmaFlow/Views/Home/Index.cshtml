@@ -314,8 +314,14 @@
             const stage = scannerPreview.closest(".invoice-scanner-stage");
             if (!stage) return;
 
-            const availableWidth = Math.max(1, stage.clientWidth - 32);
-            const availableHeight = Math.max(1, stage.clientHeight - 32);
+            const availableWidth = Math.max(1, stage.clientWidth);
+            const isMobile = window.matchMedia("(max-width: 575.98px)").matches;
+            const availableHeight = Math.max(
+                1,
+                isMobile
+                    ? window.innerHeight - 330
+                    : Math.min(window.innerHeight * 0.62, 560)
+            );
             const angle = ((rotation % 360) + 360) % 360;
             const rotated = angle === 90 || angle === 270;
 
