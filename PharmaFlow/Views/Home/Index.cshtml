@@ -100,6 +100,28 @@
 
                 <p class="invoice-scanner-hint" data-i18n="scannerPreviewHint">Make sure the full invoice is visible and the text is sharp before continuing.</p>
 
+                <div class="invoice-ocr-status" id="invoiceOcrStatus" hidden role="status" aria-live="polite">
+                    <div class="invoice-ocr-status-head">
+                        <strong id="invoiceOcrStatusTitle" data-i18n="ocrPreparing">Preparing OCR...</strong>
+                        <span id="invoiceOcrProgress">0%</span>
+                    </div>
+                    <div class="invoice-ocr-progress"><span id="invoiceOcrProgressBar"></span></div>
+                    <small id="invoiceOcrStatusMessage" data-i18n="ocrStarting">Loading the free OCR engine.</small>
+                </div>
+
+                <div class="invoice-ocr-result" id="invoiceOcrResult" hidden>
+                    <div class="invoice-ocr-result-head">
+                        <div>
+                            <strong data-i18n="ocrResult">OCR text</strong>
+                            <span id="invoiceOcrConfidence"></span>
+                        </div>
+                        <button type="button" class="invoice-ocr-copy" id="invoiceOcrCopy" data-i18n="copyOcrText">Copy text</button>
+                    </div>
+                    <textarea id="invoiceOcrText" class="invoice-ocr-text" readonly rows="10" aria-label="OCR result"></textarea>
+                </div>
+
+                <p class="invoice-pdf-ocr-note" id="invoicePdfOcrNote" hidden data-i18n="pdfOcrComingNext">PDF OCR will be added after PDF page rendering is implemented. Image invoices can be OCR-processed now.</p>
+
                 <footer class="invoice-scanner-footer">
                     <button type="button" class="btn btn-outline-secondary" id="invoiceScannerRetake" data-i18n="retakeInvoice">Retake / Choose another</button>
                     <button type="button" class="btn btn-primary" id="invoiceScannerUse" data-i18n="useThisScan">Use this scan</button>
@@ -201,6 +223,7 @@
 </div>
 
 @section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@6.0.1/dist/tesseract.min.js"></script>
 <script>
     (() => {
         const cameraInput = document.getElementById("dashboardCameraInput");
@@ -261,6 +284,7 @@
             selected?.setAttribute("hidden", "");
             pendingFile = null;
             window.pharmaFlowInvoiceCapture = null;
+            resetOcrUi();
             closeScanner();
 
             document.querySelectorAll(".stock-capture-button").forEach(button => {
@@ -272,6 +296,7 @@
             pendingFile = file;
             rotation = 0;
             enhanceText = false;
+            resetOcrUi();
 
             if (enhanceButton) {
                 enhanceButton.setAttribute("aria-pressed", "false");
@@ -351,21 +376,92 @@
             }
         };
 
+        const ocrStatus = document.getElementById("invoiceOcrStatus");
+        const ocrStatusTitle = document.getElementById("invoiceOcrStatusTitle");
+        const ocrStatusMessage = document.getElementById("invoiceOcrStatusMessage");
+        const ocrProgress = document.getElementById("invoiceOcrProgress");
+        const ocrProgressBar = document.getElementById("invoiceOcrProgressBar");
+        const ocrResult = document.getElementById("invoiceOcrResult");
+        const ocrText = document.getElementById("invoiceOcrText");
+        const ocrConfidence = document.getElementById("invoiceOcrConfidence");
+        const ocrCopy = document.getElementById("invoiceOcrCopy");
+        const pdfOcrNote = document.getElementById("invoicePdfOcrNote");
+
+        const updateOcrStatus = (title, message, progress = 0) => {
+            ocrStatus?.removeAttribute("hidden");
+            if (ocrStatusTitle) ocrStatusTitle.textContent = title;
+            if (ocrStatusMessage) ocrStatusMessage.textContent = message;
+            if (ocrProgress) ocrProgress.textContent = Math.round(progress) + "%";
+            if (ocrProgressBar) ocrProgressBar.style.width = Math.max(0, Math.min(100, progress)) + "%";
+        };
+
+        const resetOcrUi = () => {
+            ocrStatus?.setAttribute("hidden", "");
+            ocrResult?.setAttribute("hidden", "");
+            pdfOcrNote?.setAttribute("hidden", "");
+            if (ocrText) ocrText.value = "";
+            if (ocrConfidence) ocrConfidence.textContent = "";
+            if (ocrProgressBar) ocrProgressBar.style.width = "0%";
+        };
+
+        const runOcr = async (file) => {
+            if (!window.Tesseract) {
+                throw new Error("OCR engine could not be loaded. Check your internet connection and try again.");
+            }
+
+            updateOcrStatus("Starting OCR...", "Loading English text recognition.", 5);
+
+            const worker = await Tesseract.createWorker("eng", 1, {
+                logger: message => {
+                    if (message.status === "recognizing text") {
+                        updateOcrStatus("Reading invoice...", "Detecting text from the invoice image.", (message.progress || 0) * 100);
+                    } else if (message.status) {
+                        updateOcrStatus("Preparing OCR...", message.status, (message.progress || 0) * 100);
+                    }
+                }
+            });
+
+            try {
+                const result = await worker.recognize(file);
+                const text = (result?.data?.text || "").trim();
+                const confidence = Number(result?.data?.confidence || 0);
+
+                if (!text) {
+                    throw new Error("No readable text was detected in this invoice image.");
+                }
+
+                if (ocrText) ocrText.value = text;
+                if (ocrConfidence) {
+                    ocrConfidence.textContent = "Confidence: " + Math.round(confidence) + "%";
+                }
+                ocrResult?.removeAttribute("hidden");
+                updateOcrStatus("OCR complete", "Text extraction finished. We will structure these fields in the next step.", 100);
+
+                return text;
+            } finally {
+                await worker.terminate();
+            }
+        };
+
         const useScan = async () => {
             if (!pendingFile) return;
 
+            resetOcrUi();
             setBusy(true);
-            try {
-                const finalFile = pendingFile.type.startsWith("image/")
-                    ? await processImage(pendingFile)
-                    : pendingFile;
 
+            try {
+                if (!pendingFile.type.startsWith("image/")) {
+                    pdfOcrNote?.removeAttribute("hidden");
+                    return;
+                }
+
+                const finalFile = await processImage(pendingFile);
                 window.pharmaFlowInvoiceCapture = finalFile;
+                await runOcr(finalFile);
                 showFinalSelection(finalFile);
-                closeScanner();
             } catch (error) {
-                console.error("Invoice scan processing failed.", error);
-                alert("The invoice image could not be prepared. Please try again.");
+                console.error("Invoice OCR processing failed.", error);
+                updateOcrStatus("OCR failed", error?.message || "The invoice image could not be read.", 0);
             } finally {
                 setBusy(false);
             }
@@ -413,6 +509,21 @@
             scannerImage.style.filter = enhanceText
                 ? "grayscale(1) contrast(1.2) brightness(1.06)"
                 : "none";
+        });
+
+        ocrCopy?.addEventListener("click", async () => {
+            const text = ocrText?.value?.trim();
+            if (!text) return;
+
+            try {
+                await navigator.clipboard.writeText(text);
+                ocrCopy.textContent = "Copied";
+                setTimeout(() => {
+                    ocrCopy.textContent = "Copy text";
+                }, 1200);
+            } catch (error) {
+                console.error("Could not copy OCR text.", error);
+            }
         });
 
         document.addEventListener("keydown", event => {
