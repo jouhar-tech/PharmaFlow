@@ -15,6 +15,52 @@
         <div class="dashboard-date">@DateTime.Now.ToString("dd MMM yyyy")</div>
     </div>
 
+    <section class="dashboard-stock-actions" aria-label="Add stock">
+        <div class="dashboard-stock-actions-copy">
+            <span class="section-kicker" data-i18n="addStock">Add stock</span>
+            <h2 data-i18n="stockCaptureHeading">Capture an invoice in seconds</h2>
+            <p data-i18n="stockCaptureDescription">Scan a printed pharmacy invoice with your camera or upload a document from your device.</p>
+        </div>
+
+        <div class="dashboard-stock-actions-buttons">
+            <label class="stock-capture-button stock-capture-primary" for="dashboardCameraInput">
+                <span class="stock-capture-icon">⌁</span>
+                <span>
+                    <strong data-i18n="scanInvoice">Scan Invoice</strong>
+                    <small data-i18n="scanInvoiceHint">Use camera</small>
+                </span>
+            </label>
+            <input id="dashboardCameraInput"
+                   class="dashboard-file-input"
+                   type="file"
+                   accept="image/*"
+                   capture="environment"
+                   aria-label="Scan invoice using camera" />
+
+            <label class="stock-capture-button stock-capture-secondary" for="dashboardUploadInput">
+                <span class="stock-capture-icon">↑</span>
+                <span>
+                    <strong data-i18n="uploadInvoice">Upload Invoice</strong>
+                    <small data-i18n="uploadInvoiceHint">From device</small>
+                </span>
+            </label>
+            <input id="dashboardUploadInput"
+                   class="dashboard-file-input"
+                   type="file"
+                   accept="image/*,application/pdf,.pdf"
+                   aria-label="Upload invoice from device" />
+        </div>
+
+        <div class="stock-capture-selected" id="stockCaptureSelected" hidden role="status" aria-live="polite">
+            <span class="stock-capture-selected-icon">✓</span>
+            <div>
+                <strong data-i18n="invoiceSelected">Invoice selected</strong>
+                <span id="stockCaptureSelectedName"></span>
+            </div>
+            <button type="button" id="stockCaptureReset" class="stock-capture-reset" data-i18n="chooseAnother">Choose another</button>
+        </div>
+    </section>
+
     @if (Model.HasPharmaFlowValue)
     {
         <section class="dashboard-value-card" aria-label="PharmaFlow business value">
@@ -106,5 +152,41 @@
             <div class="empty-state"><span>↘</span><p data-i18n="slowMovingInsights">Slow-moving product insights will appear here.</p></div>
         </article>
     </section>
-
 </div>
+
+@section Scripts {
+<script>
+    (() => {
+        const cameraInput = document.getElementById("dashboardCameraInput");
+        const uploadInput = document.getElementById("dashboardUploadInput");
+        const selected = document.getElementById("stockCaptureSelected");
+        const selectedName = document.getElementById("stockCaptureSelectedName");
+        const reset = document.getElementById("stockCaptureReset");
+
+        const showSelectedFile = (input) => {
+            const file = input?.files?.[0];
+            if (!file || !selected || !selectedName) return;
+
+            selectedName.textContent = file.name;
+            selected.removeAttribute("hidden");
+
+            document.querySelectorAll(".stock-capture-button").forEach(button => {
+                button.classList.add("is-muted");
+            });
+        };
+
+        const resetSelection = () => {
+            if (cameraInput) cameraInput.value = "";
+            if (uploadInput) uploadInput.value = "";
+            selected?.setAttribute("hidden", "");
+            document.querySelectorAll(".stock-capture-button").forEach(button => {
+                button.classList.remove("is-muted");
+            });
+        };
+
+        cameraInput?.addEventListener("change", () => showSelectedFile(cameraInput));
+        uploadInput?.addEventListener("change", () => showSelectedFile(uploadInput));
+        reset?.addEventListener("click", resetSelection);
+    })();
+</script>
+}
