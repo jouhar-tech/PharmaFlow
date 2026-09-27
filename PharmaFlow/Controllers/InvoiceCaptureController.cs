@@ -40,11 +40,12 @@ public sealed class InvoiceCaptureController : Controller
             return BadRequest(new { message = "OCR text is missing or too large." });
 
         var inputLines = request.Lines ?? [];
+        var inputWords = request.Words ?? [];
 
         if (inputLines.Count > 2_000)
             return BadRequest(new { message = "Too many OCR lines were supplied." });
 
-        if (request.Words.Count > 15_000)
+        if (inputWords.Count > 15_000)
             return BadRequest(new { message = "Too many OCR word coordinates were supplied." });
 
         var sourceType = request.SourceType.Trim().ToLowerInvariant();
@@ -75,8 +76,8 @@ public sealed class InvoiceCaptureController : Controller
             ];
         }
 
-        var parsedItems = request.Words.Count > 0
-            ? InvoiceOcrParser.Parse(lines, request.Words)
+        var parsedItems = inputWords.Count > 0
+            ? InvoiceOcrParser.Parse(lines, inputWords)
             : InvoiceOcrParser.Parse(lines);
 
         if (parsedItems.Count == 0)
