@@ -174,7 +174,7 @@ Rules:
             },
             generation_config = new
             {
-                thinking_level = "minimal"
+                thinking_level = "medium"
             }
         };
 
@@ -196,11 +196,24 @@ Rules:
         if (!response.IsSuccessStatusCode)
         {
             _logger.LogWarning(
-                "Gemini invoice extraction failed with status {StatusCode}.",
-                response.StatusCode);
+                "Gemini invoice extraction failed with status {StatusCode}. Response: {Response}",
+                response.StatusCode,
+                responseBody.Length > 1000 ? responseBody[..1000] : responseBody);
 
-            throw new InvalidOperationException(
-                "The invoice could not be analyzed by the AI service. Please try again.");
+            var detail = response.StatusCode switch
+            {
+                System.Net.HttpStatusCode.Unauthorized or
+                System.Net.HttpStatusCode.Forbidden =>
+                    "Gemini API authentication failed. Check the API key and its project permissions.",
+                System.Net.HttpStatusCode.TooManyRequests =>
+                    "Gemini API rate limit reached. Please wait a moment and try again.",
+                System.Net.HttpStatusCode.BadRequest =>
+                    "Gemini rejected the invoice analysis request. Please try again.",
+                _ =>
+                    "The invoice could not be analyzed by the AI service. Please try again."
+            };
+
+            throw new InvalidOperationException(detail);
         }
 
         var outputText = ExtractOutputText(responseBody);
