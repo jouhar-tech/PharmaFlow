@@ -237,11 +237,6 @@
         const ocrStatusMessage = document.getElementById("invoiceOcrStatusMessage");
         const ocrProgress = document.getElementById("invoiceOcrProgress");
         const ocrProgressBar = document.getElementById("invoiceOcrProgressBar");
-        const ocrResult = document.getElementById("invoiceOcrResult");
-        const ocrText = document.getElementById("invoiceOcrText");
-        const ocrConfidence = document.getElementById("invoiceOcrConfidence");
-        const ocrCopy = document.getElementById("invoiceOcrCopy");
-        const pdfOcrNote = document.getElementById("invoicePdfOcrNote");
 
         let pendingFile = null;
         let pendingSourceType = "upload";
@@ -293,7 +288,6 @@
 
         const resetOcrUi = () => {
             ocrStatus?.setAttribute("hidden", "");
-            pdfOcrNote?.setAttribute("hidden", "");
             if (ocrProgressBar) ocrProgressBar.style.width = "0%";
         };
 
@@ -377,9 +371,7 @@
 
                 const angle = ((rotation % 360) + 360) % 360;
                 const swapDimensions = angle === 90 || angle === 270;
-                // Keep enough resolution for small pharmacy-table text. Tesseract
-                // loses batch/expiry characters quickly when a phone photo is
-                // downscaled too aggressively.
+                // Keep enough resolution for small pharmacy-table text.
                 const maxDimension = 3600;
                 const sourceMax = Math.max(image.naturalWidth, image.naturalHeight);
                 const scale = Math.min(1, maxDimension / sourceMax);
@@ -422,7 +414,7 @@
         const canvasToBlob = canvas => new Promise((resolve, reject) => {
             canvas.toBlob(blob => {
                 if (blob) resolve(blob);
-                else reject(new Error("Could not prepare the PDF page for OCR."));
+                else reject(new Error("Could not prepare the PDF preview."));
             }, "image/jpeg", 0.92);
         });
 
@@ -585,7 +577,7 @@
 
             if (file.size > MAX_FILE_SIZE) {
                 input.value = "";
-                alert("Please choose an invoice file smaller than 15 MB.");
+                alert("Please choose an invoice file smaller than 25 MB.");
                 return;
             }
 
