@@ -17,7 +17,7 @@ public interface IInvoiceVisionService
 public sealed class GeminiInvoiceVisionService : IInvoiceVisionService
 {
     private const string DefaultModel = "gemini-3.8-flash";
-    private const string Endpoint = "https://generativelanguage.googleapis.com/v1beta/interactions";
+    private const string EndpointTemplate = "https://generativelanguage.googleapis.com/v1beta/models/{0}:generateContent";
     private const int MaxFileBytes = 25 * 1024 * 1024;
 
     private readonly HttpClient _httpClient;
@@ -160,25 +160,42 @@ Rules:
 
         var payload = new
         {
-            model,
-            input = new object[]
+            contents = new[]
             {
-                new { type = "text", text = prompt },
-                inputDocument
+                new
+                {
+                    role = "user",
+                    parts = new object[]
+                    {
+                        new { text = prompt },
+                        new
+                        {
+                            inline_data = new
+                            {
+                                mime_type = mimeType,
+                                data = fileData
+                            }
+                        }
+                    }
+                }
             },
-            response_format = new
+            generationConfig = new
             {
-                type = "text",
-                mime_type = "application/json",
-                schema
-            },
-            generation_config = new
-            {
-                thinking_level = "medium"
+                responseMimeType = "application/json",
+                responseSchema = schema,
+                thinkingConfig = new
+                {
+                    thinkingLevel = "medium"
+                }
             }
         };
 
-        using var request = new HttpRequestMessage(HttpMethod.Post, Endpoint);
+        var endpoint = string.Format(
+            CultureInfo.InvariantCulture,
+            EndpointTemplate,
+            Uri.EscapeDataString(model));
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
         request.Headers.Add("x-goog-api-key", apiKey);
         request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         request.Content = new StringContent(
@@ -198,19 +215,25 @@ Rules:
             _logger.LogWarning(
                 "Gemini invoice extraction failed with status {StatusCode}. Response: {Response}",
                 response.StatusCode,
-                responseBody.Length > 1000 ? responseBody[..1000] : responseBody);
+                responseBody.Length > 2000 ? responseBody[..2000] : responseBody);
+
+            var apiDetail = TryExtractGeminiError(responseBody);
 
             var detail = response.StatusCode switch
             {
                 System.Net.HttpStatusCode.Unauthorized or
                 System.Net.HttpStatusCode.Forbidden =>
-                    "Gemini API authentication failed. Check the API key and its project permissions.",
+                    "Gemini API authentication failed. Check the API key and project permissions.",
                 System.Net.HttpStatusCode.TooManyRequests =>
                     "Gemini API rate limit reached. Please wait a moment and try again.",
                 System.Net.HttpStatusCode.BadRequest =>
-                    "Gemini rejected the invoice analysis request. Please try again.",
+                    string.IsNullOrWhiteSpace(apiDetail)
+                        ? "Gemini rejected the invoice request. Check the Gemini API configuration and try again."
+                        : $"Gemini rejected the invoice request: {apiDetail}",
                 _ =>
-                    "The invoice could not be analyzed by the AI service. Please try again."
+                    string.IsNullOrWhiteSpace(apiDetail)
+                        ? "The invoice could not be analyzed by the AI service. Please try again."
+                        : $"The AI service returned an error: {apiDetail}"
             };
 
             throw new InvalidOperationException(detail);
@@ -289,33 +312,47 @@ Rules:
         using var document = JsonDocument.Parse(responseBody);
         var root = document.RootElement;
 
-        if (root.TryGetProperty("output_text", out var outputText) &&
-            outputText.ValueKind == JsonValueKind.String)
+        if (root.TryGetProperty("candidates", out var candidates) &&
+            candidates.ValueKind == JsonValueKind.Array)
         {
-            return outputText.GetString();
-        }
-
-        if (root.TryGetProperty("steps", out var steps) &&
-            steps.ValueKind == JsonValueKind.Array)
-        {
-            foreach (var step in steps.EnumerateArray())
+            foreach (var candidate in candidates.EnumerateArray())
             {
-                if (!step.TryGetProperty("content", out var content) ||
-                    content.ValueKind != JsonValueKind.Array)
+                if (!candidate.TryGetProperty("content", out var content) ||
+                    !content.TryGetProperty("parts", out var parts) ||
+                    parts.ValueKind != JsonValueKind.Array)
                     continue;
 
-                foreach (var block in content.EnumerateArray())
+                foreach (var part in parts.EnumerateArray())
                 {
-                    if (block.TryGetProperty("type", out var type) &&
-                        type.ValueKind == JsonValueKind.String &&
-                        string.Equals(type.GetString(), "text", StringComparison.OrdinalIgnoreCase) &&
-                        block.TryGetProperty("text", out var text) &&
+                    if (part.TryGetProperty("text", out var text) &&
                         text.ValueKind == JsonValueKind.String)
                     {
                         return text.GetString();
                     }
                 }
             }
+        }
+
+        return null;
+    }
+
+    private static string? TryExtractGeminiError(string responseBody)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(responseBody);
+            var root = document.RootElement;
+
+            if (root.TryGetProperty("error", out var error) &&
+                error.TryGetProperty("message", out var message) &&
+                message.ValueKind == JsonValueKind.String)
+            {
+                return message.GetString();
+            }
+        }
+        catch (JsonException)
+        {
+            // Keep the user-facing message generic if Gemini returned non-JSON.
         }
 
         return null;
