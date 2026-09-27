@@ -14,6 +14,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<Feedback> Feedback => Set<Feedback>();
     public DbSet<Product> Products => Set<Product>();
     public DbSet<ProductBatch> ProductBatches => Set<ProductBatch>();
+    public DbSet<InvoiceImport> InvoiceImports => Set<InvoiceImport>();
+    public DbSet<InvoiceImportItem> InvoiceImportItems => Set<InvoiceImportItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -80,6 +82,63 @@ public class ApplicationDbContext : DbContext
             entity.Property(b => b.IsActive).HasColumnName("is_active");
             entity.Property(b => b.CreatedAt).HasColumnName("created_at");
             entity.Property(b => b.UpdatedAt).HasColumnName("updated_at");
+        });
+
+        modelBuilder.Entity<InvoiceImport>(entity =>
+        {
+            entity.ToTable("invoice_imports", "public");
+            entity.HasKey(item => item.ImportId);
+            entity.Property(item => item.ImportId).HasColumnName("import_id");
+            entity.Property(item => item.ProfileId).HasColumnName("profile_id");
+            entity.Property(item => item.OriginalFileName).HasColumnName("original_file_name");
+            entity.Property(item => item.SourceType).HasColumnName("source_type");
+            entity.Property(item => item.RawOcrText).HasColumnName("raw_ocr_text");
+            entity.Property(item => item.OcrConfidence).HasColumnName("ocr_confidence");
+            entity.Property(item => item.Status).HasColumnName("status");
+            entity.Property(item => item.ErrorMessage).HasColumnName("error_message");
+            entity.Property(item => item.CreatedAt).HasColumnName("created_at");
+            entity.Property(item => item.UpdatedAt).HasColumnName("updated_at");
+
+            entity.HasOne<Profile>()
+                .WithMany()
+                .HasForeignKey(item => item.ProfileId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasMany(item => item.Items)
+                .WithOne(item => item.Import)
+                .HasForeignKey(item => item.ImportId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<InvoiceImportItem>(entity =>
+        {
+            entity.ToTable("invoice_import_items", "public");
+            entity.HasKey(item => item.ImportItemId);
+            entity.Property(item => item.ImportItemId).HasColumnName("import_item_id");
+            entity.Property(item => item.ImportId).HasColumnName("import_id");
+            entity.Property(item => item.RowNumber).HasColumnName("row_number");
+            entity.Property(item => item.RawLine).HasColumnName("raw_line");
+            entity.Property(item => item.ProductName).HasColumnName("product_name");
+            entity.Property(item => item.BatchNumber).HasColumnName("batch_number");
+            entity.Property(item => item.ExpiryDate).HasColumnName("expiry_date");
+            entity.Property(item => item.Quantity).HasColumnName("quantity");
+            entity.Property(item => item.Confidence).HasColumnName("confidence");
+            entity.Property(item => item.ValidationStatus).HasColumnName("validation_status");
+            entity.Property(item => item.ValidationMessage).HasColumnName("validation_message");
+            entity.Property(item => item.MatchedProductId).HasColumnName("matched_product_id");
+            entity.Property(item => item.SavedBatchId).HasColumnName("saved_batch_id");
+            entity.Property(item => item.CreatedAt).HasColumnName("created_at");
+            entity.Property(item => item.UpdatedAt).HasColumnName("updated_at");
+
+            entity.HasOne(item => item.MatchedProduct)
+                .WithMany()
+                .HasForeignKey(item => item.MatchedProductId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(item => item.SavedBatch)
+                .WithMany()
+                .HasForeignKey(item => item.SavedBatchId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         modelBuilder.Entity<Profile>(entity =>
