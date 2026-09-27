@@ -44,6 +44,9 @@ public sealed class InvoiceCaptureController : Controller
         if (inputLines.Count > 2_000)
             return BadRequest(new { message = "Too many OCR lines were supplied." });
 
+        if (request.Words.Count > 15_000)
+            return BadRequest(new { message = "Too many OCR word coordinates were supplied." });
+
         var sourceType = request.SourceType.Trim().ToLowerInvariant();
         if (sourceType is not ("camera" or "upload" or "pdf"))
             sourceType = "upload";
@@ -72,7 +75,9 @@ public sealed class InvoiceCaptureController : Controller
             ];
         }
 
-        var parsedItems = InvoiceOcrParser.Parse(lines);
+        var parsedItems = request.Words.Count > 0
+            ? InvoiceOcrParser.Parse(lines, request.Words)
+            : InvoiceOcrParser.Parse(lines);
 
         if (parsedItems.Count == 0)
             return BadRequest(new
