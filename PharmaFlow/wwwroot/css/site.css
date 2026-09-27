@@ -639,3 +639,36 @@ body.theme-dark .invoice-scanner-footer { border-color: #263449; }
   .invoice-scanner-footer { padding: .7rem .8rem .85rem; }
   .invoice-scanner-footer .btn { flex: 1; min-height: 42px; font-size: .72rem; }
 }
+
+
+/* Invoice OCR result */
+.invoice-ocr-status { margin: 0 1rem .8rem; padding: .75rem .85rem; border: 1px solid #bfdbfe; border-radius: .8rem; background: #eff6ff; color: #1e3a8a; }
+.invoice-ocr-status[hidden], .invoice-ocr-result[hidden], .invoice-pdf-ocr-note[hidden] { display: none; }
+.invoice-ocr-status-head, .invoice-ocr-result-head { display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
+.invoice-ocr-status-head strong, .invoice-ocr-result-head strong { font-size: .72rem; font-weight: 800; }
+.invoice-ocr-status-head span, .invoice-ocr-result-head > div > span { color: #64748b; font-size: .65rem; }
+.invoice-ocr-progress { height: 6px; margin: .5rem 0 .35rem; overflow: hidden; border-radius: 999px; background: #dbeafe; }
+.invoice-ocr-progress > span { display: block; width: 0; height: 100%; border-radius: inherit; background: #2563eb; transition: width .15s ease; }
+.invoice-ocr-status small { display: block; color: #64748b; font-size: .64rem; line-height: 1.35; }
+.invoice-ocr-result { margin: 0 1rem .8rem; padding: .75rem; border: 1px solid #e5eaf2; border-radius: .8rem; background: #f8fafc; }
+.invoice-ocr-result-head > div { min-width: 0; }
+.invoice-ocr-result-head > div > strong, .invoice-ocr-result-head > div > span { display: block; }
+.invoice-ocr-result-head > div > span { margin-top: .1rem; }
+.invoice-ocr-copy { border: 0; border-radius: .55rem; padding: .42rem .6rem; background: #e2e8f0; color: #334155; font-size: .62rem; font-weight: 800; cursor: pointer; }
+.invoice-ocr-copy:hover { background: #cbd5e1; }
+.invoice-ocr-text { display: block; width: 100%; min-height: 160px; margin-top: .6rem; padding: .65rem; resize: vertical; border: 1px solid #dbe3ee; border-radius: .65rem; background: #fff; color: #334155; font: .68rem/1.45 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+.invoice-pdf-ocr-note { margin: 0 1rem .8rem; padding: .65rem .75rem; border: 1px solid #fed7aa; border-radius: .7rem; background: #fff7ed; color: #9a3412; font-size: .66rem; line-height: 1.4; }
+body.theme-dark .invoice-ocr-status { background: #172554; border-color: #1e40af; color: #bfdbfe; }
+body.theme-dark .invoice-ocr-status-head span, body.theme-dark .invoice-ocr-status small, body.theme-dark .invoice-ocr-result-head > div > span { color: #94a3b8; }
+body.theme-dark .invoice-ocr-progress { background: #1e3a8a; }
+body.theme-dark .invoice-ocr-result { background: #162235; border-color: #263449; }
+body.theme-dark .invoice-ocr-copy { background: #334155; color: #e2e8f0; }
+body.theme-dark .invoice-ocr-copy:hover { background: #475569; }
+body.theme-dark .invoice-ocr-text { background: #0f172a; border-color: #334155; color: #e2e8f0; }
+body.theme-dark .invoice-pdf-ocr-note { background: #2a2110; border-color: #854d0e; color: #fed7aa; }
+
+@media (max-width: 575.98px) {
+  .invoice-ocr-status, .invoice-ocr-result, .invoice-pdf-ocr-note { margin-left: .8rem; margin-right: .8rem; }
+  .invoice-ocr-result { padding: .65rem; }
+  .invoice-ocr-text { min-height: 130px; }
+}
