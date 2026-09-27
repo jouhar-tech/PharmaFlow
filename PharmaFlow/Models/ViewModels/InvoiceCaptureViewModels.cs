@@ -42,10 +42,22 @@ public sealed class InvoiceParseRequest
     public decimal OcrConfidence { get; set; }
     public string OcrText { get; set; } = string.Empty;
     public List<InvoiceOcrLineInput> Lines { get; set; } = [];
+    public List<InvoiceOcrWordInput> Words { get; set; } = [];
 }
 
 public sealed class InvoiceOcrLineInput
 {
     public string Text { get; set; } = string.Empty;
     public decimal Confidence { get; set; }
+}
+
+public sealed class InvoiceOcrWordInput
+{
+    public string Text { get; set; } = string.Empty;
+    public decimal Confidence { get; set; }
+    public int X0 { get; set; }
+    public int Y0 { get; set; }
+    public int X1 { get; set; }
+    public int Y1 { get; set; }
+    public int Page { get; set; } = 1;
 }
