@@ -535,21 +535,28 @@
         const scoreOcrResult = (data) => {
             const text = String(data?.text || "");
             const normalized = text.toLowerCase();
+
             const dateSignals =
                 (text.match(/\b\d{1,2}\s*[/.-]\s*\d{1,2}(?:\s*[/.-]\s*\d{2,4})?\b/g) || []).length +
                 (text.match(/\b(?:0?[1-9]|1[0-2])\s*(?:[/.-]\s*)?\d{2,4}\b/g) || []).length;
 
+            const hsnSignals = (text.match(/\b\d{7,8}\b/g) || []).length;
+
             const headerSignals = [
-                "qty", "quantity", "batch", "expiry", "exp", "description", "product", "pack"
+                "qty", "quantity", "batch", "expiry", "exp", "description", "product", "pack", "mrp"
             ].reduce((count, token) =>
                 count + (normalized.includes(token) ? 1 : 0), 0);
 
-            const wordCount = Array.isArray(data?.words) ? data.words.length : 0;
+            const footerSignals = normalized.includes("grand total") ? 2 : 0;
+            const lineSignals = (text.match(/\n/g) || []).length;
+
             const confidence = Number(data?.confidence || 0);
 
-            return (dateSignals * 8) +
+            return (hsnSignals * 10) +
+                   (dateSignals * 8) +
                    (headerSignals * 2) +
-                   Math.min(wordCount / 100, 8) +
+                   footerSignals +
+                   Math.min(lineSignals / 10, 5) +
                    (confidence / 25);
         };
 
@@ -560,11 +567,32 @@
             words: collectOcrWords(data, 1)
         });
 
+        const getImageDimensions = file => new Promise((resolve, reject) => {
+            const image = new Image();
+            const url = URL.createObjectURL(file);
+
+            image.onload = () => {
+                const dimensions = {
+                    width: image.naturalWidth,
+                    height: image.naturalHeight
+                };
+                URL.revokeObjectURL(url);
+                resolve(dimensions);
+            };
+
+            image.onerror = () => {
+                URL.revokeObjectURL(url);
+                reject(new Error("The invoice image dimensions could not be read."));
+            };
+
+            image.src = url;
+        });
+
         const runOcrOnImage = async (file) => {
             const worker = await configureWorker("6");
 
             try {
-                updateOcrStatus("Reading invoice...", "Processing the invoice image.", 10);
+                updateOcrStatus("Reading invoice...", "Reading the complete invoice first.", 10);
 
                 const primary = await worker.recognize(
                     file,
@@ -573,13 +601,49 @@
                 );
 
                 let bestData = primary.data;
+                let bestScore = scoreOcrResult(bestData);
 
-                // Pharmacy invoices are table-heavy. PSM 6 is good for a regular
-                // page block, while PSM 11 is often better when columns have
-                // uneven spacing. Retry automatically when the first pass looks
-                // weak instead of asking the user to retake a usable image.
-                if (scoreOcrResult(primary.data) < 10) {
-                    updateOcrStatus("Improving OCR...", "Trying a second table-reading pass.", 55);
+                // First table-detector pass: pharmacy invoices usually have the
+                // stock grid in the middle/lower part of the page. Restricting
+                // OCR to that dense region reduces interference from addresses,
+                // GST details, notices and totals.
+                const dimensions = await getImageDimensions(file);
+                const tableTop = Math.round(dimensions.height * 0.14);
+                const tableBottom = Math.round(dimensions.height * 0.90);
+                const tableHeight = Math.max(1, tableBottom - tableTop);
+
+                updateOcrStatus("Detecting table...", "Isolating the pharmacy stock table.", 45);
+
+                await worker.setParameters({
+                    preserve_interword_spaces: "1",
+                    tessedit_pageseg_mode: "6",
+                    user_defined_dpi: "300"
+                });
+
+                const tablePass = await worker.recognize(
+                    file,
+                    {
+                        rectangle: {
+                            top: tableTop,
+                            left: 0,
+                            width: dimensions.width,
+                            height: tableHeight
+                        }
+                    },
+                    { blocks: true }
+                );
+
+                const tableScore = scoreOcrResult(tablePass.data);
+
+                if (tableScore > bestScore) {
+                    bestData = tablePass.data;
+                    bestScore = tableScore;
+                }
+
+                // Second layout pass only when the detected table still looks
+                // weak. PSM 11 is useful for invoices with irregular spacing.
+                if (bestScore < 16) {
+                    updateOcrStatus("Improving table OCR...", "Trying a second table layout.", 65);
 
                     await worker.setParameters({
                         preserve_interword_spaces: "1",
@@ -589,12 +653,21 @@
 
                     const alternate = await worker.recognize(
                         file,
-                        {},
+                        {
+                            rectangle: {
+                                top: tableTop,
+                                left: 0,
+                                width: dimensions.width,
+                                height: tableHeight
+                            }
+                        },
                         { blocks: true }
                     );
 
-                    if (scoreOcrResult(alternate.data) > scoreOcrResult(bestData))
+                    if (scoreOcrResult(alternate.data) > bestScore) {
                         bestData = alternate.data;
+                        bestScore = scoreOcrResult(alternate.data);
+                    }
                 }
 
                 const result = buildOcrPayload(bestData);
