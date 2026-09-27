@@ -285,7 +285,7 @@ public sealed class InvoiceCaptureController : Controller
         }
         catch (InvalidOperationException ex)
         {
-            _logger.LogWarning(ex, "Gemini invoice extraction could not be completed for profile {ProfileId}.", profileId);
+            _logger.LogWarning(ex, "Invoice extraction could not be completed for profile {ProfileId}.", profileId);
             return BadRequest(new { message = ex.Message });
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -297,7 +297,7 @@ public sealed class InvoiceCaptureController : Controller
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Unexpected Gemini invoice extraction error for profile {ProfileId}.", profileId);
+            _logger.LogError(ex, "Unexpected invoice extraction error for profile {ProfileId}.", profileId);
             return StatusCode(StatusCodes.Status502BadGateway, new
             {
                 message = "The invoice could not be analyzed right now. Please try again."
