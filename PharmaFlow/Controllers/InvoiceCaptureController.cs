@@ -39,7 +39,9 @@ public sealed class InvoiceCaptureController : Controller
         if (string.IsNullOrWhiteSpace(request.OcrText) || request.OcrText.Length > 200_000)
             return BadRequest(new { message = "OCR text is missing or too large." });
 
-        if (request.Lines.Count > 2_000)
+        var inputLines = request.Lines ?? [];
+
+        if (inputLines.Count > 2_000)
             return BadRequest(new { message = "Too many OCR lines were supplied." });
 
         var sourceType = request.SourceType.Trim().ToLowerInvariant();
@@ -53,7 +55,7 @@ public sealed class InvoiceCaptureController : Controller
         if (originalFileName.Length > 255)
             originalFileName = originalFileName[..255];
 
-        var lines = request.Lines
+        var lines = inputLines
             .Where(line => !string.IsNullOrWhiteSpace(line.Text))
             .Take(2_000)
             .ToList();
