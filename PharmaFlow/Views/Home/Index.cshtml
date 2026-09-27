@@ -334,6 +334,13 @@
 
             const displayWidth = Math.max(1, Math.round(imageWidth * scale));
             const displayHeight = Math.max(1, Math.round(imageHeight * scale));
+            const sourceDisplayWidth = Math.max(1, Math.round(scannerImage.naturalWidth * scale));
+            const sourceDisplayHeight = Math.max(1, Math.round(scannerImage.naturalHeight * scale));
+
+            // Size the actual image using its unrotated dimensions, then rotate it.
+            // This keeps the crop corners locked to the visible invoice edges.
+            scannerImage.style.width = sourceDisplayWidth + "px";
+            scannerImage.style.height = sourceDisplayHeight + "px";
 
             scannerPreview.classList.add("has-image");
             scannerPreview.style.width = displayWidth + "px";
@@ -349,6 +356,8 @@
             scannerPreview?.style.removeProperty("width");
             scannerPreview?.style.removeProperty("height");
             scannerPreview?.style.removeProperty("--scanner-image-ratio");
+            scannerImage?.style.removeProperty("width");
+            scannerImage?.style.removeProperty("height");
         };
 
         const showPreviewBlob = (blob) => {
