@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PharmaFlow.Data;
@@ -15,13 +17,16 @@ public sealed class InvoiceCaptureController : Controller
 
     private readonly ApplicationDbContext _dbContext;
     private readonly ILogger<InvoiceCaptureController> _logger;
+    private readonly IInvoiceVisionService _invoiceVisionService;
 
     public InvoiceCaptureController(
         ApplicationDbContext dbContext,
-        ILogger<InvoiceCaptureController> logger)
+        ILogger<InvoiceCaptureController> logger,
+        IInvoiceVisionService invoiceVisionService)
     {
         _dbContext = dbContext;
         _logger = logger;
+        _invoiceVisionService = invoiceVisionService;
     }
 
     [HttpPost]
@@ -140,6 +145,224 @@ public sealed class InvoiceCaptureController : Controller
             importId = import.ImportId,
             redirectUrl = Url.Action(nameof(Review), "InvoiceCapture", new { id = import.ImportId })
         });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [RequestSizeLimit(26_214_400)]
+    public async Task<IActionResult> ParseWithVision(
+        IFormFile? invoice,
+        string? originalFileName,
+        string? sourceType,
+        CancellationToken cancellationToken)
+    {
+        if (!TryGetProfileId(out var profileId))
+            return Unauthorized();
+
+        if (invoice is null || invoice.Length <= 0)
+            return BadRequest(new { message = "Please select an invoice image or PDF." });
+
+        const long maxFileBytes = 25L * 1024 * 1024;
+        if (invoice.Length > maxFileBytes)
+            return BadRequest(new { message = "The invoice file is too large. Please use a file smaller than 25 MB." });
+
+        var extension = Path.GetExtension(invoice.FileName).ToLowerInvariant();
+        var mimeType = invoice.ContentType?.Trim().ToLowerInvariant();
+
+        var allowed = extension switch
+        {
+            ".jpg" or ".jpeg" => mimeType is "image/jpeg" or "" || mimeType?.StartsWith("image/") == true,
+            ".png" => mimeType is "image/png" or "" || mimeType?.StartsWith("image/") == true,
+            ".webp" => mimeType is "image/webp" or "" || mimeType?.StartsWith("image/") == true,
+            ".pdf" => mimeType is "application/pdf" or "" || mimeType == "application/octet-stream",
+            _ => false
+        };
+
+        if (!allowed)
+            return BadRequest(new { message = "Unsupported invoice format. Use JPG, PNG, WEBP or PDF." });
+
+        mimeType = extension == ".pdf"
+            ? "application/pdf"
+            : extension is ".jpg" or ".jpeg"
+                ? "image/jpeg"
+                : extension == ".webp"
+                    ? "image/webp"
+                    : "image/png";
+
+        try
+        {
+            await using var stream = invoice.OpenReadStream();
+
+            var items = await _invoiceVisionService.ExtractAsync(
+                stream,
+                mimeType,
+                cancellationToken);
+
+            if (items.Count == 0)
+                return BadRequest(new
+                {
+                    message = "The AI could not detect any stock rows. Make sure the full invoice table is visible and readable."
+                });
+
+            var now = DateTime.UtcNow;
+
+            await _dbContext.InvoiceImports
+                .Where(item =>
+                    item.ProfileId == profileId &&
+                    item.Status == "draft" &&
+                    item.CreatedAt < now.AddHours(-24))
+                .ExecuteDeleteAsync(cancellationToken);
+
+            var safeFileName = Path.GetFileName(
+                string.IsNullOrWhiteSpace(originalFileName)
+                    ? invoice.FileName
+                    : originalFileName.Trim());
+
+            if (string.IsNullOrWhiteSpace(safeFileName))
+                safeFileName = "invoice";
+
+            if (safeFileName.Length > 255)
+                safeFileName = safeFileName[..255];
+
+            var normalizedSource = string.Equals(
+                mimeType,
+                "application/pdf",
+                StringComparison.OrdinalIgnoreCase)
+                ? "pdf"
+                : (sourceType?.Trim().ToLowerInvariant() == "camera" ? "camera" : "upload");
+
+            var import = new InvoiceImport
+            {
+                ProfileId = profileId,
+                OriginalFileName = safeFileName,
+                SourceType = normalizedSource,
+                RawOcrText = null,
+                OcrConfidence = items.Count == 0 ? 0m : items.Average(item => item.Confidence),
+                Status = "draft",
+                CreatedAt = now,
+                UpdatedAt = now
+            };
+
+            foreach (var item in items.Take(MaxParsedItems))
+            {
+                var hasProduct = !string.IsNullOrWhiteSpace(item.ProductName);
+                var hasBatch = !string.IsNullOrWhiteSpace(item.BatchNumber);
+                var hasExpiry = TryParseVisionExpiry(item.ExpiryDateText, out var expiry);
+                var hasQuantity = item.Quantity > 0m;
+
+                var valid = hasProduct && hasBatch && hasExpiry && hasQuantity;
+
+                import.Items.Add(new InvoiceImportItem
+                {
+                    RowNumber = item.RowNumber,
+                    RawLine = BuildVisionRawLine(item),
+                    ProductName = item.ProductName,
+                    BatchNumber = item.BatchNumber,
+                    ExpiryDate = hasExpiry ? expiry : null,
+                    Quantity = hasQuantity ? item.Quantity : null,
+                    Confidence = Math.Clamp(item.Confidence, 0m, 100m),
+                    ValidationStatus = valid ? "ready" : "needs_review",
+                    ValidationMessage = valid
+                        ? "AI extraction complete. Verify the row before saving stock."
+                        : "One or more required fields could not be read confidently. Please verify this row.",
+                    CreatedAt = now,
+                    UpdatedAt = now
+                });
+            }
+
+            if (import.Items.Count == 0)
+                return BadRequest(new { message = "The AI returned no usable invoice rows." });
+
+            _dbContext.InvoiceImports.Add(import);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+
+            return Ok(new
+            {
+                success = true,
+                importId = import.ImportId,
+                redirectUrl = Url.Action(nameof(Review), "InvoiceCapture", new { id = import.ImportId })
+            });
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning(ex, "Gemini invoice extraction could not be completed for profile {ProfileId}.", profileId);
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            return StatusCode(StatusCodes.Status408RequestTimeout, new
+            {
+                message = "Invoice analysis timed out. Please try the invoice again."
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected Gemini invoice extraction error for profile {ProfileId}.", profileId);
+            return StatusCode(StatusCodes.Status502BadGateway, new
+            {
+                message = "The invoice could not be analyzed right now. Please try again."
+            });
+        }
+    }
+
+    private static string BuildVisionRawLine(InvoiceVisionItem item) =>
+        string.Join(
+            " | ",
+            new[]
+            {
+                item.ProductName,
+                item.BatchNumber,
+                item.ExpiryDateText,
+                item.Quantity > 0m
+                    ? item.Quantity.ToString(CultureInfo.InvariantCulture)
+                    : string.Empty
+            }.Where(value => !string.IsNullOrWhiteSpace(value)));
+
+    private static bool TryParseVisionExpiry(string? value, out DateOnly date)
+    {
+        date = default;
+
+        if (string.IsNullOrWhiteSpace(value))
+            return false;
+
+        var text = value.Trim();
+
+        if (DateOnly.TryParseExact(
+                text,
+                new[] { "yyyy-MM-dd", "dd-MM-yyyy", "dd/MM/yyyy", "dd.MM.yyyy", "MM-yyyy", "MM/yyyy", "MM.yy", "MM-yy", "MM/yy" },
+                CultureInfo.InvariantCulture,
+                DateTimeStyles.None,
+                out date))
+        {
+            if (Regex.IsMatch(text, @"^\d{2}([./-])?\d{2}$"))
+            {
+                var parts = Regex.Split(text, @"[./-]").Where(part => !string.IsNullOrWhiteSpace(part)).ToArray();
+                if (parts.Length == 2 &&
+                    int.TryParse(parts[0], out var month) &&
+                    int.TryParse(parts[1], out var year))
+                {
+                    year = year < 100 ? 2000 + year : year;
+                    if (month is >= 1 and <= 12)
+                    {
+                        date = new DateOnly(year, month, DateTime.DaysInMonth(year, month));
+                        return true;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        if (DateOnly.TryParse(
+                text,
+                CultureInfo.InvariantCulture,
+                DateTimeStyles.AllowWhiteSpaces,
+                out date))
+        {
+            return true;
+        }
+
+        return false;
     }
 
     [HttpGet]
