@@ -1,0 +1,289 @@
+@model PharmaFlow.Models.ViewModels.InvoiceReviewViewModel
+
+@{
+    ViewData["Title"] = "Review Invoice";
+    var canEdit = !Model.Saved;
+}
+
+<div class="invoice-review-page">
+    <div class="invoice-review-header">
+        <div>
+            <span class="dashboard-eyebrow" data-i18n="invoiceCapture">Invoice Capture</span>
+            <h1 class="dashboard-title" data-i18n="reviewInvoice">Review invoice</h1>
+            <p class="dashboard-subtitle" data-i18n="reviewInvoiceSubtitle">Check Product Name, Batch No, Expiry Date and Qty before stock is added.</p>
+        </div>
+        <a asp-controller="Home" asp-action="Index" class="btn btn-light border" data-i18n="backToDashboard">Back to dashboard</a>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+    {
+        <div class="invoice-review-alert invoice-review-alert-error" role="alert">
+            <strong data-i18n="reviewNeedsAttention">Needs attention</strong>
+            <span>@Model.ErrorMessage</span>
+        </div>
+    }
+
+    @if (Model.Saved)
+    {
+        <div class="invoice-review-alert invoice-review-alert-success" role="status">
+            <strong data-i18n="invoiceSaved">Invoice stock saved</strong>
+            <span data-i18n="invoiceSavedDescription">The approved rows were added to your inventory. The original invoice image is not stored.</span>
+        </div>
+    }
+
+    <section class="invoice-review-meta">
+        <div>
+            <span data-i18n="fileName">File</span>
+            <strong>@Model.OriginalFileName</strong>
+        </div>
+        <div>
+            <span data-i18n="source">Source</span>
+            <strong>@Model.SourceType</strong>
+        </div>
+        <div>
+            <span data-i18n="ocrConfidence">OCR confidence</span>
+            <strong>@Model.OcrConfidence.ToString("N0")%</strong>
+        </div>
+        <div>
+            <span data-i18n="rowsDetected">Rows detected</span>
+            <strong>@Model.Items.Count(item => !item.Removed)</strong>
+        </div>
+    </section>
+
+    @if (canEdit)
+    {
+        <form asp-controller="InvoiceCapture" asp-action="Save" method="post" id="invoiceReviewForm">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="ImportId" />
+            <input type="hidden" asp-for="OriginalFileName" />
+            <input type="hidden" asp-for="SourceType" />
+            <input type="hidden" asp-for="OcrConfidence" />
+
+            <div class="invoice-review-toolbar">
+                <div>
+                    <strong data-i18n="requiredFields">Required fields</strong>
+                    <span data-i18n="requiredFieldsDescription">Product Name, Batch No, Expiry Date and Qty must be correct.</span>
+                </div>
+                <button type="button" class="btn btn-outline-secondary" id="invoiceAddRow" data-i18n="addRow">Add row</button>
+            </div>
+
+            <div class="invoice-review-table-wrap">
+                <table class="invoice-review-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th data-i18n="productName">Product Name</th>
+                            <th data-i18n="batchNumber">Batch No</th>
+                            <th data-i18n="expiryDate">Expiry Date</th>
+                            <th data-i18n="quantity">Qty</th>
+                            <th data-i18n="confidence">Confidence</th>
+                            <th data-i18n="validation">Validation</th>
+                            <th aria-label="Actions"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="invoiceReviewBody">
+                        @for (var i = 0; i < Model.Items.Count; i++)
+                        {
+                            var item = Model.Items[i];
+                            <tr class="invoice-review-row @(item.Removed ? "is-removed" : "")" data-row-index="@i">
+                                <td class="invoice-review-row-number">
+                                    <span>@item.RowNumber</span>
+                                    <input type="hidden" name="Items[@i].ImportItemId" value="@item.ImportItemId" />
+                                    <input type="hidden" name="Items[@i].RowNumber" value="@item.RowNumber" />
+                                    <input type="hidden" name="Items[@i].Removed" value="@item.Removed.ToString().ToLowerInvariant()" class="invoice-removed-input" />
+                                    <input type="hidden" name="Items[@i].RawLine" value="@item.RawLine" />
+                                    <input type="hidden" name="Items[@i].Confidence" value="@item.Confidence" />
+                                </td>
+                                <td>
+                                    <input class="form-control invoice-review-input @(string.IsNullOrWhiteSpace(item.ProductName) ? "is-missing" : "")"
+                                           name="Items[@i].ProductName" value="@item.ProductName" maxlength="200" required />
+                                </td>
+                                <td>
+                                    <input class="form-control invoice-review-input @(string.IsNullOrWhiteSpace(item.BatchNumber) ? "is-missing" : "")"
+                                           name="Items[@i].BatchNumber" value="@item.BatchNumber" maxlength="100" required />
+                                </td>
+                                <td>
+                                    <input class="form-control invoice-review-input @(item.ExpiryDate.HasValue ? "" : "is-missing")"
+                                           name="Items[@i].ExpiryDate"
+                                           value="@(item.ExpiryDate?.ToString("yyyy-MM-dd"))"
+                                           type="date"
+                                           required />
+                                </td>
+                                <td>
+                                    <input class="form-control invoice-review-input @(item.Quantity is > 0 ? "" : "is-missing")"
+                                           name="Items[@i].Quantity"
+                                           value="@(item.Quantity?.ToString(System.Globalization.CultureInfo.InvariantCulture))"
+                                           type="number"
+                                           min="0.01"
+                                           max="1000000"
+                                           step="0.01"
+                                           required />
+                                </td>
+                                <td>
+                                    <span class="invoice-confidence-badge">@item.Confidence.ToString("N0")%</span>
+                                </td>
+                                <td>
+                                    <span class="invoice-validation-badge @(item.ValidationStatus == "ready" ? "is-ready" : "is-review")">
+                                        @item.ValidationMessage
+                                    </span>
+                                </td>
+                                <td>
+                                    <button type="button" class="invoice-row-remove" title="Remove row" aria-label="Remove row" data-i18n-attr="aria-label:removeRow">×</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="invoice-review-footer">
+                <div class="invoice-review-safety" data-i18n="invoiceSaveSafety">
+                    Saving will add the quantities to existing matching batches, or create a new product/batch when no exact match exists.
+                </div>
+                <button type="submit" class="btn btn-primary invoice-save-button" data-i18n="saveStock">Validate &amp; Save Stock</button>
+            </div>
+        </form>
+    }
+    else
+    {
+        <section class="invoice-review-saved-summary">
+            <div>
+                <span data-i18n="status">Status</span>
+                <strong data-i18n="saved">Saved</strong>
+            </div>
+            <div>
+                <span data-i18n="savedRows">Rows saved</span>
+                <strong>@Model.Items.Count(item => item.ValidationStatus == "saved")</strong>
+            </div>
+            <div>
+                <span data-i18n="reviewAgain">Import ID</span>
+                <strong>#@Model.ImportId</strong>
+            </div>
+        </section>
+
+        <div class="invoice-review-table-wrap">
+            <table class="invoice-review-table invoice-review-readonly-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th data-i18n="productName">Product Name</th>
+                        <th data-i18n="batchNumber">Batch No</th>
+                        <th data-i18n="expiryDate">Expiry Date</th>
+                        <th data-i18n="quantity">Qty</th>
+                        <th data-i18n="validation">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Items.Where(item => !item.Removed))
+                    {
+                        <tr>
+                            <td>@item.RowNumber</td>
+                            <td>@item.ProductName</td>
+                            <td>@item.BatchNumber</td>
+                            <td>@item.ExpiryDate?.ToString("dd MMM yyyy")</td>
+                            <td>@item.Quantity</td>
+                            <td><span class="invoice-validation-badge is-ready" data-i18n="saved">Saved</span></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@if (canEdit)
+{
+<script>
+    (() => {
+        const form = document.getElementById("invoiceReviewForm");
+        const body = document.getElementById("invoiceReviewBody");
+        const addRow = document.getElementById("invoiceAddRow");
+        const maxRows = 200;
+
+        const updateMissingState = (row) => {
+            row.querySelectorAll(".invoice-review-input").forEach(input => {
+                const missing = input.required && !input.value.trim();
+                input.classList.toggle("is-missing", missing);
+            });
+        };
+
+        body?.querySelectorAll(".invoice-review-row").forEach(row => {
+            row.querySelectorAll(".invoice-review-input").forEach(input => {
+                input.addEventListener("input", () => updateMissingState(row));
+                input.addEventListener("change", () => updateMissingState(row));
+            });
+
+            row.querySelector(".invoice-row-remove")?.addEventListener("click", () => {
+                const hidden = row.querySelector(".invoice-removed-input");
+                if (hidden) hidden.value = "true";
+                row.classList.add("is-removed");
+                row.querySelectorAll(".invoice-review-input").forEach(input => {
+                    input.disabled = true;
+                    input.required = false;
+                });
+            });
+        });
+
+        addRow?.addEventListener("click", () => {
+            const rows = body?.querySelectorAll(".invoice-review-row:not(.is-removed)").length || 0;
+            if (rows >= maxRows) {
+                alert("Maximum 200 active rows are allowed.");
+                return;
+            }
+
+            const index = body?.querySelectorAll(".invoice-review-row").length || 0;
+            const rowNumber = index + 1;
+            const row = document.createElement("tr");
+            row.className = "invoice-review-row";
+            row.dataset.rowIndex = String(index);
+
+            row.innerHTML = `
+                <td class="invoice-review-row-number">
+                    <span>${rowNumber}</span>
+                    <input type="hidden" name="Items[${index}].ImportItemId" value="0" />
+                    <input type="hidden" name="Items[${index}].RowNumber" value="${rowNumber}" />
+                    <input type="hidden" name="Items[${index}].Removed" value="false" class="invoice-removed-input" />
+                    <input type="hidden" name="Items[${index}].RawLine" value="" />
+                    <input type="hidden" name="Items[${index}].Confidence" value="0" />
+                </td>
+                <td><input class="form-control invoice-review-input is-missing" name="Items[${index}].ProductName" maxlength="200" required /></td>
+                <td><input class="form-control invoice-review-input is-missing" name="Items[${index}].BatchNumber" maxlength="100" required /></td>
+                <td><input class="form-control invoice-review-input is-missing" name="Items[${index}].ExpiryDate" type="date" required /></td>
+                <td><input class="form-control invoice-review-input is-missing" name="Items[${index}].Quantity" type="number" min="0.01" max="1000000" step="0.01" required /></td>
+                <td><span class="invoice-confidence-badge">—</span></td>
+                <td><span class="invoice-validation-badge is-review">New row needs review.</span></td>
+                <td><button type="button" class="invoice-row-remove" title="Remove row" aria-label="Remove row">×</button></td>`;
+
+            row.querySelectorAll(".invoice-review-input").forEach(input => {
+                input.addEventListener("input", () => updateMissingState(row));
+                input.addEventListener("change", () => updateMissingState(row));
+            });
+
+            row.querySelector(".invoice-row-remove")?.addEventListener("click", () => {
+                const hidden = row.querySelector(".invoice-removed-input");
+                if (hidden) hidden.value = "true";
+                row.classList.add("is-removed");
+                row.querySelectorAll(".invoice-review-input").forEach(input => {
+                    input.disabled = true;
+                    input.required = false;
+                });
+            });
+
+            body?.appendChild(row);
+        });
+
+        form?.addEventListener("submit", event => {
+            const activeRows = [...(body?.querySelectorAll(".invoice-review-row:not(.is-removed)") || [])];
+            const invalid = activeRows.some(row => {
+                updateMissingState(row);
+                return [...row.querySelectorAll(".invoice-review-input")].some(input => input.required && !input.value.trim());
+            });
+
+            if (invalid || !form.checkValidity()) {
+                event.preventDefault();
+                form.reportValidity();
+            }
+        });
+    })();
+</script>
+}
