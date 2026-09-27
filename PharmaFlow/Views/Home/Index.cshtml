@@ -105,17 +105,17 @@
 
                 <div class="invoice-ocr-status" id="invoiceOcrStatus" hidden role="status" aria-live="polite">
                     <div class="invoice-ocr-status-head">
-                        <strong id="invoiceOcrStatusTitle" data-i18n="ocrPreparing">Preparing OCR...</strong>
+                        <strong id="invoiceOcrStatusTitle" data-i18n="ocrPreparing">Preparing invoice analysis...</strong>
                         <span id="invoiceOcrProgress">0%</span>
                     </div>
                     <div class="invoice-ocr-progress"><span id="invoiceOcrProgressBar"></span></div>
-                    <small id="invoiceOcrStatusMessage" data-i18n="ocrStarting">Loading the free OCR engine.</small>
+                    <small id="invoiceOcrStatusMessage" data-i18n="ocrStarting">Preparing AI invoice analysis.</small>
                 </div>
 
                 <div class="invoice-ocr-result" id="invoiceOcrResult" hidden>
                     <div class="invoice-ocr-result-head">
                         <div>
-                            <strong data-i18n="ocrResult">OCR text</strong>
+                            <strong data-i18n="ocrResult">AI extraction</strong>
                             <span id="invoiceOcrConfidence"></span>
                         </div>
                         <button type="button" class="invoice-ocr-copy" id="invoiceOcrCopy" data-i18n="copyOcrText">Copy text</button>
@@ -123,7 +123,7 @@
                     <textarea id="invoiceOcrText" class="invoice-ocr-text" readonly rows="10" aria-label="OCR result"></textarea>
                 </div>
 
-                <p class="invoice-pdf-ocr-note" id="invoicePdfOcrNote" hidden data-i18n="pdfOcrComingNext">PDF OCR will be added after PDF page rendering is implemented. Image invoices can be OCR-processed now.</p>
+                <p class="invoice-pdf-ocr-note" id="invoicePdfOcrNote" hidden data-i18n="pdfOcrComingNext">AI invoice analysis supports both images and PDF invoices.</p>
 
                 <footer class="invoice-scanner-footer">
                     <button type="button" class="btn btn-outline-secondary" id="invoiceScannerRetake" data-i18n="retakeInvoice">Retake / Choose another</button>
@@ -765,7 +765,7 @@
             return { text, confidence, lines: allLines, words: allWords };
         };
 
-        const postOcrForParsing = async ({ text, confidence, lines, words }) => {
+        const postVisionForParsing = async (file) => {
             const token = document.querySelector(
                 '#invoiceCaptureAntiForgeryToken input[name="__RequestVerificationToken"]'
             )?.value;
@@ -774,22 +774,26 @@
                 throw new Error("Security token is missing. Refresh the dashboard and try again.");
             }
 
-            updateOcrStatus("Structuring invoice...", "Finding stock rows and required fields.", 100);
+            updateOcrStatus(
+                "Analyzing invoice...",
+                "AI is reading the pharmacy table and extracting Product, Batch, Expiry and Qty.",
+                35
+            );
 
-            const response = await fetch("/InvoiceCapture/Parse", {
+            const formData = new FormData();
+            formData.append("invoice", file, file.name || "invoice");
+            formData.append("originalFileName", file.name || "invoice");
+            formData.append(
+                "sourceType",
+                pendingSourceType === "camera" ? "camera" : "upload"
+            );
+
+            const response = await fetch("/InvoiceCapture/ParseWithVision", {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/json",
                     "RequestVerificationToken": token
                 },
-                body: JSON.stringify({
-                    originalFileName: pendingFile?.name || "invoice",
-                    sourceType: pendingSourceType,
-                    ocrConfidence: Math.max(0, Math.min(100, confidence)),
-                    ocrText: text.slice(0, 200000),
-                    lines: lines.slice(0, 2000),
-                    words: (words || []).slice(0, 15000)
-                })
+                body: formData
             });
 
             let payload = null;
@@ -802,9 +806,15 @@
             if (!response.ok || !payload?.redirectUrl) {
                 throw new Error(
                     payload?.message ||
-                    "The invoice could not be structured. Please retake the image and try again."
+                    "The invoice could not be analyzed. Please try again with the full invoice visible."
                 );
             }
+
+            updateOcrStatus(
+                "Invoice analyzed",
+                "Opening the review screen so you can verify every extracted stock row.",
+                100
+            );
 
             window.location.assign(payload.redirectUrl);
         };
@@ -821,35 +831,22 @@
             setBusy(true);
 
             try {
-                let result;
+                let finalFile = pendingFile;
 
                 if (pendingFile.type.startsWith("image/")) {
-                    const finalFile = await processImage(pendingFile);
+                    finalFile = await processImage(pendingFile);
                     window.pharmaFlowInvoiceCapture = finalFile;
                     showFinalSelection(finalFile);
-                    result = await runOcrOnImage(finalFile);
                 } else {
                     window.pharmaFlowInvoiceCapture = pendingFile;
-                    result = await runOcrOnPdf(pendingFile);
                 }
 
-                if (ocrText) ocrText.value = result.text;
-                if (ocrConfidence) {
-                    ocrConfidence.textContent = "Confidence: " + Math.round(result.confidence) + "%";
-                }
-                ocrResult?.removeAttribute("hidden");
-                updateOcrStatus(
-                    "OCR complete",
-                    "Preparing your review screen. The invoice image itself is not uploaded.",
-                    100
-                );
-
-                await postOcrForParsing(result);
+                await postVisionForParsing(finalFile);
             } catch (error) {
-                console.error("Invoice OCR processing failed.", error);
+                console.error("Invoice AI processing failed.", error);
                 updateOcrStatus(
-                    "OCR failed",
-                    error?.message || "The invoice could not be read.",
+                    "Invoice analysis failed",
+                    error?.message || "The invoice could not be analyzed.",
                     0
                 );
             } finally {
