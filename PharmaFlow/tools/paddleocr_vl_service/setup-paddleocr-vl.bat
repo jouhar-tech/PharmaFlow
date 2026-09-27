@@ -17,6 +17,7 @@ if not exist ".venv\Scripts\python.exe" (
 
 call ".venv\Scripts\activate.bat"
 python -m pip install --upgrade pip
+python -m pip install "paddlepaddle==3.2.1" -i https://www.paddlepaddle.org.cn/packages/stable/cpu/
 python -m pip install -r requirements.txt
 
 echo.
