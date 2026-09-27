@@ -626,6 +626,11 @@
         const useScan = async () => {
             if (!pendingFile) return;
 
+            if (window.pharmaFlowConnectivity && !window.pharmaFlowConnectivity.isOnline()) {
+                window.pharmaFlowConnectivity.requireOnline();
+                return;
+            }
+
             resetOcrUi();
             setBusy(true);
 
