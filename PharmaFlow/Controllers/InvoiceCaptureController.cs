@@ -80,6 +80,14 @@ public sealed class InvoiceCaptureController : Controller
 
         var now = DateTime.UtcNow;
 
+        // Drafts contain only temporary OCR text. Remove abandoned drafts after 24 hours.
+        await _dbContext.InvoiceImports
+            .Where(item =>
+                item.ProfileId == profileId &&
+                item.Status == "draft" &&
+                item.CreatedAt < now.AddHours(-24))
+            .ExecuteDeleteAsync(cancellationToken);
+
         var import = new InvoiceImport
         {
             ProfileId = profileId,
@@ -292,7 +300,7 @@ public sealed class InvoiceCaptureController : Controller
             .ToList();
 
         var existingBatches = existingProductIds.Count == 0 || requestedBatchKeys.Count == 0
-            ? []
+            ? new List<ProductBatch>()
             : await _dbContext.ProductBatches
                 .Where(batch =>
                     existingProductIds.Contains(batch.ProductId) &&
@@ -517,7 +525,7 @@ public sealed class InvoiceCaptureController : Controller
             .ToList();
 
         var products = productNames.Count == 0
-            ? []
+            ? new List<Product>()
             : await _dbContext.Products
                 .AsNoTracking()
                 .Where(product =>
@@ -545,7 +553,7 @@ public sealed class InvoiceCaptureController : Controller
             .ToList();
 
         var batches = matchedProductIds.Count == 0
-            ? []
+            ? new List<ProductBatch>()
             : await _dbContext.ProductBatches
                 .AsNoTracking()
                 .Where(batch => matchedProductIds.Contains(batch.ProductId))
