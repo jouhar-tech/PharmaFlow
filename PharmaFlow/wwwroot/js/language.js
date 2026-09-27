@@ -430,15 +430,7 @@
             status: "स्थिति",
             saved: "सेव किया गया",
             savedRows: "सेव की गई पंक्तियाँ",
-            reviewAgain: "इम्पोर्ट ID"
-            scanInvoicePreview: "इनवॉइस स्कैन देखें",
-            closeScanner: "स्कैनर बंद करें",
-            rotateInvoice: "घुमाएँ",
-            enhanceForOcr: "टेक्स्ट स्पष्ट करें",
-            scannerPreviewHint: "आगे बढ़ने से पहले सुनिश्चित करें कि पूरा इनवॉइस दिखाई दे रहा है और टेक्स्ट साफ़ है।",
-            retakeInvoice: "दोबारा स्कैन / दूसरा चुनें",
-            useThisScan: "यह स्कैन उपयोग करें",
-            pdfReadyForProcessing: "PDF चुना गया है और प्रोसेसिंग के लिए तैयार है.",
+            reviewAgain: "इम्पोर्ट ID",
 
             dashboardSubtitle: "अपनी फार्मेसी की गतिविधि और PharmaFlow द्वारा आपके व्यवसाय के लिए बनाए गए मूल्य की निगरानी करें।",
             welcomeBack: "वापसी पर स्वागत है",
