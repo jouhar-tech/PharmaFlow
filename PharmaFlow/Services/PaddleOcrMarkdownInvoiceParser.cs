@@ -104,7 +104,7 @@ public static class PaddleOcrMarkdownInvoiceParser
         // as a defensive fallback over the recognized Markdown text.
         var fallbackLines = lines
             .Where(line => !string.IsNullOrWhiteSpace(line))
-            .Select((line, index) => new Models.ViewModels.InvoiceOcrLineInput
+            .Select((line, index) => new PharmaFlow.Models.ViewModels.InvoiceOcrLineInput
             {
                 Text = CleanMarkdownTableLine(line),
                 Confidence = 85m
