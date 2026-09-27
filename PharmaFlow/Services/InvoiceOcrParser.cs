@@ -109,13 +109,7 @@ public static class InvoiceOcrParser
         // return enough positional information, retain the original line parser
         // as a controlled fallback.
         if (coordinateCandidates.Count > 0)
-        {
-            var fallback = Parse(inputLines)
-                .Where(item => item.Score >= 0.75m)
-                .ToList();
-
-            return MergeDuplicates(coordinateCandidates.Concat(fallback).ToList());
-        }
+            return coordinateCandidates;
 
         return Parse(inputLines);
     }
