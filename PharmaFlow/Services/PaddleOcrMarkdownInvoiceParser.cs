@@ -96,7 +96,38 @@ public static class PaddleOcrMarkdownInvoiceParser
                 break;
         }
 
-        return results;
+        if (results.Count > 0)
+            return results;
+
+        // PaddleOCR normally returns Markdown tables. If a table is emitted in a
+        // less-standard form, reuse PharmaFlow's existing HSN-anchored parser
+        // as a defensive fallback over the recognized Markdown text.
+        var fallbackLines = lines
+            .Where(line => !string.IsNullOrWhiteSpace(line))
+            .Select((line, index) => new Models.ViewModels.InvoiceOcrLineInput
+            {
+                Text = CleanMarkdownTableLine(line),
+                Confidence = 85m
+            })
+            .Where(line => !string.IsNullOrWhiteSpace(line.Text))
+            .ToList();
+
+        var parsed = InvoiceOcrParser.Parse(fallbackLines);
+
+        return parsed
+            .Take(200)
+            .Select(item => new InvoiceVisionItem(
+                item.LineNumber,
+                item.ProductName,
+                item.BatchNumber,
+                item.ExpiryDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+                item.Quantity.GetValueOrDefault(),
+                item.Confidence))
+            .Where(item =>
+                !string.IsNullOrWhiteSpace(item.ProductName) &&
+                !string.IsNullOrWhiteSpace(item.BatchNumber) &&
+                item.Quantity > 0m)
+            .ToList();
     }
 
     private static int FindHeaderIndex(
@@ -236,6 +267,19 @@ public static class PaddleOcrMarkdownInvoiceParser
         return cleaned.Length <= maxLength
             ? cleaned
             : cleaned[..maxLength];
+    }
+
+    private static string CleanMarkdownTableLine(string value)
+    {
+        var cleaned = value.Trim();
+
+        if (cleaned.StartsWith("|", StringComparison.Ordinal))
+            cleaned = cleaned[1..];
+
+        if (cleaned.EndsWith("|", StringComparison.Ordinal))
+            cleaned = cleaned[..^1];
+
+        return Regex.Replace(cleaned, @"\s*\|\s*", " ");
     }
 
     private static string CleanMarkdown(string value)
