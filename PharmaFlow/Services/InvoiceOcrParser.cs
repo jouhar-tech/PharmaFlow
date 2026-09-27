@@ -11,7 +11,7 @@ public static class InvoiceOcrParser
         RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     private static readonly Regex MonthYearRegex = new(
-        @"\b(?<month>0?[1-9]|1[0-2])\s*[/.-]\s*(?<year>\d{2}|\d{4})\b",
+        @"\b(?<month>0?[1-9]|1[0-2])\s*(?:[/.-]\s*)?(?<year>\d{2}|\d{4})\b",
         RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     private static readonly Regex TextDateRegex = new(
@@ -105,9 +105,9 @@ public static class InvoiceOcrParser
     {
         var coordinateCandidates = ParseUsingCoordinates(inputWords);
 
-        // Coordinate parsing is preferred for pharmacy tables. If OCR did not
-        // return enough positional information, retain the original line parser
-        // as a controlled fallback.
+        // Prefer positional table parsing, but keep the line parser as a
+        // fallback when OCR coordinates are incomplete or the table header was
+        // split across multiple OCR rows.
         if (coordinateCandidates.Count > 0)
             return coordinateCandidates;
 
@@ -246,62 +246,109 @@ public static class InvoiceOcrParser
         OcrRow? best = null;
         var bestScore = 0;
 
-        foreach (var row in rows)
+        for (var start = 0; start < rows.Count; start++)
         {
-            var text = NormalizeKey(string.Join(" ", row.Words.Select(word => word.Text)));
-            var score = 0;
+            var combined = new OcrRow(rows[start].LineNumber);
+            var last = start;
 
-            if (ContainsAny(text, "DESCRIPTION", "DESCRIPTION/ITEM", "ITEM DESCRIPTION", "PRODUCT"))
-                score += 2;
-
-            if (ContainsAny(text, "QTY", "QUANTITY", "QNTY"))
-                score += 2;
-
-            if (ContainsAny(text, "BATCH", "BATCH NO", "LOT"))
-                score += 2;
-
-            if (ContainsAny(text, "EXP", "EXPIRY", "EXP DATE", "E.D"))
-                score += 2;
-
-            if (ContainsAny(text, "MRP", "PACK"))
-                score += 1;
-
-            if (score > bestScore)
+            for (var end = start; end < Math.Min(rows.Count, start + 3); end++)
             {
-                best = row;
-                bestScore = score;
+                if (end > start &&
+                    rows[end].CenterY - rows[end - 1].CenterY >
+                    Math.Max(24, rows[end - 1].Height * 1.8))
+                    break;
+
+                foreach (var word in rows[end].Words)
+                    combined.Words.Add(word);
+
+                combined.Recalculate();
+                last = end;
+
+                var score = ScoreHeaderWords(combined.Words);
+
+                if (score > bestScore)
+                {
+                    best = combined;
+                    bestScore = score;
+                }
+
+                if (score >= 6)
+                    return combined;
             }
         }
 
         return bestScore >= 4 ? best : null;
     }
 
+    private static int ScoreHeaderWords(IReadOnlyList<OcrWord> words)
+    {
+        var text = NormalizeHeaderKey(string.Join(" ", words.Select(word => word.Text)));
+        var score = 0;
+
+        if (ContainsAnyHeader(text, "DESCRIPTION", "DESCRIPTIONITEM", "ITEMDESCRIPTION", "PRODUCT", "ITEM", "DESCR", "DESC"))
+            score += 2;
+
+        if (ContainsAnyHeader(text, "QTY", "QUANTITY", "QNTY", "QTV", "OTY"))
+            score += 2;
+
+        if (ContainsAnyHeader(text, "BATCH", "BATCHNO", "LOT", "BATC", "BTCH"))
+            score += 2;
+
+        if (ContainsAnyHeader(text, "EXP", "EXPIRY", "EXPDATE", "ED"))
+            score += 2;
+
+        if (ContainsAnyHeader(text, "MRP", "PACK"))
+            score += 1;
+
+        return score;
+    }
+
     private static ColumnMap DetectColumns(IReadOnlyList<OcrWord> words)
     {
-        var description = FindHeaderX(words, "DESCRIPTION", "ITEM DESCRIPTION", "PRODUCT", "DESCRIPTION/ITEM");
-        var quantity = FindHeaderX(words, "QTY", "QUANTITY", "QNTY");
-        var batch = FindHeaderX(words, "BATCH", "BATCH NO", "LOT");
-        var expiry = FindHeaderX(words, "EXP", "EXPIRY", "EXP DATE", "E.D");
+        var description = FindHeaderX(words, "DESCRIPTION", "DESCRIPTION/ITEM", "ITEM DESCRIPTION", "PRODUCT", "ITEM", "DESCR", "DESC");
+        var quantity = FindHeaderX(words, "QTY", "QUANTITY", "QNTY", "QTV", "OTY");
+        var batch = FindHeaderX(words, "BATCH", "BATCH NO", "LOT", "BATC", "BTCH");
+        var expiry = FindHeaderX(words, "EXP", "EXPIRY", "EXP DATE", "E.D", "ED");
 
         return new ColumnMap(description, quantity, batch, expiry);
     }
 
     private static int? FindHeaderX(IReadOnlyList<OcrWord> words, params string[] labels)
     {
-        foreach (var word in words)
+        foreach (var word in words.OrderBy(word => word.X0))
         {
-            var normalized = NormalizeKey(word.Text);
+            var normalized = NormalizeHeaderKey(word.Text);
 
-            if (labels.Any(label =>
-                    normalized.Equals(label, StringComparison.OrdinalIgnoreCase) ||
-                    normalized.Contains(label, StringComparison.OrdinalIgnoreCase)))
-            {
+            if (labels.Any(label => HeaderTokenMatches(normalized, NormalizeHeaderKey(label))))
                 return word.CenterX;
-            }
         }
 
         return null;
     }
+
+    private static bool HeaderTokenMatches(string token, string label)
+    {
+        if (string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(label))
+            return false;
+
+        if (token == label || token.Contains(label, StringComparison.Ordinal))
+            return true;
+
+        return label switch
+        {
+            "DESCRIPTION" => token is "DESCRIP" or "DESCRIPTON" or "DESCR",
+            "QTY" => token is "QTV" or "OTY" or "QNTY",
+            "BATCH" => token is "BATC" or "BTCH" or "BATCHNO",
+            "EXP" => token is "EXPIRY" or "EXPDATE" or "ED",
+            _ => false
+        };
+    }
+
+    private static string NormalizeHeaderKey(string? value) =>
+        Regex.Replace((value ?? string.Empty).ToUpperInvariant(), @"[^A-Z0-9]", string.Empty);
+
+    private static bool ContainsAnyHeader(string text, params string[] values) =>
+        values.Any(value => text.Contains(value, StringComparison.OrdinalIgnoreCase));
 
     private static IReadOnlyList<OcrWord> SelectProductWords(
         IReadOnlyList<OcrWord> row,
@@ -407,7 +454,17 @@ public static class InvoiceOcrParser
         var hasLetter = value.Any(char.IsLetter);
         var hasDigit = value.Any(char.IsDigit);
 
-        return hasLetter && hasDigit;
+        if (hasLetter && hasDigit)
+            return true;
+
+        // Some wholesalers use numeric-only batch numbers. Because this
+        // method is called inside the Batch column window, allow them when
+        // they look like identifiers rather than small quantities.
+        return !hasLetter &&
+               hasDigit &&
+               value.Length is >= 4 and <= 12 &&
+               decimal.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out _) &&
+               !value.StartsWith("0", StringComparison.Ordinal);
     }
 
     private static string CleanProductWords(IReadOnlyList<OcrWord> words)
