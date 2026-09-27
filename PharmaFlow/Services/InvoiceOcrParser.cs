@@ -69,6 +69,14 @@ public static class InvoiceOcrParser
     public static IReadOnlyList<ParsedInvoiceItem> Parse(IReadOnlyList<InvoiceOcrLineInput> inputLines)
     {
         var lines = NormalizeLines(inputLines);
+
+        // Pharmacy invoices commonly have an HSN/SAC code at the start of
+        // every stock row. This is a stronger structural anchor than trying to
+        // read a noisy/multi-line table header.
+        var structuredCandidates = ParseHsnAnchoredRows(lines);
+        if (structuredCandidates.Count > 0)
+            return structuredCandidates;
+
         var candidates = new List<ParsedInvoiceItem>();
 
         for (var index = 0; index < lines.Count; index++)
@@ -97,6 +105,127 @@ public static class InvoiceOcrParser
         }
 
         return MergeDuplicates(candidates);
+    }
+
+    private static IReadOnlyList<ParsedInvoiceItem> ParseHsnAnchoredRows(
+        IReadOnlyList<NormalizedLine> lines)
+    {
+        var candidates = new List<ParsedInvoiceItem>();
+
+        foreach (var line in lines)
+        {
+            if (IsNoiseLine(line.Text) || IsTableStopRow(line.Text))
+                continue;
+
+            var hsnMatch = Regex.Match(line.Text, @"(?<!\\d)\\d{7,8}(?!\\d)");
+            if (!hsnMatch.Success)
+                continue;
+
+            var afterHsn = line.Text[(hsnMatch.Index + hsnMatch.Length)..].Trim();
+            var tokens = Regex.Matches(
+                    afterHsn,
+                    @"[A-Za-z0-9][A-Za-z0-9._/%-]{0,24}")
+                .Cast<Match>()
+                .ToList();
+
+            if (tokens.Count < 3)
+                continue;
+
+            // The token immediately after HSN/SAC is normally the rack code.
+            // Skip it, then use the first small whole-number token as billed
+            // quantity. Product names with strengths/forms (e.g. 500MG TAB)
+            // remain intact because they are not pure whole numbers.
+            var productStart = 1;
+            var quantityIndex = -1;
+
+            for (var i = productStart; i < tokens.Count; i++)
+            {
+                var value = tokens[i].Value.Trim();
+
+                if (decimal.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out var quantity) &&
+                    quantity is >= 1m and <= 1000m)
+                {
+                    quantityIndex = i;
+                    break;
+                }
+            }
+
+            if (quantityIndex <= productStart)
+                continue;
+
+            // Find the expiry anywhere after the row's description. This is
+            // deliberately based on the raw line so both MM-YY and full dates
+            // work even when OCR places spaces around separators.
+            var expiry = ExtractExpiry(line.Text);
+            if (!expiry.Found)
+                continue;
+
+            var productStartOffset = tokens[productStart].Index;
+            var productEndOffset = tokens[quantityIndex].Index;
+
+            if (productEndOffset <= productStartOffset)
+                continue;
+
+            var product = CleanProductText(afterHsn[productStartOffset..productEndOffset]);
+            if (string.IsNullOrWhiteSpace(product))
+                continue;
+
+            // Batch is normally the numeric/alphanumeric identifier immediately
+            // before the MRP/trade-price values and expiry. Search backward from
+            // the expiry position and ignore decimal prices.
+            var beforeExpiry = line.Text[..expiry.Position];
+            var batchTokens = Regex.Matches(
+                    beforeExpiry,
+                    @"[A-Za-z0-9][A-Za-z0-9._/-]{2,24}")
+                .Cast<Match>()
+                .Select(match => match.Value.Trim())
+                .Where(IsLikelyBatch)
+                .ToList();
+
+            if (batchTokens.Count == 0)
+                continue;
+
+            var batch = batchTokens[^1];
+            var quantityText = tokens[quantityIndex].Value;
+            if (!decimal.TryParse(
+                    quantityText,
+                    NumberStyles.None,
+                    CultureInfo.InvariantCulture,
+                    out var quantityValue) ||
+                quantityValue <= 0m)
+                continue;
+
+            var confidence = Math.Clamp(
+                ((line.Confidence / 100m) * 0.35m + 0.65m) * 100m,
+                0m,
+                100m);
+
+            candidates.Add(new ParsedInvoiceItem(
+                line.LineNumber,
+                line.Text,
+                product,
+                batch,
+                expiry.Value,
+                quantityValue,
+                confidence,
+                1.00m));
+        }
+
+        return MergeDuplicates(candidates);
+    }
+
+    private static string CleanProductText(string value)
+    {
+        var product = CleanLine(value);
+        product = LeadingRowNumberRegex.Replace(product, string.Empty);
+        product = Regex.Replace(product, @"^[^A-Za-z0-9]+|[^A-Za-z0-9)%+/-]+$", string.Empty);
+        product = Regex.Replace(product, @"\\s{2,}", " ");
+        product = product.Trim();
+
+        if (product.Length is < 2 or > 200 || IsNoiseLine(product))
+            return string.Empty;
+
+        return product;
     }
 
     public static IReadOnlyList<ParsedInvoiceItem> Parse(
@@ -457,9 +586,8 @@ public static class InvoiceOcrParser
         if (hasLetter && hasDigit)
             return true;
 
-        // Some wholesalers use numeric-only batch numbers. Because this
-        // method is called inside the Batch column window, allow them when
-        // they look like identifiers rather than small quantities.
+        // Some wholesalers use numeric-only batch numbers. Decimal values are
+        // prices, so only allow whole-number identifiers of realistic length.
         return !hasLetter &&
                hasDigit &&
                value.Length is >= 4 and <= 12 &&
