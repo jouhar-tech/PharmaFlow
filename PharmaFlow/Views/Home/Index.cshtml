@@ -222,6 +222,7 @@
         const reset = document.getElementById("stockCaptureReset");
 
         const scanner = document.getElementById("invoiceScannerModal");
+        const scannerPreview = document.getElementById("invoiceScannerPreview");
         const scannerImage = document.getElementById("invoiceScannerImage");
         const scannerPdf = document.getElementById("invoiceScannerPdf");
         const scannerPdfName = document.getElementById("invoiceScannerPdfName");
@@ -306,14 +307,60 @@
             });
         };
 
+        const fitScannerPreviewToImage = () => {
+            if (!scannerImage || !scannerPreview || scannerImage.hidden) return;
+            if (!scannerImage.naturalWidth || !scannerImage.naturalHeight) return;
+
+            const stage = scannerPreview.closest(".invoice-scanner-stage");
+            if (!stage) return;
+
+            const availableWidth = Math.max(1, stage.clientWidth - 32);
+            const availableHeight = Math.max(1, stage.clientHeight - 32);
+            const angle = ((rotation % 360) + 360) % 360;
+            const rotated = angle === 90 || angle === 270;
+
+            const imageWidth = rotated
+                ? scannerImage.naturalHeight
+                : scannerImage.naturalWidth;
+            const imageHeight = rotated
+                ? scannerImage.naturalWidth
+                : scannerImage.naturalHeight;
+
+            const scale = Math.min(
+                availableWidth / imageWidth,
+                availableHeight / imageHeight,
+                1
+            );
+
+            const displayWidth = Math.max(1, Math.round(imageWidth * scale));
+            const displayHeight = Math.max(1, Math.round(imageHeight * scale));
+
+            scannerPreview.classList.add("has-image");
+            scannerPreview.style.width = displayWidth + "px";
+            scannerPreview.style.height = displayHeight + "px";
+            scannerPreview.style.setProperty(
+                "--scanner-image-ratio",
+                imageWidth + " / " + imageHeight
+            );
+        };
+
+        const clearScannerImageSizing = () => {
+            scannerPreview?.classList.remove("has-image");
+            scannerPreview?.style.removeProperty("width");
+            scannerPreview?.style.removeProperty("height");
+            scannerPreview?.style.removeProperty("--scanner-image-ratio");
+        };
+
         const showPreviewBlob = (blob) => {
             revokePreview();
             previewUrl = URL.createObjectURL(blob);
+            scannerImage.onload = fitScannerPreviewToImage;
             scannerImage.src = previewUrl;
             scannerImage.hidden = false;
             scannerPdf.hidden = true;
             scannerImage.style.transform = "rotate(0deg)";
             scannerImage.style.filter = "none";
+            requestAnimationFrame(fitScannerPreviewToImage);
         };
 
         const pdfJsModulePromise = () => import(
@@ -535,16 +582,20 @@
             if (file.type.startsWith("image/")) {
                 revokePreview();
                 previewUrl = URL.createObjectURL(file);
+                scannerImage.onload = fitScannerPreviewToImage;
                 scannerImage.src = previewUrl;
                 scannerImage.hidden = false;
                 scannerPdf.hidden = true;
                 scannerImage.style.transform = "rotate(0deg)";
                 scannerImage.style.filter = "none";
+                requestAnimationFrame(fitScannerPreviewToImage);
 
                 document.querySelectorAll("[data-image-only]").forEach(button => {
                     button.removeAttribute("hidden");
                 });
             } else {
+                clearScannerImageSizing();
+                scannerImage.onload = null;
                 scannerImage.hidden = true;
                 scannerPdf.hidden = false;
                 scannerPdfName.textContent = file.name;
@@ -601,6 +652,13 @@
         rotateButton?.addEventListener("click", () => {
             rotation = (rotation + 90) % 360;
             scannerImage.style.transform = `rotate(${rotation}deg)`;
+            requestAnimationFrame(fitScannerPreviewToImage);
+        });
+
+        window.addEventListener("resize", () => {
+            if (!scanner?.hasAttribute("hidden") && !scannerImage.hidden) {
+                fitScannerPreviewToImage();
+            }
         });
 
         enhanceButton?.addEventListener("click", () => {
