@@ -3,6 +3,7 @@ import os
 import shutil
 import tempfile
 from pathlib import Path
+from typing import Optional
 
 from fastapi import FastAPI, File, Header, HTTPException, UploadFile
 
@@ -42,7 +43,7 @@ def get_pipeline():
     return _pipeline
 
 
-def validate_api_key(received_key: str | None) -> None:
+def validate_api_key(received_key: Optional[str]) -> None:
     if API_KEY and received_key != API_KEY:
         raise HTTPException(status_code=401, detail="Invalid PaddleOCR API key.")
 
@@ -131,7 +132,7 @@ async def health():
 @app.post("/extract")
 async def extract_invoice(
     invoice: UploadFile = File(...),
-    x_paddleocr_api_key: str | None = Header(default=None),
+    x_paddleocr_api_key: Optional[str] = Header(default=None),
 ):
     validate_api_key(x_paddleocr_api_key)
 
