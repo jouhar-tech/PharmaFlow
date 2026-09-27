@@ -9,9 +9,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddHttpClient<ISupabaseAuthService, SupabaseAuthService>();
-builder.Services.AddHttpClient<PaddleOcrVlInvoiceVisionService>();
-builder.Services.AddHttpClient<GeminiInvoiceVisionService>();
-builder.Services.AddScoped<IInvoiceVisionService, HybridInvoiceVisionService>();
+builder.Services.AddHttpClient<IInvoiceVisionService, GeminiInvoiceVisionService>();
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {
