@@ -112,19 +112,6 @@
                     <small id="invoiceOcrStatusMessage" data-i18n="ocrStarting">Preparing AI invoice analysis.</small>
                 </div>
 
-                <div class="invoice-ocr-result" id="invoiceOcrResult" hidden>
-                    <div class="invoice-ocr-result-head">
-                        <div>
-                            <strong data-i18n="ocrResult">AI extraction</strong>
-                            <span id="invoiceOcrConfidence"></span>
-                        </div>
-                        <button type="button" class="invoice-ocr-copy" id="invoiceOcrCopy" data-i18n="copyOcrText">Copy text</button>
-                    </div>
-                    <textarea id="invoiceOcrText" class="invoice-ocr-text" readonly rows="10" aria-label="OCR result"></textarea>
-                </div>
-
-                <p class="invoice-pdf-ocr-note" id="invoicePdfOcrNote" hidden data-i18n="pdfOcrComingNext">AI invoice analysis supports both images and PDF invoices.</p>
-
                 <footer class="invoice-scanner-footer">
                     <button type="button" class="btn btn-outline-secondary" id="invoiceScannerRetake" data-i18n="retakeInvoice">Retake / Choose another</button>
                     <button type="button" class="btn btn-primary" id="invoiceScannerUse" data-i18n="useThisScan">Use this scan</button>
@@ -226,7 +213,6 @@
 </div>
 
 @section Scripts {
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@6.0.1/dist/tesseract.min.js"></script>
 <script>
     (() => {
         const cameraInput = document.getElementById("dashboardCameraInput");
@@ -263,7 +249,7 @@
         let rotation = 0;
         let enhanceText = false;
 
-        const MAX_FILE_SIZE = 15 * 1024 * 1024;
+        const MAX_FILE_SIZE = 25 * 1024 * 1024;
         const MAX_PDF_PAGES = 20;
 
         const setBusy = (busy) => {
@@ -307,10 +293,7 @@
 
         const resetOcrUi = () => {
             ocrStatus?.setAttribute("hidden", "");
-            ocrResult?.setAttribute("hidden", "");
             pdfOcrNote?.setAttribute("hidden", "");
-            if (ocrText) ocrText.value = "";
-            if (ocrConfidence) ocrConfidence.textContent = "";
             if (ocrProgressBar) ocrProgressBar.style.width = "0%";
         };
 
@@ -442,328 +425,6 @@
                 else reject(new Error("Could not prepare the PDF page for OCR."));
             }, "image/jpeg", 0.92);
         });
-
-        const collectOcrLines = (data) => {
-            if (Array.isArray(data?.lines)) {
-                return data.lines
-                    .map(line => ({
-                        text: String(line?.text || "").trim(),
-                        confidence: Number(line?.confidence || 0)
-                    }))
-                    .filter(line => line.text.length >= 2);
-            }
-
-            return String(data?.text || "")
-                .split(/\\r?\\n/)
-                .map(text => ({ text: text.trim(), confidence: Number(data?.confidence || 0) }))
-                .filter(line => line.text.length >= 2);
-        };
-
-        const collectOcrWords = (data, pageNumber = 1) => {
-            const words = [];
-
-            const visitBlocks = blocks => {
-                if (!Array.isArray(blocks)) return;
-
-                for (const block of blocks) {
-                    if (Array.isArray(block?.paragraphs)) {
-                        for (const paragraph of block.paragraphs) {
-                            if (!Array.isArray(paragraph?.lines)) continue;
-
-                            for (const line of paragraph.lines) {
-                                if (!Array.isArray(line?.words)) continue;
-
-                                for (const word of line.words) {
-                                    const text = String(word?.text || "").trim();
-                                    const bbox = word?.bbox;
-
-                                    if (!text || !bbox) continue;
-                                    if (![bbox.x0, bbox.y0, bbox.x1, bbox.y1].every(Number.isFinite)) continue;
-
-                                    words.push({
-                                        text,
-                                        confidence: Number(word?.confidence || 0),
-                                        x0: Math.round(bbox.x0),
-                                        y0: Math.round(bbox.y0),
-                                        x1: Math.round(bbox.x1),
-                                        y1: Math.round(bbox.y1),
-                                        page: pageNumber
-                                    });
-                                }
-                            }
-                        }
-                    }
-                }
-            };
-
-            visitBlocks(data?.blocks);
-            return words;
-        };
-
-        const configureWorker = async (pageSegMode = "6") => {
-            if (!window.Tesseract) {
-                throw new Error("OCR engine could not be loaded. Check your internet connection and try again.");
-            }
-
-            const worker = await Tesseract.createWorker("eng", 1, {
-                logger: message => {
-                    if (message.status === "recognizing text") {
-                        updateOcrStatus(
-                            "Reading invoice...",
-                            "Detecting product, batch, expiry and quantity text.",
-                            (message.progress || 0) * 100
-                        );
-                    } else if (message.status) {
-                        updateOcrStatus(
-                            "Preparing OCR...",
-                            message.status,
-                            (message.progress || 0) * 100
-                        );
-                    }
-                }
-            });
-
-            await worker.setParameters({
-                preserve_interword_spaces: "1",
-                tessedit_pageseg_mode: pageSegMode,
-                user_defined_dpi: "300"
-            });
-
-            return worker;
-        };
-
-        const scoreOcrResult = (data) => {
-            const text = String(data?.text || "");
-            const normalized = text.toLowerCase();
-
-            const dateSignals =
-                (text.match(/\b\d{1,2}\s*[/.-]\s*\d{1,2}(?:\s*[/.-]\s*\d{2,4})?\b/g) || []).length +
-                (text.match(/\b(?:0?[1-9]|1[0-2])\s*(?:[/.-]\s*)?\d{2,4}\b/g) || []).length;
-
-            const hsnSignals = (text.match(/\b\d{7,8}\b/g) || []).length;
-
-            const headerSignals = [
-                "qty", "quantity", "batch", "expiry", "exp", "description", "product", "pack", "mrp"
-            ].reduce((count, token) =>
-                count + (normalized.includes(token) ? 1 : 0), 0);
-
-            const footerSignals = normalized.includes("grand total") ? 2 : 0;
-            const lineSignals = (text.match(/\n/g) || []).length;
-
-            const confidence = Number(data?.confidence || 0);
-
-            return (hsnSignals * 10) +
-                   (dateSignals * 8) +
-                   (headerSignals * 2) +
-                   footerSignals +
-                   Math.min(lineSignals / 10, 5) +
-                   (confidence / 25);
-        };
-
-        const buildOcrPayload = (data) => ({
-            text: String(data?.text || "").trim(),
-            confidence: Number(data?.confidence || 0),
-            lines: collectOcrLines(data),
-            words: collectOcrWords(data, 1)
-        });
-
-        const getImageDimensions = file => new Promise((resolve, reject) => {
-            const image = new Image();
-            const url = URL.createObjectURL(file);
-
-            image.onload = () => {
-                const dimensions = {
-                    width: image.naturalWidth,
-                    height: image.naturalHeight
-                };
-                URL.revokeObjectURL(url);
-                resolve(dimensions);
-            };
-
-            image.onerror = () => {
-                URL.revokeObjectURL(url);
-                reject(new Error("The invoice image dimensions could not be read."));
-            };
-
-            image.src = url;
-        });
-
-        const runOcrOnImage = async (file) => {
-            const worker = await configureWorker("6");
-
-            try {
-                updateOcrStatus("Reading invoice...", "Reading the complete invoice first.", 10);
-
-                const primary = await worker.recognize(
-                    file,
-                    {},
-                    { blocks: true }
-                );
-
-                let bestData = primary.data;
-                let bestScore = scoreOcrResult(bestData);
-
-                // First table-detector pass: pharmacy invoices usually have the
-                // stock grid in the middle/lower part of the page. Restricting
-                // OCR to that dense region reduces interference from addresses,
-                // GST details, notices and totals.
-                const dimensions = await getImageDimensions(file);
-                const tableTop = Math.round(dimensions.height * 0.14);
-                const tableBottom = Math.round(dimensions.height * 0.90);
-                const tableHeight = Math.max(1, tableBottom - tableTop);
-
-                updateOcrStatus("Detecting table...", "Isolating the pharmacy stock table.", 45);
-
-                await worker.setParameters({
-                    preserve_interword_spaces: "1",
-                    tessedit_pageseg_mode: "6",
-                    user_defined_dpi: "300"
-                });
-
-                const tablePass = await worker.recognize(
-                    file,
-                    {
-                        rectangle: {
-                            top: tableTop,
-                            left: 0,
-                            width: dimensions.width,
-                            height: tableHeight
-                        }
-                    },
-                    { blocks: true }
-                );
-
-                const tableScore = scoreOcrResult(tablePass.data);
-
-                if (tableScore > bestScore) {
-                    bestData = tablePass.data;
-                    bestScore = tableScore;
-                }
-
-                // Second layout pass only when the detected table still looks
-                // weak. PSM 11 is useful for invoices with irregular spacing.
-                if (bestScore < 16) {
-                    updateOcrStatus("Improving table OCR...", "Trying a second table layout.", 65);
-
-                    await worker.setParameters({
-                        preserve_interword_spaces: "1",
-                        tessedit_pageseg_mode: "11",
-                        user_defined_dpi: "300"
-                    });
-
-                    const alternate = await worker.recognize(
-                        file,
-                        {
-                            rectangle: {
-                                top: tableTop,
-                                left: 0,
-                                width: dimensions.width,
-                                height: tableHeight
-                            }
-                        },
-                        { blocks: true }
-                    );
-
-                    if (scoreOcrResult(alternate.data) > bestScore) {
-                        bestData = alternate.data;
-                        bestScore = scoreOcrResult(alternate.data);
-                    }
-                }
-
-                const result = buildOcrPayload(bestData);
-
-                if (!result.text) {
-                    throw new Error("No readable text was detected in this invoice image.");
-                }
-
-                return result;
-            } finally {
-                await worker.terminate();
-            }
-        };
-
-        const runOcrOnPdf = async (file) => {
-            updateOcrStatus("Opening PDF...", "Rendering invoice pages locally.", 2);
-
-            const pdf = await getPdfDocument(file);
-            const pageCount = pdf.numPages;
-
-            if (pageCount > MAX_PDF_PAGES) {
-                await pdf.destroy();
-                throw new Error("This PDF has more than 20 pages. Please split the invoice into smaller files.");
-            }
-
-            const worker = await configureWorker();
-            const pageTexts = [];
-            const allLines = [];
-            const allWords = [];
-            const pageConfidences = [];
-
-            try {
-                for (let pageNumber = 1; pageNumber <= pageCount; pageNumber++) {
-                    updateOcrStatus(
-                        "Reading PDF...",
-                        `Processing page ${pageNumber} of ${pageCount}.`,
-                        ((pageNumber - 1) / pageCount) * 100
-                    );
-
-                    const page = await pdf.getPage(pageNumber);
-                    const unscaled = page.getViewport({ scale: 1 });
-                    const scale = Math.min(2.2, 2400 / Math.max(unscaled.width, unscaled.height));
-                    const viewport = page.getViewport({ scale });
-
-                    const canvas = document.createElement("canvas");
-                    canvas.width = Math.max(1, Math.floor(viewport.width));
-                    canvas.height = Math.max(1, Math.floor(viewport.height));
-
-                    const context = canvas.getContext("2d", { alpha: false });
-                    if (!context) throw new Error("Canvas is not supported by this browser.");
-
-                    if (enhanceText) {
-                        context.filter = "grayscale(1) contrast(1.2) brightness(1.06)";
-                    }
-
-                    await page.render({ canvasContext: context, viewport }).promise;
-
-                    const blob = await canvasToBlob(canvas);
-                    const result = await worker.recognize(
-                        blob,
-                        {},
-                        { blocks: true }
-                    );
-
-                    const pageText = String(result?.data?.text || "").trim();
-                    if (pageText) {
-                        pageTexts.push(`--- Page ${pageNumber} ---\n${pageText}`);
-                    }
-
-                    allLines.push(...collectOcrLines(result?.data));
-                    allWords.push(...collectOcrWords(result?.data, pageNumber));
-                    pageConfidences.push(Number(result?.data?.confidence || 0));
-
-                    const localProgress = (pageNumber / pageCount) * 100;
-                    updateOcrStatus(
-                        "Reading PDF...",
-                        `Page ${pageNumber} of ${pageCount} complete.`,
-                        localProgress
-                    );
-                }
-            } finally {
-                await worker.terminate();
-                await pdf.destroy();
-            }
-
-            const text = pageTexts.join("\n\n").trim();
-            const confidence = pageConfidences.length
-                ? pageConfidences.reduce((sum, value) => sum + value, 0) / pageConfidences.length
-                : 0;
-
-            if (!text) {
-                throw new Error("No readable text was detected in this PDF.");
-            }
-
-            return { text, confidence, lines: allLines, words: allWords };
-        };
 
         const postVisionForParsing = async (file) => {
             const token = document.querySelector(
@@ -957,21 +618,6 @@
             scannerImage.style.filter = enhanceText
                 ? "grayscale(1) contrast(1.2) brightness(1.06)"
                 : "none";
-        });
-
-        ocrCopy?.addEventListener("click", async () => {
-            const text = ocrText?.value?.trim();
-            if (!text) return;
-
-            try {
-                await navigator.clipboard.writeText(text);
-                ocrCopy.textContent = "Copied";
-                setTimeout(() => {
-                    ocrCopy.textContent = "Copy text";
-                }, 1200);
-            } catch (error) {
-                console.error("Could not copy OCR text.", error);
-            }
         });
 
         document.addEventListener("keydown", event => {
