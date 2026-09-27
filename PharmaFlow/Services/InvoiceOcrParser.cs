@@ -428,9 +428,8 @@ public static class InvoiceOcrParser
     {
         var token = value.Trim();
 
-        if (ExcludedBatchWords.Contains(token) || UnitTokenRegex.IsMatch(token))
-            return true;
-
+        // Keep dosage/form words such as TAB, CAP, MG and ML because they are
+        // part of a pharmacy product name. Only remove obvious numeric codes.
         return ProductNoiseRegex.IsMatch(token);
     }
 
