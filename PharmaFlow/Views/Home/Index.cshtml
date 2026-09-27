@@ -394,7 +394,10 @@
 
                 const angle = ((rotation % 360) + 360) % 360;
                 const swapDimensions = angle === 90 || angle === 270;
-                const maxDimension = 2400;
+                // Keep enough resolution for small pharmacy-table text. Tesseract
+                // loses batch/expiry characters quickly when a phone photo is
+                // downscaled too aggressively.
+                const maxDimension = 3600;
                 const sourceMax = Math.max(image.naturalWidth, image.naturalHeight);
                 const scale = Math.min(1, maxDimension / sourceMax);
 
@@ -412,8 +415,8 @@
                 context.translate(canvas.width / 2, canvas.height / 2);
                 context.rotate(angle * Math.PI / 180);
                 context.filter = enhanceText
-                    ? "grayscale(1) contrast(1.2) brightness(1.06)"
-                    : "none";
+                    ? "grayscale(1) contrast(1.35) brightness(1.04)"
+                    : "grayscale(1) contrast(1.12) brightness(1.02)";
                 context.drawImage(image, -width / 2, -height / 2, width, height);
                 context.restore();
 
@@ -497,7 +500,7 @@
             return words;
         };
 
-        const configureWorker = async () => {
+        const configureWorker = async (pageSegMode = "6") => {
             if (!window.Tesseract) {
                 throw new Error("OCR engine could not be loaded. Check your internet connection and try again.");
             }
@@ -522,33 +525,85 @@
 
             await worker.setParameters({
                 preserve_interword_spaces: "1",
-                tessedit_pageseg_mode: "6"
+                tessedit_pageseg_mode: pageSegMode,
+                user_defined_dpi: "300"
             });
 
             return worker;
         };
 
+        const scoreOcrResult = (data) => {
+            const text = String(data?.text || "");
+            const normalized = text.toLowerCase();
+            const dateSignals =
+                (text.match(/\b\d{1,2}\s*[/.-]\s*\d{1,2}(?:\s*[/.-]\s*\d{2,4})?\b/g) || []).length +
+                (text.match(/\b(?:0?[1-9]|1[0-2])\s*(?:[/.-]\s*)?\d{2,4}\b/g) || []).length;
+
+            const headerSignals = [
+                "qty", "quantity", "batch", "expiry", "exp", "description", "product", "pack"
+            ].reduce((count, token) =>
+                count + (normalized.includes(token) ? 1 : 0), 0);
+
+            const wordCount = Array.isArray(data?.words) ? data.words.length : 0;
+            const confidence = Number(data?.confidence || 0);
+
+            return (dateSignals * 8) +
+                   (headerSignals * 2) +
+                   Math.min(wordCount / 100, 8) +
+                   (confidence / 25);
+        };
+
+        const buildOcrPayload = (data) => ({
+            text: String(data?.text || "").trim(),
+            confidence: Number(data?.confidence || 0),
+            lines: collectOcrLines(data),
+            words: collectOcrWords(data, 1)
+        });
+
         const runOcrOnImage = async (file) => {
-            const worker = await configureWorker();
+            const worker = await configureWorker("6");
 
             try {
                 updateOcrStatus("Reading invoice...", "Processing the invoice image.", 10);
-                const result = await worker.recognize(
+
+                const primary = await worker.recognize(
                     file,
                     {},
                     { blocks: true }
                 );
 
-                const text = String(result?.data?.text || "").trim();
-                const confidence = Number(result?.data?.confidence || 0);
-                const lines = collectOcrLines(result?.data);
-                const words = collectOcrWords(result?.data, 1);
+                let bestData = primary.data;
 
-                if (!text) {
+                // Pharmacy invoices are table-heavy. PSM 6 is good for a regular
+                // page block, while PSM 11 is often better when columns have
+                // uneven spacing. Retry automatically when the first pass looks
+                // weak instead of asking the user to retake a usable image.
+                if (scoreOcrResult(primary.data) < 10) {
+                    updateOcrStatus("Improving OCR...", "Trying a second table-reading pass.", 55);
+
+                    await worker.setParameters({
+                        preserve_interword_spaces: "1",
+                        tessedit_pageseg_mode: "11",
+                        user_defined_dpi: "300"
+                    });
+
+                    const alternate = await worker.recognize(
+                        file,
+                        {},
+                        { blocks: true }
+                    );
+
+                    if (scoreOcrResult(alternate.data) > scoreOcrResult(bestData))
+                        bestData = alternate.data;
+                }
+
+                const result = buildOcrPayload(bestData);
+
+                if (!result.text) {
                     throw new Error("No readable text was detected in this invoice image.");
                 }
 
-                return { text, confidence, lines, words };
+                return result;
             } finally {
                 await worker.terminate();
             }
