@@ -209,7 +209,7 @@
         }
 
         <section class="dashboard-grid" aria-label="Pharmacy overview">
-            <a asp-controller="ExpiryProducts" asp-action="AtRisk" class="dashboard-card metric-card metric-warning metric-card-link">
+            <a asp-controller="ExpiryProducts" asp-action="Index" class="dashboard-card metric-card metric-warning metric-card-link">
                 <div class="metric-icon">⌛</div>
                 <div><span class="metric-label" data-i18n="productsExpiringSoon">Products expiring soon</span><strong class="metric-value">@Model.ProductsExpiringSoonCount</strong><span class="metric-note" data-i18n="reviewUpcomingExpiries">Critical + upcoming stock</span></div>
             </a>
