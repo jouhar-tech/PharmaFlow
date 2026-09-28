@@ -1135,6 +1135,29 @@ body.theme-dark .invoice-review-saved-summary strong { color: #dcfce7; }
     margin-top: .75rem;
   }
 
+  .home-mobile-count-card {
+    position: relative;
+  }
+
+  .home-mobile-count-badge {
+    position: absolute;
+    top: .65rem;
+    right: .7rem;
+    display: grid;
+    place-items: center;
+    min-width: 28px;
+    height: 28px;
+    padding: 0 .35rem;
+    border: 2px solid rgba(255,255,255,.8);
+    border-radius: 999px;
+    background: #2d9894;
+    color: #fff;
+    font-size: .72rem;
+    font-weight: 900;
+    line-height: 1;
+    box-shadow: 0 3px 8px rgba(45,152,148,.2);
+  }
+
   .home-mobile-action-card {
     display: flex;
     align-items: center;
@@ -1383,6 +1406,12 @@ body.theme-dark .invoice-review-saved-summary strong { color: #dcfce7; }
     background: #193442;
     border-color: #294858;
     color: #e2e8f0;
+  }
+
+  body.theme-dark.home-dashboard-page .home-mobile-count-badge {
+    border-color: #193442;
+    background: #67c8c4;
+    color: #102a2b;
   }
 
   body.theme-dark.home-dashboard-page .home-mobile-scan-copy strong,
