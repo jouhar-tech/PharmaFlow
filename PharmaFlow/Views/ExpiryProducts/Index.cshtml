@@ -2,49 +2,82 @@
 
 @{
     ViewData["Title"] = "Products Expiring Soon";
+    var filter = string.IsNullOrWhiteSpace(Model.ViewMode) ? "all" : Model.ViewMode;
 }
 
-<div class="expiry-page">
-    <div class="expiry-page-header">
+<div class="expiry-page expiry-page-modern">
+    <header class="expiry-modern-header">
+        <a asp-controller="Home" asp-action="Index" class="expiry-modern-back" aria-label="Back to dashboard">←</a>
         <div>
-            <span class="dashboard-eyebrow" data-i18n="expiryManagement">Expiry Management</span>
-            <h1 class="dashboard-title" data-i18n="productsExpiringSoonPage">Products Expiring Soon</h1>
-            <p class="dashboard-subtitle" data-i18n="expiryPageSubtitle">Track medicines nearing expiry before they become avoidable stock losses.</p>
+            <span class="expiry-modern-kicker" data-i18n="expiryManagement">Expiry Management</span>
+            <h1 data-i18n="productsExpiringSoonPage">Products Expiring Soon</h1>
+            <p data-i18n="expiryPageSubtitle">Track medicines nearing expiry before they become avoidable stock losses.</p>
         </div>
-        <a asp-controller="Home" asp-action="Index" class="btn btn-light border expiry-back-link" data-i18n="backToDashboard">Back to dashboard</a>
-    </div>
+    </header>
 
-    <section class="expiry-summary-grid" aria-label="Expiry summary">
-        <a asp-controller="ExpiryProducts" asp-action="Critical" class="expiry-summary-card expiry-summary-critical">
-            <span class="expiry-summary-icon">!</span>
-            <span class="expiry-summary-label" data-i18n="criticalExpiry">Critical</span>
-            <strong>@Model.CriticalCount</strong>
-            <span data-i18n="expiringWithin30Days">Expiring within 30 days</span>
-            <span class="expiry-summary-arrow">→</span>
-        </a>
-
-        <a asp-controller="ExpiryProducts" asp-action="Upcoming" class="expiry-summary-card expiry-summary-upcoming">
-            <span class="expiry-summary-icon">⌛</span>
-            <span class="expiry-summary-label" data-i18n="upcomingExpiry">Upcoming</span>
-            <strong>@Model.UpcomingCount</strong>
-            <span data-i18n="expiringWithin31To90Days">Expiring within 31–90 days</span>
-            <span class="expiry-summary-arrow">→</span>
-        </a>
-
-        <a asp-controller="ExpiryProducts" asp-action="AtRisk" class="expiry-summary-card expiry-summary-value">
-            <span class="expiry-summary-icon">₹</span>
-            <span class="expiry-summary-label" data-i18n="atRiskValue">At-Risk Value</span>
+    <section class="expiry-modern-risk-card" aria-label="Total value at risk">
+        <div class="expiry-modern-risk-icon">₹</div>
+        <div>
+            <span data-i18n="atRiskValue">Total Value at Risk</span>
             <strong>₹ @Model.AtRiskValue.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</strong>
-            <span data-i18n="expiryAtRiskDescription">Cost value of stock expiring within 90 days</span>
-            <span class="expiry-summary-arrow">→</span>
-        </a>
+            <small data-i18n="expiryAtRiskDescription">Cost value of stock expiring within 90 days</small>
+        </div>
     </section>
 
-    <section class="dashboard-card expiry-info-card">
-        <div class="expiry-info-icon">⌛</div>
-        <div>
-            <h2 data-i18n="expiryPageNextStep">Select a category above to review the affected batches.</h2>
-            <p data-i18n="expiryPageNextStepDescription">Critical shows products expiring within 30 days. Upcoming shows products expiring from 31 to 90 days. At-Risk Value includes both groups.</p>
-        </div>
+    <form method="get" asp-controller="ExpiryProducts" asp-action="Index" class="expiry-modern-search" role="search">
+        <span class="expiry-modern-search-icon" aria-hidden="true">⌕</span>
+        <input type="search"
+               name="search"
+               value="@Model.SearchTerm"
+               placeholder="Search product or batch..."
+               data-i18n-placeholder="searchExpiryProducts"
+               autocomplete="off"
+               aria-label="Search expiring products or batch numbers" />
+        <input type="hidden" name="filter" value="@filter" />
+        @if (!string.IsNullOrWhiteSpace(Model.SearchTerm))
+        {
+            <a asp-controller="ExpiryProducts" asp-action="Index" asp-route-filter="@filter" class="expiry-modern-clear" aria-label="Clear search">×</a>
+        }
+    </form>
+
+    <nav class="expiry-modern-filters" aria-label="Expiry filters">
+        <a asp-action="Index" asp-route-filter="all" asp-route-search="@Model.SearchTerm" class="@(filter == "all" ? "is-active" : "")">All <span>@(Model.Products.Count)</span></a>
+        <a asp-action="Index" asp-route-filter="critical" asp-route-search="@Model.SearchTerm" class="@(filter == "critical" ? "is-active" : "")">Expires in 30 days <span>@Model.CriticalCount</span></a>
+        <a asp-action="Index" asp-route-filter="upcoming" asp-route-search="@Model.SearchTerm" class="@(filter == "upcoming" ? "is-active" : "")">Expires in 31–90 days <span>@Model.UpcomingCount</span></a>
+    </nav>
+
+    <section class="expiry-modern-summary" aria-label="Expiry summary">
+        <article class="expiry-modern-summary-card critical">
+            <span>!</span>
+            <div><strong>@Model.CriticalCount</strong><small>Critical</small></div>
+        </article>
+        <article class="expiry-modern-summary-card upcoming">
+            <span>⌛</span>
+            <div><strong>@Model.UpcomingCount</strong><small>Upcoming</small></div>
+        </article>
+        <article class="expiry-modern-summary-card total">
+            <span>₹</span>
+            <div><strong>₹ @Model.AtRiskValue.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</strong><small>At-Risk Value</small></div>
+        </article>
+    </section>
+
+    <section class="expiry-modern-products" aria-label="Expiring products">
+        @if (Model.Products.Count == 0)
+        {
+            <div class="expiry-modern-empty">
+                <div>✓</div>
+                <h2>No matching expiring products</h2>
+                <p>Try a different product name or batch number.</p>
+            </div>
+        }
+        else
+        {
+            <div class="expiry-products-grid expiry-modern-products-grid">
+                @foreach (var product in Model.Products)
+                {
+                    <partial name="_ExpiryProductCard" model="product" />
+                }
+            </div>
+        }
     </section>
 </div>
