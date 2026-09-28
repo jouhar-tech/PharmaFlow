@@ -802,3 +802,26 @@ body.theme-dark .invoice-review-saved-summary strong { color: #dcfce7; }
   .invoice-save-button { width: 100%; }
   .invoice-review-saved-summary { grid-template-columns: 1fr; }
 }
+
+/* Home dashboard mobile shell */
+@media (max-width: 991.98px) {
+  body.home-dashboard-page .app-sidebar,
+  body.home-dashboard-page .sidebar-overlay,
+  body.home-dashboard-page .sidebar-toggle {
+    display: none !important;
+  }
+
+  body.home-dashboard-page .app-content {
+    padding-left: .9rem;
+    padding-right: .9rem;
+  }
+
+  body.home-dashboard-page .app-topbar {
+    padding-left: .9rem;
+    padding-right: .9rem;
+  }
+
+  body.home-dashboard-page.sidebar-open {
+    overflow: auto;
+  }
+}
