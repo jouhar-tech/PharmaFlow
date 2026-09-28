@@ -1801,9 +1801,9 @@ body.theme-dark .expiry-modern-filters a.is-active span { color: #d9fffa; }
     background: #f3f7fb;
   }
   .expiry-modern-header {
-    min-height: 118px;
+    min-height: 110px;
     margin: 0;
-    padding: .45rem .8rem .65rem;
+    padding: .25rem .8rem .45rem;
     background: linear-gradient(180deg,#a9e3d8 0%,#98dacc 100%);
   }
   .expiry-modern-back {
