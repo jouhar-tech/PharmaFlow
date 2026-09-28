@@ -1,3 +1,27 @@
+@model PharmaFlow.Models.ViewModels.DashboardViewModel
+
+@{
+    ViewData["Title"] = "Dashboard";
+    var businessName = Context.Session.GetString("BusinessName") ?? "PharmaFlow";
+}
+
+<div class="home-invoice-inputs" aria-hidden="true">
+    <input id="dashboardCameraInput"
+           class="dashboard-file-input"
+           type="file"
+           accept="image/*"
+           capture="environment"
+           tabindex="-1" />
+    <input id="dashboardUploadInput"
+           class="dashboard-file-input"
+           type="file"
+           accept="image/*,application/pdf,.pdf"
+           tabindex="-1" />
+    <div id="invoiceCaptureAntiForgeryToken" hidden>
+        @Html.AntiForgeryToken()
+    </div>
+</div>
+
 
 <div class="home-mobile-dashboard">
     <header class="home-mobile-hero">
@@ -54,22 +78,6 @@
             <span class="home-mobile-card-chevron" aria-hidden="true">›</span>
         </label>
 
-        <input id="dashboardCameraInput"
-               class="dashboard-file-input"
-               type="file"
-               accept="image/*"
-               capture="environment"
-               aria-label="Scan invoice using camera" />
-
-        <input id="dashboardUploadInput"
-               class="dashboard-file-input"
-               type="file"
-               accept="image/*,application/pdf,.pdf"
-               aria-label="Upload invoice from device" />
-
-        <div id="invoiceCaptureAntiForgeryToken" hidden>
-            @Html.AntiForgeryToken()
-        </div>
 
         <div class="home-mobile-action-grid">
             <label class="home-mobile-action-card" for="dashboardUploadInput">
