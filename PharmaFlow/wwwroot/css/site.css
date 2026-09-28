@@ -1801,9 +1801,9 @@ body.theme-dark .expiry-modern-filters a.is-active span { color: #d9fffa; }
     background: #f3f7fb;
   }
   .expiry-modern-header {
-    min-height: 185px;
+    min-height: 118px;
     margin: 0;
-    padding: 1.15rem .8rem 5.1rem;
+    padding: .85rem .8rem 1.25rem;
     background: linear-gradient(180deg,#a9e3d8 0%,#98dacc 100%);
   }
   .expiry-modern-back {
@@ -1819,14 +1819,10 @@ body.theme-dark .expiry-modern-filters a.is-active span { color: #d9fffa; }
     margin-top: .2rem;
     font-size: 1.5rem;
   }
-  .expiry-modern-header p {
-    max-width: 310px;
-    color: #234a45;
-    font-size: .76rem;
-  }
+
   .expiry-modern-risk-card {
     width: calc(100% - 1.25rem);
-    margin: -4rem auto .75rem;
+    margin: -0.2rem auto .75rem;
     position: relative;
     z-index: 2;
     padding: .85rem;
