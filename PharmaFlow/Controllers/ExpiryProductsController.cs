@@ -17,16 +17,42 @@ public sealed class ExpiryProductsController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Index(CancellationToken cancellationToken)
+    public async Task<IActionResult> Index(
+        string? search,
+        string? filter,
+        CancellationToken cancellationToken)
     {
         var data = await LoadExpiryDataAsync(cancellationToken);
+
+        var normalizedSearch = search?.Trim() ?? string.Empty;
+        var normalizedFilter = (filter ?? "all").Trim().ToLowerInvariant();
+
+        IEnumerable<ExpiryProductItemViewModel> products = data.AtRiskProducts;
+
+        if (normalizedFilter == "critical")
+        {
+            products = products.Where(item => item.DaysLeft >= 0 && item.DaysLeft <= 30);
+        }
+        else if (normalizedFilter == "upcoming")
+        {
+            products = products.Where(item => item.DaysLeft > 30 && item.DaysLeft <= 90);
+        }
+
+        if (!string.IsNullOrWhiteSpace(normalizedSearch))
+        {
+            products = products.Where(item =>
+                item.ProductName.Contains(normalizedSearch, StringComparison.OrdinalIgnoreCase) ||
+                item.BatchNumber.Contains(normalizedSearch, StringComparison.OrdinalIgnoreCase));
+        }
 
         return View(new ExpiringProductsViewModel
         {
             CriticalCount = data.CriticalCount,
             UpcomingCount = data.UpcomingCount,
             AtRiskValue = data.AtRiskValue,
-            ViewMode = "overview"
+            Products = products.ToList(),
+            ViewMode = normalizedFilter,
+            SearchTerm = normalizedSearch
         });
     }
 
@@ -57,21 +83,6 @@ public sealed class ExpiryProductsController : Controller
             AtRiskValue = data.AtRiskValue,
             Products = data.UpcomingProducts,
             ViewMode = "upcoming"
-        });
-    }
-
-    [HttpGet]
-    public async Task<IActionResult> AtRisk(CancellationToken cancellationToken)
-    {
-        var data = await LoadExpiryDataAsync(cancellationToken);
-
-        return View("Products", new ExpiringProductsViewModel
-        {
-            CriticalCount = data.CriticalCount,
-            UpcomingCount = data.UpcomingCount,
-            AtRiskValue = data.AtRiskValue,
-            Products = data.AtRiskProducts,
-            ViewMode = "at-risk"
         });
     }
 
