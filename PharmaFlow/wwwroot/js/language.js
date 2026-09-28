@@ -55,7 +55,7 @@
             lowStockDetails: "Low Stock Details",
             expiringDetails: "Expiring Details",
             expiryManagement: "Expiry Management",
-            productsExpiringSoonPage: "Products Expiring Soon",
+            productsExpiringSoonPage: "Expiring Products",
             expiryPageSubtitle: "Track medicines nearing expiry before they become avoidable stock losses.",
             criticalExpiry: "Critical",
             upcomingExpiry: "Upcoming",
