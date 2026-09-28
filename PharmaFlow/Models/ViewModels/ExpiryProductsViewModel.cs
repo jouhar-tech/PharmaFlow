@@ -6,7 +6,8 @@ public sealed class ExpiringProductsViewModel
     public int UpcomingCount { get; init; }
     public decimal AtRiskValue { get; init; }
     public IReadOnlyList<ExpiryProductItemViewModel> Products { get; init; } = Array.Empty<ExpiryProductItemViewModel>();
-    public string ViewMode { get; init; } = "overview";
+    public string ViewMode { get; init; } = "all";
+    public string SearchTerm { get; init; } = string.Empty;
 }
 
 public sealed class ExpiryProductItemViewModel
