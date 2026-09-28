@@ -825,3 +825,651 @@ body.theme-dark .invoice-review-saved-summary strong { color: #dcfce7; }
     overflow: auto;
   }
 }
+
+/* Mobile Home redesign */
+.home-mobile-dashboard {
+  display: none;
+}
+
+@media (max-width: 767.98px) {
+  body.home-dashboard-page {
+    background: #fff;
+    color: #102238;
+  }
+
+  body.home-dashboard-page .app-topbar,
+  body.home-dashboard-page .app-footer,
+  body.home-dashboard-page .app-sidebar,
+  body.home-dashboard-page .sidebar-overlay {
+    display: none !important;
+  }
+
+  body.home-dashboard-page .app-content {
+    max-width: none;
+    padding: 0 !important;
+  }
+
+  body.home-dashboard-page .app-main {
+    min-height: 100vh;
+  }
+
+  body.home-dashboard-page .home-desktop-dashboard {
+    display: none;
+  }
+
+  body.home-dashboard-page .home-mobile-dashboard {
+    display: block;
+    min-height: 100vh;
+    overflow-x: hidden;
+    background: #fff;
+  }
+
+  .home-mobile-hero {
+    min-height: 255px;
+    padding: 1.05rem 1rem 4.3rem;
+    background: linear-gradient(180deg, #8ed8d3 0%, #79ccc7 100%);
+  }
+
+  .home-mobile-topline {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .8rem;
+  }
+
+  .home-mobile-greeting {
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+    min-width: 0;
+  }
+
+  .home-mobile-avatar {
+    display: grid;
+    place-items: center;
+    width: 45px;
+    height: 45px;
+    flex: 0 0 45px;
+    border: 3px solid rgba(255,255,255,.72);
+    border-radius: 50%;
+    background: #f7f2ea;
+    color: #183149;
+    font-size: .88rem;
+    font-weight: 850;
+  }
+
+  .home-mobile-greeting-label,
+  .home-mobile-greeting strong {
+    display: block;
+  }
+
+  .home-mobile-greeting-label {
+    color: #16384a;
+    font-size: .72rem;
+    line-height: 1.1;
+  }
+
+  .home-mobile-greeting strong {
+    margin-top: .08rem;
+    color: #102238;
+    font-size: .95rem;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 180px;
+  }
+
+  .home-mobile-notification {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+    border: 0;
+    background: transparent;
+    color: #102238;
+  }
+
+  .home-mobile-notification svg {
+    width: 26px;
+    height: 26px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.9;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .home-mobile-notification span {
+    position: absolute;
+    top: 7px;
+    right: 6px;
+    width: 10px;
+    height: 10px;
+    border: 2px solid #8ed8d3;
+    border-radius: 50%;
+    background: #ef4444;
+  }
+
+  .home-mobile-business {
+    margin-top: 1.7rem;
+    text-align: center;
+  }
+
+  .home-mobile-business h1 {
+    margin: 0;
+    color: #102238;
+    font-size: clamp(1.7rem, 8vw, 2.25rem);
+    font-weight: 850;
+    letter-spacing: -.045em;
+    line-height: 1.05;
+    overflow-wrap: anywhere;
+  }
+
+  .home-mobile-business p {
+    margin: .42rem 0 0;
+    color: #234152;
+    font-size: .85rem;
+    font-weight: 500;
+  }
+
+  .home-mobile-content {
+    position: relative;
+    z-index: 2;
+    margin-top: -3.25rem;
+    padding: 0 .9rem 6.4rem;
+  }
+
+  .home-mobile-sales-card,
+  .home-mobile-scan-card,
+  .home-mobile-action-card,
+  .home-mobile-value-card {
+    border: 1px solid rgba(15, 35, 56, .07);
+    box-shadow: 0 9px 24px rgba(15, 35, 56, .08);
+  }
+
+  .home-mobile-sales-card {
+    padding: 1rem 1rem .75rem;
+    border-radius: 1rem;
+    background: #fff;
+  }
+
+  .home-mobile-sales-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: .75rem;
+  }
+
+  .home-mobile-eyebrow {
+    display: block;
+    color: #14283d;
+    font-size: .95rem;
+    font-weight: 800;
+  }
+
+  .home-mobile-sales-total {
+    display: block;
+    margin-top: .25rem;
+    color: #192d42;
+    font-size: 1.45rem;
+    line-height: 1.1;
+    letter-spacing: -.03em;
+  }
+
+  .home-mobile-sales-pill {
+    display: inline-flex;
+    align-items: center;
+    min-height: 30px;
+    padding: .3rem .55rem;
+    border-radius: .55rem;
+    background: #d9f2e7;
+    color: #2c7b65;
+    font-size: .68rem;
+    font-weight: 800;
+  }
+
+  .home-mobile-sales-chart {
+    display: block;
+    width: 100%;
+    height: 68px;
+    margin-top: .55rem;
+  }
+
+  .home-mobile-sales-card > small {
+    display: block;
+    color: #7a8995;
+    font-size: .59rem;
+    line-height: 1.3;
+  }
+
+  .home-mobile-scan-card {
+    display: flex;
+    align-items: center;
+    gap: .8rem;
+    min-height: 125px;
+    margin-top: .9rem;
+    padding: 1rem;
+    border-radius: .95rem;
+    background: linear-gradient(135deg, #d9f1ef 0%, #d4edf2 100%);
+    color: #11283e;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .home-mobile-scan-card:active,
+  .home-mobile-action-card:active {
+    transform: scale(.99);
+  }
+
+  .home-mobile-action-icon {
+    display: grid;
+    place-items: center;
+    width: 58px;
+    height: 58px;
+    flex: 0 0 58px;
+    border-radius: 1rem;
+    background: rgba(255,255,255,.28);
+    color: #0d5263;
+  }
+
+  .home-mobile-scan-icon {
+    width: 76px;
+    height: 76px;
+    flex-basis: 76px;
+    background: rgba(255,255,255,.2);
+  }
+
+  .home-mobile-action-icon svg {
+    width: 39px;
+    height: 39px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.1;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .home-mobile-scan-icon svg {
+    width: 53px;
+    height: 53px;
+    stroke-width: 2.35;
+  }
+
+  .home-mobile-scan-copy {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .home-mobile-scan-copy strong,
+  .home-mobile-scan-copy small {
+    display: block;
+  }
+
+  .home-mobile-scan-copy strong {
+    color: #11263c;
+    font-size: 1.06rem;
+    font-weight: 850;
+    line-height: 1.08;
+  }
+
+  .home-mobile-scan-copy small {
+    margin-top: .38rem;
+    color: #557181;
+    font-size: .64rem;
+    line-height: 1.35;
+  }
+
+  .home-mobile-card-chevron {
+    color: #517b86;
+    font-size: 1.45rem;
+    line-height: 1;
+  }
+
+  .home-mobile-action-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .75rem;
+    margin-top: .75rem;
+  }
+
+  .home-mobile-action-card {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 156px;
+    padding: .8rem .55rem;
+    border-radius: .9rem;
+    background: #d8edf5;
+    color: #11283e;
+    text-decoration: none;
+    text-align: center;
+    cursor: pointer;
+  }
+
+  .home-mobile-action-card:hover {
+    color: #11283e;
+    text-decoration: none;
+  }
+
+  .home-mobile-action-card strong {
+    margin-top: .68rem;
+    color: #11283e;
+    font-size: .9rem;
+    font-weight: 800;
+    line-height: 1.12;
+  }
+
+  .home-mobile-action-card[aria-disabled="true"] {
+    cursor: default;
+  }
+
+  .home-mobile-value-card {
+    margin-top: .8rem;
+    padding: .85rem 1rem;
+    border-radius: .9rem;
+    background: #f1f8ff;
+    border-color: #d2e4f6;
+  }
+
+  .home-mobile-value-card span,
+  .home-mobile-value-card strong,
+  .home-mobile-value-card small {
+    display: block;
+  }
+
+  .home-mobile-value-card span {
+    color: #5d7081;
+    font-size: .64rem;
+    font-weight: 750;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+  }
+
+  .home-mobile-value-card strong {
+    margin-top: .18rem;
+    color: #1854a3;
+    font-size: 1.2rem;
+  }
+
+  .home-mobile-value-card small {
+    margin-top: .18rem;
+    color: #6c7d8d;
+    font-size: .62rem;
+    line-height: 1.35;
+  }
+
+  .home-mobile-selected {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    margin-top: .75rem;
+    padding: .65rem .7rem;
+    border: 1px solid #bbf7d0;
+    border-radius: .8rem;
+    background: #f0fdf4;
+  }
+
+  .home-mobile-selected[hidden] {
+    display: none;
+  }
+
+  .home-mobile-selected-icon {
+    display: grid;
+    place-items: center;
+    width: 27px;
+    height: 27px;
+    flex: 0 0 27px;
+    border-radius: 50%;
+    background: #dcfce7;
+    color: #166534;
+    font-size: .72rem;
+    font-weight: 900;
+  }
+
+  .home-mobile-selected > div {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .home-mobile-selected strong,
+  .home-mobile-selected span:not(.home-mobile-selected-icon) {
+    display: block;
+  }
+
+  .home-mobile-selected strong {
+    color: #166534;
+    font-size: .67rem;
+  }
+
+  .home-mobile-selected span:not(.home-mobile-selected-icon) {
+    margin-top: .05rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #3f7153;
+    font-size: .61rem;
+  }
+
+  .home-mobile-selected-reset {
+    border: 0;
+    background: transparent;
+    color: #166534;
+    font-size: .61rem;
+    font-weight: 800;
+  }
+
+  .home-mobile-bottom-nav {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1200;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    align-items: end;
+    min-height: 70px;
+    padding: .35rem .4rem calc(.35rem + env(safe-area-inset-bottom));
+    border-top: 1px solid #e8edf1;
+    background: rgba(255,255,255,.97);
+    box-shadow: 0 -5px 18px rgba(15,23,42,.08);
+    backdrop-filter: blur(10px);
+  }
+
+  .home-mobile-nav-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: .18rem;
+    min-height: 58px;
+    border: 0;
+    background: transparent;
+    color: #1f2937;
+    text-decoration: none;
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .home-mobile-nav-item svg {
+    width: 24px;
+    height: 24px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .home-mobile-nav-item span {
+    font-size: .59rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .home-mobile-nav-item.is-active {
+    color: #2d9894;
+  }
+
+  .home-mobile-nav-fab {
+    width: 58px;
+    height: 58px;
+    margin: -1.05rem auto 0;
+    border: 4px solid #fff;
+    border-radius: 50%;
+    background: #2f9e9b;
+    color: #fff;
+    box-shadow: 0 7px 18px rgba(47,158,155,.28);
+  }
+
+  .home-mobile-nav-fab svg {
+    width: 31px;
+    height: 31px;
+    stroke-width: 2.1;
+  }
+
+  .home-mobile-nav-fab span {
+    margin-top: -1px;
+    font-size: .57rem;
+  }
+
+  body.theme-dark.home-dashboard-page {
+    background: #0f172a;
+    color: #e2e8f0;
+  }
+
+  body.theme-dark.home-dashboard-page .home-mobile-dashboard {
+    background: #0f172a;
+  }
+
+  body.theme-dark.home-dashboard-page .home-mobile-hero {
+    background: linear-gradient(180deg, #2d7774 0%, #235e5c 100%);
+  }
+
+  body.theme-dark.home-dashboard-page .home-mobile-avatar {
+    background: #dce7e5;
+  }
+
+  body.theme-dark.home-dashboard-page .home-mobile-greeting-label,
+  body.theme-dark.home-dashboard-page .home-mobile-greeting strong,
+  body.theme-dark.home-dashboard-page .home-mobile-business h1 {
+    color: #f8fafc;
+  }
+
+  body.theme-dark.home-dashboard-page .home-mobile-business p {
+    color: #d7eeeb;
+  }
+
+  body.theme-dark.home-dashboard-page .home-mobile-sales-card {
+    background: #111c2e;
+    border-color: #263449;
+  }
+
+  body.theme-dark.home-dashboard-page .home-mobile-eyebrow,
+  body.theme-dark.home-dashboard-page .home-mobile-sales-total {
+    color: #f8fafc;
+  }
+
+  body.theme-dark.home-dashboard-page .home-mobile-sales-card > small {
+    color: #94a3b8;
+  }
+
+  body.theme-dark.home-dashboard-page .home-mobile-scan-card,
+  body.theme-dark.home-dashboard-page .home-mobile-action-card {
+    background: #193442;
+    border-color: #294858;
+    color: #e2e8f0;
+  }
+
+  body.theme-dark.home-dashboard-page .home-mobile-scan-copy strong,
+  body.theme-dark.home-dashboard-page .home-mobile-action-card strong {
+    color: #f8fafc;
+  }
+
+  body.theme-dark.home-dashboard-page .home-mobile-scan-copy small {
+    color: #9fc0c7;
+  }
+
+  body.theme-dark.home-dashboard-page .home-mobile-value-card {
+    background: #14243a;
+    border-color: #2d4663;
+  }
+
+  body.theme-dark.home-dashboard-page .home-mobile-value-card strong {
+    color: #93c5fd;
+  }
+
+  body.theme-dark.home-dashboard-page .home-mobile-value-card span,
+  body.theme-dark.home-dashboard-page .home-mobile-value-card small {
+    color: #94a3b8;
+  }
+
+  body.theme-dark.home-dashboard-page .home-mobile-bottom-nav {
+    border-color: #263449;
+    background: rgba(15,23,42,.97);
+  }
+
+  body.theme-dark.home-dashboard-page .home-mobile-nav-item {
+    color: #cbd5e1;
+  }
+
+  body.theme-dark.home-dashboard-page .home-mobile-nav-item.is-active {
+    color: #67e8e3;
+  }
+
+  body.theme-dark.home-dashboard-page .home-mobile-nav-fab {
+    border-color: #0f172a;
+    color: #fff;
+  }
+}
+
+@media (max-width: 390px) {
+  .home-mobile-hero {
+    min-height: 242px;
+    padding-left: .8rem;
+    padding-right: .8rem;
+  }
+
+  .home-mobile-content {
+    padding-left: .72rem;
+    padding-right: .72rem;
+  }
+
+  .home-mobile-scan-card {
+    min-height: 114px;
+    padding: .8rem;
+  }
+
+  .home-mobile-scan-icon {
+    width: 66px;
+    height: 66px;
+    flex-basis: 66px;
+  }
+
+  .home-mobile-scan-icon svg {
+    width: 48px;
+    height: 48px;
+  }
+
+  .home-mobile-scan-copy strong {
+    font-size: .95rem;
+  }
+
+  .home-mobile-action-card {
+    min-height: 145px;
+  }
+
+  .home-mobile-action-icon {
+    width: 52px;
+    height: 52px;
+    flex-basis: 52px;
+  }
+
+  .home-mobile-nav-item span {
+    font-size: .55rem;
+  }
+}
