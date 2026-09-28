@@ -1,217 +1,302 @@
-@model PharmaFlow.Models.ViewModels.DashboardViewModel
 
-@{
-    ViewData["Title"] = "Dashboard";
-    var businessName = Context.Session.GetString("BusinessName") ?? "PharmaFlow";
-}
-
-<div class="dashboard-page">
-    <div class="dashboard-header">
-        <div>
-            <span class="dashboard-eyebrow" data-i18n="welcomeBack">Welcome back</span>
-            <h1 class="dashboard-title">@businessName <span data-i18n="dashboard">Dashboard</span></h1>
-            <p class="dashboard-subtitle"> <span data-i18n="dashboardSubtitle">Monitor your pharmacy activity and the value PharmaFlow creates for your business.</span></p>
-        </div>
-        <div class="dashboard-date">@DateTime.Now.ToString("dd MMM yyyy")</div>
-    </div>
-
-    <section class="dashboard-stock-actions" aria-label="Add stock">
-        <div class="dashboard-stock-actions-copy">
-            <span class="section-kicker" data-i18n="addStock">Add stock</span>
-            <h2 data-i18n="stockCaptureHeading">Capture an invoice in seconds</h2>
-            <p data-i18n="stockCaptureDescription">Scan a printed pharmacy invoice with your camera or upload a document from your device.</p>
-        </div>
-
-        <div class="dashboard-stock-actions-buttons">
-            <label class="stock-capture-button stock-capture-primary" for="dashboardCameraInput">
-                <span class="stock-capture-icon">⌁</span>
-                <span>
-                    <strong data-i18n="scanInvoice">Scan Invoice</strong>
-                    <small data-i18n="scanInvoiceHint">Use camera</small>
-                </span>
-            </label>
-            <input id="dashboardCameraInput"
-                   class="dashboard-file-input"
-                   type="file"
-                   accept="image/*"
-                   capture="environment"
-                   aria-label="Scan invoice using camera" />
-
-            <label class="stock-capture-button stock-capture-secondary" for="dashboardUploadInput">
-                <span class="stock-capture-icon">↑</span>
-                <span>
-                    <strong data-i18n="uploadInvoice">Upload Invoice</strong>
-                    <small data-i18n="uploadInvoiceHint">From device</small>
-                </span>
-            </label>
-            <input id="dashboardUploadInput"
-                   class="dashboard-file-input"
-                   type="file"
-                   accept="image/*,application/pdf,.pdf"
-                   aria-label="Upload invoice from device" />
-        </div>
-
-        <div class="stock-capture-selected" id="stockCaptureSelected" hidden role="status" aria-live="polite">
-            <span class="stock-capture-selected-icon">✓</span>
-            <div>
-                <strong data-i18n="invoiceSelected">Invoice selected</strong>
-                <span id="stockCaptureSelectedName"></span>
+<div class="home-mobile-dashboard">
+    <header class="home-mobile-hero">
+        <div class="home-mobile-topline">
+            <div class="home-mobile-greeting">
+                <span class="home-mobile-avatar">@((Context.Session.GetString("Username") ?? businessName).FirstOrDefault().ToString().ToUpperInvariant())</span>
+                <div>
+                    <span class="home-mobile-greeting-label">Greetings,</span>
+                    <strong>@(Context.Session.GetString("Username") ?? businessName)</strong>
+                </div>
             </div>
-            <button type="button" id="stockCaptureReset" class="stock-capture-reset" data-i18n="chooseAnother">Choose another</button>
+            <button type="button" class="home-mobile-notification" aria-label="Notifications">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>
+                <span></span>
+            </button>
         </div>
+
+        <div class="home-mobile-business">
+            <h1>@businessName</h1>
+            <p>@DateTime.Now.ToString("dd MMM yyyy")</p>
+        </div>
+    </header>
+
+    <main class="home-mobile-content">
+        <section class="home-mobile-sales-card" aria-label="Today's sales">
+            <div class="home-mobile-sales-head">
+                <div>
+                    <span class="home-mobile-eyebrow">Today&rsquo;s Sales</span>
+                    <strong class="home-mobile-sales-total">₹ —</strong>
+                </div>
+                <span class="home-mobile-sales-pill">Today</span>
+            </div>
+            <svg class="home-mobile-sales-chart" viewBox="0 0 520 110" preserveAspectRatio="none" aria-hidden="true">
+                <defs>
+                    <linearGradient id="homeSalesFill" x1="0" x2="0" y1="0" y2="1">
+                        <stop offset="0" stop-color="#54a9a6" stop-opacity=".28" />
+                        <stop offset="1" stop-color="#54a9a6" stop-opacity="0" />
+                    </linearGradient>
+                </defs>
+                <path d="M8 89 C54 72, 65 60, 105 70 S155 88, 194 66 S248 42, 286 58 S336 89, 373 58 S426 30, 463 47 S493 59, 512 25 L512 110 L8 110 Z" fill="url(#homeSalesFill)" />
+                <path d="M8 89 C54 72, 65 60, 105 70 S155 88, 194 66 S248 42, 286 58 S336 89, 373 58 S426 30, 463 47 S493 59, 512 25" fill="none" stroke="#54a9a6" stroke-width="5" stroke-linecap="round" />
+            </svg>
+            <small>Sales summary will appear here as billing is enabled.</small>
+        </section>
+
+        <label class="home-mobile-scan-card" for="dashboardCameraInput">
+            <span class="home-mobile-action-icon home-mobile-scan-icon" aria-hidden="true">
+                <svg viewBox="0 0 64 64"><rect x="9" y="18" width="38" height="31" rx="5"/><path d="M18 18l5-7h12l5 7M47 25h4a4 4 0 0 1 4 4v18a4 4 0 0 1-4 4H47"/><circle cx="28" cy="33" r="8"/><path d="M42 38h12M42 44h10"/></svg>
+            </span>
+            <span class="home-mobile-scan-copy">
+                <strong>Scan / Upload Invoice</strong>
+                <small>Capture an invoice and add stock faster</small>
+            </span>
+            <span class="home-mobile-card-chevron" aria-hidden="true">›</span>
+        </label>
+
+        <input id="dashboardCameraInput"
+               class="dashboard-file-input"
+               type="file"
+               accept="image/*"
+               capture="environment"
+               aria-label="Scan invoice using camera" />
+
+        <input id="dashboardUploadInput"
+               class="dashboard-file-input"
+               type="file"
+               accept="image/*,application/pdf,.pdf"
+               aria-label="Upload invoice from device" />
+
         <div id="invoiceCaptureAntiForgeryToken" hidden>
             @Html.AntiForgeryToken()
         </div>
-    </section>
 
-        <div class="invoice-scanner-modal" id="invoiceScannerModal" hidden>
-            <div class="invoice-scanner-backdrop" id="invoiceScannerBackdrop"></div>
-            <section class="invoice-scanner-panel" role="dialog" aria-modal="true" aria-labelledby="invoiceScannerTitle">
-                <header class="invoice-scanner-header">
-                    <div>
-                        <span class="section-kicker" data-i18n="stockCaptureHeading">Capture an invoice in seconds</span>
-                        <h2 id="invoiceScannerTitle" data-i18n="scanInvoicePreview">Review invoice scan</h2>
-                    </div>
-                    <button type="button" class="invoice-scanner-close" id="invoiceScannerClose" data-i18n-attr="aria-label:closeScanner">×</button>
-                </header>
+        <div class="home-mobile-action-grid">
+            <label class="home-mobile-action-card" for="dashboardUploadInput">
+                <span class="home-mobile-action-icon">
+                    <svg viewBox="0 0 64 64"><rect x="12" y="11" width="33" height="39" rx="4"/><rect x="20" y="19" width="33" height="39" rx="4"/><path d="M28 28h16M28 35h13M37 48v-9M33 43l4-4 4 4"/></svg>
+                </span>
+                <strong>Add Stock</strong>
+            </label>
 
-                <div class="invoice-scanner-stage">
-                    <div class="invoice-scanner-preview" id="invoiceScannerPreview">
-                        <img id="invoiceScannerImage" alt="Invoice preview" hidden />
-                        <div class="invoice-scanner-pdf" id="invoiceScannerPdf" hidden>
-                            <span class="invoice-scanner-pdf-icon">PDF</span>
-                            <strong id="invoiceScannerPdfName"></strong>
-                            <span data-i18n="pdfReadyForProcessing">PDF selected and ready for processing.</span>
-                        </div>
-                        <span class="invoice-scanner-corner invoice-scanner-corner-tl"></span>
-                        <span class="invoice-scanner-corner invoice-scanner-corner-tr"></span>
-                        <span class="invoice-scanner-corner invoice-scanner-corner-bl"></span>
-                        <span class="invoice-scanner-corner invoice-scanner-corner-br"></span>
-                    </div>
-                </div>
+            <button type="button" class="home-mobile-action-card" aria-disabled="true">
+                <span class="home-mobile-action-icon">
+                    <svg viewBox="0 0 64 64"><path d="M17 9h28v46H17z"/><path d="M22 18h18M22 26h18M22 34h12"/><path d="M45 16v31l9-8V9z"/><path d="M49 39v10M45 45h8"/></svg>
+                </span>
+                <strong>Create Bill</strong>
+            </button>
 
-                <div class="invoice-scanner-controls">
-                    <button type="button" class="invoice-scanner-control" id="invoiceRotate" data-image-only>
-                        <span>↻</span>
-                        <small data-i18n="rotateInvoice">Rotate</small>
-                    </button>
-                    <button type="button" class="invoice-scanner-control" id="invoiceEnhance" data-image-only aria-pressed="false">
-                        <span>✦</span>
-                        <small data-i18n="enhanceForOcr">Enhance text</small>
-                    </button>
-                </div>
+            <a class="home-mobile-action-card" asp-controller="ExpiryProducts" asp-action="AtRisk">
+                <span class="home-mobile-action-icon">
+                    <svg viewBox="0 0 64 64"><rect x="11" y="15" width="42" height="39" rx="5"/><path d="M21 10v10M43 10v10M11 26h42"/><path d="M24 36h4M36 36h4M24 45h4"/><circle cx="45" cy="47" r="8"/><path d="M45 43v5M45 51h.01"/></svg>
+                </span>
+                <strong>Expiry Details</strong>
+            </a>
 
-                <p class="invoice-scanner-hint" data-i18n="scannerPreviewHint">Make sure the full invoice is visible and the text is sharp before continuing.</p>
-
-                <div class="invoice-ocr-status" id="invoiceOcrStatus" hidden role="status" aria-live="polite">
-                    <div class="invoice-ocr-status-head">
-                        <strong id="invoiceOcrStatusTitle" data-i18n="ocrPreparing">Preparing invoice analysis...</strong>
-                        <span id="invoiceOcrProgress">0%</span>
-                    </div>
-                    <div class="invoice-ocr-progress"><span id="invoiceOcrProgressBar"></span></div>
-                    <small id="invoiceOcrStatusMessage" data-i18n="ocrStarting">Preparing AI invoice analysis.</small>
-                </div>
-
-                <footer class="invoice-scanner-footer">
-                    <button type="button" class="btn btn-outline-secondary" id="invoiceScannerRetake" data-i18n="retakeInvoice">Retake / Choose another</button>
-                    <button type="button" class="btn btn-primary" id="invoiceScannerUse" data-i18n="useThisScan">Use this scan</button>
-                </footer>
-            </section>
+            <button type="button" class="home-mobile-action-card" aria-disabled="true">
+                <span class="home-mobile-action-icon">
+                    <svg viewBox="0 0 64 64"><path d="M10 48V22h17M10 48h44M18 40l9-10 8 6 15-18"/><path d="M42 14h10v10"/><path d="M44 43h10M44 49h7"/></svg>
+                </span>
+                <strong>Low Stock Details</strong>
+            </button>
         </div>
 
-    @if (Model.HasPharmaFlowValue)
-    {
-        <section class="dashboard-value-card" aria-label="PharmaFlow business value">
-            <div class="value-card-main">
-                <div>
-                    <span class="section-kicker value-kicker" data-i18n="valueKicker">Your PharmaFlow value</span>
-                    <h2 data-i18n="valueHeading">See how much money PharmaFlow protects for your pharmacy</h2>
-                    <p class="value-description" data-i18n="valueDescription">As your sales, purchases, inventory and payment data grows, PharmaFlow will calculate the estimated money saved or protected through better stock control, expiry prevention and payment follow-up.</p>
-                </div>
-                <div class="value-total">
-                    <span class="value-total-label" data-i18n="estimatedMoneySaved">Estimated money saved</span>
-                    <strong>₹ @Model.EstimatedMoneySaved.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</strong>
-                    <small data-i18n="calculatedFromActualData">Calculated from your actual business data.</small>
-                </div>
+        @if (Model.HasPharmaFlowValue)
+        {
+            <section class="home-mobile-value-card" aria-label="PharmaFlow business value">
+                <span>Your PharmaFlow value</span>
+                <strong>₹ @Model.EstimatedMoneySaved.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</strong>
+                <small>Estimated money saved or protected from better stock control.</small>
+            </section>
+        }
+
+        <div class="home-mobile-selected" id="stockCaptureSelected" hidden role="status" aria-live="polite">
+            <span class="home-mobile-selected-icon">✓</span>
+            <div>
+                <strong>Invoice selected</strong>
+                <span id="stockCaptureSelectedName"></span>
             </div>
+            <button type="button" id="stockCaptureReset" class="home-mobile-selected-reset">Choose another</button>
+        </div>
 
-            <div class="value-proof-grid">
-                <div class="value-proof">
-                    <span class="value-proof-icon">⌛</span>
-                    <div>
-                        <strong data-i18n="expiryLossPrevented">Expiry loss prevented</strong>
-                        <span data-i18n="expiryDescription">Potential loss avoided from better expiry tracking</span>
-                    </div>
-                    <b>₹ @Model.ExpiryLossPrevented.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</b>
-                </div>
-                <div class="value-proof">
-                    <span class="value-proof-icon">↗</span>
-                    <div>
-                        <strong data-i18n="cashRecovered">Cash recovered</strong>
-                        <span data-i18n="cashDescription">Outstanding customer payments followed up faster</span>
-                    </div>
-                    <b>₹ @Model.CashRecovered.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</b>
-                </div>
-                <div class="value-proof">
-                    <span class="value-proof-icon">▤</span>
-                    <div>
-                        <strong data-i18n="inventoryLossReduced">Inventory loss reduced</strong>
-                        <span data-i18n="inventoryDescription">Better stock visibility helps reduce avoidable holding losses</span>
-                    </div>
-                    <b>₹ @Model.InventoryLossReduced.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</b>
-                </div>
-            </div>
-
-            <div class="value-card-footer">
-                <span data-i18n="businessImpact">PharmaFlow should show business impact, not just business data.</span>
-                <span data-i18n="calculatedFromRecords">Calculated from your real records</span>
-            </div>
-        </section>
-    }
-
-    <section class="dashboard-grid" aria-label="Pharmacy overview">
-        <a asp-controller="ExpiryProducts" asp-action="AtRisk" class="dashboard-card metric-card metric-warning metric-card-link">
-            <div class="metric-icon">⌛</div>
-            <div><span class="metric-label" data-i18n="productsExpiringSoon">Products expiring soon</span><strong class="metric-value">@Model.ProductsExpiringSoonCount</strong><span class="metric-note" data-i18n="reviewUpcomingExpiries">Critical + upcoming stock</span></div>
-        </a>
-        <article class="dashboard-card metric-card metric-info">
-            <div class="metric-icon">▤</div>
-            <div><span class="metric-label" data-i18n="lowStockDetailsMetric">Low stock details</span><strong class="metric-value">—</strong><span class="metric-note" data-i18n="itemsBelowReorderLevel">Items below reorder level</span></div>
-        </article>
-        <article class="dashboard-card metric-card metric-danger">
-            <div class="metric-icon">!</div>
-            <div><span class="metric-label" data-i18n="outOfStockItems">Out-of-stock items</span><strong class="metric-value">—</strong><span class="metric-note" data-i18n="productsNeedingReplenishment">Products needing replenishment</span></div>
-        </article>
-        <article class="dashboard-card metric-card metric-expired">
-            <div class="metric-icon">⟳</div>
-            <div><span class="metric-label" data-i18n="productsAlreadyExpired">Products already expired</span><strong class="metric-value">—</strong><span class="metric-note" data-i18n="checkAndQuarantineStock">Check and quarantine stock</span></div>
-        </article>
-        <article class="dashboard-card metric-card metric-success">
-            <div class="metric-icon">₹</div>
-            <div><span class="metric-label" data-i18n="todaysSales">Today's sales</span><strong class="metric-value">₹ —</strong><span class="metric-note" data-i18n="totalSalesForToday">Total sales for today</span></div>
-        </article>
-        <article class="dashboard-card metric-card metric-purple">
-            <div class="metric-icon">⇄</div>
-            <div><span class="metric-label" data-i18n="customerDebitCredit">Customer debit / credit</span><strong class="metric-value">₹ —</strong><span class="metric-note" data-i18n="pendingCustomerBalances">Pending customer balances</span></div>
-        </article>
-    </section>
-
-    <section class="dashboard-section-grid">
-        <article class="dashboard-card detail-card">
-            <div class="card-heading"><div><span class="section-kicker" data-i18n="payables">Payables</span><h2 data-i18n="supplierPendingPayments">Supplier pending payments</h2></div><span class="heading-icon">▣</span></div>
-            <div class="empty-state"><span>₹</span><p data-i18n="noSupplierPaymentData">No supplier payment data available yet.</p></div>
-        </article>
-        <article class="dashboard-card detail-card">
-            <div class="card-heading"><div><span class="section-kicker" data-i18n="inventoryTrends">Inventory trends</span><h2 data-i18n="fastMovingProducts">Fast-moving products</h2></div><span class="heading-icon">↗</span></div>
-            <div class="empty-state"><span>↗</span><p data-i18n="fastMovingInsights">Fast-moving product insights will appear here.</p></div>
-        </article>
-        <article class="dashboard-card detail-card">
-            <div class="card-heading"><div><span class="section-kicker" data-i18n="inventoryTrends">Inventory trends</span><h2 data-i18n="slowMovingProducts">Slow-moving products</h2></div><span class="heading-icon">↘</span></div>
-            <div class="empty-state"><span>↘</span><p data-i18n="slowMovingInsights">Slow-moving product insights will appear here.</p></div>
-        </article>
-    </section>
+        <nav class="home-mobile-bottom-nav" aria-label="Home navigation">
+            <a class="home-mobile-nav-item is-active" asp-controller="Home" asp-action="Index">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.8 12 3l9 7.8v9.2a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>
+                <span>Home</span>
+            </a>
+            <button type="button" class="home-mobile-nav-item">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v16H5zM8 8h8M8 12h5"/><path d="M13 16h3"/></svg>
+                <span>Items</span>
+            </button>
+            <button type="button" class="home-mobile-nav-item home-mobile-nav-fab">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                <span>Bill</span>
+            </button>
+            <button type="button" class="home-mobile-nav-item">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>
+                <span>Customers</span>
+            </button>
+            <a class="home-mobile-nav-item" asp-controller="Profile" asp-action="Index">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>
+                <span>More</span>
+            </a>
+        </nav>
+    </main>
 </div>
 
+<div class="home-desktop-dashboard">
+    <div class="dashboard-page">
+        <div class="dashboard-header">
+            <div>
+                <span class="dashboard-eyebrow" data-i18n="welcomeBack">Welcome back</span>
+                <h1 class="dashboard-title">@businessName <span data-i18n="dashboard">Dashboard</span></h1>
+                <p class="dashboard-subtitle"> <span data-i18n="dashboardSubtitle">Monitor your pharmacy activity and the value PharmaFlow creates for your business.</span></p>
+            </div>
+            <div class="dashboard-date">@DateTime.Now.ToString("dd MMM yyyy")</div>
+        </div>
+
+        <section class="dashboard-stock-actions" aria-label="Add stock">
+            <div class="dashboard-stock-actions-copy">
+                <span class="section-kicker" data-i18n="addStock">Add stock</span>
+                <h2 data-i18n="stockCaptureHeading">Capture an invoice in seconds</h2>
+                <p data-i18n="stockCaptureDescription">Scan a printed pharmacy invoice with your camera or upload a document from your device.</p>
+            </div>
+
+            <div class="dashboard-stock-actions-buttons">
+                <label class="stock-capture-button stock-capture-primary" for="dashboardCameraInput">
+                    <span class="stock-capture-icon">⌁</span>
+                    <span>
+                        <strong data-i18n="scanInvoice">Scan Invoice</strong>
+                        <small data-i18n="scanInvoiceHint">Use camera</small>
+                    </span>
+                </label>
+
+                <label class="stock-capture-button stock-capture-secondary" for="dashboardUploadInput">
+                    <span class="stock-capture-icon">↑</span>
+                    <span>
+                        <strong data-i18n="uploadInvoice">Upload Invoice</strong>
+                        <small data-i18n="uploadInvoiceHint">From device</small>
+                    </span>
+                </label>
+            </div>
+        </section>
+
+        @if (Model.HasPharmaFlowValue)
+        {
+            <section class="dashboard-value-card" aria-label="PharmaFlow business value">
+                <div class="value-card-main">
+                    <div>
+                        <span class="section-kicker value-kicker" data-i18n="valueKicker">Your PharmaFlow value</span>
+                        <h2 data-i18n="valueHeading">See how much money PharmaFlow protects for your pharmacy</h2>
+                        <p class="value-description" data-i18n="valueDescription">As your sales, purchases, inventory and payment data grows, PharmaFlow will calculate the estimated money saved or protected through better stock control, expiry prevention and payment follow-up.</p>
+                    </div>
+                    <div class="value-total">
+                        <span class="value-total-label" data-i18n="estimatedMoneySaved">Estimated money saved</span>
+                        <strong>₹ @Model.EstimatedMoneySaved.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</strong>
+                        <small data-i18n="calculatedFromActualData">Calculated from your actual business data.</small>
+                    </div>
+                </div>
+            </section>
+        }
+
+        <section class="dashboard-grid" aria-label="Pharmacy overview">
+            <a asp-controller="ExpiryProducts" asp-action="AtRisk" class="dashboard-card metric-card metric-warning metric-card-link">
+                <div class="metric-icon">⌛</div>
+                <div><span class="metric-label" data-i18n="productsExpiringSoon">Products expiring soon</span><strong class="metric-value">@Model.ProductsExpiringSoonCount</strong><span class="metric-note" data-i18n="reviewUpcomingExpiries">Critical + upcoming stock</span></div>
+            </a>
+            <article class="dashboard-card metric-card metric-info">
+                <div class="metric-icon">▤</div>
+                <div><span class="metric-label" data-i18n="lowStockDetailsMetric">Low stock details</span><strong class="metric-value">—</strong><span class="metric-note" data-i18n="itemsBelowReorderLevel">Items below reorder level</span></div>
+            </article>
+            <article class="dashboard-card metric-card metric-danger">
+                <div class="metric-icon">!</div>
+                <div><span class="metric-label" data-i18n="outOfStockItems">Out-of-stock items</span><strong class="metric-value">—</strong><span class="metric-note" data-i18n="productsNeedingReplenishment">Products needing replenishment</span></div>
+            </article>
+            <article class="dashboard-card metric-card metric-expired">
+                <div class="metric-icon">⟳</div>
+                <div><span class="metric-label" data-i18n="productsAlreadyExpired">Products already expired</span><strong class="metric-value">—</strong><span class="metric-note" data-i18n="checkAndQuarantineStock">Check and quarantine stock</span></div>
+            </article>
+            <article class="dashboard-card metric-card metric-success">
+                <div class="metric-icon">₹</div>
+                <div><span class="metric-label" data-i18n="todaysSales">Today's sales</span><strong class="metric-value">₹ —</strong><span class="metric-note" data-i18n="totalSalesForToday">Total sales for today</span></div>
+            </article>
+            <article class="dashboard-card metric-card metric-purple">
+                <div class="metric-icon">⇄</div>
+                <div><span class="metric-label" data-i18n="customerDebitCredit">Customer debit / credit</span><strong class="metric-value">₹ —</strong><span class="metric-note" data-i18n="pendingCustomerBalances">Pending customer balances</span></div>
+            </article>
+        </section>
+
+        <section class="dashboard-section-grid">
+            <article class="dashboard-card detail-card">
+                <div class="card-heading"><div><span class="section-kicker" data-i18n="payables">Payables</span><h2 data-i18n="supplierPendingPayments">Supplier pending payments</h2></div><span class="heading-icon">▣</span></div>
+                <div class="empty-state"><span>₹</span><p data-i18n="noSupplierPaymentData">No supplier payment data available yet.</p></div>
+            </article>
+            <article class="dashboard-card detail-card">
+                <div class="card-heading"><div><span class="section-kicker" data-i18n="inventoryTrends">Inventory trends</span><h2 data-i18n="fastMovingProducts">Fast-moving products</h2></div><span class="heading-icon">↗</span></div>
+                <div class="empty-state"><span>↗</span><p data-i18n="fastMovingInsights">Fast-moving product insights will appear here.</p></div>
+            </article>
+            <article class="dashboard-card detail-card">
+                <div class="card-heading"><div><span class="section-kicker" data-i18n="inventoryTrends">Inventory trends</span><h2 data-i18n="slowMovingProducts">Slow-moving products</h2></div><span class="heading-icon">↘</span></div>
+                <div class="empty-state"><span>↘</span><p data-i18n="slowMovingInsights">Slow-moving product insights will appear here.</p></div>
+            </article>
+        </section>
+    </div>
+</div>
+
+<div class="invoice-scanner-modal" id="invoiceScannerModal" hidden>
+    <div class="invoice-scanner-backdrop" id="invoiceScannerBackdrop"></div>
+    <section class="invoice-scanner-panel" role="dialog" aria-modal="true" aria-labelledby="invoiceScannerTitle">
+        <header class="invoice-scanner-header">
+            <div>
+                <span class="section-kicker" data-i18n="stockCaptureHeading">Capture an invoice in seconds</span>
+                <h2 id="invoiceScannerTitle" data-i18n="scanInvoicePreview">Review invoice scan</h2>
+            </div>
+            <button type="button" class="invoice-scanner-close" id="invoiceScannerClose" data-i18n-attr="aria-label:closeScanner">×</button>
+        </header>
+
+        <div class="invoice-scanner-stage">
+            <div class="invoice-scanner-preview" id="invoiceScannerPreview">
+                <img id="invoiceScannerImage" alt="Invoice preview" hidden />
+                <div class="invoice-scanner-pdf" id="invoiceScannerPdf" hidden>
+                    <span class="invoice-scanner-pdf-icon">PDF</span>
+                    <strong id="invoiceScannerPdfName"></strong>
+                    <span data-i18n="pdfReadyForProcessing">PDF selected and ready for processing.</span>
+                </div>
+                <span class="invoice-scanner-corner invoice-scanner-corner-tl"></span>
+                <span class="invoice-scanner-corner invoice-scanner-corner-tr"></span>
+                <span class="invoice-scanner-corner invoice-scanner-corner-bl"></span>
+                <span class="invoice-scanner-corner invoice-scanner-corner-br"></span>
+            </div>
+        </div>
+
+        <div class="invoice-scanner-controls">
+            <button type="button" class="invoice-scanner-control" id="invoiceRotate" data-image-only>
+                <span>↻</span>
+                <small data-i18n="rotateInvoice">Rotate</small>
+            </button>
+            <button type="button" class="invoice-scanner-control" id="invoiceEnhance" data-image-only aria-pressed="false">
+                <span>✦</span>
+                <small data-i18n="enhanceForOcr">Enhance text</small>
+            </button>
+        </div>
+
+        <p class="invoice-scanner-hint" data-i18n="scannerPreviewHint">Make sure the full invoice is visible and the text is sharp before continuing.</p>
+
+        <div class="invoice-ocr-status" id="invoiceOcrStatus" hidden role="status" aria-live="polite">
+            <div class="invoice-ocr-status-head">
+                <strong id="invoiceOcrStatusTitle" data-i18n="ocrPreparing">Preparing invoice analysis...</strong>
+                <span id="invoiceOcrProgress">0%</span>
+            </div>
+            <div class="invoice-ocr-progress"><span id="invoiceOcrProgressBar"></span></div>
+            <small id="invoiceOcrStatusMessage" data-i18n="ocrStarting">Preparing AI invoice analysis.</small>
+        </div>
+
+        <footer class="invoice-scanner-footer">
+            <button type="button" class="btn btn-outline-secondary" id="invoiceScannerRetake" data-i18n="retakeInvoice">Retake / Choose another</button>
+            <button type="button" class="btn btn-primary" id="invoiceScannerUse" data-i18n="useThisScan">Use this scan</button>
+        </footer>
+    </section>
+</div>
 @section Scripts {
 <script>
     (() => {
