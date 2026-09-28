@@ -1801,7 +1801,7 @@ body.theme-dark .expiry-modern-filters a.is-active span { color: #d9fffa; }
     background: #f3f7fb;
   }
   .expiry-modern-header {
-    min-height: 72px;
+    min-height: 150px;
     margin: 0;
     padding: .25rem .8rem .15rem;
     background: linear-gradient(180deg,#a9e3d8 0%,#98dacc 100%);
@@ -1822,7 +1822,7 @@ body.theme-dark .expiry-modern-filters a.is-active span { color: #d9fffa; }
 
   .expiry-modern-risk-card {
     width: calc(100% - 1.25rem);
-    margin: -0.05rem auto .75rem;
+    margin: -78px auto .75rem;
     position: relative;
     z-index: 2;
     padding: .85rem;
