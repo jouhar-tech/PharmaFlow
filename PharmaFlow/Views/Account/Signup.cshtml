@@ -3,48 +3,212 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sign Up - PharmaFlow</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
     <style>
-        .password-wrapper{position:relative}.password-wrapper .form-control{padding-right:50px}
-        .toggle-password{position:absolute;right:12px;top:50%;transform:translateY(-50%);border:0;background:transparent;font-size:20px}
+        :root{
+            --auth-text:#111827;
+            --auth-muted:#64748b;
+            --auth-border:#d5d9df;
+            --auth-blue:#087cf5;
+        }
+        *{box-sizing:border-box}
+        html,body{margin:0;min-height:100%;font-family:Arial,sans-serif;color:var(--auth-text)}
+        body{
+            min-height:100vh;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            background:linear-gradient(135deg,#eef9f7 0%,#e9f7f4 48%,#f5f1ff 100%);
+            padding:28px 16px;
+        }
+        .auth-page{width:100%;max-width:520px}
+        .auth-shell{
+            position:relative;
+            min-height:760px;
+            overflow:hidden;
+            border-radius:34px;
+            background:#f8fafc;
+            box-shadow:0 24px 65px rgba(15,23,42,.18);
+        }
+        .auth-hero{
+            min-height:235px;
+            padding:42px 28px 105px;
+            text-align:center;
+            background:linear-gradient(180deg,#a9e3d8 0%,#98dacc 100%);
+        }
+        .auth-hero h1{
+            margin:0;
+            font-size:29px;
+            line-height:1.15;
+            font-weight:800;
+            color:#102a28;
+        }
+        .auth-hero p{
+            max-width:290px;
+            margin:8px auto 0;
+            font-size:16px;
+            line-height:1.35;
+            color:#193c38;
+        }
+        .auth-card{
+            position:relative;
+            z-index:2;
+            width:calc(100% - 38px);
+            margin:-65px auto 25px;
+            padding:25px 20px 22px;
+            border-radius:23px;
+            background:rgba(255,255,255,.97);
+            box-shadow:0 13px 32px rgba(15,23,42,.14);
+        }
+        .auth-form label{
+            display:block;
+            margin:0 0 7px;
+            font-size:16px;
+            font-weight:700;
+        }
+        .auth-field{margin-bottom:13px}
+        .auth-form .form-control{
+            height:46px;
+            padding:9px 13px;
+            border:1px solid var(--auth-border);
+            border-radius:12px;
+            font-size:16px;
+            box-shadow:none;
+        }
+        .auth-form .form-control:focus{
+            border-color:#79bdb4;
+            box-shadow:0 0 0 3px rgba(85,185,170,.13);
+        }
+        .auth-error{font-size:12px;margin-top:4px}
+        .password-wrapper{position:relative}
+        .password-wrapper .form-control{padding-right:48px}
+        .toggle-password{
+            position:absolute;
+            right:10px;
+            top:50%;
+            transform:translateY(-50%);
+            width:34px;height:34px;
+            display:grid;place-items:center;
+            border:0;border-radius:8px;background:transparent;
+            font-size:18px;
+        }
+        .phone-group{
+            display:flex;
+            width:100%;
+        }
+        .phone-prefix{
+            min-width:92px;
+            height:46px;
+            display:flex;
+            align-items:center;
+            gap:7px;
+            padding:0 10px;
+            border:1px solid var(--auth-border);
+            border-right:0;
+            border-radius:12px 0 0 12px;
+            background:#f7f8fa;
+            font-size:15px;
+        }
+        .phone-group .form-control{
+            border-radius:0 12px 12px 0;
+        }
+        .auth-primary{
+            height:48px;
+            border:0;
+            border-radius:11px;
+            background:var(--auth-blue);
+            font-size:16px;
+            font-weight:700;
+            box-shadow:0 5px 12px rgba(8,124,245,.18);
+        }
+        .auth-primary:hover{background:#0872df}
+        .auth-switch{
+            margin:17px 0 0;
+            text-align:center;
+            font-size:14px;
+        }
+        .auth-switch a{color:#176fa4;font-weight:700;text-decoration:none}
+        .auth-legal{
+            margin:0 24px 25px;
+            text-align:center;
+            color:#87909d;
+            font-size:11px;
+            line-height:1.45;
+        }
+        @@media (max-width:520px){
+            body{padding:0;align-items:stretch}
+            .auth-page{max-width:none}
+            .auth-shell{min-height:100vh;border-radius:0;box-shadow:none}
+            .auth-hero{min-height:230px;padding-top:42px}
+            .auth-card{width:calc(100% - 28px);margin:-62px auto 22px;padding:24px 18px 21px}
+        }
     </style>
 </head>
-<body class="bg-light">
-<div class="container min-vh-100 d-flex align-items-center justify-content-center">
-    <div class="card shadow-sm p-4" style="max-width:420px;width:100%;border-radius:18px">
-        <h3 class="text-center">Create your account</h3>
-        <p class="text-muted text-center">Start managing your pharmacy with PharmaFlow</p>
-        <form asp-action="Signup" method="post">
-            @Html.AntiForgeryToken()
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <label asp-for="Username" class="form-label">Username</label>
-            <input asp-for="Username" class="form-control mb-1" maxlength="50" autocomplete="username" placeholder="Choose a username" />
-            <span asp-validation-for="Username" class="text-danger"></span>
-            <label asp-for="Email" class="form-label mt-2">Email address</label>
-            <input asp-for="Email" type="email" class="form-control mb-1" autocomplete="email" />
-            <span asp-validation-for="Email" class="text-danger"></span>
-            <label asp-for="Password" class="form-label mt-2">Password</label>
-            <div class="password-wrapper">
-                <input asp-for="Password" type="password" id="signupPassword" class="form-control mb-1" autocomplete="new-password" />
-                <button type="button" class="toggle-password" onclick="togglePassword('signupPassword', this)" aria-label="Show password">👁</button>
-            </div>
-            <span asp-validation-for="Password" class="text-danger"></span>
-            <label asp-for="ConfirmPassword" class="form-label mt-2">Confirm password</label>
-            <div class="password-wrapper">
-                <input asp-for="ConfirmPassword" type="password" id="confirmPassword" class="form-control mb-1" autocomplete="new-password" />
-                <button type="button" class="toggle-password" onclick="togglePassword('confirmPassword', this)" aria-label="Show password">👁</button>
-            </div>
-            <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
-            <label asp-for="PhoneNumber" class="form-label mt-2">Phone number</label>
-            <div class="input-group"><span class="input-group-text">+91</span><input asp-for="PhoneNumber" type="tel" class="form-control" maxlength="10" inputmode="numeric" autocomplete="tel" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,10);" /></div>
-            <span asp-validation-for="PhoneNumber" class="text-danger"></span>
-            <button class="btn btn-primary w-100 mt-3">Create Account</button>
-        </form>
-        <a asp-action="Login" class="text-center mt-3">Already have an account? Login</a>
-    </div>
+<body>
+<div class="auth-page">
+    <main class="auth-shell">
+        <section class="auth-hero">
+            <h1>Create your account</h1>
+            <p>Start managing your pharmacy<br />with PharmaFlow</p>
+        </section>
+
+        <section class="auth-card">
+            <form asp-action="Signup" method="post" class="auth-form">
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="ModelOnly" class="text-danger auth-error mb-3"></div>
+
+                <div class="auth-field">
+                    <label asp-for="Username">Username</label>
+                    <input asp-for="Username" class="form-control" maxlength="50" autocomplete="username" placeholder="Choose a username" />
+                    <span asp-validation-for="Username" class="text-danger auth-error"></span>
+                </div>
+
+                <div class="auth-field">
+                    <label asp-for="Email">Email address</label>
+                    <input asp-for="Email" type="email" class="form-control" autocomplete="email" placeholder="Enter your email" />
+                    <span asp-validation-for="Email" class="text-danger auth-error"></span>
+                </div>
+
+                <div class="auth-field">
+                    <label asp-for="Password">Password</label>
+                    <div class="password-wrapper">
+                        <input asp-for="Password" type="password" id="signupPassword" class="form-control" autocomplete="new-password" placeholder="Choose a password" />
+                        <button type="button" class="toggle-password" onclick="togglePassword('signupPassword', this)" aria-label="Show password">👁</button>
+                    </div>
+                    <span asp-validation-for="Password" class="text-danger auth-error"></span>
+                </div>
+
+                <div class="auth-field">
+                    <label asp-for="ConfirmPassword">Confirm password</label>
+                    <div class="password-wrapper">
+                        <input asp-for="ConfirmPassword" type="password" id="confirmPassword" class="form-control" autocomplete="new-password" placeholder="Confirm your password" />
+                        <button type="button" class="toggle-password" onclick="togglePassword('confirmPassword', this)" aria-label="Show password">👁</button>
+                    </div>
+                    <span asp-validation-for="ConfirmPassword" class="text-danger auth-error"></span>
+                </div>
+
+                <div class="auth-field">
+                    <label asp-for="PhoneNumber">Phone number</label>
+                    <div class="phone-group">
+                        <span class="phone-prefix"><span aria-hidden="true">🇮🇳</span><strong>+91</strong><span aria-hidden="true">⌄</span></span>
+                        <input asp-for="PhoneNumber" type="tel" class="form-control" maxlength="10" inputmode="numeric" autocomplete="tel" placeholder="Enter phone number" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,10);" />
+                    </div>
+                    <span asp-validation-for="PhoneNumber" class="text-danger auth-error"></span>
+                </div>
+
+                <button type="submit" class="btn btn-primary auth-primary w-100 mt-1">Create Account</button>
+            </form>
+
+            <p class="auth-switch">Already have an account? <a asp-action="Login">Login</a></p>
+        </section>
+
+        <p class="auth-legal">By continuing, you agree to our Terms and Privacy Policy.</p>
+    </main>
 </div>
+
 <script>
     function togglePassword(id, button) {
         const input = document.getElementById(id);
