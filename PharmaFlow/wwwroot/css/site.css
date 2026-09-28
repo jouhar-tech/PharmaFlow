@@ -1145,17 +1145,26 @@ body.theme-dark .invoice-review-saved-summary strong { color: #dcfce7; }
     right: .7rem;
     display: grid;
     place-items: center;
-    min-width: 28px;
-    height: 28px;
-    padding: 0 .35rem;
-    border: 2px solid rgba(255,255,255,.8);
+    min-width: 34px;
+    height: 34px;
+    padding: 0 .45rem;
+    border: 2px solid rgba(255,255,255,.9);
     border-radius: 999px;
-    background: #2d9894;
+    background: #dc2626;
     color: #fff;
-    font-size: .72rem;
+    font-size: .82rem;
     font-weight: 900;
     line-height: 1;
     box-shadow: 0 3px 8px rgba(45,152,148,.2);
+  }
+
+  .home-mobile-expiry-count-badge {
+    background: #dc2626;
+  }
+
+  .home-mobile-low-stock-count-badge {
+    background: #eab308;
+    color: #422006;
   }
 
   .home-mobile-action-card {
@@ -1408,10 +1417,16 @@ body.theme-dark .invoice-review-saved-summary strong { color: #dcfce7; }
     color: #e2e8f0;
   }
 
-  body.theme-dark.home-dashboard-page .home-mobile-count-badge {
+  body.theme-dark.home-dashboard-page .home-mobile-expiry-count-badge {
     border-color: #193442;
-    background: #67c8c4;
-    color: #102a2b;
+    background: #ef4444;
+    color: #fff;
+  }
+
+  body.theme-dark.home-dashboard-page .home-mobile-low-stock-count-badge {
+    border-color: #193442;
+    background: #facc15;
+    color: #422006;
   }
 
   body.theme-dark.home-dashboard-page .home-mobile-scan-copy strong,
