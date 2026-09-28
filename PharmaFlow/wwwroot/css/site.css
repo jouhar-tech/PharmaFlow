@@ -1860,3 +1860,23 @@ body.theme-dark .expiry-modern-filters a.is-active span { color: #d9fffa; }
     border-radius: .85rem;
   }
 }
+
+
+@media (max-width: 767.98px) {
+  /* Expiry page is a standalone mobile screen; do not show the global app topbar. */
+  body.expiry-products-page .app-topbar {
+    display: none;
+  }
+
+  body.expiry-products-page .app-main {
+    min-height: 100vh;
+  }
+
+  body.expiry-products-page .app-content {
+    padding-top: 0 !important;
+  }
+
+  body.expiry-products-page .expiry-page-modern {
+    margin-top: 0;
+  }
+}
