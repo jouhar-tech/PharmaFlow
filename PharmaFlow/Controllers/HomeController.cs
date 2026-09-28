@@ -24,6 +24,7 @@ namespace PharmaFlow.Controllers
             var profileIdValue = HttpContext.Session.GetString("ProfileId");
 
             var expiringSoonCount = 0;
+            var lowStockCount = 0;
 
             if (long.TryParse(profileIdValue, out var profileId))
             {
@@ -41,11 +42,30 @@ namespace PharmaFlow.Controllers
                         batch.ExpiryDate >= today &&
                         batch.ExpiryDate <= ninetyDaysFromToday,
                         cancellationToken);
+
+                // Count products whose total usable stock is below their configured reorder level.
+                // Products with a zero reorder level are excluded because no low-stock threshold is configured.
+                lowStockCount = await _dbContext.Products
+                    .AsNoTracking()
+                    .Where(product =>
+                        product.ProfileId == profileId &&
+                        product.IsActive &&
+                        product.ReorderLevel > 0m)
+                    .Select(product => new
+                    {
+                        product.ReorderLevel,
+                        QuantityOnHand = product.Batches
+                            .Where(batch => batch.IsActive && !batch.IsQuarantined)
+                            .Select(batch => (decimal?)batch.QuantityOnHand)
+                            .Sum() ?? 0m
+                    })
+                    .CountAsync(stock => stock.QuantityOnHand < stock.ReorderLevel, cancellationToken);
             }
 
             var dashboard = new DashboardViewModel
             {
-                ProductsExpiringSoonCount = expiringSoonCount
+                ProductsExpiringSoonCount = expiringSoonCount,
+                LowStockCount = lowStockCount
             };
 
             return View(dashboard);
