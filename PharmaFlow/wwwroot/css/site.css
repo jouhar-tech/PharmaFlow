@@ -1517,3 +1517,346 @@ body.theme-dark .invoice-review-saved-summary strong { color: #dcfce7; }
     font-size: .55rem;
   }
 }
+
+
+/* Modern expiry inventory page */
+.expiry-page-modern {
+  padding: 1rem 0 2.5rem;
+}
+.expiry-modern-header {
+  display: flex;
+  align-items: flex-start;
+  gap: .85rem;
+  margin-bottom: 1rem;
+}
+.expiry-modern-back {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  border-radius: 50%;
+  color: #111827;
+  text-decoration: none;
+  font-size: 1.8rem;
+  line-height: 1;
+}
+.expiry-modern-back:hover { color: #111827; background: #f1f5f9; }
+.expiry-modern-kicker {
+  display: block;
+  color: #64748b;
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.expiry-modern-header h1 {
+  margin: .08rem 0 .25rem;
+  color: #111827;
+  font-size: 1.55rem;
+  font-weight: 850;
+  letter-spacing: -.03em;
+}
+.expiry-modern-header p {
+  max-width: 680px;
+  margin: 0;
+  color: #64748b;
+  font-size: .82rem;
+  line-height: 1.45;
+}
+.expiry-modern-risk-card {
+  display: flex;
+  align-items: center;
+  gap: .85rem;
+  margin-bottom: .9rem;
+  padding: 1rem 1.05rem;
+  border: 1px solid #dbeafe;
+  border-radius: 1rem;
+  background: #fff;
+  box-shadow: 0 6px 22px rgba(15,23,42,.06);
+}
+.expiry-modern-risk-icon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  flex: 0 0 52px;
+  border-radius: .85rem;
+  background: #eff6ff;
+  color: #2563eb;
+  font-size: 1.5rem;
+  font-weight: 850;
+}
+.expiry-modern-risk-card span {
+  display: block;
+  color: #475569;
+  font-size: .75rem;
+  font-weight: 800;
+}
+.expiry-modern-risk-card strong {
+  display: block;
+  margin-top: .12rem;
+  color: #172033;
+  font-size: 1.7rem;
+  line-height: 1.1;
+  letter-spacing: -.035em;
+}
+.expiry-modern-risk-card small {
+  display: block;
+  margin-top: .2rem;
+  color: #64748b;
+  font-size: .68rem;
+}
+.expiry-modern-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-bottom: .7rem;
+}
+.expiry-modern-search input[type="search"] {
+  width: 100%;
+  height: 48px;
+  padding: 0 2.7rem;
+  border: 1px solid #d8dee7;
+  border-radius: .75rem;
+  outline: none;
+  background: #fff;
+  color: #172033;
+  font-size: .9rem;
+  box-shadow: 0 3px 12px rgba(15,23,42,.025);
+}
+.expiry-modern-search input[type="search"]:focus {
+  border-color: #72bdb5;
+  box-shadow: 0 0 0 3px rgba(85,185,170,.12);
+}
+.expiry-modern-search-icon {
+  position: absolute;
+  left: .9rem;
+  z-index: 1;
+  color: #7b8794;
+  font-size: 1.55rem;
+  line-height: 1;
+  pointer-events: none;
+}
+.expiry-modern-clear {
+  position: absolute;
+  right: .75rem;
+  color: #64748b;
+  font-size: 1.25rem;
+  line-height: 1;
+  text-decoration: none;
+}
+.expiry-modern-filters {
+  display: flex;
+  gap: .55rem;
+  overflow-x: auto;
+  padding: .05rem 0 .7rem;
+  scrollbar-width: none;
+}
+.expiry-modern-filters::-webkit-scrollbar { display: none; }
+.expiry-modern-filters a {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  min-height: 42px;
+  padding: .45rem .85rem;
+  border: 1px solid #d9dee7;
+  border-radius: .75rem;
+  background: #fff;
+  color: #1f2937;
+  white-space: nowrap;
+  text-decoration: none;
+  font-size: .75rem;
+  font-weight: 700;
+}
+.expiry-modern-filters a span {
+  color: #64748b;
+  font-size: .68rem;
+}
+.expiry-modern-filters a.is-active {
+  border-color: #82cfc5;
+  background: #a7ded5;
+  color: #143c38;
+}
+.expiry-modern-filters a.is-active span { color: #143c38; }
+.expiry-modern-summary {
+  display: none;
+}
+.expiry-modern-products {
+  margin-top: .1rem;
+}
+.expiry-modern-products-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .85rem;
+}
+.expiry-modern-products-grid .expiry-product-card {
+  min-width: 0;
+  padding: .8rem;
+  border-radius: .9rem;
+  box-shadow: 0 5px 18px rgba(15,23,42,.055);
+}
+.expiry-modern-products-grid .expiry-product-card-top {
+  gap: .55rem;
+  padding-bottom: .65rem;
+}
+.expiry-modern-products-grid .expiry-product-icon {
+  width: 36px;
+  height: 36px;
+  flex-basis: 36px;
+}
+.expiry-modern-products-grid .expiry-product-heading h3 {
+  font-size: .82rem;
+  line-height: 1.2;
+}
+.expiry-modern-products-grid .expiry-product-heading span {
+  font-size: .64rem;
+}
+.expiry-modern-products-grid .expiry-product-details {
+  gap: .65rem .5rem;
+  padding-top: .7rem;
+}
+.expiry-modern-products-grid .expiry-detail-label {
+  font-size: .57rem;
+}
+.expiry-modern-products-grid .expiry-product-details strong {
+  font-size: .7rem;
+}
+.expiry-modern-empty {
+  padding: 2.5rem 1rem;
+  border: 1px solid #e5eaf2;
+  border-radius: 1rem;
+  background: #fff;
+  text-align: center;
+}
+.expiry-modern-empty > div {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin: 0 auto;
+  border-radius: 50%;
+  background: #ecfdf5;
+  color: #16a34a;
+  font-weight: 900;
+}
+.expiry-modern-empty h2 { margin: .7rem 0 .25rem; font-size: 1rem; }
+.expiry-modern-empty p { margin: 0; color: #64748b; font-size: .75rem; }
+
+body.theme-dark .expiry-modern-back { color: #e2e8f0; }
+body.theme-dark .expiry-modern-back:hover { background: #1e293b; }
+body.theme-dark .expiry-modern-header h1,
+body.theme-dark .expiry-modern-risk-card strong { color: #f8fafc; }
+body.theme-dark .expiry-modern-risk-card,
+body.theme-dark .expiry-modern-search input[type="search"],
+body.theme-dark .expiry-modern-filters a,
+body.theme-dark .expiry-modern-empty { background: #111c2e; border-color: #263449; color: #e2e8f0; }
+body.theme-dark .expiry-modern-risk-icon { background: #172554; color: #93c5fd; }
+body.theme-dark .expiry-modern-filters a.is-active { background: #245b57; border-color: #3c817a; color: #d9fffa; }
+body.theme-dark .expiry-modern-filters a.is-active span { color: #d9fffa; }
+
+@media (min-width: 768px) {
+  .expiry-modern-header {
+    align-items: center;
+  }
+  .expiry-modern-risk-card {
+    max-width: none;
+  }
+  .expiry-modern-summary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0,1fr));
+    gap: .8rem;
+    margin-bottom: .9rem;
+  }
+  .expiry-modern-summary-card {
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+    padding: .75rem;
+    border: 1px solid #e5eaf2;
+    border-radius: .85rem;
+    background: #fff;
+  }
+  .expiry-modern-summary-card > span {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+    border-radius: .7rem;
+    font-weight: 900;
+  }
+  .expiry-modern-summary-card strong,
+  .expiry-modern-summary-card small { display:block; }
+  .expiry-modern-summary-card strong { font-size: 1rem; }
+  .expiry-modern-summary-card small { margin-top:.1rem; color:#64748b; font-size:.68rem; }
+  .expiry-modern-summary-card.critical > span { background:#fef2f2; color:#dc2626; }
+  .expiry-modern-summary-card.upcoming > span { background:#fffbeb; color:#d97706; }
+  .expiry-modern-summary-card.total > span { background:#eff6ff; color:#2563eb; }
+}
+
+@media (max-width: 767.98px) {
+  .expiry-page-modern {
+    margin: -1rem -.75rem 0;
+    padding: 0 0 6rem;
+    background: #f3f7fb;
+  }
+  .expiry-modern-header {
+    min-height: 185px;
+    margin: 0;
+    padding: 1.15rem .8rem 5.1rem;
+    background: linear-gradient(180deg,#a9e3d8 0%,#98dacc 100%);
+  }
+  .expiry-modern-back {
+    width: 36px;
+    height: 36px;
+    flex-basis: 36px;
+    color: #0f2826;
+    font-size: 1.8rem;
+  }
+  .expiry-modern-back:hover { color:#0f2826; background:rgba(255,255,255,.25); }
+  .expiry-modern-kicker { display:none; }
+  .expiry-modern-header h1 {
+    margin-top: .2rem;
+    font-size: 1.5rem;
+  }
+  .expiry-modern-header p {
+    max-width: 310px;
+    color: #234a45;
+    font-size: .76rem;
+  }
+  .expiry-modern-risk-card {
+    width: calc(100% - 1.25rem);
+    margin: -4rem auto .75rem;
+    position: relative;
+    z-index: 2;
+    padding: .85rem;
+    border-radius: 1rem;
+  }
+  .expiry-modern-risk-icon {
+    width: 50px;
+    height: 50px;
+    flex-basis: 50px;
+  }
+  .expiry-modern-risk-card strong { font-size: 1.55rem; }
+  .expiry-modern-search {
+    width: calc(100% - 1.25rem);
+    margin: 0 auto .65rem;
+  }
+  .expiry-modern-filters {
+    width: calc(100% - 1.25rem);
+    margin: 0 auto;
+  }
+  .expiry-modern-summary { display:none; }
+  .expiry-modern-products {
+    width: calc(100% - 1.25rem);
+    margin: .05rem auto 0;
+  }
+  .expiry-modern-products-grid {
+    grid-template-columns: repeat(2, minmax(0,1fr));
+    gap: .65rem;
+  }
+  .expiry-modern-products-grid .expiry-product-card {
+    padding: .7rem;
+    border-radius: .85rem;
+  }
+}
