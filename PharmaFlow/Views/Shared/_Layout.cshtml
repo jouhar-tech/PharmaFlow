@@ -1,8 +1,8 @@
 ﻿<!DOCTYPE html>
 @{
     var businessName = Context.Session.GetString("BusinessName") ?? "PharmaFlow";
-    var isHomeDashboard = string.Equals(ViewContext.RouteData.Values["controller"]?.ToString(), "Home", StringComparison.OrdinalIgnoreCase)
-        && string.Equals(ViewContext.RouteData.Values["action"]?.ToString(), "Index", StringComparison.OrdinalIgnoreCase);
+    var isHomeDashboard = ViewContext.RouteData.Values["controller"]?.ToString() == "Home"
+        && ViewContext.RouteData.Values["action"]?.ToString() == "Index";
 }
 <html lang="en">
 <head>
