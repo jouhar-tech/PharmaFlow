@@ -3,6 +3,8 @@
     var businessName = Context.Session.GetString("BusinessName") ?? "PharmaFlow";
     var isHomeDashboard = ViewContext.RouteData.Values["controller"]?.ToString() == "Home"
         && ViewContext.RouteData.Values["action"]?.ToString() == "Index";
+    var isExpiryProductsPage = ViewContext.RouteData.Values["controller"]?.ToString() == "ExpiryProducts"
+        && ViewContext.RouteData.Values["action"]?.ToString() == "Index";
 }
 <html lang="en">
 <head>
@@ -14,7 +16,7 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/PharmaFlow.styles.css" asp-append-version="true" />
 </head>
-<body class="@(isHomeDashboard ? "home-dashboard-page" : "")">
+<body class="@((isHomeDashboard ? "home-dashboard-page " : "") + (isExpiryProductsPage ? "expiry-products-page" : ""))">
     <div class="app-shell">
         <aside class="app-sidebar" id="appSidebar" aria-label="Main navigation">
             <div class="sidebar-brand">
