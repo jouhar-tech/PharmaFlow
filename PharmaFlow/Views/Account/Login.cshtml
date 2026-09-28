@@ -8,49 +8,269 @@
     <title>Login - PharmaFlow</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
     <style>
-        body{background:#f8f9fc;min-height:100vh;display:flex;align-items:center;justify-content:center;font-family:Arial,sans-serif}
-        .login-container{width:100%;max-width:430px;padding:25px}.logo{font-size:32px;font-weight:bold;color:#2563eb}
-        .login-card{background:#fff;border-radius:20px;padding:30px;box-shadow:0 5px 25px rgba(0,0,0,.08)}
-        .form-control,.btn{height:55px;border-radius:12px}.password-wrapper{position:relative}.password-wrapper .form-control{padding-right:50px}
-        .toggle-password{position:absolute;right:12px;top:50%;transform:translateY(-50%);border:0;background:transparent;font-size:20px}
-        .login-loading-overlay{position:fixed;inset:0;z-index:2000;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(248,249,252,.86);backdrop-filter:blur(5px)}
+        :root{
+            --auth-teal:#9edfd2;
+            --auth-teal-dark:#55b9aa;
+            --auth-blue:#087cf5;
+            --auth-text:#111827;
+            --auth-muted:#64748b;
+            --auth-border:#d5d9df;
+        }
+        *{box-sizing:border-box}
+        html,body{margin:0;min-height:100%;font-family:Arial,sans-serif;color:var(--auth-text)}
+        body{
+            min-height:100vh;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            background:linear-gradient(135deg,#eef9f7 0%,#e9f7f4 48%,#f5f1ff 100%);
+            padding:28px 16px;
+        }
+        .auth-page{
+            width:100%;
+            max-width:520px;
+        }
+        .auth-shell{
+            position:relative;
+            min-height:720px;
+            overflow:hidden;
+            border-radius:34px;
+            background:#f8fafc;
+            box-shadow:0 24px 65px rgba(15,23,42,.18);
+        }
+        .auth-hero{
+            min-height:275px;
+            padding:48px 28px 115px;
+            text-align:center;
+            background:linear-gradient(180deg,#a9e3d8 0%,#98dacc 100%);
+        }
+        .auth-avatar{
+            width:86px;
+            height:86px;
+            margin:0 auto 12px;
+            display:grid;
+            place-items:center;
+            border-radius:50%;
+            background:#eef7f5;
+            border:5px solid rgba(255,255,255,.8);
+            box-shadow:0 8px 20px rgba(43,123,112,.12);
+            color:#2f756c;
+        }
+        .auth-avatar svg{width:60px;height:60px}
+        .auth-greeting{
+            margin:0;
+            font-size:20px;
+            line-height:1.3;
+            color:#102a28;
+        }
+        .auth-greeting strong{font-weight:800}
+        .auth-card{
+            position:relative;
+            z-index:2;
+            width:calc(100% - 38px);
+            margin:-72px auto 24px;
+            padding:27px 24px 24px;
+            border-radius:23px;
+            background:rgba(255,255,255,.97);
+            box-shadow:0 13px 32px rgba(15,23,42,.14);
+        }
+        .auth-title{
+            margin:0;
+            text-align:center;
+            font-size:30px;
+            font-weight:800;
+            line-height:1.15;
+        }
+        .auth-subtitle{
+            margin:8px 0 24px;
+            text-align:center;
+            color:var(--auth-muted);
+            font-size:15px;
+        }
+        .auth-form label{
+            display:block;
+            margin:0 0 7px;
+            font-size:16px;
+            font-weight:700;
+        }
+        .auth-form .form-control{
+            height:47px;
+            padding:10px 13px;
+            border:1px solid var(--auth-border);
+            border-radius:12px;
+            font-size:16px;
+            box-shadow:none;
+        }
+        .auth-form .form-control:focus{
+            border-color:#79bdb4;
+            box-shadow:0 0 0 3px rgba(85,185,170,.13);
+        }
+        .auth-field{margin-bottom:16px}
+        .auth-error{font-size:12px;margin-top:4px}
+        .password-wrapper{position:relative}
+        .password-wrapper .form-control{padding-right:48px}
+        .toggle-password{
+            position:absolute;
+            right:10px;
+            top:50%;
+            transform:translateY(-50%);
+            width:34px;
+            height:34px;
+            display:grid;
+            place-items:center;
+            border:0;
+            border-radius:8px;
+            background:transparent;
+            color:#111827;
+            font-size:18px;
+        }
+        .auth-primary{
+            height:48px;
+            border:0;
+            border-radius:11px;
+            background:var(--auth-blue);
+            font-size:16px;
+            font-weight:700;
+            box-shadow:0 5px 12px rgba(8,124,245,.18);
+        }
+        .auth-primary:hover{background:#0872df}
+        .auth-divider{
+            display:flex;
+            align-items:center;
+            gap:12px;
+            margin:20px 0;
+            color:#667085;
+            font-size:14px;
+        }
+        .auth-divider::before,.auth-divider::after{
+            content:"";
+            flex:1;
+            height:1px;
+            background:#d9dde3;
+        }
+        .google-button{
+            height:48px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            gap:10px;
+            border:1px solid #d6dbe1;
+            border-radius:11px;
+            background:#fff;
+            color:#172033;
+            font-size:15px;
+            font-weight:600;
+            text-decoration:none;
+        }
+        .google-button:hover{background:#f8fafc;color:#172033}
+        .google-logo{width:20px;height:20px}
+        .auth-switch{
+            margin:18px 0 0;
+            text-align:center;
+            font-size:14px;
+        }
+        .auth-switch a{color:#176fa4;font-weight:700;text-decoration:none}
+        .auth-legal{
+            margin:0 24px 25px;
+            text-align:center;
+            color:#87909d;
+            font-size:11px;
+            line-height:1.45;
+        }
+        .login-loading-overlay{
+            position:fixed;inset:0;z-index:2000;
+            display:flex;align-items:center;justify-content:center;
+            padding:24px;background:rgba(238,249,247,.86);
+            backdrop-filter:blur(6px);
+        }
         .login-loading-overlay[hidden]{display:none}
-        .login-loading-card{width:min(100%,360px);padding:30px 26px;background:#fff;border:1px solid #e7eaf0;border-radius:20px;box-shadow:0 18px 50px rgba(15,23,42,.16);text-align:center}
+        .login-loading-card{
+            width:min(100%,360px);padding:30px 26px;
+            background:#fff;border:1px solid #e7eaf0;border-radius:20px;
+            box-shadow:0 18px 50px rgba(15,23,42,.16);text-align:center
+        }
         .login-loading-card h4{margin:18px 0 8px;color:#172033;font-size:20px;font-weight:700}
         .login-loading-card p{margin:0;color:#6b7280;font-size:14px;line-height:1.5}
-        .login-spinner,.button-spinner{display:inline-block;border-style:solid;border-color:#dbeafe;border-top-color:#2563eb;border-radius:50%;animation:login-spin .75s linear infinite}
+        .login-spinner,.button-spinner{
+            display:inline-block;border-style:solid;border-color:#dbeafe;
+            border-top-color:#087cf5;border-radius:50%;animation:login-spin .75s linear infinite
+        }
         .login-spinner{width:44px;height:44px;border-width:4px}
         .button-spinner{width:16px;height:16px;margin-right:8px;vertical-align:-3px;border-width:2px;border-color:rgba(255,255,255,.35);border-top-color:#fff}
         #loginButton:disabled{cursor:wait;opacity:.9}
         body.login-loading{overflow:hidden}
         @@keyframes login-spin{to{transform:rotate(360deg)}}
         @@media (prefers-reduced-motion:reduce){.login-spinner,.button-spinner{animation:none}}
+        @@media (max-width:520px){
+            body{padding:0;align-items:stretch}
+            .auth-page{max-width:none}
+            .auth-shell{min-height:100vh;border-radius:0;box-shadow:none}
+            .auth-hero{min-height:285px;padding-top:44px}
+            .auth-card{width:calc(100% - 28px);margin:-72px auto 22px;padding:25px 20px 22px}
+            .auth-title{font-size:28px}
+        }
     </style>
 </head>
 <body>
-<div class="login-container">
-    <div class="text-center mb-4"><div class="logo">PharmaFlow</div><p class="text-muted mt-2">Your pharmacy, simplified.</p></div>
-    <div class="login-card">
-        <h3 class="text-center fw-bold mb-2">Welcome Back</h3><p class="text-center text-muted mb-4">Login with your username</p>
-        <form asp-controller="Account" asp-action="Login" method="post" id="loginForm">
-            @Html.AntiForgeryToken()
-            <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
-            <label asp-for="Username" class="form-label fw-semibold"></label>
-            <input asp-for="Username" class="form-control mb-1" placeholder="Enter your username" autocomplete="username" />
-            <span asp-validation-for="Username" class="text-danger"></span>
-            <label asp-for="Password" class="form-label fw-semibold mt-3"></label>
-            <div class="password-wrapper">
-                <input asp-for="Password" type="password" id="loginPassword" class="form-control mb-1" placeholder="Enter your password" autocomplete="current-password" />
-                <button type="button" class="toggle-password" onclick="togglePassword('loginPassword', this)" aria-label="Show password">👁</button>
+<div class="auth-page">
+    <main class="auth-shell">
+        <section class="auth-hero">
+            <div class="auth-avatar" aria-hidden="true">
+                <svg viewBox="0 0 64 64" fill="none">
+                    <circle cx="32" cy="23" r="11" fill="#8c6048"/>
+                    <path d="M19 53c1.8-10 7.1-15 13-15s11.2 5 13 15" fill="#3f5365"/>
+                    <path d="M21 21c1-8 21-12 23 1-3-3-6-4-10-4-4 1-7 2-13 3Z" fill="#20252b"/>
+                    <path d="M24 30c2.5 4 5.2 6 8 6s5.5-2 8-6" stroke="#754d3a" stroke-width="2" stroke-linecap="round"/>
+                    <circle cx="51" cy="47" r="11" fill="#5bb7aa"/>
+                    <path d="M47 47h8M51 43v8" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+                </svg>
             </div>
-            <span asp-validation-for="Password" class="text-danger"></span>
-            <button type="submit" class="btn btn-primary w-100 mt-3" id="loginButton">Login</button>
-        </form>
-        <div class="text-center my-4 text-muted">OR</div>
-        <a asp-action="GoogleLogin" class="btn btn-light border w-100">🔵 Continue with Google</a>
-        <p class="text-center mt-4 mb-0">New to PharmaFlow? <a asp-action="Signup" class="fw-bold text-decoration-none">Sign Up</a></p>
-    </div>
-    <p class="text-center text-muted small mt-4">By continuing, you agree to our Terms and Privacy Policy.</p>
+            <p class="auth-greeting">Greetings, <strong>Welcome</strong></p>
+        </section>
+
+        <section class="auth-card">
+            <h1 class="auth-title">Welcome Back</h1>
+            <p class="auth-subtitle">Login with your username</p>
+
+            <form asp-controller="Account" asp-action="Login" method="post" id="loginForm" class="auth-form">
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="ModelOnly" class="text-danger auth-error mb-3"></div>
+
+                <div class="auth-field">
+                    <label asp-for="Username">Username</label>
+                    <input asp-for="Username" class="form-control" placeholder="Enter your username" autocomplete="username" />
+                    <span asp-validation-for="Username" class="text-danger auth-error"></span>
+                </div>
+
+                <div class="auth-field">
+                    <label asp-for="Password">Password</label>
+                    <div class="password-wrapper">
+                        <input asp-for="Password" type="password" id="loginPassword" class="form-control" placeholder="Enter your password" autocomplete="current-password" />
+                        <button type="button" class="toggle-password" onclick="togglePassword('loginPassword', this)" aria-label="Show password">👁</button>
+                    </div>
+                    <span asp-validation-for="Password" class="text-danger auth-error"></span>
+                </div>
+
+                <button type="submit" class="btn btn-primary auth-primary w-100" id="loginButton">Login</button>
+            </form>
+
+            <div class="auth-divider"><span>OR</span></div>
+
+            <a asp-action="GoogleLogin" class="google-button">
+                <svg class="google-logo" viewBox="0 0 24 24" aria-hidden="true">
+                    <path fill="#4285F4" d="M21.35 12.23c0-.72-.06-1.42-.18-2.09H12v3.96h5.24a4.48 4.48 0 0 1-1.94 2.94v2.45h3.14c1.84-1.69 2.91-4.18 2.91-7.26Z"/>
+                    <path fill="#34A853" d="M12 21.75c2.63 0 4.84-.87 6.45-2.36l-3.14-2.45c-.87.58-1.98.92-3.31.92-2.54 0-4.69-1.72-5.46-4.03H3.3v2.53A9.75 9.75 0 0 0 12 21.75Z"/>
+                    <path fill="#FBBC05" d="M6.54 13.83A5.86 5.86 0 0 1 6.23 12c0-.64.11-1.27.31-1.83V7.64H3.3A9.75 9.75 0 0 0 2.25 12c0 1.57.38 3.06 1.05 4.36l3.24-2.53Z"/>
+                    <path fill="#EA4335" d="M12 6.14c1.43 0 2.71.49 3.72 1.45l2.79-2.79C16.84 3.18 14.63 2.25 12 2.25A9.75 9.75 0 0 0 3.3 7.64l3.24 2.53C7.31 7.86 9.46 6.14 12 6.14Z"/>
+                </svg>
+                Continue with Google
+            </a>
+
+            <p class="auth-switch">New to PharmaFlow? <a asp-action="Signup">Sign Up</a></p>
+        </section>
+
+        <p class="auth-legal">By continuing, you agree to our Terms and Privacy Policy.</p>
+    </main>
 </div>
 
 <div class="login-loading-overlay" id="loginLoadingOverlay" hidden aria-hidden="true">
@@ -74,7 +294,6 @@
         const form = document.getElementById('loginForm');
         const button = document.getElementById('loginButton');
         const overlay = document.getElementById('loginLoadingOverlay');
-
         if (!form || !button || !overlay) return;
 
         form.addEventListener('submit', () => {
