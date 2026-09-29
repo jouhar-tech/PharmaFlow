@@ -1,6 +1,8 @@
 @model PharmaFlow.Models.ViewModels.ExpiryProductItemViewModel
 
-<article class="expiry-product-card">
+<article class="expiry-product-card"
+    data-days-left="@Model.DaysLeft"
+    data-search-text="@($"{Model.ProductName} {Model.BatchNumber}")">
     <div class="expiry-product-card-top">
         <div class="expiry-product-icon">Rx</div>
         <div class="expiry-product-heading">
