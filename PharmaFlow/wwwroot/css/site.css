@@ -1452,20 +1452,20 @@ body.theme-dark .invoice-review-saved-summary strong { color: #dcfce7; }
     color: #94a3b8;
   }
 
-  body.theme-dark.home-dashboard-page .home-mobile-bottom-nav {
+  body.theme-dark .home-mobile-bottom-nav {
     border-color: #263449;
     background: rgba(15,23,42,.97);
   }
 
-  body.theme-dark.home-dashboard-page .home-mobile-nav-item {
+  body.theme-dark .home-mobile-nav-item {
     color: #cbd5e1;
   }
 
-  body.theme-dark.home-dashboard-page .home-mobile-nav-item.is-active {
+  body.theme-dark .home-mobile-nav-item.is-active {
     color: #67e8e3;
   }
 
-  body.theme-dark.home-dashboard-page .home-mobile-nav-fab {
+  body.theme-dark .home-mobile-nav-fab {
     border-color: #0f172a;
     color: #fff;
   }
@@ -1945,5 +1945,11 @@ body.theme-dark .expiry-modern-filters a.is-active span { color: #d9fffa; }
   .expiry-filter-count {
     min-width: 23px;
     height: 23px;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .app-content {
+    padding-bottom: 5.5rem;
   }
 }
