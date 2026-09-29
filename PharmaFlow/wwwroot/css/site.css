@@ -2770,3 +2770,117 @@ body.theme-dark .low-stock-status-badge + .low-stock-reorder-inline {
   background: #163b39;
   color: #7dd3ca;
 }
+
+
+/* Low Stock mobile top now follows the Expiring Products layout. */
+@media (max-width: 767.98px) {
+  .low-stock-page-modern {
+    margin: 0 -.75rem 0;
+    padding: 0 0 6rem;
+    background: #f3f7fb;
+  }
+
+  .low-stock-modern-header {
+    min-height: 150px;
+    margin: 0;
+    padding: .25rem .8rem .15rem;
+    background: linear-gradient(180deg,#a9e3d8 0%,#98dacc 100%);
+  }
+
+  .low-stock-modern-back {
+    width: 36px;
+    height: 36px;
+    color: #0f2826;
+    font-size: 1.8rem;
+  }
+
+  .low-stock-modern-summary {
+    width: calc(100% - 1.25rem);
+    margin: -78px auto .75rem;
+    position: relative;
+    z-index: 2;
+    padding: .85rem;
+    border-radius: 1rem;
+  }
+
+  .low-stock-modern-search {
+    width: calc(100% - 1.25rem);
+    margin: 0 auto .65rem;
+  }
+
+  .low-stock-modern-products {
+    width: calc(100% - 1.25rem);
+    margin: .05rem auto 0;
+    padding: 0;
+  }
+}
+
+/* Keep both mobile pages fully dark when dark theme is active. */
+body.theme-dark .expiry-page-modern {
+  background: #0f172a;
+}
+
+body.theme-dark .expiry-modern-risk-card span,
+body.theme-dark .expiry-modern-risk-card small {
+  color: #94a3b8;
+}
+
+body.theme-dark .expiry-modern-search input[type="search"] {
+  background: #111c2e;
+  border-color: #263449;
+  color: #e2e8f0;
+}
+
+body.theme-dark .expiry-modern-search input[type="search"]::placeholder {
+  color: #64748b;
+}
+
+body.theme-dark .expiry-modern-search-icon {
+  color: #94a3b8;
+}
+
+body.theme-dark .expiry-modern-filters .expiry-filter-chip {
+  background: #111c2e;
+  border-color: #263449;
+  color: #e2e8f0;
+}
+
+body.theme-dark .expiry-modern-filters .expiry-filter-chip.is-active {
+  background: #245b57;
+  border-color: #3c817a;
+  color: #d9fffa;
+}
+
+body.theme-dark .expiry-modern-filters .expiry-filter-chip.is-active span {
+  color: #d9fffa;
+}
+
+body.theme-dark .low-stock-page-modern {
+  background: #0f172a;
+}
+
+body.theme-dark .low-stock-modern-summary {
+  background: #111c2e;
+  border-color: #263449;
+}
+
+body.theme-dark .low-stock-modern-search input {
+  background: #111c2e;
+  border-color: #263449;
+  color: #e2e8f0;
+}
+
+body.theme-dark .low-stock-modern-search input::placeholder {
+  color: #64748b;
+}
+
+body.theme-dark .low-stock-modern-search-icon,
+body.theme-dark .low-stock-modern-search button {
+  color: #94a3b8;
+}
+
+body.theme-dark .low-stock-modern-empty {
+  background: #111c2e;
+  border-color: #263449;
+  color: #e2e8f0;
+}
