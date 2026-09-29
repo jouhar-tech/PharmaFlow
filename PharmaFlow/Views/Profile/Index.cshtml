@@ -3,6 +3,92 @@
     ViewData["Title"] = "My Profile";
 }
 
+<div class="more-mobile-page">
+    <header class="more-mobile-header">
+        <a asp-controller="Home" asp-action="Index" class="more-mobile-back" aria-label="Back">←</a>
+        <h1>Settings</h1>
+    </header>
+
+    <section class="more-mobile-profile-card">
+        <div class="more-mobile-business">
+            <h2>@Model.BusinessName</h2>
+            <span>PharmaFlow</span>
+        </div>
+        <div class="more-mobile-avatar">
+            @((Model.Username.Length > 0 ? Model.Username[0] : 'U').ToString().ToUpperInvariant())
+        </div>
+    </section>
+
+    <section class="more-mobile-menu-card">
+        <a href="#" class="more-mobile-row">
+            <span class="more-mobile-row-icon">▤</span>
+            <span class="more-mobile-row-label">Order items</span>
+            <span class="more-mobile-chevron">›</span>
+        </a>
+        <a href="#" class="more-mobile-row">
+            <span class="more-mobile-row-icon">▧</span>
+            <span class="more-mobile-row-label">Bills</span>
+            <span class="more-mobile-chevron">›</span>
+        </a>
+        <a href="#" class="more-mobile-row">
+            <span class="more-mobile-row-icon">▥</span>
+            <span class="more-mobile-row-label">Reports</span>
+            <span class="more-mobile-chevron">›</span>
+        </a>
+    </section>
+
+    <section class="more-mobile-settings-card">
+        <h2>App Settings</h2>
+
+        <a href="#" class="more-mobile-row">
+            <span class="more-mobile-row-icon">♙</span>
+            <span class="more-mobile-row-label">Add Staff</span>
+            <span class="more-mobile-chevron">›</span>
+        </a>
+
+        <div class="more-mobile-row more-mobile-language-row">
+            <span class="more-mobile-row-icon">◎</span>
+            <span class="more-mobile-row-label">Language</span>
+            <select id="moreMobileLanguage" aria-label="Language">
+                <option value="en">English</option>
+                <option value="kn">ಕನ್ನಡ</option>
+                <option value="hi">हिन्दी</option>
+            </select>
+        </div>
+
+        <div class="more-mobile-row more-mobile-theme-row">
+            <span class="more-mobile-row-icon">☼</span>
+            <span class="more-mobile-row-label">Theme</span>
+            <div class="more-mobile-theme-switch" role="group" aria-label="Theme">
+                <button type="button" data-theme-choice="light">Light</button>
+                <button type="button" data-theme-choice="dark">Dark</button>
+            </div>
+        </div>
+
+        <a href="#" class="more-mobile-row">
+            <span class="more-mobile-row-icon">♧</span>
+            <span class="more-mobile-row-label">Customer Support</span>
+            <span class="more-mobile-chevron">›</span>
+        </a>
+
+        <a asp-controller="Profile" asp-action="Feedback" class="more-mobile-row">
+            <span class="more-mobile-row-icon">▱</span>
+            <span class="more-mobile-row-label">Feedback for Us</span>
+            <span class="more-mobile-chevron">›</span>
+        </a>
+
+        <form asp-area="" asp-controller="Account" asp-action="Logout" method="post" data-online-required="true" class="more-mobile-signout-form">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="more-mobile-signout">Sign out</button>
+        </form>
+    </section>
+
+    <div class="more-mobile-legal">
+        <a href="#">Terms and Conditions</a>
+        <a href="#">Privacy Policy</a>
+    </div>
+</div>
+
 <div class="profile-page">
     <div class="profile-header">
         <div>
