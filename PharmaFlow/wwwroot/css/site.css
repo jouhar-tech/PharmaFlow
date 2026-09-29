@@ -2624,3 +2624,54 @@ body.theme-dark .low-stock-modern-search input,
 body.theme-dark .low-stock-product-card,
 body.theme-dark .low-stock-modern-empty,
 body.theme-dark .low-stock-modern-summary { background:#111c2e; border-color:#263449; color:#e2e8f0; }
+
+
+/* Reorder action on low-stock and expiry product cards */
+.low-stock-product-card,
+.expiry-product-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.low-stock-reorder-link,
+.expiry-reorder-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 30px;
+  margin-top: .6rem;
+  padding: .42rem .1rem 0;
+  border-top: 1px solid #eef2f7;
+  color: #238b87;
+  font-size: .62rem;
+  font-weight: 850;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.low-stock-reorder-link span,
+.expiry-reorder-link span {
+  font-size: .9rem;
+  line-height: 1;
+}
+
+.low-stock-reorder-link:hover,
+.expiry-reorder-link:hover {
+  color: #176d6a;
+  text-decoration: none;
+}
+
+body.theme-dark .low-stock-reorder-link,
+body.theme-dark .expiry-reorder-link {
+  border-color: #263449;
+  color: #7dd3ca;
+}
+
+@media (max-width: 767.98px) {
+  .low-stock-reorder-link,
+  .expiry-reorder-link {
+    margin-top: auto;
+    padding-top: .55rem;
+  }
+}
