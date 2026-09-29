@@ -1,0 +1,157 @@
+@model PharmaFlow.Models.ViewModels.InventoryViewModel
+
+@{
+    ViewData["Title"] = "Inventory";
+}
+
+<div class="inventory-page-modern">
+    <header class="inventory-modern-header">
+        <a asp-controller="Home" asp-action="Index" class="inventory-modern-back" aria-label="Back">←</a>
+        <h1>Inventory</h1>
+        <a href="@Url.Action("Index", "Home")#add-stock" class="inventory-add-item">+ Add item</a>
+    </header>
+
+    <div class="inventory-modern-search">
+        <span class="inventory-modern-search-icon" aria-hidden="true">⌕</span>
+        <input id="inventorySearch"
+               type="search"
+               autocomplete="off"
+               placeholder="Search product..."
+               aria-label="Search inventory" />
+        <button id="inventorySearchClear" class="inventory-modern-clear" type="button" aria-label="Clear search" hidden>×</button>
+    </div>
+
+    <nav class="inventory-modern-filters" aria-label="Inventory filters">
+        <button type="button" class="inventory-filter-chip is-active" data-filter="all">
+            All <span class="inventory-filter-count all">@Model.AllCount</span>
+        </button>
+        <button type="button" class="inventory-filter-chip" data-filter="low-stock">
+            Low Stock <span class="inventory-filter-count low">@Model.LowStockCount</span>
+        </button>
+        <button type="button" class="inventory-filter-chip" data-filter="expiring">
+            Expiring <span class="inventory-filter-count expiring">@Model.ExpiringCount</span>
+        </button>
+    </nav>
+
+    <main class="inventory-modern-products">
+        @if (Model.Items.Count == 0)
+        {
+            <div class="inventory-modern-empty">
+                <div>Rx</div>
+                <h2>No inventory yet</h2>
+                <p>Add stock to start building your inventory.</p>
+            </div>
+        }
+        else
+        {
+            <div id="inventoryProductsGrid" class="inventory-products-grid">
+                @foreach (var item in Model.Items)
+                {
+                    <article class="inventory-product-card"
+                             data-filter-low="@(item.IsLowStock ? "true" : "false")"
+                             data-filter-expiring="@(item.IsExpiring ? "true" : "false")"
+                             data-search-text="@($"{item.ProductName} {item.GenericName} {item.BrandName} {item.BatchNumber} {item.Barcode}")">
+                        <div class="inventory-product-card-top">
+                            <div class="inventory-product-icon">Rx</div>
+                            <div class="inventory-product-heading">
+                                <h2>@item.ProductName</h2>
+                                <span>Batch : @item.BatchNumber</span>
+                            </div>
+                        </div>
+
+                        <div class="inventory-product-details">
+                            <div>
+                                <span class="inventory-detail-label">QTY</span>
+                                <strong>@item.Quantity.ToString("0.##")</strong>
+                            </div>
+                            <div>
+                                <span class="inventory-detail-label">EXPIRY DATE</span>
+                                <strong class="@(item.IsExpiring ? "inventory-expiry-warning" : "")">
+                                    @item.ExpiryDate.ToString("dd MMM yyyy")
+                                </strong>
+                            </div>
+                            <div>
+                                <span class="inventory-detail-label">SELLING PRICE</span>
+                                <strong>₹ @item.SellingUnitPrice.ToString("N2")</strong>
+                            </div>
+                            <div>
+                                <span class="inventory-detail-label">STOCK VALUE</span>
+                                <strong>₹ @item.StockValue.ToString("N2")</strong>
+                            </div>
+                        </div>
+
+                        @if (item.IsLowStock)
+                        {
+                            <span class="inventory-status-badge low">Low stock</span>
+                        }
+                        else if (item.IsExpiring)
+                        {
+                            <span class="inventory-status-badge expiring">Expiring soon</span>
+                        }
+                    </article>
+                }
+            </div>
+
+            <div id="inventoryEmptySearch" class="inventory-modern-empty" hidden>
+                <div>⌕</div>
+                <h2>No products found</h2>
+                <p>Try another product name, batch number or barcode.</p>
+            </div>
+        }
+    </main>
+</div>
+
+@section Scripts {
+<script>
+(function () {
+    const search = document.getElementById('inventorySearch');
+    const clear = document.getElementById('inventorySearchClear');
+    const buttons = Array.from(document.querySelectorAll('.inventory-filter-chip'));
+    const cards = Array.from(document.querySelectorAll('.inventory-product-card'));
+    const empty = document.getElementById('inventoryEmptySearch');
+
+    if (!search || !cards.length) return;
+
+    let activeFilter = 'all';
+
+    function update() {
+        const term = search.value.trim().toLocaleLowerCase();
+        let visible = 0;
+
+        cards.forEach(card => {
+            const text = (card.dataset.searchText || '').toLocaleLowerCase();
+            const searchMatch = !term || text.includes(term);
+            const filterMatch =
+                activeFilter === 'all' ||
+                (activeFilter === 'low-stock' && card.dataset.filterLow === 'true') ||
+                (activeFilter === 'expiring' && card.dataset.filterExpiring === 'true');
+
+            const show = searchMatch && filterMatch;
+            card.hidden = !show;
+            if (show) visible++;
+        });
+
+        clear.hidden = !term;
+        if (empty) empty.hidden = visible !== 0;
+    }
+
+    search.addEventListener('input', update);
+
+    clear?.addEventListener('click', function () {
+        search.value = '';
+        search.focus();
+        update();
+    });
+
+    buttons.forEach(button => {
+        button.addEventListener('click', function () {
+            activeFilter = button.dataset.filter || 'all';
+            buttons.forEach(item => item.classList.toggle('is-active', item === button));
+            update();
+        });
+    });
+
+    update();
+})();
+</script>
+}
