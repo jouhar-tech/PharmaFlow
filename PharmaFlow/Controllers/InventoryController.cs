@@ -54,7 +54,7 @@ public sealed class InventoryController : Controller
         var items = rows.Select(row =>
         {
             var daysLeft = row.ExpiryDate.DayNumber - today.DayNumber;
-            var isLowStock = row.ReorderLevel > 0 && row.Quantity <= row.ReorderLevel;
+            var isLowStock = row.ReorderLevel > 0 && row.Quantity < row.ReorderLevel;
             var isExpiring = daysLeft >= 0 && daysLeft <= 90;
 
             return new InventoryItemViewModel
