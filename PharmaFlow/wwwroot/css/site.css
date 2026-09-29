@@ -2212,3 +2212,307 @@ body.theme-dark .inventory-modern-empty { background:#111c2e; border-color:#2634
     min-height: 100vh;
   }
 }
+
+
+/* Mobile More / Settings page */
+.more-mobile-page { display:none; }
+
+@media (max-width: 767.98px) {
+  body.more-page .app-topbar {
+    display:none;
+  }
+
+  body.more-page .app-content {
+    padding:0 0 6rem !important;
+  }
+
+  body.more-page .app-footer {
+    display:none;
+  }
+
+  body.more-page .profile-page {
+    display:none;
+  }
+
+  .more-mobile-page {
+    display:block;
+    min-height:100vh;
+    padding:0 .65rem 1.25rem;
+    background:linear-gradient(180deg,#f7fbfa 0%,#f5f4f9 100%);
+  }
+
+  .more-mobile-header {
+    display:grid;
+    grid-template-columns:42px 1fr 42px;
+    align-items:center;
+    min-height:76px;
+    margin:0 -.65rem;
+    padding:0 .8rem;
+    background:linear-gradient(180deg,#a9e3d8 0%,#98dacc 100%);
+  }
+
+  .more-mobile-header h1 {
+    margin:0;
+    text-align:center;
+    color:#24302f;
+    font-size:1.65rem;
+    font-weight:800;
+    letter-spacing:-.035em;
+  }
+
+  .more-mobile-back {
+    display:grid;
+    place-items:center;
+    width:40px;
+    height:40px;
+    color:#182827;
+    text-decoration:none;
+    font-size:2rem;
+    line-height:1;
+  }
+
+  .more-mobile-profile-card {
+    position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    min-height:118px;
+    margin:.15rem .65rem .8rem;
+    padding:1rem 1.05rem;
+    border-radius:1rem;
+    background:linear-gradient(135deg,#d8f2ee 0%,#c5ebe4 100%);
+    box-shadow:0 7px 18px rgba(15,23,42,.08);
+  }
+
+  .more-mobile-business h2 {
+    margin:0;
+    color:#172323;
+    font-size:1.55rem;
+    font-weight:750;
+    letter-spacing:-.03em;
+  }
+
+  .more-mobile-business span {
+    display:inline-block;
+    margin-top:.45rem;
+    padding:.28rem .6rem;
+    border-radius:999px;
+    background:rgba(78,139,130,.14);
+    color:#304845;
+    font-size:.78rem;
+    font-weight:650;
+  }
+
+  .more-mobile-avatar {
+    display:grid;
+    place-items:center;
+    width:66px;
+    height:66px;
+    border:4px solid rgba(255,255,255,.65);
+    border-radius:50%;
+    background:#3ca8a2;
+    color:#fff;
+    font-size:1.25rem;
+    font-weight:800;
+    box-shadow:0 4px 12px rgba(31,95,91,.16);
+  }
+
+  .more-mobile-menu-card,
+  .more-mobile-settings-card {
+    margin:.75rem .65rem 0;
+    overflow:hidden;
+    border-radius:1rem;
+    background:#fff;
+    box-shadow:0 6px 20px rgba(15,23,42,.09);
+  }
+
+  .more-mobile-row {
+    display:grid;
+    grid-template-columns:48px minmax(0,1fr) auto;
+    align-items:center;
+    min-height:72px;
+    padding:.35rem .9rem;
+    border-bottom:1px solid #d9dddf;
+    color:#2d3032;
+    text-decoration:none;
+  }
+
+  .more-mobile-row:last-child { border-bottom:0; }
+
+  .more-mobile-row-icon {
+    display:grid;
+    place-items:center;
+    width:42px;
+    height:42px;
+    border-radius:.7rem;
+    background:#a8e1d4;
+    color:#2d5c57;
+    font-size:1.3rem;
+    font-weight:700;
+  }
+
+  .more-mobile-row-label {
+    padding-left:.35rem;
+    font-size:1.05rem;
+    font-weight:500;
+  }
+
+  .more-mobile-chevron {
+    padding-left:.5rem;
+    color:#666d70;
+    font-size:2rem;
+    line-height:1;
+    font-weight:300;
+  }
+
+  .more-mobile-settings-card {
+    margin-top:1rem;
+  }
+
+  .more-mobile-settings-card h2 {
+    margin:0;
+    padding:1rem .95rem .45rem;
+    color:#303536;
+    font-size:1.25rem;
+    font-weight:750;
+  }
+
+  .more-mobile-language-row,
+  .more-mobile-theme-row {
+    grid-template-columns:48px minmax(0,1fr) auto;
+  }
+
+  .more-mobile-language-row select {
+    min-width:118px;
+    height:42px;
+    padding:.25rem .55rem;
+    border:1px solid #c9cdd1;
+    border-radius:.7rem;
+    background:#f4f4f6;
+    color:#34383a;
+    font-size:.9rem;
+    outline:none;
+  }
+
+  .more-mobile-theme-switch {
+    display:flex;
+    overflow:hidden;
+    border-radius:.8rem;
+    background:#e7e7e9;
+  }
+
+  .more-mobile-theme-switch button {
+    min-width:76px;
+    min-height:42px;
+    padding:.3rem .7rem;
+    border:0;
+    background:transparent;
+    color:#727579;
+    font:inherit;
+    font-size:.9rem;
+    cursor:pointer;
+  }
+
+  .more-mobile-theme-switch button.is-selected {
+    border-radius:.75rem;
+    background:#fff;
+    color:#263133;
+    box-shadow:0 2px 8px rgba(15,23,42,.18);
+    font-weight:700;
+  }
+
+  .more-mobile-signout-form {
+    margin:0;
+  }
+
+  .more-mobile-signout {
+    width:100%;
+    min-height:66px;
+    border:0;
+    border-top:1px solid #d9dddf;
+    background:#fff;
+    color:#ad5555;
+    font:inherit;
+    font-size:1.05rem;
+    font-weight:650;
+    cursor:pointer;
+  }
+
+  .more-mobile-legal {
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:.65rem;
+    padding:1.1rem 0 .4rem;
+  }
+
+  .more-mobile-legal a {
+    color:#85888b;
+    font-size:.9rem;
+    text-decoration:underline;
+  }
+
+  body.theme-dark.more-page .more-mobile-page {
+    background:linear-gradient(180deg,#0f1e25 0%,#0f172a 100%);
+  }
+
+  body.theme-dark.more-page .more-mobile-header {
+    background:linear-gradient(180deg,#245a55 0%,#1f514d 100%);
+  }
+
+  body.theme-dark.more-page .more-mobile-header h1,
+  body.theme-dark.more-page .more-mobile-back {
+    color:#f1f5f9;
+  }
+
+  body.theme-dark.more-page .more-mobile-profile-card {
+    background:linear-gradient(135deg,#183b3b 0%,#19333b 100%);
+  }
+
+  body.theme-dark.more-page .more-mobile-business h2,
+  body.theme-dark.more-page .more-mobile-settings-card h2 {
+    color:#f8fafc;
+  }
+
+  body.theme-dark.more-page .more-mobile-business span {
+    color:#d2eeea;
+    background:rgba(167,222,213,.13);
+  }
+
+  body.theme-dark.more-page .more-mobile-menu-card,
+  body.theme-dark.more-page .more-mobile-settings-card,
+  body.theme-dark.more-page .more-mobile-signout {
+    background:#111c2e;
+  }
+
+  body.theme-dark.more-page .more-mobile-row {
+    color:#e2e8f0;
+    border-color:#263449;
+  }
+
+  body.theme-dark.more-page .more-mobile-row-icon {
+    background:#24514e;
+    color:#c8eeea;
+  }
+
+  body.theme-dark.more-page .more-mobile-language-row select,
+  body.theme-dark.more-page .more-mobile-theme-switch {
+    background:#1e293b;
+    border-color:#334155;
+    color:#e2e8f0;
+  }
+
+  body.theme-dark.more-page .more-mobile-theme-switch button.is-selected {
+    background:#334155;
+    color:#fff;
+  }
+
+  body.theme-dark.more-page .more-mobile-signout {
+    border-color:#263449;
+    color:#fca5a5;
+  }
+
+  body.theme-dark.more-page .more-mobile-legal a {
+    color:#94a3b8;
+  }
+}
