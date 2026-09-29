@@ -101,12 +101,13 @@
                 <strong>Expiry Details</strong>
             </a>
 
-            <button type="button" class="home-mobile-action-card" aria-disabled="true">
+            <a class="home-mobile-action-card home-mobile-count-card" asp-controller="LowStock" asp-action="Index">
+                <span class="home-mobile-count-badge home-mobile-low-stock-count-badge" aria-label="@Model.LowStockCount low stock products">@Model.LowStockCount</span>
                 <span class="home-mobile-action-icon">
                     <svg viewBox="0 0 64 64"><path d="M10 48V22h17M10 48h44M18 40l9-10 8 6 15-18"/><path d="M42 14h10v10"/><path d="M44 43h10M44 49h7"/></svg>
                 </span>
                 <strong>Low Stock Details</strong>
-            </button>
+            </a>
         </div>
 
         @if (Model.HasPharmaFlowValue)
@@ -191,10 +192,10 @@
                 <div class="metric-icon">⌛</div>
                 <div><span class="metric-label" data-i18n="productsExpiringSoon">Products expiring soon</span><strong class="metric-value">@Model.ProductsExpiringSoonCount</strong><span class="metric-note" data-i18n="reviewUpcomingExpiries">Critical + upcoming stock</span></div>
             </a>
-            <article class="dashboard-card metric-card metric-info">
+            <a asp-controller="LowStock" asp-action="Index" class="dashboard-card metric-card metric-info metric-card-link">
                 <div class="metric-icon">▤</div>
-                <div><span class="metric-label" data-i18n="lowStockDetailsMetric">Low stock details</span><strong class="metric-value">@Model.LowStockCount</strong><span class="metric-note" data-i18n="itemsBelowReorderLevel">Items below reorder level</span></div>
-            </article>
+                <div><span class="metric-label" data-i18n="lowStockDetailsMetric">Low stock details</span><strong class="metric-value">@Model.LowStockCount</strong><span class="metric-note" data-i18n="itemsBelowReorderLevel">Quantity below 3</span></div>
+            </a>
             <article class="dashboard-card metric-card metric-danger">
                 <div class="metric-icon">!</div>
                 <div><span class="metric-label" data-i18n="outOfStockItems">Out-of-stock items</span><strong class="metric-value">—</strong><span class="metric-note" data-i18n="productsNeedingReplenishment">Products needing replenishment</span></div>
