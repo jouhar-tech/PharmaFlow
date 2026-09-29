@@ -1876,3 +1876,74 @@ body.theme-dark .expiry-modern-filters a.is-active span { color: #d9fffa; }
     margin-top: 0;
   }
 }
+
+
+/* Expiry filter count colors and instant-search state */
+.expiry-modern-filters .expiry-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: .42rem;
+  min-height: 42px;
+  padding: .45rem .82rem;
+  border: 1px solid #d9dee7;
+  border-radius: .75rem;
+  background: #fff;
+  color: #1f2937;
+  white-space: nowrap;
+  text-decoration: none;
+  font: inherit;
+  font-size: .75rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+.expiry-modern-filters .expiry-filter-chip.is-active {
+  border-color: #82cfc5;
+  background: #a7ded5;
+  color: #143c38;
+}
+.expiry-filter-count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 .35rem;
+  border-radius: 999px;
+  font-size: .65rem;
+  font-weight: 900;
+  line-height: 1;
+}
+.expiry-filter-count.all {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+.expiry-filter-count.critical {
+  background: #fee2e2;
+  color: #dc2626;
+}
+.expiry-filter-count.upcoming {
+  background: #fef3c7;
+  color: #b45309;
+}
+.expiry-filter-count.expired {
+  background: #fecaca;
+  color: #b91c1c;
+}
+.expiry-modern-clear {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+.expiry-product-card[hidden] { display: none !important; }
+.expiry-modern-empty[hidden] { display: none; }
+
+@media (max-width: 767.98px) {
+  .expiry-modern-filters .expiry-filter-chip {
+    min-height: 40px;
+    padding: .4rem .72rem;
+  }
+  .expiry-filter-count {
+    min-width: 23px;
+    height: 23px;
+  }
+}
