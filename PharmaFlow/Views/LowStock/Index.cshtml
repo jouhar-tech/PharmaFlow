@@ -71,10 +71,12 @@
                                 <span>STOCK VALUE</span>
                                 <strong>₹ @item.StockValue.ToString("N2")</strong>
                             </div>
+                            </div>
+
+                        <div class="low-stock-card-footer">
+                            <span class="low-stock-status-badge">Low stock</span>
                             <a asp-controller="LowStock" asp-action="Index" class="low-stock-reorder-link">Reorder <span aria-hidden="true">→</span></a>
                         </div>
-
-                        <span class="low-stock-status-badge">Low stock</span>
                     </article>
                 }
             </div>
