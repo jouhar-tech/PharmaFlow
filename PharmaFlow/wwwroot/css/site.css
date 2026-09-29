@@ -2805,3 +2805,52 @@ body.theme-dark .low-stock-card-footer,
 body.theme-dark .expiry-card-footer {
   border-color:#263449;
 }
+
+
+/* Final stock-card footer alignment */
+.low-stock-card-footer,
+.expiry-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem;
+  width: 100%;
+  margin-top: .45rem;
+  padding-top: .45rem;
+  border-top: 1px solid #eef2f7;
+}
+
+.low-stock-card-footer .low-stock-status-badge,
+.expiry-card-footer .expiry-status-badge {
+  flex: 0 0 auto;
+  margin: 0;
+}
+
+.low-stock-card-footer .low-stock-reorder-link,
+.expiry-card-footer .expiry-reorder-link {
+  flex: 0 0 auto;
+  width: auto;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  white-space: nowrap;
+  color: #238b87;
+}
+
+.low-stock-card-footer .low-stock-reorder-link span,
+.expiry-card-footer .expiry-reorder-link span {
+  margin-left: .25rem;
+  font-size: .85rem;
+}
+
+@media (max-width: 767.98px) {
+  .low-stock-card-footer,
+  .expiry-card-footer {
+    margin-top: .45rem;
+    padding-top: .45rem;
+  }
+}
