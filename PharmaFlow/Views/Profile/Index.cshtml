@@ -149,4 +149,24 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        (() => {
+            const language = document.getElementById('moreMobileLanguage');
+            if (!language) return;
+
+            const current = localStorage.getItem('pharmaflow-language') || 'en';
+            language.value = current;
+
+            language.addEventListener('change', () => {
+                const selected = language.value;
+                localStorage.setItem('pharmaflow-language', selected);
+                window.pharmaFlowLanguage?.apply(selected);
+            });
+
+            window.addEventListener('storage', () => {
+                const selected = localStorage.getItem('pharmaflow-language') || 'en';
+                language.value = selected;
+            });
+        })();
+    </script>
 }
