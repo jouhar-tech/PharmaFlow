@@ -35,7 +35,11 @@ public sealed class ExpiryProductsController : Controller
         }
         else if (normalizedFilter == "upcoming")
         {
-            products = products.Where(item => item.DaysLeft > 30 && item.DaysLeft <= 90);
+            products = products.Where(item => item.DaysLeft > 30 && item.DaysLeft <= 60);
+        }
+        else if (normalizedFilter == "expired")
+        {
+            products = products.Where(item => item.DaysLeft < 0);
         }
 
         if (!string.IsNullOrWhiteSpace(normalizedSearch))
@@ -103,7 +107,6 @@ public sealed class ExpiryProductsController : Controller
                 batch.IsActive &&
                 !batch.IsQuarantined &&
                 batch.QuantityOnHand > 0 &&
-                batch.ExpiryDate >= today &&
                 batch.ExpiryDate <= ninetyDaysFromToday)
             .OrderBy(batch => batch.ExpiryDate)
             .Select(batch => new
@@ -138,14 +141,21 @@ public sealed class ExpiryProductsController : Controller
             .ToList();
 
         var upcoming = expiryItems
-            .Where(row => row.DaysLeft > 30 && row.DaysLeft <= 90)
+            .Where(row => row.DaysLeft > 30 && row.DaysLeft <= 60)
+            .ToList();
+
+        var expired = expiryItems
+            .Where(row => row.DaysLeft < 0)
             .ToList();
 
         return new ExpiryData
         {
             CriticalCount = critical.Count,
             UpcomingCount = upcoming.Count,
-            AtRiskValue = expiryItems.Sum(row => row.TotalValue),
+            ExpiredCount = expired.Count,
+            AtRiskValue = expiryItems
+                .Where(row => row.DaysLeft >= 0 && row.DaysLeft <= 90)
+                .Sum(row => row.TotalValue),
             CriticalProducts = critical,
             UpcomingProducts = upcoming,
             AtRiskProducts = expiryItems
