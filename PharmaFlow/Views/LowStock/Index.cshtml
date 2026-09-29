@@ -1,0 +1,126 @@
+@model PharmaFlow.Models.ViewModels.LowStockViewModel
+
+@{
+    ViewData["Title"] = "Low Stock";
+}
+
+<div class="low-stock-page-modern">
+    <header class="low-stock-modern-header">
+        <a asp-controller="Home" asp-action="Index" class="low-stock-modern-back" aria-label="Back to dashboard">←</a>
+        <h1>Low Stock</h1>
+    </header>
+
+    <section class="low-stock-modern-summary">
+        <div class="low-stock-summary-icon">!</div>
+        <div>
+            <span>Low Stock Products</span>
+            <strong>@Model.Count</strong>
+            <small>Products with quantity below 3</small>
+        </div>
+    </section>
+
+    <form class="low-stock-modern-search" role="search" onsubmit="return false;">
+        <span class="low-stock-modern-search-icon" aria-hidden="true">⌕</span>
+        <input id="lowStockSearch"
+               type="search"
+               value="@Model.SearchTerm"
+               placeholder="Search product or batch..."
+               autocomplete="off"
+               aria-label="Search low stock products or batch numbers" />
+        <button id="lowStockSearchClear" type="button" aria-label="Clear search" hidden>×</button>
+    </form>
+
+    <section class="low-stock-modern-products" aria-label="Low stock products">
+        @if (Model.Items.Count == 0)
+        {
+            <div class="low-stock-modern-empty">
+                <div>✓</div>
+                <h2>No low stock products</h2>
+                <p>Products with quantity below 3 will appear here.</p>
+            </div>
+        }
+        else
+        {
+            <div class="low-stock-products-grid">
+                @foreach (var item in Model.Items)
+                {
+                    <article class="low-stock-product-card"
+                             data-search-text="@($"{item.ProductName} {item.GenericName} {item.BrandName} {item.BatchNumber} {item.Barcode}")">
+                        <div class="low-stock-product-card-top">
+                            <div class="low-stock-product-icon">Rx</div>
+                            <div class="low-stock-product-heading">
+                                <h2>@item.ProductName</h2>
+                                <span>Batch : @item.BatchNumber</span>
+                            </div>
+                        </div>
+
+                        <div class="low-stock-product-details">
+                            <div>
+                                <span>QTY</span>
+                                <strong class="low-stock-qty">@item.Quantity.ToString("0.##")</strong>
+                            </div>
+                            <div>
+                                <span>EXPIRY DATE</span>
+                                <strong>@item.ExpiryDate.ToString("dd MMM yyyy")</strong>
+                            </div>
+                            <div>
+                                <span>SELLING PRICE</span>
+                                <strong>₹ @item.SellingUnitPrice.ToString("N2")</strong>
+                            </div>
+                            <div>
+                                <span>STOCK VALUE</span>
+                                <strong>₹ @item.StockValue.ToString("N2")</strong>
+                            </div>
+                        </div>
+
+                        <span class="low-stock-status-badge">Low stock</span>
+                    </article>
+                }
+            </div>
+
+            <div id="lowStockEmptySearch" class="low-stock-modern-empty" hidden>
+                <div>⌕</div>
+                <h2>No products found</h2>
+                <p>Try another product name, batch number or barcode.</p>
+            </div>
+        }
+    </section>
+</div>
+
+@section Scripts {
+<script>
+(function () {
+    const search = document.getElementById('lowStockSearch');
+    const clear = document.getElementById('lowStockSearchClear');
+    const cards = Array.from(document.querySelectorAll('.low-stock-product-card'));
+    const empty = document.getElementById('lowStockEmptySearch');
+
+    if (!search) return;
+
+    function update() {
+        const term = search.value.trim().toLocaleLowerCase();
+        let visible = 0;
+
+        cards.forEach(card => {
+            const text = (card.dataset.searchText || '').toLocaleLowerCase();
+            const show = !term || text.includes(term);
+            card.hidden = !show;
+            if (show) visible++;
+        });
+
+        clear.hidden = !term;
+        if (empty) empty.hidden = visible !== 0;
+    }
+
+    search.addEventListener('input', update);
+
+    clear?.addEventListener('click', function () {
+        search.value = '';
+        search.focus();
+        update();
+    });
+
+    update();
+})();
+</script>
+}
