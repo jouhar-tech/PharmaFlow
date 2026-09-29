@@ -24,7 +24,7 @@
         </div>
     </section>
 
-    <form method="get" asp-controller="ExpiryProducts" asp-action="Index" class="expiry-modern-search" role="search">
+    <form class="expiry-modern-search" role="search" onsubmit="return false;">
         <span class="expiry-modern-search-icon" aria-hidden="true">⌕</span>
         <input type="search"
                name="search"
@@ -33,17 +33,22 @@
                data-i18n-placeholder="searchExpiryProducts"
                autocomplete="off"
                aria-label="Search expiring products or batch numbers" />
-        <input type="hidden" name="filter" value="@filter" />
-        @if (!string.IsNullOrWhiteSpace(Model.SearchTerm))
-        {
-            <a asp-controller="ExpiryProducts" asp-action="Index" asp-route-filter="@filter" class="expiry-modern-clear" aria-label="Clear search">×</a>
-        }
+        <button type="button" class="expiry-modern-clear" aria-label="Clear search" hidden>×</button>
     </form>
 
     <nav class="expiry-modern-filters" aria-label="Expiry filters">
-        <a asp-action="Index" asp-route-filter="all" asp-route-search="@Model.SearchTerm" class="@(filter == "all" ? "is-active" : "")">All <span>@(Model.Products.Count)</span></a>
-        <a asp-action="Index" asp-route-filter="critical" asp-route-search="@Model.SearchTerm" class="@(filter == "critical" ? "is-active" : "")">Expires in 30 days <span>@Model.CriticalCount</span></a>
-        <a asp-action="Index" asp-route-filter="upcoming" asp-route-search="@Model.SearchTerm" class="@(filter == "upcoming" ? "is-active" : "")">Expires in 31–90 days <span>@Model.UpcomingCount</span></a>
+        <button type="button" class="expiry-filter-chip is-active" data-filter="all">
+            All <span class="expiry-filter-count all">@Model.AllCount</span>
+        </button>
+        <button type="button" class="expiry-filter-chip" data-filter="critical">
+            Expires in 30 <span class="expiry-filter-count critical">@Model.CriticalCount</span>
+        </button>
+        <button type="button" class="expiry-filter-chip" data-filter="upcoming">
+            Expires in 31–60 <span class="expiry-filter-count upcoming">@Model.UpcomingCount</span>
+        </button>
+        <button type="button" class="expiry-filter-chip" data-filter="expired">
+            Expired <span class="expiry-filter-count expired">@Model.ExpiredCount</span>
+        </button>
     </nav>
 
     <section class="expiry-modern-summary" aria-label="Expiry summary">
@@ -81,3 +86,61 @@
         }
     </section>
 </div>
+
+@section Scripts {
+<script>
+(function () {
+    const search = document.querySelector('.expiry-modern-search input[type="search"]');
+    const clear = document.querySelector('.expiry-modern-clear');
+    const filterButtons = Array.from(document.querySelectorAll('.expiry-filter-chip'));
+    const cards = Array.from(document.querySelectorAll('.expiry-product-card'));
+
+    if (!search || !cards.length) return;
+
+    let activeFilter = 'all';
+
+    function matchesFilter(card) {
+        const days = Number(card.dataset.daysLeft);
+        if (activeFilter === 'critical') return days >= 0 && days <= 30;
+        if (activeFilter === 'upcoming') return days > 30 && days <= 60;
+        if (activeFilter === 'expired') return days < 0;
+        return true;
+    }
+
+    function updateResults() {
+        const term = search.value.trim().toLocaleLowerCase();
+        let visible = 0;
+
+        cards.forEach(card => {
+            const haystack = (card.dataset.searchText || '').toLocaleLowerCase();
+            const matchesSearch = !term || haystack.includes(term);
+            const show = matchesSearch && matchesFilter(card);
+            card.hidden = !show;
+            if (show) visible++;
+        });
+
+        clear.hidden = !term;
+        const empty = document.querySelector('.expiry-modern-empty');
+        if (empty) empty.hidden = visible !== 0;
+    }
+
+    search.addEventListener('input', updateResults);
+
+    clear?.addEventListener('click', function () {
+        search.value = '';
+        search.focus();
+        updateResults();
+    });
+
+    filterButtons.forEach(button => {
+        button.addEventListener('click', function () {
+            activeFilter = button.dataset.filter || 'all';
+            filterButtons.forEach(item => item.classList.toggle('is-active', item === button));
+            updateResults();
+        });
+    });
+
+    updateResults();
+})();
+</script>
+}
