@@ -2772,3 +2772,36 @@ textarea {
     scroll-behavior: auto !important;
   }
 }
+
+.low-stock-card-footer,
+.expiry-card-footer {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:.5rem;
+  width:100%;
+  margin-top:.5rem;
+  padding-top:.45rem;
+  border-top:1px solid #eef2f7;
+}
+.low-stock-card-footer .low-stock-reorder-link,
+.expiry-card-footer .expiry-reorder-link {
+  display:inline-flex;
+  align-items:center;
+  justify-content:flex-end;
+  width:auto;
+  min-height:0;
+  margin:0;
+  padding:0;
+  border:0;
+  flex:0 0 auto;
+}
+.low-stock-card-footer .low-stock-status-badge,
+.expiry-card-footer .expiry-status-badge {
+  margin:0;
+  flex:0 0 auto;
+}
+body.theme-dark .low-stock-card-footer,
+body.theme-dark .expiry-card-footer {
+  border-color:#263449;
+}
