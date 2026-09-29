@@ -153,6 +153,7 @@ public sealed class ExpiryProductsController : Controller
             CriticalCount = critical.Count,
             UpcomingCount = upcoming.Count,
             ExpiredCount = expired.Count,
+            AllCount = expiryItems.Count,
             AtRiskValue = expiryItems
                 .Where(row => row.DaysLeft >= 0 && row.DaysLeft <= 90)
                 .Sum(row => row.TotalValue),
