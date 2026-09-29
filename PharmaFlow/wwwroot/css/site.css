@@ -2625,6 +2625,12 @@ body.theme-dark .low-stock-product-card,
 body.theme-dark .low-stock-modern-empty,
 body.theme-dark .low-stock-modern-summary { background:#111c2e; border-color:#263449; color:#e2e8f0; }
 
+/* Keep the low-stock badge identical to the Inventory badge in dark theme. */
+body.theme-dark .low-stock-product-details .low-stock-status-badge {
+  background:#fef3c7;
+  color:#a16207;
+}
+
 
 /* Lightweight global motion
    Keep animations short and compositor-friendly. No heavy effects or JS animation loops. */
