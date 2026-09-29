@@ -2675,3 +2675,105 @@ body.theme-dark .expiry-reorder-link {
     padding-top: .55rem;
   }
 }
+
+
+/* Lightweight global motion
+   Keep animations short and compositor-friendly. No heavy effects or JS animation loops. */
+:root {
+  --pf-motion-fast: 140ms;
+  --pf-motion: 190ms;
+  --pf-motion-ease: cubic-bezier(.2,.7,.2,1);
+}
+
+/* Small interaction feedback across the app */
+button,
+.btn,
+a,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+.btn,
+a {
+  transition:
+    transform var(--pf-motion-fast) var(--pf-motion-ease),
+    background-color var(--pf-motion-fast) ease,
+    border-color var(--pf-motion-fast) ease,
+    color var(--pf-motion-fast) ease,
+    box-shadow var(--pf-motion-fast) ease,
+    opacity var(--pf-motion-fast) ease;
+}
+
+button:active,
+.btn:active,
+a:active {
+  transform: scale(.98);
+}
+
+input,
+select,
+textarea {
+  transition:
+    border-color var(--pf-motion-fast) ease,
+    box-shadow var(--pf-motion-fast) ease,
+    background-color var(--pf-motion-fast) ease;
+}
+
+/* Cards get a very small lift only where hover exists.
+   Mobile devices do not need hover animation. */
+@media (hover: hover) and (pointer: fine) {
+  .dashboard-card,
+  .inventory-product-card,
+  .low-stock-product-card,
+  .expiry-product-card,
+  .more-mobile-menu-card,
+  .more-mobile-settings-card,
+  .more-mobile-profile-card {
+    transition:
+      transform var(--pf-motion) var(--pf-motion-ease),
+      box-shadow var(--pf-motion) ease,
+      border-color var(--pf-motion-fast) ease;
+  }
+
+  .dashboard-card:hover,
+  .inventory-product-card:hover,
+  .low-stock-product-card:hover,
+  .expiry-product-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 22px rgba(15, 23, 42, .07);
+  }
+}
+
+/* Search/filter interactions stay fast and do not animate layout/reflow. */
+.expiry-filter-chip,
+.inventory-filter-chip,
+.low-stock-status-badge,
+.expiry-filter-count,
+.inventory-filter-count {
+  transition:
+    background-color var(--pf-motion-fast) ease,
+    color var(--pf-motion-fast) ease,
+    border-color var(--pf-motion-fast) ease,
+    box-shadow var(--pf-motion-fast) ease;
+}
+
+/* Lightweight loading feedback for elements already marked busy. */
+[aria-busy="true"] {
+  cursor: wait;
+  opacity: .72;
+}
+
+/* Respect users/devices that request reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}
