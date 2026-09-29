@@ -2781,6 +2781,9 @@ body.theme-dark .low-stock-status-badge + .low-stock-reorder-inline {
   }
 
   .low-stock-modern-header {
+    display: flex;
+    align-items: flex-start;
+    gap: .85rem;
     min-height: 150px;
     margin: 0;
     padding: .25rem .8rem .15rem;
@@ -2790,8 +2793,17 @@ body.theme-dark .low-stock-status-badge + .low-stock-reorder-inline {
   .low-stock-modern-back {
     width: 36px;
     height: 36px;
+    flex: 0 0 36px;
     color: #0f2826;
     font-size: 1.8rem;
+  }
+
+  .low-stock-modern-header h1 {
+    margin: .2rem 0 0;
+    color: #111827;
+    font-size: 1.5rem;
+    font-weight: 850;
+    letter-spacing: -.03em;
   }
 
   .low-stock-modern-summary {
