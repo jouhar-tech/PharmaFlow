@@ -53,6 +53,8 @@ public sealed class ExpiryProductsController : Controller
         {
             CriticalCount = data.CriticalCount,
             UpcomingCount = data.UpcomingCount,
+            ExpiredCount = data.ExpiredCount,
+            AllCount = data.AllCount,
             AtRiskValue = data.AtRiskValue,
             Products = products.ToList(),
             ViewMode = normalizedFilter,
@@ -167,6 +169,8 @@ public sealed class ExpiryProductsController : Controller
     {
         public int CriticalCount { get; init; }
         public int UpcomingCount { get; init; }
+        public int ExpiredCount { get; init; }
+        public int AllCount { get; init; }
         public decimal AtRiskValue { get; init; }
         public IReadOnlyList<ExpiryProductItemViewModel> CriticalProducts { get; init; } = Array.Empty<ExpiryProductItemViewModel>();
         public IReadOnlyList<ExpiryProductItemViewModel> UpcomingProducts { get; init; } = Array.Empty<ExpiryProductItemViewModel>();
