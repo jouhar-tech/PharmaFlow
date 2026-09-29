@@ -2197,3 +2197,18 @@ body.theme-dark .inventory-modern-search input,
 body.theme-dark .inventory-filter-chip,
 body.theme-dark .inventory-product-card,
 body.theme-dark .inventory-modern-empty { background:#111c2e; border-color:#263449; color:#e2e8f0; }
+
+
+@media (max-width: 767.98px) {
+  body.inventory-page .app-topbar {
+    display: none;
+  }
+
+  body.inventory-page .app-content {
+    padding-top: 0 !important;
+  }
+
+  body.inventory-page .app-main {
+    min-height: 100vh;
+  }
+}
