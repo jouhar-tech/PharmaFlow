@@ -28,5 +28,6 @@
             <span class="expiry-detail-label" data-i18n="totalValue">Total Value</span>
             <strong>₹ @Model.TotalValue.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</strong>
         </div>
+    <a asp-controller="LowStock" asp-action="Index" class="expiry-reorder-link">Reorder <span aria-hidden="true">→</span></a>
     </div>
 </article>
