@@ -4,6 +4,8 @@ public sealed class ExpiringProductsViewModel
 {
     public int CriticalCount { get; init; }
     public int UpcomingCount { get; init; }
+    public int ExpiredCount { get; init; }
+    public int AllCount { get; init; }
     public decimal AtRiskValue { get; init; }
     public IReadOnlyList<ExpiryProductItemViewModel> Products { get; init; } = Array.Empty<ExpiryProductItemViewModel>();
     public string ViewMode { get; init; } = "all";
