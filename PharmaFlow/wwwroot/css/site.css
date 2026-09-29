@@ -1953,3 +1953,247 @@ body.theme-dark .expiry-modern-filters a.is-active span { color: #d9fffa; }
     padding-bottom: 5.5rem;
   }
 }
+
+/* Mobile inventory page */
+.inventory-page-modern {
+  padding: 0 0 6rem;
+}
+.inventory-modern-header {
+  display: grid;
+  grid-template-columns: 38px minmax(0,1fr) auto;
+  align-items: center;
+  gap: .45rem;
+  min-height: 64px;
+  padding: .2rem .8rem;
+  background: linear-gradient(180deg,#a9e3d8 0%,#98dacc 100%);
+}
+.inventory-modern-header h1 {
+  margin: 0;
+  color: #111827;
+  font-size: 1.45rem;
+  font-weight: 850;
+  letter-spacing: -.035em;
+}
+.inventory-modern-back {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  color: #0f2826;
+  text-decoration: none;
+  font-size: 1.65rem;
+  line-height: 1;
+}
+.inventory-add-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: .45rem .72rem;
+  border: 0;
+  border-radius: .7rem;
+  background: #2f9e9b;
+  color: #fff;
+  text-decoration: none;
+  font-size: .7rem;
+  font-weight: 800;
+  box-shadow: 0 4px 12px rgba(47,158,155,.2);
+}
+.inventory-modern-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin: .75rem .75rem .55rem;
+}
+.inventory-modern-search input {
+  width: 100%;
+  height: 46px;
+  padding: 0 2.6rem;
+  border: 1px solid #d8dee7;
+  border-radius: .75rem;
+  outline: none;
+  background: #fff;
+  color: #172033;
+  font-size: .88rem;
+}
+.inventory-modern-search input:focus {
+  border-color: #72bdb5;
+  box-shadow: 0 0 0 3px rgba(85,185,170,.12);
+}
+.inventory-modern-search-icon {
+  position: absolute;
+  left: .85rem;
+  color: #7b8794;
+  font-size: 1.45rem;
+  pointer-events: none;
+}
+.inventory-modern-clear {
+  position: absolute;
+  right: .7rem;
+  border: 0;
+  background: transparent;
+  color: #64748b;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+.inventory-modern-filters {
+  display: flex;
+  gap: .5rem;
+  overflow-x: auto;
+  padding: .05rem .75rem .7rem;
+  scrollbar-width: none;
+}
+.inventory-modern-filters::-webkit-scrollbar { display:none; }
+.inventory-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  min-height: 40px;
+  padding: .4rem .72rem;
+  border: 1px solid #d9dee7;
+  border-radius: .75rem;
+  background: #fff;
+  color: #1f2937;
+  white-space: nowrap;
+  font: inherit;
+  font-size: .72rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+.inventory-filter-chip.is-active {
+  border-color: #82cfc5;
+  background: #a7ded5;
+  color: #143c38;
+}
+.inventory-filter-count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 23px;
+  height: 23px;
+  padding: 0 .3rem;
+  border-radius: 999px;
+  font-size: .62rem;
+  font-weight: 900;
+}
+.inventory-filter-count.all { background:#dbeafe; color:#1d4ed8; }
+.inventory-filter-count.low { background:#fef3c7; color:#b45309; }
+.inventory-filter-count.expiring { background:#fee2e2; color:#dc2626; }
+.inventory-modern-products { padding: 0 .75rem; }
+.inventory-products-grid {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: .65rem;
+}
+.inventory-product-card {
+  position: relative;
+  min-width: 0;
+  padding: .7rem;
+  border: 1px solid #e5eaf2;
+  border-radius: .85rem;
+  background: #fff;
+  box-shadow: 0 5px 18px rgba(15,23,42,.055);
+}
+.inventory-product-card[hidden] { display:none !important; }
+.inventory-product-card-top {
+  display:flex;
+  align-items:flex-start;
+  gap:.55rem;
+  padding-bottom:.62rem;
+  border-bottom:1px solid #eef2f7;
+}
+.inventory-product-icon {
+  display:grid;
+  place-items:center;
+  width:36px;
+  height:36px;
+  flex:0 0 36px;
+  border-radius:.72rem;
+  background:#eef2f6;
+  color:#475569;
+  font-size:.72rem;
+  font-weight:900;
+}
+.inventory-product-heading { min-width:0; }
+.inventory-product-heading h2 {
+  margin: .02rem 0 .18rem;
+  overflow:hidden;
+  color:#111827;
+  font-size:.78rem;
+  font-weight:850;
+  line-height:1.2;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.inventory-product-heading span {
+  color:#475569;
+  font-size:.59rem;
+  line-height:1.2;
+}
+.inventory-product-details {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:.62rem .45rem;
+  padding-top:.65rem;
+}
+.inventory-detail-label {
+  display:block;
+  margin-bottom:.16rem;
+  color:#111827;
+  font-size:.52rem;
+  font-weight:850;
+}
+.inventory-product-details strong {
+  display:block;
+  color:#111827;
+  font-size:.66rem;
+  font-weight:650;
+  line-height:1.15;
+}
+.inventory-expiry-warning { color:#a23b43 !important; }
+.inventory-status-badge {
+  display:inline-flex;
+  margin-top:.55rem;
+  padding:.22rem .42rem;
+  border-radius:999px;
+  font-size:.52rem;
+  font-weight:850;
+}
+.inventory-status-badge.low { background:#fef3c7; color:#a16207; }
+.inventory-status-badge.expiring { background:#fee2e2; color:#b91c1c; }
+.inventory-modern-empty {
+  padding:2.4rem 1rem;
+  border:1px solid #e5eaf2;
+  border-radius:1rem;
+  background:#fff;
+  text-align:center;
+}
+.inventory-modern-empty > div {
+  display:grid;
+  place-items:center;
+  width:44px;
+  height:44px;
+  margin:0 auto;
+  border-radius:50%;
+  background:#ecfdf5;
+  color:#16a34a;
+  font-weight:900;
+}
+.inventory-modern-empty h2 { margin:.7rem 0 .25rem; font-size:1rem; }
+.inventory-modern-empty p { margin:0; color:#64748b; font-size:.72rem; }
+@media (min-width:768px) {
+  .inventory-page-modern { padding: 1rem 0 3rem; }
+  .inventory-modern-header { background:transparent; min-height:auto; padding:.2rem 0 1rem; }
+  .inventory-modern-header h1 { font-size:1.8rem; }
+  .inventory-products-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .inventory-modern-search { margin-left:0; margin-right:0; }
+  .inventory-modern-filters { padding-left:0; }
+  .inventory-modern-products { padding:0; }
+}
+body.theme-dark .inventory-modern-header h1,
+body.theme-dark .inventory-product-heading h2,
+body.theme-dark .inventory-detail-label,
+body.theme-dark .inventory-product-details strong { color:#f8fafc; }
+body.theme-dark .inventory-modern-search input,
+body.theme-dark .inventory-filter-chip,
+body.theme-dark .inventory-product-card,
+body.theme-dark .inventory-modern-empty { background:#111c2e; border-color:#263449; color:#e2e8f0; }
