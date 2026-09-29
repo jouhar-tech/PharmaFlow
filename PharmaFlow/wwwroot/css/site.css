@@ -2627,20 +2627,15 @@ body.theme-dark .low-stock-modern-summary { background:#111c2e; border-color:#26
 
 
 /* Reorder action on low-stock and expiry product cards */
-.low-stock-product-card,
-.expiry-product-card {
-  display: flex;
-  flex-direction: column;
-}
-
 .low-stock-reorder-link,
 .expiry-reorder-link {
+  grid-column: 1 / -1;
   display: flex;
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  min-height: 30px;
-  margin-top: .6rem;
+  min-height: 26px;
+  margin-top: .05rem;
   padding: .42rem .1rem 0;
   border-top: 1px solid #eef2f7;
   color: #238b87;
@@ -2671,8 +2666,8 @@ body.theme-dark .expiry-reorder-link {
 @media (max-width: 767.98px) {
   .low-stock-reorder-link,
   .expiry-reorder-link {
-    margin-top: auto;
-    padding-top: .55rem;
+    margin-top: .05rem;
+    padding-top: .45rem;
   }
 }
 
