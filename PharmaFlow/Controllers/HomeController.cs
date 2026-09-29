@@ -43,23 +43,18 @@ namespace PharmaFlow.Controllers
                         batch.ExpiryDate <= ninetyDaysFromToday,
                         cancellationToken);
 
-                // Count products whose total usable stock is below their configured reorder level.
-                // Products with a zero reorder level are excluded because no low-stock threshold is configured.
-                lowStockCount = await _dbContext.Products
+                // Keep the dashboard count identical to the Low Stock page:
+                // active, usable batches with quantity below 3.
+                lowStockCount = await _dbContext.ProductBatches
                     .AsNoTracking()
-                    .Where(product =>
-                        product.ProfileId == profileId &&
-                        product.IsActive &&
-                        product.ReorderLevel > 0m)
-                    .Select(product => new
-                    {
-                        product.ReorderLevel,
-                        QuantityOnHand = product.Batches
-                            .Where(batch => batch.IsActive && !batch.IsQuarantined)
-                            .Select(batch => (decimal?)batch.QuantityOnHand)
-                            .Sum() ?? 0m
-                    })
-                    .CountAsync(stock => stock.QuantityOnHand < stock.ReorderLevel, cancellationToken);
+                    .CountAsync(batch =>
+                        batch.Product.ProfileId == profileId &&
+                        batch.Product.IsActive &&
+                        batch.IsActive &&
+                        !batch.IsQuarantined &&
+                        batch.QuantityOnHand > 0 &&
+                        batch.QuantityOnHand < 3m,
+                        cancellationToken);
             }
 
             var dashboard = new DashboardViewModel
