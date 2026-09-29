@@ -2727,3 +2727,40 @@ textarea {
   }
 }
 
+
+
+/* Inline reorder action beside the low-stock status */
+.low-stock-status-badge + .low-stock-reorder-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: .22rem;
+  margin-left: .45rem;
+  padding: .22rem .42rem;
+  border-radius: 999px;
+  background: #e8f7f4;
+  color: #238b87;
+  font-size: .52rem;
+  font-weight: 850;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color 140ms ease, color 140ms ease, transform 140ms ease;
+}
+
+.low-stock-status-badge + .low-stock-reorder-inline:hover {
+  background: #d7f0ec;
+  color: #176d6a;
+}
+
+.low-stock-status-badge + .low-stock-reorder-inline:active {
+  transform: scale(.98);
+}
+
+.low-stock-status-badge + .low-stock-reorder-inline span {
+  font-size: .7rem;
+}
+
+body.theme-dark .low-stock-status-badge + .low-stock-reorder-inline {
+  background: #163b39;
+  color: #7dd3ca;
+}
