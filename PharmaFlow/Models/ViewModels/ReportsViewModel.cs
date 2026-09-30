@@ -2,7 +2,9 @@ namespace PharmaFlow.Models.ViewModels;
 
 public sealed class ReportsViewModel
 {
-    public string SelectedPeriod { get; set; } = "30 days";
+    public string SelectedPeriod { get; set; } = "7 days";
+    public DateTime? StartDate { get; set; }
+    public DateTime? EndDate { get; set; }
     public decimal TotalSalesAmount { get; set; }
     public decimal Profit { get; set; }
     public int BillCount { get; set; }
