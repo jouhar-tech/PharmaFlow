@@ -3536,3 +3536,8 @@ body.theme-dark .more-mobile-staff-success { background:#163b39; color:#a7f3d0; 
   body.staff-add-page .app-topbar { display:none; }
   body.staff-add-page .app-content { padding-top:0 !important; }
 }
+
+@media (max-width: 767.98px) {
+  body.staff-add-page .home-mobile-bottom-nav { display:none; }
+  body.staff-add-page .app-footer { display:none; }
+}
