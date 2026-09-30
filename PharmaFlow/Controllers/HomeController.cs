@@ -82,7 +82,7 @@ namespace PharmaFlow.Controllers
                         batch.IsActive &&
                         !batch.IsQuarantined &&
                         batch.QuantityOnHand > 0 &&
-                        batch.CreatedAt.Date <= slowMovingCutoff.ToDateTime(TimeOnly.MinValue))
+                        batch.CreatedAt <= slowMovingCutoff.ToDateTime(TimeOnly.MinValue))
                     .SumAsync(batch => batch.QuantityOnHand * batch.PurchaseUnitPrice, cancellationToken);
             }
 
