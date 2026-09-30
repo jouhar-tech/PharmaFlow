@@ -6,7 +6,7 @@
 <div class="add-staff-mobile-page">
     <header class="add-staff-mobile-hero">
         <a asp-controller="Profile" asp-action="Index" class="add-staff-mobile-back" aria-label="Back">←</a>
-        <h1>Add Staff</h1>
+        <h1 data-i18n="addStaff">Add Staff</h1>
     </header>
 
     <form asp-action="Add" method="post" enctype="multipart/form-data" class="add-staff-mobile-form" autocomplete="off" data-online-required="true">
@@ -30,49 +30,49 @@
                 <span class="add-staff-upload-plus">+</span>
             </label>
             <input asp-for="ProfilePhoto" id="staffProfilePhoto" type="file" accept="image/jpeg,image/png,image/webp" class="add-staff-photo-input" />
-            <div class="add-staff-photo-label">Profile Photo</div>
+            <div class="add-staff-photo-label" data-i18n="profilePhoto">Profile Photo</div>
         </div>
 
         <div class="add-staff-field">
             <span class="add-staff-field-icon">♙</span>
-            <input asp-for="FullName" placeholder="Full Name" autocomplete="name" maxlength="120" />
+            <input asp-for="FullName" data-i18n-placeholder="fullName" placeholder="Full Name" autocomplete="name" maxlength="120" />
         </div>
         <span asp-validation-for="FullName" class="add-staff-field-error"></span>
 
         <div class="add-staff-field">
             <span class="add-staff-field-icon">⌖</span>
-            <input asp-for="Address" placeholder="Address" autocomplete="street-address" maxlength="500" />
+            <input asp-for="Address" data-i18n-placeholder="address" placeholder="Address" autocomplete="street-address" maxlength="500" />
         </div>
         <span asp-validation-for="Address" class="add-staff-field-error"></span>
 
         <div class="add-staff-field">
             <span class="add-staff-field-icon">⌕</span>
-            <input asp-for="PhoneNumber" placeholder="Phone Number" autocomplete="tel" inputmode="tel" maxlength="20" />
+            <input asp-for="PhoneNumber" data-i18n-placeholder="phoneNumberField" placeholder="Phone Number" autocomplete="tel" inputmode="tel" maxlength="20" />
         </div>
         <span asp-validation-for="PhoneNumber" class="add-staff-field-error"></span>
 
         <div class="add-staff-field">
             <span class="add-staff-field-icon">✉</span>
-            <input asp-for="Email" placeholder="Email Address" autocomplete="email" maxlength="160" />
+            <input asp-for="Email" data-i18n-placeholder="emailField" placeholder="Email Address" autocomplete="email" maxlength="160" />
         </div>
         <span asp-validation-for="Email" class="add-staff-field-error"></span>
         <small class="add-staff-login-hint">Phone number and email are used by the staff member to log in.</small>
 
         <div class="add-staff-field">
             <span class="add-staff-field-icon">♙</span>
-            <input asp-for="Password" type="password" id="staffPassword" placeholder="Password" autocomplete="new-password" />
+            <input asp-for="Password" type="password" id="staffPassword" data-i18n-placeholder="password" placeholder="Password" autocomplete="new-password" />
             <button type="button" class="add-staff-password-toggle" data-target="staffPassword" aria-label="Show password">◉</button>
         </div>
         <span asp-validation-for="Password" class="add-staff-field-error"></span>
 
         <div class="add-staff-field">
             <span class="add-staff-field-icon">♙</span>
-            <input asp-for="ConfirmPassword" type="password" id="staffConfirmPassword" placeholder="Confirm Password" autocomplete="new-password" />
+            <input asp-for="ConfirmPassword" type="password" id="staffConfirmPassword" data-i18n-placeholder="confirmPassword" placeholder="Confirm Password" autocomplete="new-password" />
             <button type="button" class="add-staff-password-toggle" data-target="staffConfirmPassword" aria-label="Show password">◉</button>
         </div>
         <span asp-validation-for="ConfirmPassword" class="add-staff-field-error"></span>
 
-        <button type="submit" class="add-staff-save">Save</button>
+        <button type="submit" class="add-staff-save" data-i18n="save">Save</button>
     </form>
 </div>
 
