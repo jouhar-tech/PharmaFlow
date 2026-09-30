@@ -37,6 +37,9 @@ public sealed class ProfileController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Index(ProfileViewModel model, CancellationToken cancellationToken)
     {
+        if (string.Equals(HttpContext.Session.GetString("UserRole"), "Staff", StringComparison.OrdinalIgnoreCase))
+            return RedirectToAction(nameof(Index));
+
         var profile = await GetCurrentProfileAsync(cancellationToken);
         if (profile is null)
             return RedirectToAction("Login", "Account");
