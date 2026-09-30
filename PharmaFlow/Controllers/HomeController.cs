@@ -25,6 +25,7 @@ namespace PharmaFlow.Controllers
 
             var expiringSoonCount = 0;
             var lowStockCount = 0;
+            decimal expiryAtRiskValue = 0m;
 
             if (long.TryParse(profileIdValue, out var profileId))
             {
@@ -55,12 +56,25 @@ namespace PharmaFlow.Controllers
                         batch.QuantityOnHand > 0 &&
                         batch.QuantityOnHand < 3m,
                         cancellationToken);
+
+                expiryAtRiskValue = await _dbContext.ProductBatches
+                    .AsNoTracking()
+                    .Where(batch =>
+                        batch.Product.ProfileId == profileId &&
+                        batch.Product.IsActive &&
+                        batch.IsActive &&
+                        !batch.IsQuarantined &&
+                        batch.QuantityOnHand > 0 &&
+                        batch.ExpiryDate >= today &&
+                        batch.ExpiryDate <= ninetyDaysFromToday)
+                    .SumAsync(batch => batch.QuantityOnHand * batch.PurchaseUnitPrice, cancellationToken);
             }
 
             var dashboard = new DashboardViewModel
             {
                 ProductsExpiringSoonCount = expiringSoonCount,
-                LowStockCount = lowStockCount
+                LowStockCount = lowStockCount,
+                ExpiryAtRiskValue = expiryAtRiskValue
             };
 
             return View(dashboard);
