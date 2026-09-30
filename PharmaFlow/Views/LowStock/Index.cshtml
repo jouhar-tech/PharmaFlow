@@ -7,13 +7,13 @@
 <div class="low-stock-page-modern">
     <header class="low-stock-modern-header">
         <a asp-controller="Home" asp-action="Index" class="low-stock-modern-back" aria-label="Back to dashboard">←</a>
-        <h1>Low Stock</h1>
+        <h1 data-i18n="lowStock">Low Stock</h1>
     </header>
 
     <section class="low-stock-modern-summary">
         <div class="low-stock-summary-icon">!</div>
         <div>
-            <span>Low Stock Products</span>
+            <span data-i18n="lowStockProducts">Low Stock Products</span>
             <strong>@Model.Count</strong>
             <small>Products with quantity below 3</small>
         </div>
@@ -24,7 +24,7 @@
         <input id="lowStockSearch"
                type="search"
                value="@Model.SearchTerm"
-               placeholder="Search product or batch..."
+               data-i18n-placeholder="searchProductBatch" placeholder="Search product or batch..."
                autocomplete="off"
                aria-label="Search low stock products or batch numbers" />
         <button id="lowStockSearchClear" type="button" aria-label="Clear search" hidden>×</button>
