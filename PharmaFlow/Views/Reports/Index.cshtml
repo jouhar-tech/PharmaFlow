@@ -11,12 +11,24 @@
     </header>
 
     <nav class="reports-periods" aria-label="Report period">
-        <button type="button" class="reports-period-chip">Today</button>
-        <button type="button" class="reports-period-chip">Last 7 days</button>
-        <button type="button" class="reports-period-chip is-active">30 days</button>
-        <button type="button" class="reports-period-chip">All time</button>
-        <button type="button" class="reports-calendar" aria-label="Choose date range">▣</button>
+        <a class="reports-period-chip @(Model.SelectedPeriod == "Today" ? "is-active" : "")"
+           asp-action="Index" asp-route-period="Today">Today</a>
+        <a class="reports-period-chip @(Model.SelectedPeriod == "7 days" ? "is-active" : "")"
+           asp-action="Index" asp-route-period="7 days">Last 7 days</a>
+        <a class="reports-period-chip @(Model.SelectedPeriod == "30 days" ? "is-active" : "")"
+           asp-action="Index" asp-route-period="30 days">30 days</a>
+        <a class="reports-period-chip @(Model.SelectedPeriod == "All time" ? "is-active" : "")"
+           asp-action="Index" asp-route-period="All time">All time</a>
+        <button type="button" class="reports-calendar" id="reportsCalendarButton" aria-label="Choose custom date range" title="Choose custom date range">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v3M17 3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v14H4V6a1 1 0 0 1 1-1Z"/><path d="M8 13h3M8 17h3M14 13h2M14 17h2"/></svg>
+        </button>
     </nav>
+    <form asp-action="Index" method="get" class="reports-custom-date-form" id="reportsCustomDateForm" hidden>
+        <input type="hidden" name="period" value="Custom" />
+        <label>From <input type="date" name="startDate" value="@(Model.StartDate?.ToString("yyyy-MM-dd"))" required /></label>
+        <label>To <input type="date" name="endDate" value="@(Model.EndDate?.ToString("yyyy-MM-dd"))" required /></label>
+        <button type="submit">Apply</button>
+    </form>
 
     <section class="reports-summary-card" aria-label="Sales summary">
         <div class="reports-metric">
@@ -50,7 +62,8 @@
     </section>
 
     <button type="button" class="reports-export-button" onclick="window.print()">
-        <span aria-hidden="true">♧</span> Export PDF
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6a1 1 0 0 1-1 1h-2"/><path d="M7 14h10v7H7zM17 12h.01"/></svg>
+        Export PDF
     </button>
 
     <section class="reports-sellers-section">
@@ -148,3 +161,18 @@
     </footer>
 </section>
 
+
+@section Scripts {
+<script>
+(() => {
+    const calendar = document.getElementById('reportsCalendarButton');
+    const customForm = document.getElementById('reportsCustomDateForm');
+    calendar?.addEventListener('click', () => {
+        customForm?.toggleAttribute('hidden');
+        if (!customForm?.hasAttribute('hidden')) {
+            customForm.querySelector('input[type="date"]')?.focus();
+        }
+    });
+})();
+</script>
+}
