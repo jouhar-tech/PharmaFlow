@@ -720,6 +720,12 @@
             "My Profile": "myProfile",
             "Send Feedback": "sendFeedback",
             "Privacy Policy": "privacyPolicy",
+            "Inventory": "inventory",
+            "Low Stock": "lowStock",
+            "Expiring Products": "productsExpiringSoonPage",
+            "Reports": "reportsTitle",
+            "Add Staff": "addStaff",
+            "More": "more",
             "Error": "error"
         };
         const titleKey = pageTitleMap[rawTitle];
