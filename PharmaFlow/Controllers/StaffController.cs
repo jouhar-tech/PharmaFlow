@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Net.Http.Headers;
 using PharmaFlow.Data;
 using PharmaFlow.Filters;
 using PharmaFlow.Models;
@@ -14,15 +15,18 @@ public sealed class StaffController : Controller
     private readonly ApplicationDbContext _dbContext;
     private readonly ISupabaseAuthService _authService;
     private readonly ILogger<StaffController> _logger;
+    private readonly IHttpClientFactory _httpClientFactory;
 
     public StaffController(
         ApplicationDbContext dbContext,
         ISupabaseAuthService authService,
-        ILogger<StaffController> logger)
+        ILogger<StaffController> logger,
+        IHttpClientFactory httpClientFactory)
     {
         _dbContext = dbContext;
         _authService = authService;
         _logger = logger;
+        _httpClientFactory = httpClientFactory;
     }
 
     [HttpGet]
@@ -68,6 +72,30 @@ public sealed class StaffController : Controller
             return View(model);
         }
 
+        string? profilePhotoUrl = null;
+        if (model.ProfilePhoto is not null)
+        {
+            if (model.ProfilePhoto.Length > 5 * 1024 * 1024)
+            {
+                ModelState.AddModelError(nameof(model.ProfilePhoto), "Profile photo must be 5 MB or smaller.");
+                return View(model);
+            }
+
+            var allowedTypes = new[] { "image/jpeg", "image/png", "image/webp" };
+            if (!allowedTypes.Contains(model.ProfilePhoto.ContentType, StringComparer.OrdinalIgnoreCase))
+            {
+                ModelState.AddModelError(nameof(model.ProfilePhoto), "Only JPG, PNG or WebP profile photos are allowed.");
+                return View(model);
+            }
+
+            profilePhotoUrl = await UploadStaffPhotoAsync(model.ProfilePhoto, profileId, cancellationToken);
+            if (profilePhotoUrl is null)
+            {
+                ModelState.AddModelError(nameof(model.ProfilePhoto), "The profile photo could not be uploaded. Please try again.");
+                return View(model);
+            }
+        }
+
         var authResult = await _authService.SignUpStaffAsync(
             email,
             phone,
@@ -89,7 +117,7 @@ public sealed class StaffController : Controller
             Address = string.IsNullOrWhiteSpace(model.Address) ? null : model.Address.Trim(),
             PhoneNumber = phone,
             Email = email,
-            ProfilePhotoUrl = string.IsNullOrWhiteSpace(model.ProfilePhotoUrl) ? null : model.ProfilePhotoUrl.Trim(),
+            ProfilePhotoUrl = profilePhotoUrl,
             IsActive = true,
             CreatedAt = DateTime.UtcNow
         };
@@ -108,6 +136,43 @@ public sealed class StaffController : Controller
 
         TempData["StaffMessage"] = $"{staff.FullName} was added successfully.";
         return RedirectToAction("Index", "Profile");
+    }
+
+    private async Task<string?> UploadStaffPhotoAsync(IFormFile file, long profileId, CancellationToken cancellationToken)
+    {
+        var accessToken = HttpContext.Session.GetString("SupabaseAccessToken");
+        var baseUrl = HttpContext.RequestServices.GetRequiredService<IConfiguration>()["Supabase:Url"]?.TrimEnd('/');
+        var anonKey = HttpContext.RequestServices.GetRequiredService<IConfiguration>()["Supabase:AnonKey"];
+
+        if (string.IsNullOrWhiteSpace(accessToken) || string.IsNullOrWhiteSpace(baseUrl) || string.IsNullOrWhiteSpace(anonKey))
+            return null;
+
+        var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+        if (extension is not ".jpg" and not ".jpeg" and not ".png" and not ".webp")
+            extension = ".jpg";
+
+        var objectPath = $"{profileId}/{Guid.NewGuid():N}{extension}";
+        var client = _httpClientFactory.CreateClient();
+        using var stream = await file.OpenReadStreamAsync(cancellationToken);
+        using var content = new StreamContent(stream);
+        content.Headers.ContentType = new MediaTypeHeaderValue(file.ContentType);
+
+        using var request = new HttpRequestMessage(
+            HttpMethod.Post,
+            $"{baseUrl}/storage/v1/object/staff-photos/{Uri.EscapeDataString(objectPath)}");
+        request.Headers.Add("apikey", anonKey);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        request.Headers.Add("x-upsert", "false");
+        request.Content = content;
+
+        using var response = await client.SendAsync(request, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            _logger.LogWarning("Staff photo upload failed with status {StatusCode}.", response.StatusCode);
+            return null;
+        }
+
+        return $"{baseUrl}/storage/v1/object/public/staff-photos/{objectPath}";
     }
 
     private bool IsOwner() =>
