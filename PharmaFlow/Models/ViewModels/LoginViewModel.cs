@@ -5,7 +5,7 @@ namespace PharmaFlow.Models.ViewModels;
 public class LoginViewModel
 {
     [Required, StringLength(100, MinimumLength = 2)]
-    [Display(Name = "Username")]
+    [Display(Name = "Username, Email or Phone")]
     public string Username { get; set; } = string.Empty;
 
     [Required, DataType(DataType.Password)]
