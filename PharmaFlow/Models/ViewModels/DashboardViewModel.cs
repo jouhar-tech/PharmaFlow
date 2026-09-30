@@ -6,6 +6,8 @@ namespace PharmaFlow.Models.ViewModels
 
         public int LowStockCount { get; init; }
 
+        public decimal ExpiryAtRiskValue { get; init; }
+
         public decimal EstimatedMoneySaved { get; init; }
 
         public decimal ExpiryLossPrevented { get; init; }
