@@ -4,6 +4,12 @@
 }
 
 <div class="more-mobile-page">
+    @if (TempData["StaffMessage"] is string staffMessage)
+    {
+        <div class="more-mobile-staff-success">@staffMessage</div>
+    }
+
+
     <header class="more-mobile-header">
         <a asp-controller="Home" asp-action="Index" class="more-mobile-back" aria-label="Back">←</a>
         <h1>Settings</h1>
@@ -30,21 +36,27 @@
             <span class="more-mobile-row-label">Bills</span>
             <span class="more-mobile-chevron">›</span>
         </a>
-        <a asp-controller="Reports" asp-action="Index" class="more-mobile-row">
-            <span class="more-mobile-row-icon">▥</span>
-            <span class="more-mobile-row-label">Reports</span>
-            <span class="more-mobile-chevron">›</span>
-        </a>
+        @if (!string.Equals(Context.Session.GetString("UserRole"), "Staff", StringComparison.OrdinalIgnoreCase))
+        {
+            <a asp-controller="Reports" asp-action="Index" class="more-mobile-row">
+                <span class="more-mobile-row-icon">▥</span>
+                <span class="more-mobile-row-label">Reports</span>
+                <span class="more-mobile-chevron">›</span>
+            </a>
+        }
     </section>
 
     <section class="more-mobile-settings-card">
         <h2>App Settings</h2>
 
-        <a href="#" class="more-mobile-row">
-            <span class="more-mobile-row-icon">♙</span>
-            <span class="more-mobile-row-label">Add Staff</span>
-            <span class="more-mobile-chevron">›</span>
-        </a>
+        @if (!string.Equals(Context.Session.GetString("UserRole"), "Staff", StringComparison.OrdinalIgnoreCase))
+        {
+            <a asp-controller="Staff" asp-action="Add" class="more-mobile-row">
+                <span class="more-mobile-row-icon">♙</span>
+                <span class="more-mobile-row-label">Add Staff</span>
+                <span class="more-mobile-chevron">›</span>
+            </a>
+        }
 
         <div class="more-mobile-row more-mobile-language-row">
             <span class="more-mobile-row-icon">◎</span>
