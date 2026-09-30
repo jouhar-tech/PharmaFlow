@@ -10,6 +10,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 builder.Services.AddHttpClient<ISupabaseAuthService, SupabaseAuthService>();
 builder.Services.AddHttpClient<IInvoiceVisionService, GeminiInvoiceVisionService>();
+builder.Services.AddHostedService<ProfileInactivityService>();
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {
