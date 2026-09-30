@@ -2245,7 +2245,7 @@ body.theme-dark .inventory-modern-empty { background:#111c2e; border-color:#2634
     display:grid;
     grid-template-columns:42px 1fr 42px;
     align-items:center;
-    min-height:190px;
+    min-height:155px;
     margin:0 -.65rem;
     padding:.8rem .8rem 0;
     align-items:start;
@@ -2278,7 +2278,7 @@ body.theme-dark .inventory-modern-empty { background:#111c2e; border-color:#2634
     align-items:center;
     justify-content:space-between;
     min-height:118px;
-    margin:-82px .65rem .8rem;
+    margin:-55px .65rem .8rem;
     padding:1rem 1.05rem;
     border-radius:1rem;
     background:linear-gradient(135deg,#d8f2ee 0%,#c5ebe4 100%);
