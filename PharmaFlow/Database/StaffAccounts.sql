@@ -31,3 +31,24 @@ create unique index if not exists ix_staff_profile_phone
 
 create index if not exists ix_staff_active_profile
     on public.staff(profile_id, is_active);
+
+
+-- Staff profile photo storage.
+-- Run this after creating public.staff.
+insert into storage.buckets (id, name, public)
+values ('staff-photos', 'staff-photos', true)
+on conflict (id) do update set public = true;
+
+drop policy if exists "staff photos authenticated upload" on storage.objects;
+create policy "staff photos authenticated upload"
+on storage.objects
+for insert
+to authenticated
+with check (bucket_id = 'staff-photos');
+
+drop policy if exists "staff photos public read" on storage.objects;
+create policy "staff photos public read"
+on storage.objects
+for select
+to public
+using (bucket_id = 'staff-photos');
