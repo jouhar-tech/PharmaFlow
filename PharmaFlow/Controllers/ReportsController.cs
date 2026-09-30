@@ -13,6 +13,9 @@ public sealed class ReportsController : Controller
         if (!long.TryParse(HttpContext.Session.GetString("ProfileId"), out _))
             return RedirectToAction("Login", "Account");
 
+        if (string.Equals(HttpContext.Session.GetString("UserRole"), "Staff", StringComparison.OrdinalIgnoreCase))
+            return RedirectToAction("Index", "Home");
+
         return View(new ReportsViewModel());
     }
 }
