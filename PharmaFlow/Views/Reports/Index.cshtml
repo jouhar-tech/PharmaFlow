@@ -1,0 +1,83 @@
+@model PharmaFlow.Models.ViewModels.ReportsViewModel
+
+@{
+    ViewData["Title"] = "Reports";
+}
+
+<div class="reports-mobile-page">
+    <header class="reports-mobile-header">
+        <a asp-controller="Home" asp-action="Index" class="reports-mobile-back" aria-label="Back to dashboard">←</a>
+        <h1>Reports</h1>
+    </header>
+
+    <nav class="reports-periods" aria-label="Report period">
+        <button type="button" class="reports-period-chip">Today</button>
+        <button type="button" class="reports-period-chip">Last 7 days</button>
+        <button type="button" class="reports-period-chip is-active">30 days</button>
+        <button type="button" class="reports-period-chip">All time</button>
+        <button type="button" class="reports-calendar" aria-label="Choose date range">▣</button>
+    </nav>
+
+    <section class="reports-summary-card" aria-label="Sales summary">
+        <div class="reports-metric">
+            <span>Total Sales Amount</span>
+            <strong>₹@Model.TotalSalesAmount.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</strong>
+        </div>
+        <div class="reports-metric reports-profit">
+            <span>Profit</span>
+            <strong>₹@Model.Profit.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</strong>
+        </div>
+        <div class="reports-metric">
+            <span>No. of Bills</span>
+            <strong>@Model.BillCount</strong>
+        </div>
+        <div class="reports-metric">
+            <span>Total MRP</span>
+            <strong>₹@Model.TotalMrp.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</strong>
+        </div>
+
+        <div class="reports-payment-section">
+            <span class="reports-payment-title">Payment Methods</span>
+            <div class="reports-payment-content">
+                <div class="reports-payment-chart"
+                     style="--cash:@Model.CashPercentage%; --upi:@Model.UpiPercentage%;"></div>
+                <div class="reports-payment-legend">
+                    <span><i class="cash"></i>Cash (@Model.CashPercentage.ToString("0")%)</span>
+                    <span><i class="upi"></i>UPI (@Model.UpiPercentage.ToString("0")%)</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <button type="button" class="reports-export-button">
+        <span aria-hidden="true">♧</span> Export PDF
+    </button>
+
+    <section class="reports-sellers-section">
+        <h2>Top Sellers</h2>
+        @if (Model.TopSellers.Count == 0)
+        {
+            <div class="reports-empty-sellers">
+                <strong>No sales data yet</strong>
+                <span>Top-selling products will appear here once bills are recorded.</span>
+            </div>
+        }
+        else
+        {
+            <div class="reports-sellers-card">
+                @for (var index = 0; index < Model.TopSellers.Count; index++)
+                {
+                    var seller = Model.TopSellers[index];
+                    <article class="reports-seller-row">
+                        <span class="reports-seller-rank">@(index + 1)</span>
+                        <div>
+                            <h3>@seller.ProductName</h3>
+                            <p>@seller.QuantitySold.ToString("0.##") sold · ₹@seller.Revenue.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("en-IN")) revenue</p>
+                            <small>MRP ₹@seller.Mrp.ToString("N0") &nbsp; Cost ₹@seller.Cost.ToString("N0") &nbsp; <b>Profit ₹@seller.Profit.ToString("N0")</b></small>
+                        </div>
+                    </article>
+                }
+            </div>
+        }
+    </section>
+</div>
