@@ -865,7 +865,7 @@ body.theme-dark .invoice-review-saved-summary strong { color: #dcfce7; }
   }
 
   .home-mobile-hero {
-    min-height: 239px;
+    min-height: 220px;
     padding: 1.05rem 1rem 4.3rem;
     background: linear-gradient(180deg, #8ed8d3 0%, #79ccc7 100%);
   }
