@@ -50,13 +50,9 @@ public class AccountController : Controller
 
             if (!string.IsNullOrWhiteSpace(staff.Email) &&
                 string.Equals(staff.Email, identifier, StringComparison.OrdinalIgnoreCase))
-            {
                 staffResult = await _authService.LoginAsync(staff.Email, model.Password, cancellationToken);
-            }
             else if (!string.IsNullOrWhiteSpace(staff.PhoneNumber) && normalizedPhone == staff.PhoneNumber)
-            {
                 staffResult = await _authService.LoginWithPhoneAsync(staff.PhoneNumber, model.Password, cancellationToken);
-            }
             else
             {
                 ModelState.AddModelError(string.Empty, "Invalid login details.");
@@ -87,12 +83,11 @@ public class AccountController : Controller
             return RedirectToAction("Index", "Home");
         }
 
-        var ownerIdentifier = identifier;
         var ownerProfile = await _dbContext.Profiles
             .AsNoTracking()
             .SingleOrDefaultAsync(p =>
-                p.Username == ownerIdentifier ||
-                (!string.IsNullOrWhiteSpace(p.Email) && p.Email == ownerIdentifier.ToLowerInvariant()) ||
+                p.Username == identifier ||
+                (!string.IsNullOrWhiteSpace(p.Email) && p.Email == identifier.ToLowerInvariant()) ||
                 (!string.IsNullOrWhiteSpace(p.PhoneNumber) && normalizedPhone != null && p.PhoneNumber == normalizedPhone),
                 cancellationToken);
 
@@ -110,9 +105,65 @@ public class AccountController : Controller
         }
 
         SetAuthenticatedSession(result, ownerProfile.Id, ownerProfile.BusinessName, ownerProfile.Username);
-        HttpContext.Session.SetString("UserRole", "Owner");
         await MarkProfileActiveAsync(ownerProfile.Id, cancellationToken);
         return RedirectAfterAuthentication(ownerProfile.BusinessName);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> TouchSession(CancellationToken cancellationToken)
+    {
+        var role = HttpContext.Session.GetString("UserRole");
+        var profileIdText = HttpContext.Session.GetString("ProfileId");
+        var accessToken = HttpContext.Session.GetString("SupabaseAccessToken");
+        var userIdText = HttpContext.Session.GetString("SupabaseUserId");
+
+        if (string.IsNullOrWhiteSpace(accessToken) ||
+            string.IsNullOrWhiteSpace(userIdText) ||
+            !Guid.TryParse(userIdText, out _) ||
+            !long.TryParse(profileIdText, out var profileId))
+        {
+            return Unauthorized();
+        }
+
+        // Keep this endpoint cheap: one indexed profile lookup/update only when
+        // the client decides a new app-open/resume event needs to be recorded.
+        var profile = await _dbContext.Profiles
+            .AsNoTracking()
+            .Where(p => p.Id == profileId)
+            .Select(p => new { p.Id, p.ActiveStatus, p.LastLoginAt })
+            .SingleOrDefaultAsync(cancellationToken);
+
+        if (profile is null || profile.ActiveStatus != 1)
+        {
+            HttpContext.Session.Clear();
+            return Unauthorized();
+        }
+
+        var now = DateTime.UtcNow;
+        var cutoff = now.AddDays(-60);
+
+        if (profile.LastLoginAt.HasValue && profile.LastLoginAt.Value <= cutoff)
+        {
+            await _dbContext.Profiles
+                .Where(p => p.Id == profileId && p.ActiveStatus == 1)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(p => p.ActiveStatus, (short)0)
+                    .SetProperty(p => p.LastLogoutAt, now), cancellationToken);
+
+            HttpContext.Session.Clear();
+            return Unauthorized();
+        }
+
+        if (string.Equals(role, "Owner", StringComparison.OrdinalIgnoreCase))
+        {
+            await _dbContext.Profiles
+                .Where(p => p.Id == profileId && p.ActiveStatus == 1)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(p => p.LastLoginAt, now), cancellationToken);
+        }
+
+        return NoContent();
     }
 
     [HttpPost]
@@ -238,12 +289,7 @@ public class AccountController : Controller
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
 
-        SetAuthenticatedSession(
-            result,
-            profile.Id,
-            profile.BusinessName,
-            profile.Username);
-
+        SetAuthenticatedSession(result, profile.Id, profile.BusinessName, profile.Username);
         await MarkProfileActiveAsync(profile.Id, cancellationToken);
 
         if (isNewGoogleProfile)
@@ -285,15 +331,10 @@ public class AccountController : Controller
 
     private static string? NormalizePhone(string? value)
     {
-        if (string.IsNullOrWhiteSpace(value))
-            return null;
-
+        if (string.IsNullOrWhiteSpace(value)) return null;
         var digits = new string(value.Where(char.IsDigit).ToArray());
-        if (digits.StartsWith("91") && digits.Length == 12)
-            return "+" + digits;
-        if (digits.Length == 10)
-            return "+91" + digits;
-
+        if (digits.StartsWith("91") && digits.Length == 12) return "+" + digits;
+        if (digits.Length == 10) return "+91" + digits;
         return value.Trim();
     }
 
