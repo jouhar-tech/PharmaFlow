@@ -16,6 +16,8 @@
     var isStaffAddPage = ViewContext.RouteData.Values["controller"]?.ToString() == "Staff"
         && ViewContext.RouteData.Values["action"]?.ToString() == "Add";
     var isStaffUser = string.Equals(Context.Session.GetString("UserRole"), "Staff", StringComparison.OrdinalIgnoreCase);
+    var isAuthenticated = !string.IsNullOrWhiteSpace(Context.Session.GetString("SupabaseAccessToken"))
+        && !string.IsNullOrWhiteSpace(Context.Session.GetString("ProfileId"));
 }
 <html lang="en">
 <head>
@@ -169,6 +171,58 @@
     <script src="~/js/language.js" asp-append-version="true"></script>
     <script src="~/js/offline-store.js" asp-append-version="true"></script>
     <script src="~/js/offline.js" asp-append-version="true"></script>
+@if (isAuthenticated)
+{
+    @Html.AntiForgeryToken()
+    <script>
+        (() => {
+            // Record a real app open/resume without sending a database write on every page request.
+            // localStorage survives normal app restarts, so the server is touched at most once per 4 hours.
+            const activityKey = 'pharmaflow-last-app-open';
+            const activityIntervalMs = 4 * 60 * 60 * 1000;
+            const now = Date.now();
+            const lastRecorded = Number(localStorage.getItem(activityKey) || '0');
+
+            const touchSession = async () => {
+                const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+                if (!token) return;
+
+                try {
+                    const response = await fetch('@Url.Action("TouchSession", "Account")', {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        headers: {
+                            'RequestVerificationToken': token,
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+
+                    if (response.ok) {
+                        localStorage.setItem(activityKey, String(Date.now()));
+                    } else if (response.status === 401) {
+                        window.location.replace('@Url.Action("Login", "Account")');
+                    }
+                } catch {
+                    // Offline: do not clear the local session or interrupt the app.
+                    // The next successful app open will record activity.
+                }
+            };
+
+            if (!Number.isFinite(lastRecorded) || now - lastRecorded >= activityIntervalMs) {
+                touchSession();
+            }
+
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState !== 'visible') return;
+
+                const last = Number(localStorage.getItem(activityKey) || '0');
+                if (!Number.isFinite(last) || Date.now() - last >= activityIntervalMs) {
+                    touchSession();
+                }
+            });
+        })();
+    </script>
+}
     <script>
         (() => {
             const sidebar = document.getElementById('appSidebar');
