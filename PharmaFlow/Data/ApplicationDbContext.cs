@@ -16,6 +16,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<ProductBatch> ProductBatches => Set<ProductBatch>();
     public DbSet<InvoiceImport> InvoiceImports => Set<InvoiceImport>();
     public DbSet<InvoiceImportItem> InvoiceImportItems => Set<InvoiceImportItem>();
+    public DbSet<Staff> Staff => Set<Staff>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -139,6 +140,33 @@ public class ApplicationDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(item => item.SavedBatchId)
                 .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<Staff>(entity =>
+        {
+            entity.ToTable("staff", "public");
+            entity.HasKey(s => s.StaffId);
+            entity.Property(s => s.StaffId).HasColumnName("staff_id");
+            entity.Property(s => s.ProfileId).HasColumnName("profile_id");
+            entity.Property(s => s.AuthUserId).HasColumnName("auth_user_id");
+            entity.Property(s => s.FullName).HasColumnName("full_name");
+            entity.Property(s => s.Address).HasColumnName("address");
+            entity.Property(s => s.PhoneNumber).HasColumnName("phone_number");
+            entity.Property(s => s.Email).HasColumnName("email");
+            entity.Property(s => s.ProfilePhotoUrl).HasColumnName("profile_photo_url");
+            entity.Property(s => s.IsActive).HasColumnName("is_active");
+            entity.Property(s => s.LastLoginAt).HasColumnName("last_login_at");
+            entity.Property(s => s.LastLogoutAt).HasColumnName("last_logout_at");
+            entity.Property(s => s.CreatedAt).HasColumnName("created_at");
+
+            entity.HasOne(s => s.Profile)
+                .WithMany()
+                .HasForeignKey(s => s.ProfileId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(s => s.AuthUserId).IsUnique();
+            entity.HasIndex(s => new { s.ProfileId, s.Email }).IsUnique();
+            entity.HasIndex(s => new { s.ProfileId, s.PhoneNumber }).IsUnique();
         });
 
         modelBuilder.Entity<Profile>(entity =>
