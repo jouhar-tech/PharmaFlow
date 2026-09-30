@@ -3698,3 +3698,23 @@ body.theme-dark .reports-custom-date-form label {
   }
 }
 
+
+.home-mobile-expiry-risk-value {
+  display: block;
+  margin-top: .18rem;
+  color: #0f766e;
+  font-size: .64rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+.metric-at-risk-value {
+  display: block;
+  margin-top: .2rem;
+  color: #0f766e;
+  font-size: .72rem;
+  font-weight: 800;
+}
+body.theme-dark .home-mobile-expiry-risk-value,
+body.theme-dark .metric-at-risk-value {
+  color: #7dd3ca;
+}
