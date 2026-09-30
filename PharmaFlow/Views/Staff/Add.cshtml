@@ -9,15 +9,17 @@
         <h1>Add Staff</h1>
     </header>
 
-    <form asp-action="Add" method="post" class="add-staff-mobile-form" autocomplete="off" data-online-required="true">
+    <form asp-action="Add" method="post" enctype="multipart/form-data" class="add-staff-mobile-form" autocomplete="off" data-online-required="true">
         @Html.AntiForgeryToken()
         <div asp-validation-summary="ModelOnly" class="add-staff-validation"></div>
 
         <div class="add-staff-photo-wrap">
             <div class="add-staff-photo">
-                <span>◎</span>
+                <img id="staffPhotoPreview" alt="Profile photo preview" hidden />
+                <span id="staffPhotoPlaceholder">◎</span>
             </div>
-            <button type="button" class="add-staff-photo-action" aria-label="Add profile photo">◉</button>
+            <label for="staffProfilePhoto" class="add-staff-photo-action" aria-label="Choose profile photo">◉</label>
+            <input asp-for="ProfilePhoto" id="staffProfilePhoto" type="file" accept="image/jpeg,image/png,image/webp" class="add-staff-photo-input" />
             <div class="add-staff-photo-label">Profile Photo</div>
         </div>
 
@@ -44,7 +46,7 @@
             <input asp-for="Email" placeholder="Email Address" autocomplete="email" maxlength="160" />
         </div>
         <span asp-validation-for="Email" class="add-staff-field-error"></span>
-        <small class="add-staff-login-hint">Phone number or email is used by the staff member to log in.</small>
+        <small class="add-staff-login-hint">Phone number and email are used by the staff member to log in.</small>
 
         <div class="add-staff-field">
             <span class="add-staff-field-icon">♙</span>
@@ -67,6 +69,27 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
+        const photoInput = document.getElementById('staffProfilePhoto');
+        const photoPreview = document.getElementById('staffPhotoPreview');
+        const photoPlaceholder = document.getElementById('staffPhotoPlaceholder');
+
+        photoInput?.addEventListener('change', () => {
+            const file = photoInput.files?.[0];
+            if (!file) return;
+            if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) {
+                photoInput.value = '';
+                alert('Please select a JPG, PNG or WebP image up to 5 MB.');
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = event => {
+                photoPreview.src = event.target.result;
+                photoPreview.hidden = false;
+                photoPlaceholder.hidden = true;
+            };
+            reader.readAsDataURL(file);
+        });
+
         document.querySelectorAll('.add-staff-password-toggle').forEach(button => {
             button.addEventListener('click', () => {
                 const input = document.getElementById(button.dataset.target);
