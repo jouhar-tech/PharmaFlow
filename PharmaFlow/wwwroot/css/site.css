@@ -3561,3 +3561,87 @@ body.theme-dark .more-mobile-staff-success { background:#163b39; color:#a7f3d0; 
     padding-bottom: 5.5rem;
   }
 }
+
+
+/* Reports period controls */
+.reports-period-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+.reports-calendar svg,
+.reports-export-button svg {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.reports-custom-date-form {
+  display: flex;
+  align-items: end;
+  gap: .45rem;
+  margin: -.25rem .8rem .75rem;
+  padding: .65rem;
+  border: 1px solid #d9dee7;
+  border-radius: .8rem;
+  background: #fff;
+}
+.reports-custom-date-form label {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: .25rem;
+  color: #64748b;
+  font-size: .65rem;
+  font-weight: 700;
+}
+.reports-custom-date-form input {
+  min-width: 0;
+  height: 36px;
+  padding: .35rem .45rem;
+  border: 1px solid #d9dee7;
+  border-radius: .55rem;
+  color: #374151;
+  background: #fff;
+  font: inherit;
+  font-size: .7rem;
+}
+.reports-custom-date-form button {
+  height: 36px;
+  padding: 0 .75rem;
+  border: 0;
+  border-radius: .55rem;
+  background: #8fd7c7;
+  color: #173a36;
+  font: inherit;
+  font-size: .7rem;
+  font-weight: 750;
+}
+body.theme-dark .reports-custom-date-form {
+  background: #111c2e;
+  border-color: #263449;
+}
+body.theme-dark .reports-custom-date-form input {
+  background: #0f172a;
+  border-color: #334155;
+  color: #f8fafc;
+}
+body.theme-dark .reports-custom-date-form label {
+  color: #94a3b8;
+}
+
+@media (max-width: 767.98px) {
+  .reports-periods {
+    gap: .4rem;
+  }
+  .reports-period-chip {
+    flex: 0 0 auto;
+  }
+  .reports-calendar {
+    flex: 0 0 38px;
+  }
+}
