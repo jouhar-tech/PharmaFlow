@@ -153,7 +153,7 @@ public sealed class StaffController : Controller
 
         var objectPath = $"{profileId}/{Guid.NewGuid():N}{extension}";
         var client = _httpClientFactory.CreateClient();
-        using var stream = await file.OpenReadStreamAsync(cancellationToken);
+        using var stream = file.OpenReadStream();
         using var content = new StreamContent(stream);
         content.Headers.ContentType = new MediaTypeHeaderValue(file.ContentType);
 
