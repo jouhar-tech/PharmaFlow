@@ -303,6 +303,8 @@ public class AccountController : Controller
         HttpContext.Session.SetString("SupabaseUserId", result.UserId!);
         HttpContext.Session.SetString("ProfileId", profileId.ToString());
         HttpContext.Session.SetString("Username", username);
+        HttpContext.Session.SetString("UserRole", "Owner");
+        HttpContext.Session.Remove("StaffId");
 
         if (!string.IsNullOrWhiteSpace(businessName))
             HttpContext.Session.SetString("BusinessName", businessName);
