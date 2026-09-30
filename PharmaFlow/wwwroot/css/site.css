@@ -3538,6 +3538,45 @@ body.theme-dark .more-mobile-staff-success { background:#163b39; color:#a7f3d0; 
 }
 
 @media (max-width: 767.98px) {
-  body.staff-add-page .home-mobile-bottom-nav { display:none; }
-  body.staff-add-page .app-footer { display:none; }
+  body.staff-add-page .home-mobile-bottom-nav {
+    display:flex;
+  }
+  body.staff-add-page .app-footer {
+    display:none;
+  }
+  body.staff-add-page .app-content {
+    padding-bottom: 0;
+  }
+}
+
+.add-staff-photo-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+.add-staff-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+.add-staff-photo-action {
+  cursor: pointer;
+}
+.add-staff-mobile-form {
+  padding-bottom: 1rem;
+}
+@media (max-width: 767.98px) {
+  body.staff-add-page .home-mobile-bottom-nav {
+    position: fixed;
+    z-index: 1050;
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
+  body.staff-add-page .add-staff-mobile-page {
+    padding-bottom: 5.5rem;
+  }
 }
