@@ -7,18 +7,18 @@
 <div class="reports-mobile-page">
     <header class="reports-mobile-header">
         <a asp-controller="Profile" asp-action="Index" class="reports-mobile-back" aria-label="Back to dashboard">←</a>
-        <h1>Reports</h1>
+        <h1 data-i18n="reportsTitle">Reports</h1>
     </header>
 
     <nav class="reports-periods" aria-label="Report period">
         <a class="reports-period-chip @(Model.SelectedPeriod == "Today" ? "is-active" : "")"
-           asp-action="Index" asp-route-period="Today">Today</a>
+           asp-action="Index" asp-route-period="Today" data-i18n="today">Today</a>
         <a class="reports-period-chip @(Model.SelectedPeriod == "7 days" ? "is-active" : "")"
-           asp-action="Index" asp-route-period="7 days">Last 7 days</a>
+           asp-action="Index" asp-route-period="7 days" data-i18n="last7Days">Last 7 days</a>
         <a class="reports-period-chip @(Model.SelectedPeriod == "30 days" ? "is-active" : "")"
-           asp-action="Index" asp-route-period="30 days">30 days</a>
+           asp-action="Index" asp-route-period="30 days" data-i18n="days30">30 days</a>
         <a class="reports-period-chip @(Model.SelectedPeriod == "All time" ? "is-active" : "")"
-           asp-action="Index" asp-route-period="All time">All time</a>
+           asp-action="Index" asp-route-period="All time" data-i18n="allTime">All time</a>
         <button type="button" class="reports-calendar" id="reportsCalendarButton" aria-label="Choose custom date range" title="Choose custom date range">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v3M17 3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v14H4V6a1 1 0 0 1 1-1Z"/><path d="M8 13h3M8 17h3M14 13h2M14 17h2"/></svg>
         </button>
@@ -63,11 +63,11 @@
 
     <button type="button" class="reports-export-button" onclick="window.print()">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6a1 1 0 0 1-1 1h-2"/><path d="M7 14h10v7H7zM17 12h.01"/></svg>
-        Export PDF
+        <span data-i18n="exportPdf">Export PDF</span>
     </button>
 
     <section class="reports-sellers-section">
-        <h2>Top Sellers</h2>
+        <h2 data-i18n="topSellers">Top Sellers</h2>
         @if (Model.TopSellers.Count == 0)
         {
             <div class="reports-empty-sellers">
