@@ -73,7 +73,11 @@ namespace PharmaFlow.Controllers
                 // Until billing/sales history is available, classify stock held for more than
                 // 90 days as slow-moving inventory. This keeps the dashboard value data-driven
                 // without pretending we have sales velocity data.
-                var slowMovingCutoff = today.AddDays(-90);
+                var slowMovingCutoffDate = today.AddDays(-90);
+                var slowMovingCutoffUtc = DateTime.SpecifyKind(
+                    slowMovingCutoffDate.ToDateTime(TimeOnly.MinValue),
+                    DateTimeKind.Utc);
+
                 slowMovingStockValue = await _dbContext.ProductBatches
                     .AsNoTracking()
                     .Where(batch =>
@@ -82,7 +86,7 @@ namespace PharmaFlow.Controllers
                         batch.IsActive &&
                         !batch.IsQuarantined &&
                         batch.QuantityOnHand > 0 &&
-                        batch.CreatedAt <= slowMovingCutoff.ToDateTime(TimeOnly.MinValue))
+                        batch.CreatedAt <= slowMovingCutoffUtc)
                     .SumAsync(batch => batch.QuantityOnHand * batch.PurchaseUnitPrice, cancellationToken);
             }
 
