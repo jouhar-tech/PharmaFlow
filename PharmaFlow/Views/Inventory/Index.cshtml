@@ -7,8 +7,8 @@
 <div class="inventory-page-modern">
     <header class="inventory-modern-header">
         <a asp-controller="Home" asp-action="Index" class="inventory-modern-back" aria-label="Back">←</a>
-        <h1>Inventory</h1>
-        <a href="@Url.Action("Index", "Home")#add-stock" class="inventory-add-item">+ Add Stock</a>
+        <h1 data-i18n="inventory">Inventory</h1>
+        <a href="@Url.Action("Index", "Home")#add-stock" class="inventory-add-item" data-i18n="addItem">+ Add Stock</a>
     </header>
 
     <div class="inventory-modern-search">
@@ -16,7 +16,7 @@
         <input id="inventorySearch"
                type="search"
                autocomplete="off"
-               placeholder="Search product..."
+               data-i18n-placeholder="searchProduct" placeholder="Search product..."
                aria-label="Search inventory" />
         <button id="inventorySearchClear" class="inventory-modern-clear" type="button" aria-label="Clear search" hidden>×</button>
     </div>
