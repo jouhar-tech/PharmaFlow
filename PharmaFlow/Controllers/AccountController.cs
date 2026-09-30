@@ -33,27 +33,86 @@ public class AccountController : Controller
     {
         if (!ModelState.IsValid) return View(model);
 
-        var username = model.Username.Trim();
-        var profile = await _dbContext.Profiles
-            .AsNoTracking()
-            .SingleOrDefaultAsync(p => p.Username == username, cancellationToken);
+        var identifier = model.Username.Trim();
+        var normalizedPhone = NormalizePhone(identifier);
 
-        if (profile is null || string.IsNullOrWhiteSpace(profile.Email))
+        var staff = await _dbContext.Staff
+            .AsNoTracking()
+            .SingleOrDefaultAsync(s =>
+                s.IsActive &&
+                ((normalizedPhone != null && s.PhoneNumber == normalizedPhone) ||
+                 (identifier.Contains("@") && s.Email == identifier.ToLowerInvariant())),
+                cancellationToken);
+
+        if (staff is not null)
         {
-            ModelState.AddModelError(string.Empty, "Invalid username or password.");
+            SupabaseAuthResult staffResult;
+
+            if (!string.IsNullOrWhiteSpace(staff.Email) &&
+                string.Equals(staff.Email, identifier, StringComparison.OrdinalIgnoreCase))
+            {
+                staffResult = await _authService.LoginAsync(staff.Email, model.Password, cancellationToken);
+            }
+            else if (!string.IsNullOrWhiteSpace(staff.PhoneNumber) && normalizedPhone == staff.PhoneNumber)
+            {
+                staffResult = await _authService.LoginWithPhoneAsync(staff.PhoneNumber, model.Password, cancellationToken);
+            }
+            else
+            {
+                ModelState.AddModelError(string.Empty, "Invalid login details.");
+                return View(model);
+            }
+
+            if (!staffResult.Success ||
+                string.IsNullOrWhiteSpace(staffResult.UserId) ||
+                !Guid.TryParse(staffResult.UserId, out var staffUserId) ||
+                staffUserId != staff.AuthUserId)
+            {
+                ModelState.AddModelError(string.Empty, "Invalid login details.");
+                return View(model);
+            }
+
+            var profile = await _dbContext.Profiles
+                .AsNoTracking()
+                .SingleOrDefaultAsync(p => p.Id == staff.ProfileId, cancellationToken);
+
+            if (profile is null)
+            {
+                ModelState.AddModelError(string.Empty, "This pharmacy account is no longer available.");
+                return View(model);
+            }
+
+            SetStaffAuthenticatedSession(staffResult, staff, profile);
+            await MarkStaffActiveAsync(staff.StaffId, cancellationToken);
+            return RedirectToAction("Index", "Home");
+        }
+
+        var ownerIdentifier = identifier;
+        var ownerProfile = await _dbContext.Profiles
+            .AsNoTracking()
+            .SingleOrDefaultAsync(p =>
+                p.Username == ownerIdentifier ||
+                (!string.IsNullOrWhiteSpace(p.Email) && p.Email == ownerIdentifier.ToLowerInvariant()) ||
+                (!string.IsNullOrWhiteSpace(p.PhoneNumber) && normalizedPhone != null && p.PhoneNumber == normalizedPhone),
+                cancellationToken);
+
+        if (ownerProfile is null || string.IsNullOrWhiteSpace(ownerProfile.Email))
+        {
+            ModelState.AddModelError(string.Empty, "Invalid username, email, phone or password.");
             return View(model);
         }
 
-        var result = await _authService.LoginAsync(profile.Email, model.Password, cancellationToken);
+        var result = await _authService.LoginAsync(ownerProfile.Email, model.Password, cancellationToken);
         if (!result.Success || string.IsNullOrWhiteSpace(result.UserId) || !Guid.TryParse(result.UserId, out _))
         {
-            ModelState.AddModelError(string.Empty, "Invalid username or password.");
+            ModelState.AddModelError(string.Empty, "Invalid username, email, phone or password.");
             return View(model);
         }
 
-        SetAuthenticatedSession(result, profile.Id, profile.BusinessName, profile.Username);
-        await MarkProfileActiveAsync(profile.Id, cancellationToken);
-        return RedirectAfterAuthentication(profile.BusinessName);
+        SetAuthenticatedSession(result, ownerProfile.Id, ownerProfile.BusinessName, ownerProfile.Username);
+        HttpContext.Session.SetString("UserRole", "Owner");
+        await MarkProfileActiveAsync(ownerProfile.Id, cancellationToken);
+        return RedirectAfterAuthentication(ownerProfile.BusinessName);
     }
 
     [HttpPost]
@@ -62,7 +121,9 @@ public class AccountController : Controller
     {
         try
         {
-            if (long.TryParse(HttpContext.Session.GetString("ProfileId"), out var profileId))
+            if (long.TryParse(HttpContext.Session.GetString("StaffId"), out var staffId))
+                await MarkStaffInactiveAsync(staffId, cancellationToken);
+            else if (long.TryParse(HttpContext.Session.GetString("ProfileId"), out var profileId))
                 await MarkProfileInactiveAsync(profileId, cancellationToken);
         }
         catch (Exception ex)
@@ -189,6 +250,51 @@ public class AccountController : Controller
             HttpContext.Session.SetString("GoogleProfileSetupRequired", "true");
 
         return RedirectAfterAuthentication(profile.BusinessName);
+    }
+
+    private void SetStaffAuthenticatedSession(SupabaseAuthResult result, Staff staff, Profile profile)
+    {
+        HttpContext.Session.SetString("SupabaseAccessToken", result.AccessToken!);
+        HttpContext.Session.SetString("SupabaseUserId", result.UserId!);
+        HttpContext.Session.SetString("ProfileId", profile.Id.ToString());
+        HttpContext.Session.SetString("StaffId", staff.StaffId.ToString());
+        HttpContext.Session.SetString("UserRole", "Staff");
+        HttpContext.Session.SetString("Username", staff.FullName);
+
+        if (!string.IsNullOrWhiteSpace(profile.BusinessName))
+            HttpContext.Session.SetString("BusinessName", profile.BusinessName);
+        else
+            HttpContext.Session.Remove("BusinessName");
+    }
+
+    private async Task MarkStaffActiveAsync(long staffId, CancellationToken cancellationToken)
+    {
+        await _dbContext.Staff
+            .Where(s => s.StaffId == staffId)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(s => s.LastLoginAt, DateTime.UtcNow), cancellationToken);
+    }
+
+    private async Task MarkStaffInactiveAsync(long staffId, CancellationToken cancellationToken)
+    {
+        await _dbContext.Staff
+            .Where(s => s.StaffId == staffId)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(s => s.LastLogoutAt, DateTime.UtcNow), cancellationToken);
+    }
+
+    private static string? NormalizePhone(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return null;
+
+        var digits = new string(value.Where(char.IsDigit).ToArray());
+        if (digits.StartsWith("91") && digits.Length == 12)
+            return "+" + digits;
+        if (digits.Length == 10)
+            return "+91" + digits;
+
+        return value.Trim();
     }
 
     private void SetAuthenticatedSession(SupabaseAuthResult result, long profileId, string? businessName, string username)
