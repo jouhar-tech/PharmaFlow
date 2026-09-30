@@ -11,6 +11,8 @@
         && ViewContext.RouteData.Values["action"]?.ToString() == "Index";
     var isLowStockPage = ViewContext.RouteData.Values["controller"]?.ToString() == "LowStock"
         && ViewContext.RouteData.Values["action"]?.ToString() == "Index";
+    var isReportsPage = ViewContext.RouteData.Values["controller"]?.ToString() == "Reports"
+        && ViewContext.RouteData.Values["action"]?.ToString() == "Index";
 }
 <html lang="en">
 <head>
@@ -22,7 +24,7 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/PharmaFlow.styles.css" asp-append-version="true" />
 </head>
-<body class="@((isHomeDashboard ? "home-dashboard-page " : "") + (isExpiryProductsPage ? "expiry-products-page " : "") + (isInventoryPage ? "inventory-page " : "") + (isMorePage ? "more-page " : "") + (isLowStockPage ? "low-stock-page" : ""))">
+<body class="@((isHomeDashboard ? "home-dashboard-page " : "") + (isExpiryProductsPage ? "expiry-products-page " : "") + (isInventoryPage ? "inventory-page " : "") + (isMorePage ? "more-page " : "") + (isLowStockPage ? "low-stock-page " : "") + (isReportsPage ? "reports-page" : ""))">
     <div class="app-shell">
         <aside class="app-sidebar" id="appSidebar" aria-label="Main navigation">
             <div class="sidebar-brand">
