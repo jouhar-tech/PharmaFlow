@@ -1,0 +1,80 @@
+@model PharmaFlow.Models.ViewModels.AddStaffViewModel
+@{
+    ViewData["Title"] = "Add Staff";
+}
+
+<div class="add-staff-mobile-page">
+    <header class="add-staff-mobile-hero">
+        <a asp-controller="Profile" asp-action="Index" class="add-staff-mobile-back" aria-label="Back">←</a>
+        <h1>Add Staff</h1>
+    </header>
+
+    <form asp-action="Add" method="post" class="add-staff-mobile-form" autocomplete="off" data-online-required="true">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="add-staff-validation"></div>
+
+        <div class="add-staff-photo-wrap">
+            <div class="add-staff-photo">
+                <span>◎</span>
+            </div>
+            <button type="button" class="add-staff-photo-action" aria-label="Add profile photo">◉</button>
+            <div class="add-staff-photo-label">Profile Photo</div>
+        </div>
+
+        <div class="add-staff-field">
+            <span class="add-staff-field-icon">♙</span>
+            <input asp-for="FullName" placeholder="Full Name" autocomplete="name" maxlength="120" />
+        </div>
+        <span asp-validation-for="FullName" class="add-staff-field-error"></span>
+
+        <div class="add-staff-field">
+            <span class="add-staff-field-icon">⌖</span>
+            <input asp-for="Address" placeholder="Address" autocomplete="street-address" maxlength="500" />
+        </div>
+        <span asp-validation-for="Address" class="add-staff-field-error"></span>
+
+        <div class="add-staff-field">
+            <span class="add-staff-field-icon">⌕</span>
+            <input asp-for="PhoneNumber" placeholder="Phone Number" autocomplete="tel" inputmode="tel" maxlength="20" />
+        </div>
+        <span asp-validation-for="PhoneNumber" class="add-staff-field-error"></span>
+
+        <div class="add-staff-field">
+            <span class="add-staff-field-icon">✉</span>
+            <input asp-for="Email" placeholder="Email Address" autocomplete="email" maxlength="160" />
+        </div>
+        <span asp-validation-for="Email" class="add-staff-field-error"></span>
+        <small class="add-staff-login-hint">Phone number or email is used by the staff member to log in.</small>
+
+        <div class="add-staff-field">
+            <span class="add-staff-field-icon">♙</span>
+            <input asp-for="Password" type="password" id="staffPassword" placeholder="Password" autocomplete="new-password" />
+            <button type="button" class="add-staff-password-toggle" data-target="staffPassword" aria-label="Show password">◉</button>
+        </div>
+        <span asp-validation-for="Password" class="add-staff-field-error"></span>
+
+        <div class="add-staff-field">
+            <span class="add-staff-field-icon">♙</span>
+            <input asp-for="ConfirmPassword" type="password" id="staffConfirmPassword" placeholder="Confirm Password" autocomplete="new-password" />
+            <button type="button" class="add-staff-password-toggle" data-target="staffConfirmPassword" aria-label="Show password">◉</button>
+        </div>
+        <span asp-validation-for="ConfirmPassword" class="add-staff-field-error"></span>
+
+        <button type="submit" class="add-staff-save">Save</button>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.querySelectorAll('.add-staff-password-toggle').forEach(button => {
+            button.addEventListener('click', () => {
+                const input = document.getElementById(button.dataset.target);
+                if (!input) return;
+                const visible = input.type === 'text';
+                input.type = visible ? 'password' : 'text';
+                button.setAttribute('aria-label', visible ? 'Show password' : 'Hide password');
+            });
+        });
+    </script>
+}
