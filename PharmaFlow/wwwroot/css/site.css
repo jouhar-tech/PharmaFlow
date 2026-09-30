@@ -3802,3 +3802,29 @@ body.theme-dark .home-mobile-slow-moving-value {
     font-size: .62rem;
   }
 }
+
+/* Professional back arrow icon shared by mobile page headers */
+.inventory-modern-back svg,
+.expiry-modern-back svg,
+.low-stock-modern-back svg,
+.reports-mobile-back svg,
+.add-staff-mobile-back svg,
+.more-mobile-back svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  display: block;
+}
+.inventory-modern-back,
+.expiry-modern-back,
+.low-stock-modern-back,
+.reports-mobile-back,
+.add-staff-mobile-back,
+.more-mobile-back {
+  display: inline-grid;
+  place-items: center;
+}
