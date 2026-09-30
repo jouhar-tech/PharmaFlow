@@ -12,7 +12,7 @@
 
     <header class="more-mobile-header">
         <a asp-controller="Home" asp-action="Index" class="more-mobile-back" aria-label="Back">←</a>
-        <h1>More</h1>
+        <h1 data-i18n="more">More</h1>
     </header>
 
     <section class="more-mobile-profile-card">
@@ -28,19 +28,19 @@
     <section class="more-mobile-menu-card">
         <a href="#" class="more-mobile-row">
             <span class="more-mobile-row-icon">▤</span>
-            <span class="more-mobile-row-label">Order items</span>
+            <span class="more-mobile-row-label" data-i18n="orderItems">Order items</span>
             <span class="more-mobile-chevron">›</span>
         </a>
         <a href="#" class="more-mobile-row">
             <span class="more-mobile-row-icon">▧</span>
-            <span class="more-mobile-row-label">Bills</span>
+            <span class="more-mobile-row-label" data-i18n="bills">Bills</span>
             <span class="more-mobile-chevron">›</span>
         </a>
         @if (!string.Equals(Context.Session.GetString("UserRole"), "Staff", StringComparison.OrdinalIgnoreCase))
         {
             <a asp-controller="Reports" asp-action="Index" class="more-mobile-row">
                 <span class="more-mobile-row-icon">▥</span>
-                <span class="more-mobile-row-label">Reports</span>
+                <span class="more-mobile-row-label" data-i18n="reports">Reports</span>
                 <span class="more-mobile-chevron">›</span>
             </a>
         }
@@ -53,14 +53,14 @@
         {
             <a asp-controller="Staff" asp-action="Add" class="more-mobile-row">
                 <span class="more-mobile-row-icon">♙</span>
-                <span class="more-mobile-row-label">Add Staff</span>
+                <span class="more-mobile-row-label" data-i18n="addStaff">Add Staff</span>
                 <span class="more-mobile-chevron">›</span>
             </a>
         }
 
         <div class="more-mobile-row more-mobile-language-row">
             <span class="more-mobile-row-icon">◎</span>
-            <span class="more-mobile-row-label">Language</span>
+            <span class="more-mobile-row-label" data-i18n="language">Language</span>
             <select id="moreMobileLanguage" aria-label="Language">
                 <option value="en">English</option>
                 <option value="kn">ಕನ್ನಡ</option>
@@ -70,7 +70,7 @@
 
         <div class="more-mobile-row more-mobile-theme-row">
             <span class="more-mobile-row-icon">☼</span>
-            <span class="more-mobile-row-label">Theme</span>
+            <span class="more-mobile-row-label" data-i18n="theme">Theme</span>
             <div class="more-mobile-theme-switch" role="group" aria-label="Theme">
                 <button type="button" data-theme-choice="light">Light</button>
                 <button type="button" data-theme-choice="dark">Dark</button>
@@ -79,19 +79,19 @@
 
         <a href="#" class="more-mobile-row">
             <span class="more-mobile-row-icon">♧</span>
-            <span class="more-mobile-row-label">Customer Support</span>
+            <span class="more-mobile-row-label" data-i18n="customerSupport">Customer Support</span>
             <span class="more-mobile-chevron">›</span>
         </a>
 
         <a asp-controller="Profile" asp-action="Feedback" class="more-mobile-row">
             <span class="more-mobile-row-icon">▱</span>
-            <span class="more-mobile-row-label">Feedback for Us</span>
+            <span class="more-mobile-row-label" data-i18n="feedbackForUs">Feedback for Us</span>
             <span class="more-mobile-chevron">›</span>
         </a>
 
         <form asp-area="" asp-controller="Account" asp-action="Logout" method="post" data-online-required="true" class="more-mobile-signout-form">
             @Html.AntiForgeryToken()
-            <button type="submit" class="more-mobile-signout">Sign out</button>
+            <button type="submit" class="more-mobile-signout" data-i18n="signOut">Sign out</button>
         </form>
     </section>
 
