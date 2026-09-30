@@ -13,6 +13,7 @@
         && ViewContext.RouteData.Values["action"]?.ToString() == "Index";
     var isReportsPage = ViewContext.RouteData.Values["controller"]?.ToString() == "Reports"
         && ViewContext.RouteData.Values["action"]?.ToString() == "Index";
+    var isStaffUser = string.Equals(Context.Session.GetString("UserRole"), "Staff", StringComparison.OrdinalIgnoreCase);
 }
 <html lang="en">
 <head>
@@ -43,6 +44,8 @@
 
                 <a class="sidebar-link" href="#"><span class="sidebar-icon">♙</span><span data-i18n="customerManagement">Customer Management</span><span class="sidebar-badge">Voice</span></a>
                 <a class="sidebar-link" href="#"><span class="sidebar-icon">↗</span><span data-i18n="topSellingLowSelling">Top Selling / Low Selling</span></a>
+@if (!isStaffUser)
+                {
                 <button type="button" class="sidebar-link sidebar-dropdown-toggle" aria-expanded="false" aria-controls="salesReportsMenu">
                     <span class="sidebar-icon">▥</span>
                     <span data-i18n="salesReports">Sales Reports</span>
@@ -66,6 +69,7 @@
                     <a class="sidebar-sublink" href="#"><span data-i18n="expiryReport">Expiry Report</span></a>
                     <a class="sidebar-sublink" href="#"><span data-i18n="pharmaFlowValueReport">PharmaFlow Value Report</span></a>
                 </div>
+                }
 
             </nav>
 
