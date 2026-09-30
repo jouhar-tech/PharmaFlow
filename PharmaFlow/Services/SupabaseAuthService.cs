@@ -40,6 +40,38 @@ public sealed class SupabaseAuthService : ISupabaseAuthService
         return await ReadResultAsync(response, requireAccessToken: true, cancellationToken);
     }
 
+    public async Task<SupabaseAuthResult> LoginWithPhoneAsync(string phoneNumber, string password, CancellationToken cancellationToken = default)
+    {
+        var response = await SendAsync("/auth/v1/token?grant_type=password", new { phone = phoneNumber, password }, cancellationToken);
+        return await ReadResultAsync(response, requireAccessToken: true, cancellationToken);
+    }
+
+    public async Task<SupabaseAuthResult> SignUpStaffAsync(
+        string? email,
+        string? phoneNumber,
+        string password,
+        string fullName,
+        CancellationToken cancellationToken = default)
+    {
+        var payload = new Dictionary<string, object?>
+        {
+            ["password"] = password,
+            ["data"] = new
+            {
+                full_name = fullName,
+                account_type = "staff"
+            }
+        };
+
+        if (!string.IsNullOrWhiteSpace(email))
+            payload["email"] = email;
+        if (!string.IsNullOrWhiteSpace(phoneNumber))
+            payload["phone"] = phoneNumber;
+
+        var response = await SendAsync("/auth/v1/signup", payload, cancellationToken);
+        return await ReadResultAsync(response, requireAccessToken: false, cancellationToken);
+    }
+
     public string GetGoogleLoginUrl(string redirectUri, string codeChallenge)
     {
         var baseUrl = Required("Supabase:Url").TrimEnd('/');
