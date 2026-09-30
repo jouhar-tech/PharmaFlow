@@ -3645,3 +3645,17 @@ body.theme-dark .reports-custom-date-form label {
     flex: 0 0 38px;
   }
 }
+
+/* Reports mobile header matches the green page headers used throughout the app */
+@media (max-width: 767.98px) {
+  body.reports-page .reports-mobile-header {
+    background: linear-gradient(180deg, #a9e3d8 0%, #98dacc 100%);
+    min-height: 98px;
+    margin: 0;
+    padding-top: .7rem;
+    border-radius: 0 0 .2rem .2rem;
+  }
+  body.reports-page .reports-mobile-page {
+    background: #eef3f7;
+  }
+}
