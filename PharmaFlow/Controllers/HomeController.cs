@@ -26,6 +26,7 @@ namespace PharmaFlow.Controllers
             var expiringSoonCount = 0;
             var lowStockCount = 0;
             decimal expiryAtRiskValue = 0m;
+            decimal slowMovingStockValue = 0m;
 
             if (long.TryParse(profileIdValue, out var profileId))
             {
@@ -68,13 +69,29 @@ namespace PharmaFlow.Controllers
                         batch.ExpiryDate >= today &&
                         batch.ExpiryDate <= ninetyDaysFromToday)
                     .SumAsync(batch => batch.QuantityOnHand * batch.PurchaseUnitPrice, cancellationToken);
+
+                // Until billing/sales history is available, classify stock held for more than
+                // 90 days as slow-moving inventory. This keeps the dashboard value data-driven
+                // without pretending we have sales velocity data.
+                var slowMovingCutoff = today.AddDays(-90);
+                slowMovingStockValue = await _dbContext.ProductBatches
+                    .AsNoTracking()
+                    .Where(batch =>
+                        batch.Product.ProfileId == profileId &&
+                        batch.Product.IsActive &&
+                        batch.IsActive &&
+                        !batch.IsQuarantined &&
+                        batch.QuantityOnHand > 0 &&
+                        batch.CreatedAt.Date <= slowMovingCutoff.ToDateTime(TimeOnly.MinValue))
+                    .SumAsync(batch => batch.QuantityOnHand * batch.PurchaseUnitPrice, cancellationToken);
             }
 
             var dashboard = new DashboardViewModel
             {
                 ProductsExpiringSoonCount = expiringSoonCount,
                 LowStockCount = lowStockCount,
-                ExpiryAtRiskValue = expiryAtRiskValue
+                ExpiryAtRiskValue = expiryAtRiskValue,
+                SlowMovingStockValue = slowMovingStockValue
             };
 
             return View(dashboard);
