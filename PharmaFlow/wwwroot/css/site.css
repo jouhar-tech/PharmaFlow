@@ -3828,3 +3828,37 @@ body.theme-dark .home-mobile-slow-moving-value {
   display: inline-grid;
   place-items: center;
 }
+
+/* Small white circular back-button surface on mobile pages except Reports */
+@media (max-width: 767.98px) {
+  .inventory-modern-back,
+  .expiry-modern-back,
+  .low-stock-modern-back,
+  .add-staff-mobile-back,
+  .more-mobile-back {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #fff;
+    color: #16324a;
+    box-shadow: 0 2px 7px rgba(15, 23, 42, .12);
+  }
+
+  .inventory-modern-back:hover,
+  .expiry-modern-back:hover,
+  .low-stock-modern-back:hover,
+  .add-staff-mobile-back:hover,
+  .more-mobile-back:hover {
+    background: #fff;
+    color: #16324a;
+  }
+
+  body.theme-dark .inventory-modern-back,
+  body.theme-dark .expiry-modern-back,
+  body.theme-dark .low-stock-modern-back,
+  body.theme-dark .add-staff-mobile-back,
+  body.theme-dark .more-mobile-back {
+    background: #fff;
+    color: #16324a;
+  }
+}
