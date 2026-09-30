@@ -16,9 +16,19 @@
         <div class="add-staff-photo-wrap">
             <div class="add-staff-photo">
                 <img id="staffPhotoPreview" alt="Profile photo preview" hidden />
-                <span id="staffPhotoPlaceholder">◎</span>
+                <svg id="staffPhotoPlaceholder" class="add-staff-photo-placeholder" viewBox="0 0 64 64" aria-hidden="true">
+                    <circle cx="32" cy="24" r="11"></circle>
+                    <path d="M12 54c2.5-10 10.2-16 20-16s17.5 6 20 16"></path>
+                </svg>
             </div>
-            <label for="staffProfilePhoto" class="add-staff-photo-action" aria-label="Choose profile photo">◉</label>
+            <label for="staffProfilePhoto" class="add-staff-photo-action" aria-label="Upload profile photo" title="Upload profile photo">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M4 8.5A2.5 2.5 0 0 1 6.5 6H9l1.5-2h3L15 6h2.5A2.5 2.5 0 0 1 20 8.5v8A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5z"></path>
+                    <circle cx="12" cy="12.5" r="3.2"></circle>
+                    <path d="M18 9h.01"></path>
+                </svg>
+                <span class="add-staff-upload-plus">+</span>
+            </label>
             <input asp-for="ProfilePhoto" id="staffProfilePhoto" type="file" accept="image/jpeg,image/png,image/webp" class="add-staff-photo-input" />
             <div class="add-staff-photo-label">Profile Photo</div>
         </div>
