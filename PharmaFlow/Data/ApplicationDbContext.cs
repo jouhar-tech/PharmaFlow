@@ -60,7 +60,6 @@ public class ApplicationDbContext : DbContext
             entity.Property(p => p.IsPrescriptionRequired).HasColumnName("is_prescription_required");
             entity.Property(p => p.IsActive).HasColumnName("is_active");
             entity.Property(p => p.CreatedAt).HasColumnName("created_at");
-            entity.Property(p => p.NotificationCycleStartAt).HasColumnName("notification_cycle_start_at");
             entity.Property(p => p.UpdatedAt).HasColumnName("updated_at");
 
             entity.HasMany(p => p.Batches)
@@ -187,6 +186,7 @@ public class ApplicationDbContext : DbContext
             entity.Property(p => p.LastLoginAt).HasColumnName("last_login_at");
             entity.Property(p => p.LastLogoutAt).HasColumnName("last_logout_at");
             entity.Property(p => p.CreatedAt).HasColumnName("created_at");
+            entity.Property(p => p.NotificationCycleStartAt).HasColumnName("notification_cycle_start_at");
         });
 
         modelBuilder.Entity<PushDeviceSubscription>(entity =>

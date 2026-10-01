@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using PharmaFlow.Data;
 using PharmaFlow.Models;
 using WebPush;
+using WebPush.Model;
 
 namespace PharmaFlow.Services;
 
