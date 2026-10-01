@@ -52,7 +52,7 @@ public sealed class NotificationSchedulerService : BackgroundService
         using var scope = _scopeFactory.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-        return await db.Profiles
+        var rows = await db.Profiles
             .AsNoTracking()
             .Where(p =>
                 p.ActiveStatus == 1 &&
@@ -62,12 +62,11 @@ public sealed class NotificationSchedulerService : BackgroundService
                 p.Id,
                 p.NotificationCycleStartAt
             })
-            .ToListAsync(cancellationToken)
-            .ContinueWith(
-                task => task.Result
-                    .Select(p => (p.Id, p.NotificationCycleStartAt!.Value))
-                    .ToList(),
-                cancellationToken);
+            .ToListAsync(cancellationToken);
+
+        return rows
+            .Select(p => (p.Id, p.NotificationCycleStartAt!.Value))
+            .ToList();
     }
 
     private async Task SendDailyNotificationsAsync(
