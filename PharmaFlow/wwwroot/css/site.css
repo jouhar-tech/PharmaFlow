@@ -953,6 +953,10 @@ body.theme-dark .invoice-review-saved-summary strong { color: #dcfce7; }
     background: #ef4444;
   }
 
+  .home-mobile-notification.is-enabled span {
+    background: #16a34a;
+  }
+
   .home-mobile-business {
     margin-top: 1.7rem;
     text-align: center;
