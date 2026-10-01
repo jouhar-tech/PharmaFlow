@@ -24,8 +24,28 @@ CREATE TABLE IF NOT EXISTS public.feedback (
     "FeedBackID" BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     profile_id BIGINT NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
     message TEXT NOT NULL CHECK (char_length(trim(message)) BETWEEN 5 AND 2000),
+    rating INTEGER NOT NULL DEFAULT 0 CHECK (rating BETWEEN 0 AND 5),
+    tags TEXT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE public.feedback
+    ADD COLUMN IF NOT EXISTS rating INTEGER NOT NULL DEFAULT 0;
+
+ALTER TABLE public.feedback
+    ADD COLUMN IF NOT EXISTS tags TEXT NULL;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'feedback_rating_check'
+          AND conrelid = 'public.feedback'::regclass
+    ) THEN
+        ALTER TABLE public.feedback
+            ADD CONSTRAINT feedback_rating_check CHECK (rating BETWEEN 0 AND 5);
+    END IF;
+END $$;
 
 CREATE INDEX IF NOT EXISTS feedback_profile_id_idx
     ON public.feedback(profile_id);
