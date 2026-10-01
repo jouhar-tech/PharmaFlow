@@ -80,13 +80,23 @@ public sealed class NotificationSchedulerService : BackgroundService
             async (profileId, token) =>
             {
                 using var scope = _scopeFactory.CreateScope();
-                var notifications = scope.ServiceProvider
-                    .GetRequiredService<IPharmaFlowPushNotificationService>();
+                try
+                {
+                    var notifications = scope.ServiceProvider
+                        .GetRequiredService<IPharmaFlowPushNotificationService>();
 
-                await notifications.SendDailyStockNotificationAsync(
-                    profileId,
-                    localDate,
-                    token);
+                    await notifications.SendDailyStockNotificationAsync(
+                        profileId,
+                        localDate,
+                        token);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(
+                        ex,
+                        "Daily stock notification failed for profile {ProfileId}.",
+                        profileId);
+                }
             });
     }
 
@@ -106,13 +116,23 @@ public sealed class NotificationSchedulerService : BackgroundService
             async (profileId, token) =>
             {
                 using var scope = _scopeFactory.CreateScope();
-                var notifications = scope.ServiceProvider
-                    .GetRequiredService<IPharmaFlowPushNotificationService>();
+                try
+                {
+                    var notifications = scope.ServiceProvider
+                        .GetRequiredService<IPharmaFlowPushNotificationService>();
 
-                await notifications.SendMonthlySavingsNotificationAsync(
-                    profileId,
-                    monthStart,
-                    token);
+                    await notifications.SendMonthlySavingsNotificationAsync(
+                        profileId,
+                        monthStart,
+                        token);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(
+                        ex,
+                        "Monthly savings notification failed for profile {ProfileId}.",
+                        profileId);
+                }
             });
     }
 }
