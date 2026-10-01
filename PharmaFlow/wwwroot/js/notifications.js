@@ -51,6 +51,13 @@
     const ensureExistingSubscriptionSynced = async () => {
         if (!isSupported() || Notification.permission !== "granted") return false;
 
+        const syncKey = "pharmaflow-notification-sync";
+        const syncIntervalMs = 24 * 60 * 60 * 1000;
+        const lastSync = Number(localStorage.getItem(syncKey) || "0");
+
+        if (Number.isFinite(lastSync) && Date.now() - lastSync < syncIntervalMs)
+            return false;
+
         try {
             const registration = await navigator.serviceWorker.ready;
             const subscription = await registration.pushManager.getSubscription();
@@ -58,6 +65,7 @@
             if (!subscription) return false;
 
             await saveCurrentSubscription(subscription);
+            localStorage.setItem(syncKey, String(Date.now()));
             return true;
         } catch {
             return false;
@@ -94,25 +102,30 @@
             const registration = await navigator.serviceWorker.ready;
 
             let subscription = await registration.pushManager.getSubscription();
+            let createdNewSubscription = false;
 
             if (!subscription) {
                 subscription = await registration.pushManager.subscribe({
                     userVisibleOnly: true,
                     applicationServerKey: base64UrlToBytes(publicKey)
                 });
+                createdNewSubscription = true;
             }
 
             await saveCurrentSubscription(subscription);
+            localStorage.setItem("pharmaflow-notification-sync", String(Date.now()));
 
             document.querySelectorAll("[data-notification-button]").forEach(button => {
                 button.classList.add("is-enabled");
                 button.setAttribute("aria-label", "Notifications enabled");
             });
 
-            try {
-                await postJson("/Notifications/Test", {});
-            } catch {
-                // Registration succeeded even if the immediate test delivery fails.
+            if (createdNewSubscription) {
+                try {
+                    await postJson("/Notifications/Test", {});
+                } catch {
+                    // Registration succeeded even if the immediate test delivery fails.
+                }
             }
 
             return true;
