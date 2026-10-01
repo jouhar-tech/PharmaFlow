@@ -33,6 +33,9 @@ public sealed class ProfileController : Controller
         });
     }
 
+    [HttpGet]
+    public IActionResult UnlimitedPlan() => View();
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Index(ProfileViewModel model, CancellationToken cancellationToken)
@@ -80,6 +83,22 @@ public sealed class ProfileController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Feedback(FeedbackViewModel model, CancellationToken cancellationToken)
     {
+        var allowedTags = new[]
+        {
+            "Usability",
+            "App Design",
+            "Performance",
+            "Customer Support",
+            "Features"
+        };
+
+        model.SelectedTags = model.SelectedTags
+            .Where(tag => !string.IsNullOrWhiteSpace(tag))
+            .Select(tag => tag.Trim())
+            .Where(tag => allowedTags.Contains(tag, StringComparer.Ordinal))
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+
         if (!ModelState.IsValid)
             return View(model);
 
@@ -90,7 +109,9 @@ public sealed class ProfileController : Controller
         var feedback = new Feedback
         {
             ProfileId = profile.Id,
+            Rating = model.Rating,
             Message = model.Message.Trim(),
+            Tags = model.SelectedTags.Count == 0 ? null : string.Join(", ", model.SelectedTags),
             CreatedAt = DateTime.UtcNow
         };
 

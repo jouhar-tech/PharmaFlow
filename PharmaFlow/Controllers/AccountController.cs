@@ -357,15 +357,23 @@ public class AccountController : Controller
     {
         try
         {
+            var now = DateTime.UtcNow;
+
+            // LastLoginAt tracks the most recent real app activity.
+            // NotificationCycleStartAt is intentionally separate so the 30-day
+            // savings cycle does not move forward every time the user opens the app.
             await _dbContext.Profiles
                 .Where(p => p.Id == profileId)
                 .ExecuteUpdateAsync(setters => setters
                     .SetProperty(p => p.ActiveStatus, (short)1)
-                    .SetProperty(p => p.LastLoginAt, DateTime.UtcNow), cancellationToken);
+                    .SetProperty(p => p.LastLoginAt, now)
+                    .SetProperty(
+                        p => p.NotificationCycleStartAt,
+                        p.NotificationCycleStartAt ?? now), cancellationToken);
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Could not update profile active status during login for profile {ProfileId}.", profileId);
+            _logger.LogWarning(ex, "Could not update profile activity during login for profile {ProfileId}.", profileId);
         }
     }
 

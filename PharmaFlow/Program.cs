@@ -10,6 +10,10 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 builder.Services.AddHttpClient<ISupabaseAuthService, SupabaseAuthService>();
 builder.Services.AddHttpClient<IInvoiceVisionService, GeminiInvoiceVisionService>();
+builder.Services.AddSingleton<WebPush.WebPushClient>();
+builder.Services.AddScoped<IPharmaFlowPushNotificationService, PharmaFlowPushNotificationService>();
+builder.Services.AddScoped<IPharmaFlowSavingsService, PharmaFlowSavingsService>();
+builder.Services.AddHostedService<NotificationSchedulerService>();
 builder.Services.AddHostedService<ProfileInactivityService>();
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>

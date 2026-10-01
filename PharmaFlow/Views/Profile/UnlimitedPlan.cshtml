@@ -1,0 +1,303 @@
+@{
+    ViewData["Title"] = "Unlimited Plan";
+}
+
+<style>
+    .unlimited-plan-page {
+        min-height: calc(100vh - 78px);
+        padding: 1.5rem 0 2.5rem;
+    }
+
+    .unlimited-plan-shell {
+        max-width: 1120px;
+        margin: 0 auto;
+    }
+
+    .unlimited-plan-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.35rem;
+    }
+
+    .unlimited-plan-back {
+        display: grid;
+        place-items: center;
+        width: 40px;
+        height: 40px;
+        flex: 0 0 40px;
+        border-radius: 50%;
+        background: #fff;
+        border: 1px solid #e5eaf2;
+        box-shadow: 0 3px 12px rgba(15,23,42,.07);
+        color: #334155;
+        text-decoration: none;
+        transition: transform .15s ease, box-shadow .15s ease;
+    }
+
+    .unlimited-plan-back:hover { color: #1e293b; transform: translateX(-1px); box-shadow: 0 6px 18px rgba(15,23,42,.1); }
+    .unlimited-plan-back svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+
+    .unlimited-plan-heading h1 {
+        margin: 0;
+        color: #0f172a;
+        font-size: clamp(1.45rem, 3vw, 2rem);
+        font-weight: 800;
+        letter-spacing: -.035em;
+    }
+
+    .unlimited-plan-heading p {
+        margin: .25rem 0 0;
+        color: #64748b;
+        font-size: .86rem;
+    }
+
+    .unlimited-plan-hero {
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 1.15rem;
+        padding: 1.35rem 1.5rem;
+        background: linear-gradient(135deg, #0f766e 0%, #0d9488 58%, #14b8a6 100%);
+        border-radius: 1.1rem;
+        color: #fff;
+        box-shadow: 0 12px 30px rgba(13,148,136,.16);
+    }
+
+    .unlimited-plan-hero::after {
+        content: "";
+        position: absolute;
+        width: 180px;
+        height: 180px;
+        right: -65px;
+        top: -90px;
+        border-radius: 50%;
+        background: rgba(255,255,255,.09);
+    }
+
+    .unlimited-plan-hero strong { position: relative; z-index: 1; display: block; font-size: 1.02rem; }
+    .unlimited-plan-hero span { position: relative; z-index: 1; display: block; margin-top: .25rem; color: rgba(255,255,255,.86); font-size: .78rem; }
+
+    .unlimited-plan-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1rem;
+    }
+
+    .unlimited-plan-card {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        min-height: 380px;
+        padding: 1.3rem;
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 1rem;
+        box-shadow: 0 6px 22px rgba(15,23,42,.045);
+        transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+    }
+
+    .unlimited-plan-card:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(15,23,42,.08); border-color: #cbd5e1; }
+
+    .unlimited-plan-card.featured { border: 1.5px solid #0d9488; box-shadow: 0 10px 30px rgba(13,148,136,.11); }
+
+    .unlimited-plan-badge {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        padding: .3rem .55rem;
+        border-radius: 999px;
+        background: #ecfdf5;
+        color: #047857;
+        font-size: .62rem;
+        font-weight: 800;
+        letter-spacing: .03em;
+        text-transform: uppercase;
+    }
+
+    .unlimited-plan-name { margin: 0; color: #334155; font-size: .84rem; font-weight: 750; }
+
+    .unlimited-plan-price { display: flex; align-items: baseline; gap: .3rem; margin: .65rem 0 .15rem; }
+    .unlimited-plan-price strong { color: #0f172a; font-size: 2rem; line-height: 1; letter-spacing: -.045em; }
+    .unlimited-plan-price span { color: #64748b; font-size: .72rem; font-weight: 650; }
+
+    .unlimited-plan-equivalent {
+        min-height: 2.25rem;
+        color: #64748b;
+        font-size: .72rem;
+        line-height: 1.45;
+    }
+
+    .unlimited-plan-equivalent strong { color: #0f766e; font-weight: 800; }
+
+    .unlimited-plan-divider { height: 1px; margin: 1rem 0; background: #edf1f5; }
+
+    .unlimited-plan-feature {
+        display: flex;
+        align-items: flex-start;
+        gap: .6rem;
+        color: #475569;
+        font-size: .78rem;
+        line-height: 1.5;
+    }
+
+    .unlimited-plan-check {
+        display: grid;
+        place-items: center;
+        width: 21px;
+        height: 21px;
+        flex: 0 0 21px;
+        margin-top: 1px;
+        border-radius: 50%;
+        background: #ecfdf5;
+        color: #059669;
+        font-size: .72rem;
+        font-weight: 900;
+    }
+
+    .unlimited-plan-bonus {
+        margin-top: .75rem;
+        padding: .65rem .7rem;
+        border: 1px solid #d1fae5;
+        border-radius: .7rem;
+        background: #f0fdf4;
+        color: #047857;
+        font-size: .7rem;
+        font-weight: 750;
+        line-height: 1.4;
+    }
+
+    .unlimited-plan-card-footer { margin-top: auto; padding-top: 1.2rem; }
+
+    .unlimited-plan-select {
+        width: 100%;
+        min-height: 42px;
+        border: 0;
+        border-radius: .7rem;
+        background: #0f766e;
+        color: #fff;
+        font-size: .78rem;
+        font-weight: 750;
+        cursor: pointer;
+    }
+
+    .unlimited-plan-select:hover { background: #0d9488; }
+
+    .unlimited-plan-note {
+        margin: 1rem 0 0;
+        color: #94a3b8;
+        font-size: .68rem;
+        text-align: center;
+    }
+
+    @media (max-width: 850px) {
+        .unlimited-plan-grid { grid-template-columns: 1fr; }
+        .unlimited-plan-card { min-height: 0; }
+    }
+
+    @media (max-width: 575.98px) {
+        .unlimited-plan-page { padding: .9rem 0 6rem; }
+        .unlimited-plan-header { margin-bottom: 1rem; }
+        .unlimited-plan-back { width: 34px; height: 34px; flex-basis: 34px; }
+        .unlimited-plan-heading p { font-size: .76rem; }
+        .unlimited-plan-hero { padding: 1rem 1.05rem; border-radius: .9rem; }
+        .unlimited-plan-card { padding: 1.05rem; border-radius: .9rem; }
+        .unlimited-plan-price strong { font-size: 1.8rem; }
+    }
+</style>
+
+<div class="unlimited-plan-page">
+    <div class="unlimited-plan-shell">
+        <header class="unlimited-plan-header">
+            <a asp-controller="Profile" asp-action="Index" class="unlimited-plan-back" aria-label="Back to More">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M19 12H5"></path>
+                    <path d="m11 18-6-6 6-6"></path>
+                </svg>
+            </a>
+            <div class="unlimited-plan-heading">
+                <h1>Unlimited Plan</h1>
+                <p>Choose the plan that fits your pharmacy.</p>
+            </div>
+        </header>
+
+        <section class="unlimited-plan-hero">
+            <strong>One plan. Unlimited access.</strong>
+            <span>Use PharmaFlow without usage limits and access all app features included in your subscription.</span>
+        </section>
+
+        <section class="unlimited-plan-grid" aria-label="Unlimited Plan options">
+            <article class="unlimited-plan-card">
+                <h2 class="unlimited-plan-name">Monthly</h2>
+                <div class="unlimited-plan-price">
+                    <strong>₹449</strong>
+                    <span>/ month</span>
+                </div>
+                <div class="unlimited-plan-equivalent">Simple monthly access with no long-term commitment.</div>
+                <div class="unlimited-plan-divider"></div>
+                <div class="unlimited-plan-feature">
+                    <span class="unlimited-plan-check">✓</span>
+                    <span>Unlimited usage</span>
+                </div>
+                <div class="unlimited-plan-feature" style="margin-top:.65rem;">
+                    <span class="unlimited-plan-check">✓</span>
+                    <span>Access to all PharmaFlow features</span>
+                </div>
+                <div class="unlimited-plan-card-footer">
+                    <button type="button" class="unlimited-plan-select">Continue with Monthly</button>
+                </div>
+            </article>
+
+            <article class="unlimited-plan-card featured">
+                <span class="unlimited-plan-badge">10 days extra</span>
+                <h2 class="unlimited-plan-name">6 Month</h2>
+                <div class="unlimited-plan-price">
+                    <strong>₹2,599</strong>
+                    <span>/ 6 months</span>
+                </div>
+                <div class="unlimited-plan-equivalent">
+                    Equivalent to <strong>₹433/month</strong> + extra time included.
+                </div>
+                <div class="unlimited-plan-divider"></div>
+                <div class="unlimited-plan-feature">
+                    <span class="unlimited-plan-check">✓</span>
+                    <span>Unlimited usage</span>
+                </div>
+                <div class="unlimited-plan-feature" style="margin-top:.65rem;">
+                    <span class="unlimited-plan-check">✓</span>
+                    <span>Access to all PharmaFlow features</span>
+                </div>
+                <div class="unlimited-plan-bonus">Plus 10 additional days free — enjoy <strong>6 months + 10 days</strong> of access.</div>
+                <div class="unlimited-plan-card-footer">
+                    <button type="button" class="unlimited-plan-select">Continue with 6 Month</button>
+                </div>
+            </article>
+
+            <article class="unlimited-plan-card">
+                <span class="unlimited-plan-badge">1 month extra</span>
+                <h2 class="unlimited-plan-name">Annual</h2>
+                <div class="unlimited-plan-price">
+                    <strong>₹4,999</strong>
+                    <span>/ year</span>
+                </div>
+                <div class="unlimited-plan-equivalent">
+                    Equivalent to <strong>₹416/month</strong> + extra time included.
+                </div>
+                <div class="unlimited-plan-divider"></div>
+                <div class="unlimited-plan-feature">
+                    <span class="unlimited-plan-check">✓</span>
+                    <span>Unlimited usage</span>
+                </div>
+                <div class="unlimited-plan-feature" style="margin-top:.65rem;">
+                    <span class="unlimited-plan-check">✓</span>
+                    <span>Access to all PharmaFlow features</span>
+                </div>
+                <div class="unlimited-plan-bonus">Plus 1 additional month free — enjoy <strong>12 months + 1 month</strong> of access.</div>
+                <div class="unlimited-plan-card-footer">
+                    <button type="button" class="unlimited-plan-select">Continue with Annual</button>
+                </div>
+            </article>
+        </section>
+
+        <p class="unlimited-plan-note">Subscription checkout will be available here once payments are connected.</p>
+    </div>
+</div>

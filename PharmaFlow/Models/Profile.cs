@@ -36,4 +36,7 @@ public sealed class Profile
 
     [Column("created_at")]
     public DateTime CreatedAt { get; set; }
+
+    [Column("notification_cycle_start_at")]
+    public DateTime? NotificationCycleStartAt { get; set; }
 }
