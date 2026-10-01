@@ -33,6 +33,9 @@ public sealed class ProfileController : Controller
         });
     }
 
+    [HttpGet]
+    public IActionResult UnlimitedPlan() => View();
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Index(ProfileViewModel model, CancellationToken cancellationToken)
