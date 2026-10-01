@@ -17,6 +17,12 @@ public sealed class Feedback
     [Column("message")]
     public string Message { get; set; } = string.Empty;
 
+    [Column("rating")]
+    public int Rating { get; set; }
+
+    [Column("tags")]
+    public string? Tags { get; set; }
+
     [Column("created_at")]
     public DateTime CreatedAt { get; set; }
 }
