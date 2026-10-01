@@ -53,6 +53,13 @@ public sealed class NotificationsController : Controller
         if (!long.TryParse(HttpContext.Session.GetString("ProfileId"), out var profileId))
             return Unauthorized();
 
+        var profileActive = await _db.Profiles
+            .AsNoTracking()
+            .AnyAsync(p => p.Id == profileId && p.ActiveStatus == 1, cancellationToken);
+
+        if (!profileActive)
+            return Unauthorized();
+
         var role = HttpContext.Session.GetString("UserRole") ?? "Owner";
         var now = DateTime.UtcNow;
 
