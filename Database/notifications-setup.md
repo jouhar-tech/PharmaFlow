@@ -2,7 +2,10 @@
 
 ## 1. Run the database script
 
-Run `Database/notifications.sql` once in the Supabase SQL Editor.
+Run both scripts once in the Supabase SQL Editor:
+
+1. `Database/notifications.sql`
+2. `Database/notification_cycle.sql`
 
 It creates:
 - `push_device_subscriptions` — one row per browser/device subscription.
