@@ -3867,14 +3867,33 @@ body.theme-dark .home-mobile-slow-moving-value {
   }
 }
 
-/* Keep the More-page back arrow clearly visible in dark theme */
+/* Profile detail pages use their own page header */
 @media (max-width: 767.98px) {
-  body.theme-dark .more-mobile-back {
-    background: #fff;
-    color: #16324a !important;
-    border-color: transparent;
-  }
-  body.theme-dark .more-mobile-back svg {
-    stroke: #16324a;
-  }
+    body.unlimited-plan-detail-page .app-topbar,
+    body.feedback-page .app-topbar {
+        display: none;
+    }
+
+    body.unlimited-plan-detail-page .app-content,
+    body.feedback-page .app-content {
+        padding-top: 0 !important;
+    }
+
+    body.unlimited-plan-detail-page .app-main,
+    body.feedback-page .app-main {
+        min-height: 100vh;
+    }
 }
+
+/* Make More-page back arrow clearly visible in dark theme */
+@media (max-width: 767.98px) {
+    body.theme-dark .more-mobile-back {
+        background: #fff;
+        color: #16324a;
+    }
+}
+
+body.theme-dark .more-mobile-back svg {
+    color: #16324a;
+}
+
