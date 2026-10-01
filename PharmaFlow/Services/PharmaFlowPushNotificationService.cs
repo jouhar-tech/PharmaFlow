@@ -10,7 +10,7 @@ namespace PharmaFlow.Services;
 public interface IPharmaFlowPushNotificationService
 {
     Task<bool> SendDailyStockNotificationAsync(long profileId, DateOnly localDate, CancellationToken cancellationToken);
-    Task<bool> SendMonthlySavingsNotificationAsync(long profileId, DateOnly monthStart, CancellationToken cancellationToken);
+    Task<bool> Send30DaySavingsNotificationAsync(long profileId, DateTime cycleStartUtc, DateTime cycleEndUtc, int cycleNumber, CancellationToken cancellationToken);
     Task<bool> SendTestNotificationAsync(long profileId, CancellationToken cancellationToken);
 }
 
@@ -68,43 +68,35 @@ public sealed class PharmaFlowPushNotificationService : IPharmaFlowPushNotificat
         return delivered;
     }
 
-    public async Task<bool> SendMonthlySavingsNotificationAsync(
+    public async Task<bool> Send30DaySavingsNotificationAsync(
         long profileId,
-        DateOnly monthStart,
+        DateTime cycleStartUtc,
+        DateTime cycleEndUtc,
+        int cycleNumber,
         CancellationToken cancellationToken)
     {
         if (!await HasActiveSubscriptionAsync(profileId, cancellationToken))
             return false;
 
-        var monthEnd = monthStart.AddMonths(1);
-        var india = NotificationTimeZone.GetIndiaStandardTimeZone();
-        var startUtc = TimeZoneInfo.ConvertTimeToUtc(
-            DateTime.SpecifyKind(monthStart.ToDateTime(TimeOnly.MinValue), DateTimeKind.Unspecified),
-            india);
-        var endUtc = TimeZoneInfo.ConvertTimeToUtc(
-            DateTime.SpecifyKind(monthEnd.ToDateTime(TimeOnly.MinValue), DateTimeKind.Unspecified),
-            india);
-
         var savings = await _db.PharmaFlowSavingsEvents
             .AsNoTracking()
             .Where(e =>
                 e.ProfileId == profileId &&
-                e.OccurredAt >= startUtc &&
-                e.OccurredAt < endUtc)
+                e.OccurredAt >= cycleStartUtc &&
+                e.OccurredAt < cycleEndUtc)
             .SumAsync(e => (decimal?)e.Amount, cancellationToken) ?? 0m;
 
-        var periodKey = monthStart.ToString("yyyy-MM");
+        var periodKey = $"30day-{cycleNumber}";
         if (!await TryClaimDispatchAsync(profileId, MonthlyNotificationType, periodKey, cancellationToken))
             return false;
 
-        var monthName = monthStart.ToDateTime(TimeOnly.MinValue).ToString("MMMM");
         var body =
-            $"Your recorded PharmaFlow savings for {monthName}: " +
+            $"Your PharmaFlow savings for the last 30 days: " +
             $"₹{savings.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))}.";
 
         var delivered = await SendToProfileAsync(
             profileId,
-            "PharmaFlow Monthly Savings",
+            "PharmaFlow 30-Day Savings",
             body,
             "/Home",
             cancellationToken);
