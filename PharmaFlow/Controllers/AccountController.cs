@@ -359,17 +359,23 @@ public class AccountController : Controller
         {
             var now = DateTime.UtcNow;
 
-            // LastLoginAt tracks the most recent real app activity.
-            // NotificationCycleStartAt is intentionally separate so the 30-day
+            // Keep LastLoginAt as the most recent real app activity.
+            // NotificationCycleStartAt is initialized only once so the 30-day
             // savings cycle does not move forward every time the user opens the app.
+            var existingCycleStart = await _dbContext.Profiles
+                .AsNoTracking()
+                .Where(p => p.Id == profileId)
+                .Select(p => p.NotificationCycleStartAt)
+                .SingleOrDefaultAsync(cancellationToken);
+
+            var cycleStart = existingCycleStart ?? now;
+
             await _dbContext.Profiles
                 .Where(p => p.Id == profileId)
                 .ExecuteUpdateAsync(setters => setters
                     .SetProperty(p => p.ActiveStatus, (short)1)
                     .SetProperty(p => p.LastLoginAt, now)
-                    .SetProperty(
-                        p => p.NotificationCycleStartAt,
-                        p.NotificationCycleStartAt ?? now), cancellationToken);
+                    .SetProperty(p => p.NotificationCycleStartAt, cycleStart), cancellationToken);
         }
         catch (Exception ex)
         {
