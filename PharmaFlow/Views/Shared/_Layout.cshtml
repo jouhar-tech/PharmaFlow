@@ -16,6 +16,10 @@
     var isStaffAddPage = ViewContext.RouteData.Values["controller"]?.ToString() == "Staff"
         && ViewContext.RouteData.Values["action"]?.ToString() == "Add";
     var isStaffUser = string.Equals(Context.Session.GetString("UserRole"), "Staff", StringComparison.OrdinalIgnoreCase);
+    var isUnlimitedPlanPage = ViewContext.RouteData.Values["controller"]?.ToString() == "Profile"
+        && ViewContext.RouteData.Values["action"]?.ToString() == "UnlimitedPlan";
+    var isFeedbackPage = ViewContext.RouteData.Values["controller"]?.ToString() == "Profile"
+        && ViewContext.RouteData.Values["action"]?.ToString() == "Feedback";
     var isAuthenticated = !string.IsNullOrWhiteSpace(Context.Session.GetString("SupabaseAccessToken"))
         && !string.IsNullOrWhiteSpace(Context.Session.GetString("ProfileId"));
 }
@@ -29,7 +33,7 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/PharmaFlow.styles.css" asp-append-version="true" />
 </head>
-<body class="@((isHomeDashboard ? "home-dashboard-page " : "") + (isExpiryProductsPage ? "expiry-products-page " : "") + (isInventoryPage ? "inventory-page " : "") + (isMorePage ? "more-page " : "") + (isLowStockPage ? "low-stock-page " : "") + (isReportsPage ? "reports-page " : "") + (isStaffAddPage ? "staff-add-page" : ""))">
+<body class="@((isHomeDashboard ? "home-dashboard-page " : "") + (isExpiryProductsPage ? "expiry-products-page " : "") + (isInventoryPage ? "inventory-page " : "") + (isMorePage ? "more-page " : "") + (isLowStockPage ? "low-stock-page " : "") + (isReportsPage ? "reports-page " : "") + (isStaffAddPage ? "staff-add-page " : "") + (isUnlimitedPlanPage ? "unlimited-plan-detail-page " : "") + (isFeedbackPage ? "feedback-page " : ""))">
     <div class="app-shell">
         <aside class="app-sidebar" id="appSidebar" aria-label="Main navigation">
             <div class="sidebar-brand">
