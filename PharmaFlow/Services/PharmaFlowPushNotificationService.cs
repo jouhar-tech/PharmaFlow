@@ -55,12 +55,17 @@ public sealed class PharmaFlowPushNotificationService : IPharmaFlowPushNotificat
             $"At-risk value: ₹{stats.ExpiringValue.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))} • " +
             $"Low stock: {stats.LowStockCount} products";
 
-        return await SendToProfileAsync(
+        var delivered = await SendToProfileAsync(
             profileId,
             "PharmaFlow Daily Stock Check",
             body,
             "/Home",
             cancellationToken);
+
+        if (!delivered)
+            await ReleaseDispatchAsync(profileId, DailyNotificationType, periodKey, cancellationToken);
+
+        return delivered;
     }
 
     public async Task<bool> SendMonthlySavingsNotificationAsync(
@@ -97,12 +102,17 @@ public sealed class PharmaFlowPushNotificationService : IPharmaFlowPushNotificat
             $"Your recorded PharmaFlow savings for {monthName}: " +
             $"₹{savings.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))}.";
 
-        return await SendToProfileAsync(
+        var delivered = await SendToProfileAsync(
             profileId,
             "PharmaFlow Monthly Savings",
             body,
             "/Home",
             cancellationToken);
+
+        if (!delivered)
+            await ReleaseDispatchAsync(profileId, MonthlyNotificationType, periodKey, cancellationToken);
+
+        return delivered;
     }
 
     public async Task<bool> SendTestNotificationAsync(
@@ -180,6 +190,22 @@ public sealed class PharmaFlowPushNotificationService : IPharmaFlowPushNotificat
             cancellationToken);
 
         return affected > 0;
+    }
+
+    private async Task ReleaseDispatchAsync(
+        long profileId,
+        string notificationType,
+        string periodKey,
+        CancellationToken cancellationToken)
+    {
+        await _db.Database.ExecuteSqlInterpolatedAsync(
+            $"""
+            DELETE FROM public.notification_dispatch_log
+            WHERE profile_id = {profileId}
+              AND notification_type = {notificationType}
+              AND period_key = {periodKey};
+            """,
+            cancellationToken);
     }
 
     private async Task<bool> SendToProfileAsync(
