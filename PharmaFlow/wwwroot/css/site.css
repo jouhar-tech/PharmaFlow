@@ -3866,3 +3866,22 @@ body.theme-dark .home-mobile-slow-moving-value {
     color: #16324a;
   }
 }
+
+
+/* Mobile profile detail pages use their own page header */
+@media (max-width: 767.98px) {
+  body.unlimited-plan-detail-page .app-topbar,
+  body.feedback-page .app-topbar {
+    display: none;
+  }
+
+  body.unlimited-plan-detail-page .app-content,
+  body.feedback-page .app-content {
+    padding-top: 0 !important;
+  }
+
+  body.unlimited-plan-detail-page .app-main,
+  body.feedback-page .app-main {
+    min-height: 100vh;
+  }
+}
