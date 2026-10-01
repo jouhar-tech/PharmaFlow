@@ -60,6 +60,7 @@ public class ApplicationDbContext : DbContext
             entity.Property(p => p.IsPrescriptionRequired).HasColumnName("is_prescription_required");
             entity.Property(p => p.IsActive).HasColumnName("is_active");
             entity.Property(p => p.CreatedAt).HasColumnName("created_at");
+            entity.Property(p => p.NotificationCycleStartAt).HasColumnName("notification_cycle_start_at");
             entity.Property(p => p.UpdatedAt).HasColumnName("updated_at");
 
             entity.HasMany(p => p.Batches)
