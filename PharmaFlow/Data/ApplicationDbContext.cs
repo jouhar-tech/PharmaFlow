@@ -17,6 +17,9 @@ public class ApplicationDbContext : DbContext
     public DbSet<InvoiceImport> InvoiceImports => Set<InvoiceImport>();
     public DbSet<InvoiceImportItem> InvoiceImportItems => Set<InvoiceImportItem>();
     public DbSet<Staff> Staff => Set<Staff>();
+    public DbSet<PushDeviceSubscription> PushDeviceSubscriptions => Set<PushDeviceSubscription>();
+    public DbSet<NotificationDispatchLog> NotificationDispatchLogs => Set<NotificationDispatchLog>();
+    public DbSet<PharmaFlowSavingsEvent> PharmaFlowSavingsEvents => Set<PharmaFlowSavingsEvent>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -183,6 +186,65 @@ public class ApplicationDbContext : DbContext
             entity.Property(p => p.LastLoginAt).HasColumnName("last_login_at");
             entity.Property(p => p.LastLogoutAt).HasColumnName("last_logout_at");
             entity.Property(p => p.CreatedAt).HasColumnName("created_at");
+        });
+
+        modelBuilder.Entity<PushDeviceSubscription>(entity =>
+        {
+            entity.ToTable("push_device_subscriptions", "public");
+            entity.HasKey(s => s.SubscriptionId);
+            entity.Property(s => s.SubscriptionId).HasColumnName("subscription_id");
+            entity.Property(s => s.ProfileId).HasColumnName("profile_id");
+            entity.Property(s => s.UserRole).HasColumnName("user_role").HasMaxLength(20);
+            entity.Property(s => s.Endpoint).HasColumnName("endpoint");
+            entity.Property(s => s.P256dh).HasColumnName("p256dh");
+            entity.Property(s => s.Auth).HasColumnName("auth");
+            entity.Property(s => s.UserAgent).HasColumnName("user_agent");
+            entity.Property(s => s.IsActive).HasColumnName("is_active");
+            entity.Property(s => s.CreatedAt).HasColumnName("created_at");
+            entity.Property(s => s.UpdatedAt).HasColumnName("updated_at");
+            entity.Property(s => s.LastSuccessAt).HasColumnName("last_success_at");
+            entity.Property(s => s.LastFailureAt).HasColumnName("last_failure_at");
+            entity.HasOne<Profile>()
+                .WithMany()
+                .HasForeignKey(s => s.ProfileId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(s => s.Endpoint).IsUnique();
+            entity.HasIndex(s => new { s.ProfileId, s.IsActive });
+        });
+
+        modelBuilder.Entity<NotificationDispatchLog>(entity =>
+        {
+            entity.ToTable("notification_dispatch_log", "public");
+            entity.HasKey(n => n.NotificationId);
+            entity.Property(n => n.NotificationId).HasColumnName("notification_id");
+            entity.Property(n => n.ProfileId).HasColumnName("profile_id");
+            entity.Property(n => n.NotificationType).HasColumnName("notification_type").HasMaxLength(40);
+            entity.Property(n => n.PeriodKey).HasColumnName("period_key").HasMaxLength(20);
+            entity.Property(n => n.SentAt).HasColumnName("sent_at");
+            entity.HasOne<Profile>()
+                .WithMany()
+                .HasForeignKey(n => n.ProfileId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(n => new { n.ProfileId, n.NotificationType, n.PeriodKey }).IsUnique();
+        });
+
+        modelBuilder.Entity<PharmaFlowSavingsEvent>(entity =>
+        {
+            entity.ToTable("pharmaflow_savings_events", "public");
+            entity.HasKey(e => e.EventId);
+            entity.Property(e => e.EventId).HasColumnName("event_id");
+            entity.Property(e => e.ProfileId).HasColumnName("profile_id");
+            entity.Property(e => e.Category).HasColumnName("category").HasMaxLength(50);
+            entity.Property(e => e.Amount).HasColumnName("amount").HasPrecision(14, 2);
+            entity.Property(e => e.Description).HasColumnName("description");
+            entity.Property(e => e.SourceType).HasColumnName("source_type").HasMaxLength(80);
+            entity.Property(e => e.SourceId).HasColumnName("source_id").HasMaxLength(160);
+            entity.Property(e => e.OccurredAt).HasColumnName("occurred_at");
+            entity.HasOne<Profile>()
+                .WithMany()
+                .HasForeignKey(e => e.ProfileId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(e => new { e.ProfileId, e.OccurredAt });
         });
     }
 }
