@@ -1,0 +1,61 @@
+@model PharmaFlow.Models.ViewModels.InvoiceBatchReviewViewModel
+
+@{
+    ViewData["Title"] = "Review Invoices";
+}
+
+<div class="invoice-batch-review-page">
+    <header class="invoice-batch-review-header">
+        <a asp-controller="Home" asp-action="Index" class="invoice-batch-review-back" aria-label="Back to dashboard">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M19 12H5"></path>
+                <path d="m11 18-6-6 6-6"></path>
+            </svg>
+        </a>
+        <div>
+            <span class="section-kicker">Invoice Capture</span>
+            <h1>Review Invoices</h1>
+            <p>@Model.Invoices.Count invoice@(Model.Invoices.Count == 1 ? "" : "s") captured and analyzed.</p>
+        </div>
+    </header>
+
+    <main class="invoice-batch-review-content">
+        @if (Model.Invoices.Count == 0)
+        {
+            <section class="invoice-batch-review-empty">
+                <strong>No captured invoices found</strong>
+                <span>Return to the dashboard and capture the invoices again.</span>
+                <a asp-controller="Home" asp-action="Index" class="btn btn-primary">Back to Dashboard</a>
+            </section>
+        }
+        else
+        {
+            <section class="invoice-batch-review-list" aria-label="Captured invoices">
+                @foreach (var invoice in Model.Invoices)
+                {
+                    <article class="invoice-batch-review-card">
+                        <div class="invoice-batch-review-index">@invoice.InvoiceNumber</div>
+
+                        <div class="invoice-batch-review-main">
+                            <strong>Invoice @invoice.InvoiceNumber</strong>
+                            <span>@invoice.OriginalFileName</span>
+                            <small>@invoice.ItemCount items · OCR @invoice.OcrConfidence.ToString("0")%</small>
+                        </div>
+
+                        <a class="invoice-batch-review-open"
+                           asp-controller="InvoiceCapture"
+                           asp-action="Review"
+                           asp-route-id="@invoice.ImportId">
+                            Review
+                        </a>
+                    </article>
+                }
+            </section>
+
+            <section class="invoice-batch-review-note">
+                <strong>Review each invoice before saving stock.</strong>
+                <span>Open each invoice above, verify Product, Batch, Expiry and Quantity, then save its stock.</span>
+            </section>
+        }
+    </main>
+</div>
