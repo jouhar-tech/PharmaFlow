@@ -119,9 +119,16 @@ public sealed class BillingController : Controller
         var customerName = NormalizeOptionalText(model.CustomerName, 120);
         var phoneNumber = NormalizePhoneNumber(model.PhoneNumber);
 
-        if (customerName is null && phoneNumber is null)
+        if (!string.IsNullOrWhiteSpace(model.PhoneNumber) && phoneNumber is null)
         {
-            // Walk-in sale is allowed.
+            TempData["BillingError"] = "Enter a valid 10-digit Indian mobile number.";
+            return RedirectToAction(nameof(Create));
+        }
+
+        if (paymentMethod == "Udhaar" && customerName is null && phoneNumber is null)
+        {
+            TempData["BillingError"] = "For Udhaar, enter the customer name or a valid phone number.";
+            return RedirectToAction(nameof(Create));
         }
 
         List<BillingLineInput> requestedLines;
@@ -303,6 +310,9 @@ public sealed class BillingController : Controller
                     customer.UpdatedAt = DateTime.UtcNow;
                 }
             }
+
+            if (customer is not null && customer.CustomerId == 0)
+                await _dbContext.SaveChangesAsync(cancellationToken);
 
             var billNumber = await GenerateUniqueBillNumberAsync(cancellationToken);
             var now = DateTime.UtcNow;
