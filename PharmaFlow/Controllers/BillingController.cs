@@ -351,6 +351,7 @@ public sealed class BillingController : Controller
                     ExpiryDate = line.ExpiryDate,
                     Quantity = line.Quantity,
                     UnitPrice = line.UnitPrice,
+                    PurchaseUnitPrice = batchById[line.BatchId].PurchaseUnitPrice,
                     Mrp = line.Mrp,
                     GstRate = line.GstRate,
                     TaxableAmount = line.GstRate > 0
