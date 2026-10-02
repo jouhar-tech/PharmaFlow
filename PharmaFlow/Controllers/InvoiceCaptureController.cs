@@ -366,6 +366,54 @@ public sealed class InvoiceCaptureController : Controller
     }
 
     [HttpGet]
+    public async Task<IActionResult> BatchReview(
+        string? ids,
+        CancellationToken cancellationToken)
+    {
+        if (!TryGetProfileId(out var profileId))
+            return RedirectToAction("Login", "Account");
+
+        var parsedIds = (ids ?? string.Empty)
+            .Split(',', StringSplitOptions.RemoveEmptyEntries)
+            .Select(value => long.TryParse(value, out var id) ? id : 0)
+            .Where(id => id > 0)
+            .Distinct()
+            .Take(20)
+            .ToList();
+
+        if (parsedIds.Count == 0)
+            return RedirectToAction(nameof(Review));
+
+        var imports = await _dbContext.InvoiceImports
+            .AsNoTracking()
+            .Include(item => item.Items)
+            .Where(item =>
+                item.ProfileId == profileId &&
+                parsedIds.Contains(item.ImportId))
+            .OrderBy(item => parsedIds.IndexOf(item.ImportId))
+            .Select(item => new InvoiceBatchReviewItemViewModel
+            {
+                ImportId = item.ImportId,
+                InvoiceNumber = 0,
+                OriginalFileName = item.OriginalFileName,
+                SourceType = item.SourceType,
+                OcrConfidence = item.OcrConfidence,
+                ItemCount = item.Items.Count,
+                Status = item.Status
+            })
+            .ToListAsync(cancellationToken);
+
+        for (var index = 0; index < imports.Count; index++)
+            imports[index].InvoiceNumber = index + 1;
+
+        ViewData["Title"] = "Review Invoices";
+        return View(new InvoiceBatchReviewViewModel
+        {
+            Invoices = imports
+        });
+    }
+
+    [HttpGet]
     public async Task<IActionResult> Review(
         long id,
         CancellationToken cancellationToken)
