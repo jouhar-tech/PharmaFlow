@@ -310,7 +310,6 @@ public sealed class BillingController : Controller
             var bill = new SalesBill
             {
                 ProfileId = profileId,
-                Customer = null,
                 CustomerId = customer?.CustomerId,
                 BillNumber = billNumber,
                 CustomerName = customerName,
