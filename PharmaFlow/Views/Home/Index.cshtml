@@ -314,8 +314,7 @@
                 </button>
 
                 <button type="button" class="invoice-camera-confirm" id="invoiceCameraConfirm" hidden aria-label="Continue with captured invoices">
-                    <span aria-hidden="true">✓</span>
-                    <span>1</span>
+                    <span>Page 2</span>
                 </button>
             </div>
         </div>
@@ -462,7 +461,7 @@
             const confirm = document.getElementById("invoiceCameraConfirm");
             if (confirm) {
                 confirm.hidden = count === 0;
-                confirm.querySelector("span:last-child").textContent = String(count);
+                confirm.querySelector("span").textContent = "Page " + (count + 1);
             }
         };
 
