@@ -3197,8 +3197,8 @@ body.theme-dark .reports-export-button { background: #245b57; color: #d9fffa; }
     color: #111 !important;
   }
 
-  body > * { display: none !important; }
-  body .reports-print-document {
+  body.reports-page > * { display: none !important; }
+  body.reports-page .reports-print-document {
     display: block !important;
     width: 100%;
     min-height: 100%;
@@ -7205,5 +7205,119 @@ body.theme-dark .bill-details-item-row {
 @media (max-width: 767.98px) {
   .bill-details-mobile-header {
     display: grid;
+  }
+}
+
+
+/* Reliable mobile/desktop receipt printing for generated bills and bill details */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 10mm;
+  }
+
+  html,
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    min-height: 0 !important;
+    background: #fff !important;
+    color: #111 !important;
+  }
+
+  body.billing-generated-page-body > .app-shell,
+  body.bill-details-page-body > .app-shell {
+    display: block !important;
+    width: 100% !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+  }
+
+  body.billing-generated-page-body .app-sidebar,
+  body.bill-details-page-body .app-sidebar,
+  body.billing-generated-page-body .app-topbar,
+  body.bill-details-page-body .app-topbar,
+  body.billing-generated-page-body .sidebar-overlay,
+  body.bill-details-page-body .sidebar-overlay,
+  body.billing-generated-page-body .pharmaflow-connectivity-banner,
+  body.bill-details-page-body .pharmaflow-connectivity-banner,
+  body.billing-generated-page-body .home-mobile-bottom-nav,
+  body.bill-details-page-body .home-mobile-bottom-nav,
+  body.billing-generated-page-body .app-footer,
+  body.bill-details-page-body .app-footer,
+  body.billing-generated-page-body .billing-generated-header,
+  body.bill-details-page-body .bill-details-mobile-header,
+  body.billing-generated-page-body .billing-invoice-summary-card,
+  body.billing-generated-page-body .billing-generated-items,
+  body.billing-generated-page-body .bill-details-meta-card,
+  body.bill-details-page-body .bill-details-items-card,
+  body.billing-generated-page-body .billing-generated-actions,
+  body.bill-details-page-body .bill-details-actions {
+    display: none !important;
+  }
+
+  body.billing-generated-page-body .app-main,
+  body.bill-details-page-body .app-main,
+  body.billing-generated-page-body .app-content,
+  body.bill-details-page-body .app-content,
+  body.billing-generated-page-body .billing-generated-page,
+  body.bill-details-page-body .bill-details-page,
+  body.billing-generated-page-body .billing-generated-content,
+  body.bill-details-page-body .bill-details-content {
+    display: block !important;
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+  }
+
+  body.billing-generated-page-body .billing-receipt-print-only,
+  body.bill-details-page-body .billing-receipt-print-only {
+    display: block !important;
+    visibility: visible !important;
+    position: static !important;
+    width: 110mm !important;
+    max-width: 110mm !important;
+    min-height: 0 !important;
+    margin: 0 auto !important;
+    padding: 7mm 6mm 6mm !important;
+    box-sizing: border-box !important;
+    overflow: visible !important;
+    color: #111 !important;
+    background: #fff !important;
+    font-family: Arial, Helvetica, sans-serif !important;
+    font-size: 10.5pt !important;
+    line-height: 1.3 !important;
+  }
+
+  body.billing-generated-page-body .billing-receipt-print-only *,
+  body.bill-details-page-body .billing-receipt-print-only * {
+    visibility: visible !important;
+  }
+
+  body.billing-generated-page-body .billing-receipt-print-only table,
+  body.bill-details-page-body .billing-receipt-print-only table {
+    display: table !important;
+  }
+
+  body.billing-generated-page-body .billing-receipt-print-only tbody,
+  body.bill-details-page-body .billing-receipt-print-only tbody {
+    display: table-row-group !important;
+  }
+
+  body.billing-generated-page-body .billing-receipt-print-only tr,
+  body.bill-details-page-body .billing-receipt-print-only tr {
+    display: table-row !important;
+  }
+
+  body.billing-generated-page-body .billing-receipt-print-only th,
+  body.billing-generated-page-body .billing-receipt-print-only td,
+  body.bill-details-page-body .billing-receipt-print-only th,
+  body.bill-details-page-body .billing-receipt-print-only td {
+    display: table-cell !important;
   }
 }
