@@ -78,9 +78,10 @@ public sealed class BillsController : Controller
 
         var bill = await _dbContext.SalesBills
             .AsNoTracking()
-            .Where(b => b.BillId == billId
-                     && b.ProfileId == profileId
-                     && b.Status == "Completed")
+            .Where(b =>
+                b.BillId == billId &&
+                b.ProfileId == profileId &&
+                b.Status == "Completed")
             .SingleOrDefaultAsync(cancellationToken);
 
         if (bill is null)
@@ -90,15 +91,11 @@ public sealed class BillsController : Controller
             .AsNoTracking()
             .Where(i => i.BillId == billId)
             .OrderBy(i => i.BillItemId)
-            .Select(i => new GeneratedBillLineViewModel
+            .Select(i => new BillDetailsLineViewModel
             {
                 ProductName = i.ProductName,
                 BatchNumber = i.BatchNumber,
                 Quantity = i.Quantity,
-                UnitPrice = i.UnitPrice,
-                Mrp = i.Mrp,
-                GstRate = i.GstRate,
-                GstAmount = i.GstAmount,
                 LineTotal = i.LineTotal
             })
             .ToListAsync(cancellationToken);
@@ -114,29 +111,27 @@ public sealed class BillsController : Controller
             })
             .SingleOrDefaultAsync(cancellationToken);
 
-        var details = new GeneratedBillViewModel
+        var details = new BillDetailsViewModel
         {
             BillId = bill.BillId,
-            BusinessName = string.IsNullOrWhiteSpace(profile?.BusinessName) ? "PharmaFlow" : profile.BusinessName!,
+            BusinessName = string.IsNullOrWhiteSpace(profile?.BusinessName)
+                ? "PharmaFlow"
+                : profile.BusinessName!,
             BusinessPhone = profile?.PhoneNumber,
             BusinessEmail = profile?.Email,
             InvoiceNumber = bill.BillNumber,
             InvoiceDate = bill.CreatedAt.AddHours(5.5),
             CustomerName = bill.CustomerName,
             PhoneNumber = bill.CustomerPhone,
-            Subtotal = bill.Subtotal,
-            TaxableAmount = bill.TaxableAmount,
-            CgstAmount = bill.CgstAmount,
-            SgstAmount = bill.SgstAmount,
-            IgstAmount = bill.IgstAmount,
-            GstAmount = bill.GstAmount,
+            PaymentMethod = string.IsNullOrWhiteSpace(bill.PaymentMethod)
+                ? null
+                : bill.PaymentMethod,
             TotalAmount = bill.TotalAmount,
-            PaymentMethod = bill.PaymentMethod,
             Items = items
         };
 
         ViewData["Title"] = "Bill Details";
-        return View("~/Views/Billing/Generated.cshtml", details);
+        return View("Details", details);
     }
 
     [HttpGet]
