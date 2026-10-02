@@ -6768,3 +6768,430 @@ body.theme-dark .bills-empty-state strong {
   outline: 2px solid #3b82f6;
   outline-offset: 2px;
 }
+
+
+/* Dedicated Bill Details page */
+.bill-details-page {
+  min-height: 100vh;
+  padding-bottom: 5.75rem;
+  background: #eef3f6;
+}
+
+.bill-details-mobile-header {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) 42px;
+  align-items: center;
+  min-height: 176px;
+  padding: 1rem .85rem 3.25rem;
+  background: linear-gradient(180deg, #a9e3d8 0%, #98dacc 100%);
+  border-radius: 0 0 1.2rem 1.2rem;
+}
+
+.bill-details-mobile-header h1 {
+  margin: 0;
+  color: #172b2b;
+  text-align: center;
+  font-size: 1.65rem;
+  font-weight: 850;
+  letter-spacing: -.035em;
+}
+
+.bill-details-header-spacer {
+  width: 36px;
+  height: 36px;
+}
+
+.bill-details-back {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #fff;
+  color: #183b3a;
+  box-shadow: 0 4px 12px rgba(15,23,42,.12);
+  text-decoration: none;
+}
+
+.bill-details-back:hover {
+  color: #183b3a;
+  background: #fff;
+  text-decoration: none;
+}
+
+.bill-details-back svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.bill-details-content {
+  position: relative;
+  z-index: 2;
+  width: calc(100% - 1.05rem);
+  max-width: 820px;
+  margin: -2.05rem auto 0;
+}
+
+.bill-details-meta-card,
+.bill-details-items-card {
+  background: #fff;
+  border: 1px solid #dce4ea;
+  border-radius: 1rem;
+  box-shadow: 0 8px 22px rgba(15,23,42,.08);
+}
+
+.bill-details-meta-card {
+  padding: .82rem .9rem .72rem;
+}
+
+.bill-details-meta-row {
+  display: grid;
+  grid-template-columns: 24px minmax(0,1fr) auto;
+  align-items: center;
+  gap: .52rem;
+  min-height: 36px;
+  padding: .3rem 0;
+  border-bottom: 1px solid #e8edf0;
+}
+
+.bill-details-meta-row:last-child {
+  border-bottom: 0;
+}
+
+.bill-details-meta-icon {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  color: #7d858e;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.bill-details-meta-label {
+  color: #202a33;
+  font-size: .86rem;
+}
+
+.bill-details-meta-row strong {
+  color: #111827;
+  font-size: .84rem;
+  font-weight: 800;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.bill-details-items-card {
+  margin-top: 1rem;
+  overflow: hidden;
+}
+
+.bill-details-items-header {
+  padding: .85rem .95rem .78rem;
+  border-bottom: 1px solid #e2e7eb;
+}
+
+.bill-details-items-header h2 {
+  margin: 0;
+  color: #17202b;
+  font-size: 1.05rem;
+  font-weight: 850;
+}
+
+.bill-details-items-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 74px 84px;
+  align-items: center;
+  min-height: 38px;
+  padding: 0 .95rem;
+  background: #f1f2f5;
+  color: #252c33;
+  border-bottom: 1px solid #dfe4e8;
+  font-size: .76rem;
+  font-weight: 700;
+}
+
+.bill-details-items-columns span:nth-child(2) {
+  text-align: center;
+}
+
+.bill-details-items-columns span:nth-child(3) {
+  text-align: right;
+}
+
+.bill-details-item-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 74px 84px;
+  align-items: center;
+  min-height: 53px;
+  padding: .35rem .95rem;
+  border-bottom: 1px solid #e2e7eb;
+}
+
+.bill-details-item-name {
+  color: #171c21;
+  font-size: .92rem;
+  font-weight: 600;
+  min-width: 0;
+}
+
+.bill-details-item-qty {
+  color: #202830;
+  font-size: .85rem;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.bill-details-item-amount {
+  color: #171c21;
+  font-size: .9rem;
+  font-weight: 700;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.bill-details-total-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 65px;
+  padding: .75rem .95rem;
+}
+
+.bill-details-total-row span {
+  color: #131a20;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.bill-details-total-row strong {
+  color: #111;
+  font-size: 1.55rem;
+  font-weight: 900;
+  letter-spacing: -.035em;
+  white-space: nowrap;
+}
+
+.bill-details-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .7rem;
+  margin-top: .9rem;
+}
+
+.bill-details-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .55rem;
+  min-height: 58px;
+  padding: .75rem .8rem;
+  border: 0;
+  border-radius: .8rem;
+  font: inherit;
+  font-size: .9rem;
+  font-weight: 750;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(15,23,42,.08);
+}
+
+.bill-details-action svg {
+  width: 21px;
+  height: 21px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.bill-details-print {
+  background: #1769c2;
+  color: #fff;
+}
+
+.bill-details-print:hover {
+  background: #145da9;
+  color: #fff;
+}
+
+.bill-details-whatsapp {
+  background: #9fdfd1;
+  color: #17332f;
+}
+
+.bill-details-whatsapp:hover {
+  background: #92d6c7;
+  color: #17332f;
+}
+
+@media (min-width: 768px) {
+  .bill-details-mobile-header {
+    max-width: 860px;
+    margin: 0 auto;
+    border-radius: 0 0 1.2rem 1.2rem;
+  }
+
+  .bill-details-page {
+    max-width: 860px;
+    margin: 0 auto;
+  }
+
+  .bill-details-content {
+    width: calc(100% - 2rem);
+  }
+}
+
+@media (max-width: 420px) {
+  .bill-details-mobile-header {
+    min-height: 166px;
+    padding-bottom: 2.8rem;
+  }
+
+  .bill-details-mobile-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .bill-details-content {
+    width: calc(100% - .9rem);
+    margin-top: -1.85rem;
+  }
+
+  .bill-details-meta-card {
+    padding: .72rem .75rem .6rem;
+  }
+
+  .bill-details-meta-row {
+    grid-template-columns: 22px minmax(0,1fr) auto;
+    min-height: 34px;
+    gap: .42rem;
+  }
+
+  .bill-details-meta-label {
+    font-size: .8rem;
+  }
+
+  .bill-details-meta-row strong {
+    font-size: .79rem;
+  }
+
+  .bill-details-items-header {
+    padding: .78rem .75rem .7rem;
+  }
+
+  .bill-details-items-columns,
+  .bill-details-item-row {
+    grid-template-columns: minmax(0,1fr) 63px 72px;
+    padding-left: .75rem;
+    padding-right: .75rem;
+  }
+
+  .bill-details-items-columns {
+    font-size: .68rem;
+  }
+
+  .bill-details-item-name {
+    font-size: .78rem;
+  }
+
+  .bill-details-item-qty {
+    font-size: .74rem;
+  }
+
+  .bill-details-item-amount {
+    font-size: .8rem;
+  }
+
+  .bill-details-total-row {
+    min-height: 61px;
+    padding-left: .75rem;
+    padding-right: .75rem;
+  }
+
+  .bill-details-total-row span {
+    font-size: .92rem;
+  }
+
+  .bill-details-total-row strong {
+    font-size: 1.35rem;
+  }
+
+  .bill-details-actions {
+    gap: .55rem;
+  }
+
+  .bill-details-action {
+    min-height: 54px;
+    font-size: .78rem;
+  }
+}
+
+body.theme-dark .bill-details-page {
+  background: #0f172a;
+}
+
+body.theme-dark .bill-details-meta-card,
+body.theme-dark .bill-details-items-card {
+  background: #111c2e;
+  border-color: #263449;
+  box-shadow: none;
+}
+
+body.theme-dark .bill-details-mobile-header {
+  background: linear-gradient(180deg, #245b57 0%, #1e4f4c 100%);
+}
+
+body.theme-dark .bill-details-mobile-header h1 {
+  color: #f8fafc;
+}
+
+body.theme-dark .bill-details-back {
+  background: #111c2e;
+  color: #e2e8f0;
+}
+
+body.theme-dark .bill-details-meta-label,
+body.theme-dark .bill-details-meta-row strong,
+body.theme-dark .bill-details-items-header h2,
+body.theme-dark .bill-details-item-name,
+body.theme-dark .bill-details-item-qty,
+body.theme-dark .bill-details-item-amount,
+body.theme-dark .bill-details-total-row span,
+body.theme-dark .bill-details-total-row strong {
+  color: #f8fafc;
+}
+
+body.theme-dark .bill-details-meta-row {
+  border-color: #263449;
+}
+
+body.theme-dark .bill-details-items-header {
+  border-color: #263449;
+}
+
+body.theme-dark .bill-details-items-columns {
+  background: #1e293b;
+  border-color: #263449;
+  color: #cbd5e1;
+}
+
+body.theme-dark .bill-details-item-row {
+  border-color: #263449;
+}
+
+@media (max-width: 767.98px) {
+  body.bill-details-page-body .app-topbar {
+    display: none !important;
+  }
+
+  body.bill-details-page-body .app-content {
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
