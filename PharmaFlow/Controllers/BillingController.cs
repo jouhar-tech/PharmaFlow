@@ -393,9 +393,23 @@ public sealed class BillingController : Controller
 
             await transaction.CommitAsync(cancellationToken);
 
+            var profile = await _dbContext.Profiles
+                .AsNoTracking()
+                .Where(p => p.Id == profileId)
+                .Select(p => new
+                {
+                    p.BusinessName,
+                    p.PhoneNumber,
+                    p.Email
+                })
+                .SingleOrDefaultAsync(cancellationToken);
+
             var generated = new GeneratedBillViewModel
             {
                 BillId = bill.BillId,
+                BusinessName = string.IsNullOrWhiteSpace(profile?.BusinessName) ? "PharmaFlow" : profile.BusinessName!,
+                BusinessPhone = profile?.PhoneNumber,
+                BusinessEmail = profile?.Email,
                 InvoiceNumber = bill.BillNumber,
                 InvoiceDate = bill.CreatedAt.AddHours(5.5),
                 CustomerName = bill.CustomerName,
