@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PharmaFlow.Data;
 using PharmaFlow.Filters;
+using PharmaFlow.Models;
 using PharmaFlow.Models.ViewModels;
 
 namespace PharmaFlow.Controllers;
@@ -60,12 +61,18 @@ public sealed class ReportsController : Controller
 
         var billIds = billList.Select(b => b.BillId).ToList();
 
-        var items = billIds.Count == 0
-            ? []
-            : await _dbContext.SalesBillItems
+        List<SalesBillItem> items;
+        if (billIds.Count == 0)
+        {
+            items = [];
+        }
+        else
+        {
+            items = await _dbContext.SalesBillItems
                 .AsNoTracking()
                 .Where(i => billIds.Contains(i.BillId))
                 .ToListAsync(cancellationToken);
+        }
 
         var billLookup = billList.ToDictionary(b => b.BillId);
 
