@@ -66,6 +66,80 @@ public sealed class BillsController : Controller
     }
 
     [HttpGet]
+    public async Task<IActionResult> Details(
+        long billId,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetProfileId(out var profileId))
+            return RedirectToAction("Login", "Account");
+
+        if (billId <= 0)
+            return NotFound();
+
+        var bill = await _dbContext.SalesBills
+            .AsNoTracking()
+            .Where(b => b.BillId == billId
+                     && b.ProfileId == profileId
+                     && b.Status == "Completed")
+            .SingleOrDefaultAsync(cancellationToken);
+
+        if (bill is null)
+            return NotFound();
+
+        var items = await _dbContext.SalesBillItems
+            .AsNoTracking()
+            .Where(i => i.BillId == billId)
+            .OrderBy(i => i.BillItemId)
+            .Select(i => new GeneratedBillLineViewModel
+            {
+                ProductName = i.ProductName,
+                BatchNumber = i.BatchNumber,
+                Quantity = i.Quantity,
+                UnitPrice = i.UnitPrice,
+                Mrp = i.Mrp,
+                GstRate = i.GstRate,
+                GstAmount = i.GstAmount,
+                LineTotal = i.LineTotal
+            })
+            .ToListAsync(cancellationToken);
+
+        var profile = await _dbContext.Profiles
+            .AsNoTracking()
+            .Where(p => p.Id == profileId)
+            .Select(p => new
+            {
+                p.BusinessName,
+                p.PhoneNumber,
+                p.Email
+            })
+            .SingleOrDefaultAsync(cancellationToken);
+
+        var details = new GeneratedBillViewModel
+        {
+            BillId = bill.BillId,
+            BusinessName = string.IsNullOrWhiteSpace(profile?.BusinessName) ? "PharmaFlow" : profile.BusinessName!,
+            BusinessPhone = profile?.PhoneNumber,
+            BusinessEmail = profile?.Email,
+            InvoiceNumber = bill.BillNumber,
+            InvoiceDate = bill.CreatedAt.AddHours(5.5),
+            CustomerName = bill.CustomerName,
+            PhoneNumber = bill.CustomerPhone,
+            Subtotal = bill.Subtotal,
+            TaxableAmount = bill.TaxableAmount,
+            CgstAmount = bill.CgstAmount,
+            SgstAmount = bill.SgstAmount,
+            IgstAmount = bill.IgstAmount,
+            GstAmount = bill.GstAmount,
+            TotalAmount = bill.TotalAmount,
+            PaymentMethod = bill.PaymentMethod,
+            Items = items
+        };
+
+        ViewData["Title"] = "Bill Details";
+        return View("~/Views/Billing/Generated.cshtml", details);
+    }
+
+    [HttpGet]
     public async Task<IActionResult> Search(
         string period = "Today",
         string? q = null,
