@@ -86,6 +86,7 @@ CREATE TABLE IF NOT EXISTS public.sales_bill_items
     expiry_date DATE NOT NULL,
     quantity NUMERIC(12,2) NOT NULL,
     unit_price NUMERIC(14,2) NOT NULL,
+    purchase_unit_price NUMERIC(14,2) NOT NULL DEFAULT 0,
     mrp NUMERIC(14,2) NOT NULL,
     gst_rate NUMERIC(5,2) NOT NULL DEFAULT 0,
     taxable_amount NUMERIC(14,2) NOT NULL DEFAULT 0,
@@ -97,7 +98,7 @@ CREATE TABLE IF NOT EXISTS public.sales_bill_items
 
     CONSTRAINT ck_sales_bill_items_quantity_positive CHECK (quantity > 0),
     CONSTRAINT ck_sales_bill_items_prices_nonnegative CHECK (
-        unit_price >= 0 AND mrp >= 0
+        unit_price >= 0 AND purchase_unit_price >= 0 AND mrp >= 0
     ),
     CONSTRAINT ck_sales_bill_items_tax_nonnegative CHECK (
         gst_rate >= 0 AND taxable_amount >= 0 AND
