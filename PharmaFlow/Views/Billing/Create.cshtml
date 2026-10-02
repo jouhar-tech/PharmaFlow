@@ -2,6 +2,7 @@
 
 @{
     ViewData["Title"] = "Create Bill";
+    var billingError = TempData["BillingError"] as string;
 }
 
 <div class="billing-create-page">
@@ -17,9 +18,27 @@
         <span class="billing-create-header-spacer" aria-hidden="true"></span>
     </header>
 
-    <form asp-controller="Billing" asp-action="Generate" method="post" class="billing-create-content" id="billingCreateForm">
+    <form asp-controller="Billing"
+          asp-action="Generate"
+          method="post"
+          class="billing-create-content"
+          id="billingCreateForm"
+          novalidate>
         @Html.AntiForgeryToken()
-        <input type="hidden" name="PaymentMethod" id="billingPaymentMethod" value="Cash" />
+        <input type="hidden" asp-for="PaymentMethod" id="billingPaymentMethod" value="Cash" />
+        <input type="hidden" asp-for="ItemsJson" id="billingItemsJson" />
+
+        @if (!string.IsNullOrWhiteSpace(billingError))
+        {
+            <div class="billing-create-alert" role="alert">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <circle cx="12" cy="12" r="9"></circle>
+                    <path d="M12 8v5M12 16h.01"></path>
+                </svg>
+                <span>@billingError</span>
+            </div>
+        }
+
         <section class="billing-customer-card" aria-labelledby="billingCustomerTitle">
             <div class="billing-section-heading">
                 <div class="billing-section-icon billing-section-icon-customer" aria-hidden="true">
@@ -61,6 +80,7 @@
                            autocomplete="tel"
                            placeholder="Phone Number (Optional)" />
                 </div>
+                <small class="billing-field-hint">For Udhaar, provide a customer name or valid 10-digit phone number.</small>
             </div>
         </section>
 
@@ -73,9 +93,12 @@
                 <input id="billingProductSearch"
                        type="search"
                        autocomplete="off"
+                       maxlength="80"
                        placeholder="Search medicine or drug"
                        aria-label="Search medicine or drug" />
             </label>
+
+            <div class="billing-search-results" id="billingSearchResults" hidden></div>
         </section>
 
         <section class="billing-items-section" aria-labelledby="billingItemsTitle">
@@ -84,15 +107,24 @@
             </div>
 
             <div class="billing-items-card" id="billingItemsCard">
-                <div class="billing-empty-items">
+                <div class="billing-empty-items" id="billingEmptyItems">
                     <div class="billing-empty-icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24">
                             <rect x="5" y="3.5" width="14" height="17" rx="2"></rect>
                             <path d="M8.5 8h7M8.5 12h7M8.5 16h4.5"></path>
                         </svg>
                     </div>
-                    <strong>No medicines added yet</strong>
-                    <span>Search for a medicine above to add items to this bill.</span>
+                    <div>
+                        <strong>No medicines added yet</strong>
+                        <span>Search for a medicine above and select an available batch.</span>
+                    </div>
+                </div>
+
+                <div class="billing-item-list" id="billingItemList" hidden></div>
+
+                <div class="billing-total-strip" id="billingTotalStrip" hidden>
+                    <span>Total Amount</span>
+                    <strong id="billingLiveTotal">₹0.00</strong>
                 </div>
             </div>
         </section>
@@ -127,11 +159,12 @@
 
                 <button type="button" class="billing-payment-option" data-payment-method="Udhaar" aria-pressed="false">
                     <span class="billing-payment-icon" aria-hidden="true">
-                        <rect x="5" y="4" width="14" height="16" rx="2"></rect>
-                        <path d="M8 8h8M8 12h5"></path>
-                        <circle cx="16.5" cy="16.5" r="2.5"></circle>
-                        <path d="m15.4 16.5.8.8 1.5-1.6"></path>
-                    </svg>
+                        <svg viewBox="0 0 24 24">
+                            <rect x="5" y="4" width="14" height="16" rx="2"></rect>
+                            <path d="M8 8h8M8 12h5"></path>
+                            <circle cx="16.5" cy="16.5" r="2.5"></circle>
+                            <path d="m15.4 16.5.8.8 1.5-1.6"></path>
+                        </svg>
                     </span>
                     <span>Udhaar</span>
                 </button>
@@ -153,32 +186,304 @@
 @section Scripts {
 <script>
     (() => {
-        const paymentButtons = document.querySelectorAll(".billing-payment-option");
+        const searchInput = document.getElementById("billingProductSearch");
+        const searchResults = document.getElementById("billingSearchResults");
+        const itemList = document.getElementById("billingItemList");
+        const emptyItems = document.getElementById("billingEmptyItems");
+        const totalStrip = document.getElementById("billingTotalStrip");
+        const liveTotal = document.getElementById("billingLiveTotal");
+        const itemsJson = document.getElementById("billingItemsJson");
         const paymentInput = document.getElementById("billingPaymentMethod");
         const createForm = document.getElementById("billingCreateForm");
+        const generateButton = document.getElementById("billingGenerateButton");
 
-        paymentButtons.forEach(button => {
+        const state = {
+            items: new Map(),
+            searchTimer: null,
+            requestSequence: 0
+        };
+
+        const formatMoney = value =>
+            "₹" + Number(value || 0).toLocaleString("en-IN", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+
+        const escapeHtml = value =>
+            String(value ?? "")
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll('"', "&quot;")
+                .replaceAll("'", "&#039;");
+
+        const syncForm = () => {
+            const payload = Array.from(state.items.values()).map(item => ({
+                batchId: item.batchId,
+                quantity: item.quantity
+            }));
+
+            itemsJson.value = JSON.stringify(payload);
+
+            const total = Array.from(state.items.values())
+                .reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0);
+
+            liveTotal.textContent = formatMoney(total);
+
+            const hasItems = state.items.size > 0;
+            emptyItems.hidden = hasItems;
+            itemList.hidden = !hasItems;
+            totalStrip.hidden = !hasItems;
+            generateButton.classList.toggle("is-ready", hasItems);
+        };
+
+        const renderItems = () => {
+            itemList.innerHTML = "";
+
+            for (const item of state.items.values()) {
+                const card = document.createElement("article");
+                card.className = "billing-line-card";
+                card.dataset.batchId = String(item.batchId);
+
+                card.innerHTML = `
+                    <div class="billing-line-main">
+                        <div class="billing-line-product-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M5 8.5 12 4l7 4.5-7 4.5z"></path>
+                                <path d="M5 8.5V16l7 4 7-4V8.5M12 13v7"></path>
+                            </svg>
+                        </div>
+                        <div class="billing-line-copy">
+                            <strong>${escapeHtml(item.productName)}</strong>
+                            <span>Batch ${escapeHtml(item.batchNumber)} · Exp ${escapeHtml(item.expiryDate)}</span>
+                            <small>Rate ${formatMoney(item.unitPrice)} · GST ${Number(item.gstRate || 0).toFixed(2)}%</small>
+                        </div>
+                        <button type="button" class="billing-line-remove" data-action="remove" aria-label="Remove item">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M5 7h14M9 7V4.5h6V7M8 7l.7 13h6.6L16 7M10 11v5M14 11v5"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="billing-line-bottom">
+                        <div class="billing-stock-note">Available ${Number(item.availableQty).toLocaleString("en-IN", { maximumFractionDigits: 2 })}</div>
+                        <div class="billing-qty-control" aria-label="Quantity">
+                            <button type="button" data-action="minus" aria-label="Decrease quantity">−</button>
+                            <strong>${Number(item.quantity).toLocaleString("en-IN", { maximumFractionDigits: 2 })}</strong>
+                            <button type="button" data-action="plus" aria-label="Increase quantity">+</button>
+                        </div>
+                        <strong class="billing-line-total">${formatMoney(item.unitPrice * item.quantity)}</strong>
+                    </div>
+                `;
+
+                itemList.appendChild(card);
+            }
+
+            syncForm();
+        };
+
+        const addBatch = batch => {
+            const existing = state.items.get(batch.batchId);
+
+            if (existing) {
+                if (existing.quantity >= existing.availableQty) return;
+                existing.quantity += 1;
+            } else {
+                state.items.set(batch.batchId, {
+                    ...batch,
+                    quantity: 1
+                });
+            }
+
+            searchResults.hidden = true;
+            searchInput.value = "";
+            renderItems();
+            searchInput.focus();
+        };
+
+        const renderSearchResults = products => {
+            const rows = [];
+
+            for (const product of products) {
+                for (const batch of (product.batches || [])) {
+                    const disabled = Number(batch.sellingUnitPrice || 0) <= 0 ||
+                        Number(batch.quantityOnHand || 0) <= 0;
+
+                    rows.push(`
+                        <button type="button"
+                                class="billing-search-result"
+                                data-batch-id="${batch.batchId}"
+                                ${disabled ? "disabled" : ""}>
+                            <span class="billing-search-result-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M5 8.5 12 4l7 4.5-7 4.5z"></path>
+                                    <path d="M5 8.5V16l7 4 7-4V8.5"></path>
+                                </svg>
+                            </span>
+                            <span class="billing-search-result-copy">
+                                <strong>${escapeHtml(product.productName)}</strong>
+                                <small>Batch ${escapeHtml(batch.batchNumber)} · Exp ${escapeHtml(batch.expiryDate)} · Stock ${Number(batch.quantityOnHand).toLocaleString("en-IN", { maximumFractionDigits: 2 })}</small>
+                            </span>
+                            <span class="billing-search-result-price">
+                                ${disabled ? "Price not set" : formatMoney(batch.sellingUnitPrice)}
+                            </span>
+                        </button>
+                    `);
+                }
+            }
+
+            if (rows.length === 0) {
+                searchResults.innerHTML = `
+                    <div class="billing-search-empty">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <circle cx="11" cy="11" r="6.5"></circle>
+                            <path d="m16 16 4.5 4.5"></path>
+                        </svg>
+                        <strong>No saleable stock found</strong>
+                        <span>Try another medicine name, batch or barcode.</span>
+                    </div>`;
+            } else {
+                searchResults.innerHTML = rows.join("");
+            }
+
+            searchResults.hidden = false;
+
+            searchResults.querySelectorAll(".billing-search-result:not(:disabled)").forEach(button => {
+                button.addEventListener("click", () => {
+                    const batchId = Number(button.dataset.batchId);
+                    const batch = products
+                        .flatMap(product => product.batches || [])
+                        .find(item => Number(item.batchId) === batchId);
+
+                    const product = products.find(p =>
+                        (p.batches || []).some(item => Number(item.batchId) === batchId));
+
+                    if (!batch || !product) return;
+
+                    addBatch({
+                        batchId: Number(batch.batchId),
+                        productName: product.productName,
+                        batchNumber: batch.batchNumber,
+                        expiryDate: batch.expiryDate,
+                        availableQty: Number(batch.quantityOnHand || 0),
+                        unitPrice: Number(batch.sellingUnitPrice || 0),
+                        mrp: Number(batch.mrp || batch.sellingUnitPrice || 0),
+                        gstRate: Number(product.gstRate || 0)
+                    });
+                });
+            });
+        };
+
+        const loadSearchResults = async query => {
+            const sequence = ++state.requestSequence;
+
+            if (!query.trim()) {
+                searchResults.hidden = true;
+                searchResults.innerHTML = "";
+                return;
+            }
+
+            searchResults.hidden = false;
+            searchResults.innerHTML = `
+                <div class="billing-search-loading">
+                    <span class="billing-mini-spinner" aria-hidden="true"></span>
+                    <span>Searching stock...</span>
+                </div>`;
+
+            try {
+                const response = await fetch(
+                    '@Url.Action("Search", "Billing")?q=' + encodeURIComponent(query.trim()),
+                    { credentials: "same-origin" });
+
+                if (sequence !== state.requestSequence) return;
+
+                if (!response.ok) {
+                    throw new Error("Search failed.");
+                }
+
+                const products = await response.json();
+                renderSearchResults(products);
+            } catch {
+                if (sequence !== state.requestSequence) return;
+
+                searchResults.innerHTML = `
+                    <div class="billing-search-empty">
+                        <strong>Could not search inventory</strong>
+                        <span>Check your connection and try again.</span>
+                    </div>`;
+                searchResults.hidden = false;
+            }
+        };
+
+        searchInput?.addEventListener("input", () => {
+            clearTimeout(state.searchTimer);
+            const query = searchInput.value;
+
+            state.searchTimer = setTimeout(() => loadSearchResults(query), 180);
+        });
+
+        document.addEventListener("click", event => {
+            if (!event.target.closest(".billing-product-search")) {
+                searchResults.hidden = true;
+            }
+        });
+
+        itemList?.addEventListener("click", event => {
+            const button = event.target.closest("button[data-action]");
+            if (!button) return;
+
+            const card = button.closest(".billing-line-card");
+            const batchId = Number(card?.dataset.batchId);
+            const item = state.items.get(batchId);
+
+            if (!item) return;
+
+            const action = button.dataset.action;
+
+            if (action === "remove") {
+                state.items.delete(batchId);
+            } else if (action === "minus") {
+                item.quantity = Math.max(1, item.quantity - 1);
+            } else if (action === "plus") {
+                item.quantity = Math.min(item.availableQty, item.quantity + 1);
+            }
+
+            renderItems();
+        });
+
+        document.querySelectorAll(".billing-payment-option").forEach(button => {
             button.addEventListener("click", () => {
                 const selectedMethod = button.dataset.paymentMethod || "Cash";
 
-                paymentButtons.forEach(item => {
+                document.querySelectorAll(".billing-payment-option").forEach(item => {
                     const active = item === button;
                     item.classList.toggle("is-selected", active);
                     item.setAttribute("aria-pressed", String(active));
                 });
 
-                if (paymentInput) {
-                    paymentInput.value = selectedMethod;
-                }
+                paymentInput.value = selectedMethod;
             });
         });
 
-        createForm?.addEventListener("submit", () => {
+        createForm?.addEventListener("submit", event => {
+            if (state.items.size === 0) {
+                event.preventDefault();
+                generateButton.classList.add("billing-submit-error");
+                setTimeout(() => generateButton.classList.remove("billing-submit-error"), 450);
+                return;
+            }
+
             const selected = document.querySelector(".billing-payment-option.is-selected");
-            if (paymentInput && selected) {
+            if (selected) {
                 paymentInput.value = selected.dataset.paymentMethod || "Cash";
             }
+
+            syncForm();
+            generateButton.disabled = true;
+            generateButton.setAttribute("aria-busy", "true");
+            generateButton.querySelector("span").textContent = "Generating...";
         });
+
+        syncForm();
     })();
 </script>
 }
