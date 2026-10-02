@@ -17,7 +17,9 @@
         <span class="billing-create-header-spacer" aria-hidden="true"></span>
     </header>
 
-    <main class="billing-create-content">
+    <form asp-controller="Billing" asp-action="Generate" method="post" class="billing-create-content" id="billingCreateForm">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="PaymentMethod" id="billingPaymentMethod" value="Cash" />
         <section class="billing-customer-card" aria-labelledby="billingCustomerTitle">
             <div class="billing-section-heading">
                 <div class="billing-section-icon billing-section-icon-customer" aria-hidden="true">
@@ -145,22 +147,37 @@
             </svg>
             <span>Generate Bill</span>
         </button>
-    </main>
+    </form>
 </div>
 
 @section Scripts {
 <script>
     (() => {
         const paymentButtons = document.querySelectorAll(".billing-payment-option");
+        const paymentInput = document.getElementById("billingPaymentMethod");
+        const createForm = document.getElementById("billingCreateForm");
 
         paymentButtons.forEach(button => {
             button.addEventListener("click", () => {
+                const selectedMethod = button.dataset.paymentMethod || "Cash";
+
                 paymentButtons.forEach(item => {
                     const active = item === button;
                     item.classList.toggle("is-selected", active);
                     item.setAttribute("aria-pressed", String(active));
                 });
+
+                if (paymentInput) {
+                    paymentInput.value = selectedMethod;
+                }
             });
+        });
+
+        createForm?.addEventListener("submit", () => {
+            const selected = document.querySelector(".billing-payment-option.is-selected");
+            if (paymentInput && selected) {
+                paymentInput.value = selected.dataset.paymentMethod || "Cash";
+            }
         });
     })();
 </script>
