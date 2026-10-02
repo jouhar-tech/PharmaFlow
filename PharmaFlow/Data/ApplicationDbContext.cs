@@ -20,6 +20,9 @@ public class ApplicationDbContext : DbContext
     public DbSet<PushDeviceSubscription> PushDeviceSubscriptions => Set<PushDeviceSubscription>();
     public DbSet<NotificationDispatchLog> NotificationDispatchLogs => Set<NotificationDispatchLog>();
     public DbSet<PharmaFlowSavingsEvent> PharmaFlowSavingsEvents => Set<PharmaFlowSavingsEvent>();
+    public DbSet<Customer> Customers => Set<Customer>();
+    public DbSet<SalesBill> SalesBills => Set<SalesBill>();
+    public DbSet<SalesBillItem> SalesBillItems => Set<SalesBillItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -246,6 +249,91 @@ public class ApplicationDbContext : DbContext
                 .HasForeignKey(e => e.ProfileId)
                 .OnDelete(DeleteBehavior.Cascade);
             entity.HasIndex(e => new { e.ProfileId, e.OccurredAt });
+        });
+
+        modelBuilder.Entity<Customer>(entity =>
+        {
+            entity.ToTable("customers", "public");
+            entity.HasKey(c => c.CustomerId);
+            entity.Property(c => c.CustomerId).HasColumnName("customer_id");
+            entity.Property(c => c.ProfileId).HasColumnName("profile_id");
+            entity.Property(c => c.FullName).HasColumnName("full_name").HasMaxLength(120);
+            entity.Property(c => c.PhoneNumber).HasColumnName("phone_number").HasMaxLength(20);
+            entity.Property(c => c.CreatedAt).HasColumnName("created_at");
+            entity.Property(c => c.UpdatedAt).HasColumnName("updated_at");
+            entity.HasOne<Profile>()
+                .WithMany()
+                .HasForeignKey(c => c.ProfileId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(c => new { c.ProfileId, c.PhoneNumber });
+        });
+
+        modelBuilder.Entity<SalesBill>(entity =>
+        {
+            entity.ToTable("sales_bills", "public");
+            entity.HasKey(b => b.BillId);
+            entity.Property(b => b.BillId).HasColumnName("bill_id");
+            entity.Property(b => b.ProfileId).HasColumnName("profile_id");
+            entity.Property(b => b.CustomerId).HasColumnName("customer_id");
+            entity.Property(b => b.BillNumber).HasColumnName("bill_number").HasMaxLength(40);
+            entity.Property(b => b.CustomerName).HasColumnName("customer_name").HasMaxLength(120);
+            entity.Property(b => b.CustomerPhone).HasColumnName("customer_phone").HasMaxLength(20);
+            entity.Property(b => b.Subtotal).HasColumnName("subtotal").HasPrecision(14, 2);
+            entity.Property(b => b.TaxableAmount).HasColumnName("taxable_amount").HasPrecision(14, 2);
+            entity.Property(b => b.CgstAmount).HasColumnName("cgst_amount").HasPrecision(14, 2);
+            entity.Property(b => b.SgstAmount).HasColumnName("sgst_amount").HasPrecision(14, 2);
+            entity.Property(b => b.IgstAmount).HasColumnName("igst_amount").HasPrecision(14, 2);
+            entity.Property(b => b.GstAmount).HasColumnName("gst_amount").HasPrecision(14, 2);
+            entity.Property(b => b.TotalAmount).HasColumnName("total_amount").HasPrecision(14, 2);
+            entity.Property(b => b.PaymentMethod).HasColumnName("payment_method").HasMaxLength(20);
+            entity.Property(b => b.Status).HasColumnName("status").HasMaxLength(20);
+            entity.Property(b => b.CreatedAt).HasColumnName("created_at");
+            entity.HasOne<Profile>()
+                .WithMany()
+                .HasForeignKey(b => b.ProfileId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne<Customer>()
+                .WithMany()
+                .HasForeignKey(b => b.CustomerId)
+                .OnDelete(DeleteBehavior.SetNull);
+            entity.HasIndex(b => b.BillNumber).IsUnique();
+            entity.HasIndex(b => new { b.ProfileId, b.CreatedAt });
+        });
+
+        modelBuilder.Entity<SalesBillItem>(entity =>
+        {
+            entity.ToTable("sales_bill_items", "public");
+            entity.HasKey(i => i.BillItemId);
+            entity.Property(i => i.BillItemId).HasColumnName("bill_item_id");
+            entity.Property(i => i.BillId).HasColumnName("bill_id");
+            entity.Property(i => i.ProductId).HasColumnName("product_id");
+            entity.Property(i => i.BatchId).HasColumnName("batch_id");
+            entity.Property(i => i.ProductName).HasColumnName("product_name").HasMaxLength(200);
+            entity.Property(i => i.BatchNumber).HasColumnName("batch_number").HasMaxLength(100);
+            entity.Property(i => i.ExpiryDate).HasColumnName("expiry_date");
+            entity.Property(i => i.Quantity).HasColumnName("quantity").HasPrecision(12, 2);
+            entity.Property(i => i.UnitPrice).HasColumnName("unit_price").HasPrecision(14, 2);
+            entity.Property(i => i.Mrp).HasColumnName("mrp").HasPrecision(14, 2);
+            entity.Property(i => i.GstRate).HasColumnName("gst_rate").HasPrecision(5, 2);
+            entity.Property(i => i.TaxableAmount).HasColumnName("taxable_amount").HasPrecision(14, 2);
+            entity.Property(i => i.CgstAmount).HasColumnName("cgst_amount").HasPrecision(14, 2);
+            entity.Property(i => i.SgstAmount).HasColumnName("sgst_amount").HasPrecision(14, 2);
+            entity.Property(i => i.IgstAmount).HasColumnName("igst_amount").HasPrecision(14, 2);
+            entity.Property(i => i.GstAmount).HasColumnName("gst_amount").HasPrecision(14, 2);
+            entity.Property(i => i.LineTotal).HasColumnName("line_total").HasPrecision(14, 2);
+
+            entity.HasOne(i => i.Bill)
+                .WithMany(b => b.Items)
+                .HasForeignKey(i => i.BillId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne<Product>()
+                .WithMany()
+                .HasForeignKey(i => i.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<ProductBatch>()
+                .WithMany()
+                .HasForeignKey(i => i.BatchId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }
