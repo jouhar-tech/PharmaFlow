@@ -108,26 +108,10 @@
                             </strong>
                         </div>
 
-                        @if (!string.IsNullOrWhiteSpace(bill.CustomerPhone))
-                        {
-                            <div class="bill-card-detail bill-card-phone-detail">
-                                <span>PHONE</span>
-                                <strong>@bill.CustomerPhone</strong>
-                            </div>
-                        }
-
                         <div class="bill-card-detail">
                             <span>PAYMENT METHOD</span>
                             <strong>@bill.PaymentMethod</strong>
                         </div>
-
-                        @if (!string.IsNullOrWhiteSpace(bill.ProductNames))
-                        {
-                            <div class="bill-card-detail bill-card-products">
-                                <span>PRODUCT</span>
-                                <strong title="@bill.ProductNames">@bill.ProductNames</strong>
-                            </div>
-                        }
 
                         <div class="bill-card-total">
                             <span>TOTAL AMOUNT</span>
@@ -203,11 +187,6 @@
         empty.hidden = true;
         grid.innerHTML = data.bills.map(bill => {
             const customer = escapeHtml(bill.customerName || "Walk-in Customer");
-            const phone = bill.customerPhone ? '<div class="bill-card-detail bill-card-phone-detail"><span>PHONE</span><strong>' + escapeHtml(bill.customerPhone) + '</strong></div>' : "";
-            const products = bill.productNames
-                ? '<div class="bill-card-detail bill-card-products"><span>PRODUCT</span><strong title="' + escapeHtml(bill.productNames) + '">' + escapeHtml(bill.productNames) + '</strong></div>'
-                : "";
-
             return '<article class="bill-square-card">' +
                 '<div class="bill-card-head">' +
                     '<div class="bill-card-icon" aria-hidden="true">' + documentIcon + '</div>' +
@@ -215,9 +194,7 @@
                 '</div>' +
                 '<div class="bill-card-detail"><span>DATE</span><strong>' + formatDate(bill.createdAt) + '</strong></div>' +
                 '<div class="bill-card-detail"><span>CUSTOMER</span><strong>' + personIcon + customer + '</strong></div>' +
-                phone +
                 '<div class="bill-card-detail"><span>PAYMENT METHOD</span><strong>' + escapeHtml(bill.paymentMethod) + '</strong></div>' +
-                products +
                 '<div class="bill-card-total"><span>TOTAL AMOUNT</span><strong>' + money(bill.totalAmount) + '</strong></div>' +
             '</article>';
         }).join("");
