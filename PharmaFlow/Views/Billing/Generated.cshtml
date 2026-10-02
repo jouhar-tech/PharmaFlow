@@ -3,7 +3,9 @@
 @{
     ViewData["Title"] = "Invoice Generated";
     var paymentMethod = Model.PaymentMethod;
-    var customerDisplayName = string.IsNullOrWhiteSpace(Model.CustomerName) ? "Walk-in Customer" : Model.CustomerName;
+    var hasCustomerName = !string.IsNullOrWhiteSpace(Model.CustomerName);
+    var hasPhoneNumber = !string.IsNullOrWhiteSpace(Model.PhoneNumber);
+    var hasPaymentMethod = !string.IsNullOrWhiteSpace(Model.PaymentMethod);
 }
 
 <div class="billing-generated-page">
@@ -41,25 +43,43 @@
                 <strong>@Model.InvoiceDate.ToString("dd MMM yyyy")</strong>
             </div>
 
-            <div class="billing-summary-divider"></div>
+            @if (hasCustomerName)
+            {
+                <div class="billing-summary-divider"></div>
 
-            <div class="billing-summary-customer-row">
-                <div class="billing-customer-result">
-                    <span class="billing-summary-label">Customer Name</span>
-                    <strong>@customerDisplayName</strong>
+                <div class="billing-summary-customer-row">
+                    <div class="billing-customer-result">
+                        <span class="billing-summary-label">Customer Name</span>
+                        <strong>@Model.CustomerName</strong>
+                    </div>
+
+                    <strong class="billing-summary-amount">
+                        ₹@Model.TotalAmount.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))
+                    </strong>
                 </div>
+            }
+            else
+            {
+                <div class="billing-summary-customer-row">
+                    <div class="billing-customer-result">
+                        <span class="billing-summary-label">Total Amount</span>
+                    </div>
 
-                <strong class="billing-summary-amount">
-                    ₹@Model.TotalAmount.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))
-                </strong>
-            </div>
+                    <strong class="billing-summary-amount">
+                        ₹@Model.TotalAmount.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))
+                    </strong>
+                </div>
+            }
 
-            <div class="billing-summary-phone-row">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M7.1 4.8 5.7 6.2c-.8.8-.8 2.1-.1 3.1 2.1 3.1 5.1 6.1 8.2 8.2 1 .7 2.3.7 3.1-.1l1.4-1.4c.5-.5.5-1.3.1-1.9l-1.8-2.5c-.4-.6-1.2-.8-1.8-.5l-1.7.8c-1.7-1-3.1-2.5-4.1-4.1l.8-1.7c.3-.7.1-1.4-.5-1.8L9 4.7c-.6-.4-1.4-.4-1.9.1Z"></path>
-                </svg>
-                <span>@(string.IsNullOrWhiteSpace(Model.PhoneNumber) ? "Phone number not provided" : Model.PhoneNumber)</span>
-            </div>
+            @if (hasPhoneNumber)
+            {
+                <div class="billing-summary-phone-row">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M7.1 4.8 5.7 6.2c-.8.8-.8 2.1-.1 3.1 2.1 3.1 5.1 6.1 8.2 8.2 1 .7 2.3.7 3.1-.1l1.4-1.4c.5-.5.5-1.3.1-1.9l-1.8-2.5c-.4-.6-1.2-.8-1.8-.5l-1.7.8c-1.7-1-3.1-2.5-4.1-4.1l.8-1.7c.3-.7.1-1.4-.5-1.8L9 4.7c-.6-.4-1.4-.4-1.9.1Z"></path>
+                    </svg>
+                    <span>@Model.PhoneNumber</span>
+                </div>
+            }
 
             <div class="billing-summary-divider"></div>
 
@@ -80,45 +100,48 @@
                 </div>
             }
 
-            <div class="billing-summary-double-line" aria-hidden="true"></div>
+            @if (hasPaymentMethod)
+            {
+                <div class="billing-summary-double-line" aria-hidden="true"></div>
 
-            <div class="billing-generated-payment-row">
-                <span>Payment Method:</span>
-                <span class="billing-generated-payment-value">
-                    @if (paymentMethod == "UPI")
-                    {
-                        <span class="billing-generated-payment-icon billing-generated-payment-icon-upi" aria-hidden="true">
-                            <svg viewBox="0 0 24 24">
-                                <path d="M4 12h10"></path>
-                                <path d="m11 7 6 5-6 5"></path>
-                                <path d="M19 7v10"></path>
-                            </svg>
-                        </span>
-                    }
-                    else if (paymentMethod == "Udhaar")
-                    {
-                        <span class="billing-generated-payment-icon billing-generated-payment-icon-credit" aria-hidden="true">
-                            <svg viewBox="0 0 24 24">
-                                <rect x="5" y="4" width="14" height="16" rx="2"></rect>
-                                <path d="M8 8h8M8 12h5"></path>
-                                <circle cx="16.5" cy="16.5" r="2.5"></circle>
-                                <path d="m15.4 16.5.8.8 1.5-1.6"></path>
-                            </svg>
-                        </span>
-                    }
-                    else
-                    {
-                        <span class="billing-generated-payment-icon billing-generated-payment-icon-cash" aria-hidden="true">
-                            <svg viewBox="0 0 24 24">
-                                <rect x="3" y="6" width="18" height="12" rx="2"></rect>
-                                <circle cx="12" cy="12" r="2.2"></circle>
-                                <path d="M6 9h.01M18 15h.01"></path>
-                            </svg>
-                        </span>
-                    }
-                    <strong>@paymentMethod</strong>
-                </span>
-            </div>
+                <div class="billing-generated-payment-row">
+                    <span>Payment Method:</span>
+                    <span class="billing-generated-payment-value">
+                        @if (paymentMethod == "UPI")
+                        {
+                            <span class="billing-generated-payment-icon billing-generated-payment-icon-upi" aria-hidden="true">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M4 12h10"></path>
+                                    <path d="m11 7 6 5-6 5"></path>
+                                    <path d="M19 7v10"></path>
+                                </svg>
+                            </span>
+                        }
+                        else if (paymentMethod == "Udhaar")
+                        {
+                            <span class="billing-generated-payment-icon billing-generated-payment-icon-credit" aria-hidden="true">
+                                <svg viewBox="0 0 24 24">
+                                    <rect x="5" y="4" width="14" height="16" rx="2"></rect>
+                                    <path d="M8 8h8M8 12h5"></path>
+                                    <circle cx="16.5" cy="16.5" r="2.5"></circle>
+                                    <path d="m15.4 16.5.8.8 1.5-1.6"></path>
+                                </svg>
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="billing-generated-payment-icon billing-generated-payment-icon-cash" aria-hidden="true">
+                                <svg viewBox="0 0 24 24">
+                                    <rect x="3" y="6" width="18" height="12" rx="2"></rect>
+                                    <circle cx="12" cy="12" r="2.2"></circle>
+                                    <path d="M6 9h.01M18 15h.01"></path>
+                                </svg>
+                            </span>
+                        }
+                        <strong>@paymentMethod</strong>
+                    </span>
+                </div>
+            }
         </section>
 
         <section class="billing-generated-items" aria-labelledby="generatedItemsTitle">
@@ -185,19 +208,25 @@
                 </div>
             </header>
 
-            <section class="billing-receipt-customer">
-                <div>
-                    <span>Customer Name</span>
-                    <strong>@customerDisplayName</strong>
-                </div>
-                @if (!string.IsNullOrWhiteSpace(Model.PhoneNumber))
-                {
-                    <div>
-                        <span>Phone</span>
-                        <strong>@Model.PhoneNumber</strong>
-                    </div>
-                }
-            </section>
+            @if (hasCustomerName || hasPhoneNumber)
+            {
+                <section class="billing-receipt-customer">
+                    @if (hasCustomerName)
+                    {
+                        <div>
+                            <span>Customer Name</span>
+                            <strong>@Model.CustomerName</strong>
+                        </div>
+                    }
+                    @if (hasPhoneNumber)
+                    {
+                        <div>
+                            <span>Phone</span>
+                            <strong>@Model.PhoneNumber</strong>
+                        </div>
+                    }
+                </section>
+            }
 
             <table class="billing-receipt-table">
                 <thead>
@@ -235,10 +264,13 @@
                     <span>Total Amount</span>
                     <strong>₹@Model.TotalAmount.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</strong>
                 </div>
-                <div class="billing-receipt-payment">
-                    <span>Payment Method</span>
-                    <strong>@paymentMethod</strong>
-                </div>
+                @if (hasPaymentMethod)
+                {
+                    <div class="billing-receipt-payment">
+                        <span>Payment Method</span>
+                        <strong>@paymentMethod</strong>
+                    </div>
+                }
             </section>
 
             <footer class="billing-receipt-footer">
@@ -260,7 +292,8 @@
 
         whatsappButton?.addEventListener("click", () => {
             const invoiceNumber = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.InvoiceNumber));
-            const customerName = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(customerDisplayName));
+            const customerName = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CustomerName));
+            const phoneNumber = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.PhoneNumber));
             const paymentMethod = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.PaymentMethod));
             const total = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.TotalAmount.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))));
             const gst = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.GstAmount.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))));
@@ -270,16 +303,26 @@
                     $"{item.ProductName} x {item.Quantity:0.##} = ₹{item.LineTotal.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))}"
                 ).ToArray()));
 
-            const message =
-                "PharmaFlow Invoice " + invoiceNumber +
-                "\nCustomer: " + customerName +
-                "\n" + lines.join("\n") +
-                "\nGST: ₹" + gst +
-                "\nTotal: ₹" + total +
-                "\nPayment: " + paymentMethod;
+            const messageParts = ["PharmaFlow Invoice " + invoiceNumber];
+
+            if (customerName) {
+                messageParts.push("Customer: " + customerName);
+            }
+
+            if (phoneNumber) {
+                messageParts.push("Phone: " + phoneNumber);
+            }
+
+            messageParts.push(lines.join("\n"));
+            messageParts.push("GST: ₹" + gst);
+            messageParts.push("Total: ₹" + total);
+
+            if (paymentMethod) {
+                messageParts.push("Payment: " + paymentMethod);
+            }
 
             window.open(
-                "https://wa.me/?text=" + encodeURIComponent(message),
+                "https://wa.me/?text=" + encodeURIComponent(messageParts.join("\n")),
                 "_blank",
                 "noopener,noreferrer");
         });
