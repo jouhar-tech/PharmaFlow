@@ -11,6 +11,7 @@ public sealed class SalesBillItem
     public DateOnly ExpiryDate { get; set; }
     public decimal Quantity { get; set; }
     public decimal UnitPrice { get; set; }
+    public decimal PurchaseUnitPrice { get; set; }
     public decimal Mrp { get; set; }
     public decimal GstRate { get; set; }
     public decimal TaxableAmount { get; set; }
