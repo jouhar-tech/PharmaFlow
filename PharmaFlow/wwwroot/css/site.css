@@ -7896,3 +7896,286 @@ body.invoice-camera-open {
     height: 66px;
   }
 }
+
+
+/* Multi-invoice camera capture confirmation */
+.invoice-camera-confirm {
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .35rem;
+  min-width: 78px;
+  height: 52px;
+  padding: 0 .8rem;
+  border: 0;
+  border-radius: 999px;
+  background: #fff;
+  color: #111;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 800;
+  box-shadow: 0 4px 16px rgba(0,0,0,.22);
+  cursor: pointer;
+}
+
+.invoice-camera-confirm[hidden] {
+  display: none !important;
+}
+
+.invoice-camera-confirm > span:first-child {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.invoice-camera-confirm > span:last-child {
+  min-width: 1ch;
+}
+
+.invoice-camera-confirm:active {
+  transform: scale(.97);
+}
+
+.invoice-camera-confirm[disabled] {
+  opacity: .55;
+  cursor: wait;
+}
+
+.invoice-camera-bottom {
+  padding-bottom: calc(max(1rem, env(safe-area-inset-bottom)) + .8rem);
+}
+
+@media (max-width: 575.98px) {
+  .invoice-camera-confirm {
+    min-width: 72px;
+    height: 50px;
+    padding: 0 .7rem;
+    font-size: .95rem;
+  }
+}
+
+/* Captured-invoice review page */
+.invoice-batch-review-page {
+  min-height: 100vh;
+  padding-bottom: 6rem;
+  background: #eef3f6;
+}
+
+.invoice-batch-review-header {
+  display: grid;
+  grid-template-columns: 42px minmax(0,1fr);
+  align-items: center;
+  gap: .7rem;
+  min-height: 150px;
+  padding: 1rem .85rem 2.6rem;
+  background: linear-gradient(180deg,#a9e3d8 0%,#98dacc 100%);
+  border-radius: 0 0 1.25rem 1.25rem;
+}
+
+.invoice-batch-review-header h1 {
+  margin: .2rem 0 .2rem;
+  color: #172b2b;
+  font-size: 1.5rem;
+  font-weight: 850;
+}
+
+.invoice-batch-review-header p {
+  margin: 0;
+  color: #315a57;
+  font-size: .76rem;
+}
+
+.invoice-batch-review-back {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #fff;
+  color: #173c3c;
+  text-decoration: none;
+  box-shadow: 0 4px 12px rgba(15,23,42,.1);
+}
+
+.invoice-batch-review-back svg {
+  width: 21px;
+  height: 21px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.invoice-batch-review-content {
+  position: relative;
+  z-index: 2;
+  width: calc(100% - 1rem);
+  max-width: 820px;
+  margin: -1.8rem auto 0;
+}
+
+.invoice-batch-review-list {
+  display: grid;
+  gap: .65rem;
+}
+
+.invoice-batch-review-card {
+  display: grid;
+  grid-template-columns: 38px minmax(0,1fr) auto;
+  align-items: center;
+  gap: .65rem;
+  padding: .8rem;
+  border: 1px solid #dbe4e9;
+  border-radius: .95rem;
+  background: #fff;
+  box-shadow: 0 6px 16px rgba(15,23,42,.07);
+}
+
+.invoice-batch-review-index {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: .7rem;
+  background: #e1f4ef;
+  color: #1d8275;
+  font-weight: 850;
+}
+
+.invoice-batch-review-main {
+  min-width: 0;
+}
+
+.invoice-batch-review-main strong,
+.invoice-batch-review-main span,
+.invoice-batch-review-main small {
+  display: block;
+}
+
+.invoice-batch-review-main strong {
+  color: #17202b;
+  font-size: .82rem;
+  font-weight: 800;
+}
+
+.invoice-batch-review-main span {
+  margin-top: .12rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #64748b;
+  font-size: .65rem;
+}
+
+.invoice-batch-review-main small {
+  margin-top: .18rem;
+  color: #7b8794;
+  font-size: .61rem;
+}
+
+.invoice-batch-review-open {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 64px;
+  min-height: 38px;
+  padding: 0 .75rem;
+  border-radius: .65rem;
+  background: #1769c2;
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.invoice-batch-review-open:hover {
+  background: #145da9;
+  color: #fff;
+  text-decoration: none;
+}
+
+.invoice-batch-review-note,
+.invoice-batch-review-empty {
+  margin-top: .75rem;
+  padding: .9rem;
+  border: 1px solid #dbe4e9;
+  border-radius: .9rem;
+  background: #fff;
+  box-shadow: 0 6px 16px rgba(15,23,42,.05);
+}
+
+.invoice-batch-review-note strong,
+.invoice-batch-review-note span,
+.invoice-batch-review-empty strong,
+.invoice-batch-review-empty span {
+  display: block;
+}
+
+.invoice-batch-review-note strong,
+.invoice-batch-review-empty strong {
+  color: #17202b;
+  font-size: .78rem;
+  font-weight: 800;
+}
+
+.invoice-batch-review-note span,
+.invoice-batch-review-empty span {
+  margin-top: .22rem;
+  color: #64748b;
+  font-size: .67rem;
+  line-height: 1.4;
+}
+
+.invoice-batch-review-empty .btn {
+  margin-top: .8rem;
+}
+
+body.theme-dark .invoice-batch-review-page {
+  background: #0f172a;
+}
+
+body.theme-dark .invoice-batch-review-header {
+  background: linear-gradient(180deg,#245b57 0%,#1e4f4c 100%);
+}
+
+body.theme-dark .invoice-batch-review-header h1 {
+  color: #f8fafc;
+}
+
+body.theme-dark .invoice-batch-review-header p {
+  color: #b7ddd6;
+}
+
+body.theme-dark .invoice-batch-review-card,
+body.theme-dark .invoice-batch-review-note,
+body.theme-dark .invoice-batch-review-empty {
+  background: #111c2e;
+  border-color: #263449;
+  box-shadow: none;
+}
+
+body.theme-dark .invoice-batch-review-main strong,
+body.theme-dark .invoice-batch-review-note strong,
+body.theme-dark .invoice-batch-review-empty strong {
+  color: #f8fafc;
+}
+
+body.theme-dark .invoice-batch-review-main span,
+body.theme-dark .invoice-batch-review-main small,
+body.theme-dark .invoice-batch-review-note span,
+body.theme-dark .invoice-batch-review-empty span {
+  color: #94a3b8;
+}
+
+body.theme-dark .invoice-batch-review-back {
+  background: #111c2e;
+  color: #e2e8f0;
+}
+
+@media (min-width: 768px) {
+  .invoice-batch-review-page {
+    max-width: 860px;
+    margin: 0 auto;
+  }
+}
