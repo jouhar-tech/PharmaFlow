@@ -4471,41 +4471,6 @@ body.theme-dark .billing-section-icon {
   color: #17312f;
 }
 
-.billing-generated-back {
-  position: absolute;
-  top: 1.1rem;
-  left: .9rem;
-  display: grid;
-  place-items: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: rgba(255,255,255,.94);
-  color: #16324a;
-  box-shadow: 0 2px 7px rgba(15,23,42,.12);
-  text-decoration: none;
-  transition: transform .15s ease, box-shadow .15s ease;
-}
-
-.billing-generated-back:hover {
-  color: #16324a;
-  background: #fff;
-}
-
-.billing-generated-back:active {
-  transform: scale(.96);
-}
-
-.billing-generated-back svg {
-  width: 19px;
-  height: 19px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.9;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
 .billing-generated-success-icon {
   display: grid;
   place-items: center;
@@ -4908,7 +4873,6 @@ body.theme-dark .billing-section-icon {
 @media print {
   body.billing-generated-page-body .home-mobile-bottom-nav,
   body.billing-generated-page-body .app-footer,
-  body.billing-generated-page-body .billing-generated-back,
   body.billing-generated-page-body .billing-generated-actions {
     display: none !important;
   }
