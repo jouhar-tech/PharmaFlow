@@ -58,18 +58,6 @@
                     </strong>
                 </div>
             }
-            else
-            {
-                <div class="billing-summary-customer-row">
-                    <div class="billing-customer-result">
-                        <span class="billing-summary-label">Total Amount</span>
-                    </div>
-
-                    <strong class="billing-summary-amount">
-                        ₹@Model.TotalAmount.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))
-                    </strong>
-                </div>
-            }
 
             @if (hasPhoneNumber)
             {
