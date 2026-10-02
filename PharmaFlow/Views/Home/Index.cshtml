@@ -10,6 +10,7 @@
            class="dashboard-file-input"
            type="file"
            accept="image/*"
+           capture="environment"
            tabindex="-1" />
     <input id="dashboardUploadInput"
            class="dashboard-file-input"
@@ -60,7 +61,7 @@
 
         </section>
 
-        <label class="home-mobile-scan-card" for="dashboardCameraInput">
+        <button type="button" class="home-mobile-scan-card" id="dashboardScanUploadTrigger">
             <span class="home-mobile-action-icon home-mobile-scan-icon" aria-hidden="true">
                 <svg viewBox="0 0 64 64"><rect x="9" y="18" width="38" height="31" rx="5"/><path d="M18 18l5-7h12l5 7M47 25h4a4 4 0 0 1 4 4v18a4 4 0 0 1-4 4H47"/><circle cx="28" cy="33" r="8"/><path d="M42 38h12M42 44h10"/></svg>
             </span>
@@ -69,7 +70,7 @@
                 <small>Capture an invoice and add stock faster</small>
             </span>
             <span class="home-mobile-card-chevron" aria-hidden="true">›</span>
-        </label>
+        </button>
 
 
         <div class="home-mobile-action-grid">
@@ -238,6 +239,30 @@
     </div>
 </div>
 
+<div class="invoice-capture-source-modal" id="invoiceCaptureSourceModal" hidden>
+    <div class="invoice-capture-source-backdrop" id="invoiceCaptureSourceBackdrop"></div>
+    <section class="invoice-capture-source-panel" role="dialog" aria-modal="true" aria-labelledby="invoiceCaptureSourceTitle">
+        <header class="invoice-capture-source-header">
+            <div>
+                <span class="section-kicker">Add stock</span>
+                <h2 id="invoiceCaptureSourceTitle">Choose invoice source</h2>
+                <p>Scan with your camera or select an invoice from your device.</p>
+            </div>
+            <button type="button" class="invoice-capture-source-close" id="invoiceCaptureSourceClose" aria-label="Close">×</button>
+        </header>
+        <div class="invoice-capture-source-options">
+            <button type="button" class="invoice-capture-source-option invoice-capture-source-camera" id="invoiceCaptureSourceCamera">
+                <span class="invoice-capture-source-icon" aria-hidden="true">⌕</span>
+                <span><strong>Scan Invoice</strong><small>Use camera</small></span>
+            </button>
+            <button type="button" class="invoice-capture-source-option invoice-capture-source-upload" id="invoiceCaptureSourceUpload">
+                <span class="invoice-capture-source-icon" aria-hidden="true">↑</span>
+                <span><strong>Upload Invoice</strong><small>From device</small></span>
+            </button>
+        </div>
+    </section>
+</div>
+
 <div class="invoice-scanner-modal" id="invoiceScannerModal" hidden>
     <div class="invoice-scanner-backdrop" id="invoiceScannerBackdrop"></div>
     <section class="invoice-scanner-panel" role="dialog" aria-modal="true" aria-labelledby="invoiceScannerTitle">
@@ -297,6 +322,12 @@
     (() => {
         const cameraInput = document.getElementById("dashboardCameraInput");
         const uploadInput = document.getElementById("dashboardUploadInput");
+        const sourceModal = document.getElementById("invoiceCaptureSourceModal");
+        const sourceTrigger = document.getElementById("dashboardScanUploadTrigger");
+        const sourceCamera = document.getElementById("invoiceCaptureSourceCamera");
+        const sourceUpload = document.getElementById("invoiceCaptureSourceUpload");
+        const sourceClose = document.getElementById("invoiceCaptureSourceClose");
+        const sourceBackdrop = document.getElementById("invoiceCaptureSourceBackdrop");
         const selected = document.getElementById("stockCaptureSelected");
         const selectedName = document.getElementById("stockCaptureSelectedName");
         const reset = document.getElementById("stockCaptureReset");
@@ -338,6 +369,25 @@
             if (previewUrl) {
                 URL.revokeObjectURL(previewUrl);
                 previewUrl = null;
+            }
+        };
+
+        const closeSourceModal = () => {
+            sourceModal?.setAttribute("hidden", "");
+            document.body.classList.remove("invoice-capture-source-open");
+        };
+
+        const openSourceModal = () => {
+            sourceModal?.removeAttribute("hidden");
+            document.body.classList.add("invoice-capture-source-open");
+            sourceClose?.focus();
+        };
+
+        const chooseSource = input => {
+            closeSourceModal();
+            if (input) {
+                input.value = "";
+                input.click();
             }
         };
 
@@ -738,6 +788,12 @@
             handleInput(uploadInput, "upload")
         );
 
+        sourceTrigger?.addEventListener("click", openSourceModal);
+        sourceCamera?.addEventListener("click", () => chooseSource(cameraInput));
+        sourceUpload?.addEventListener("click", () => chooseSource(uploadInput));
+        sourceClose?.addEventListener("click", closeSourceModal);
+        sourceBackdrop?.addEventListener("click", closeSourceModal);
+
         reset?.addEventListener("click", resetSelection);
         retakeButton?.addEventListener("click", resetSelection);
         closeButton?.addEventListener("click", closeScanner);
@@ -766,6 +822,10 @@
         });
 
         document.addEventListener("keydown", event => {
+            if (event.key === "Escape" && !sourceModal?.hasAttribute("hidden")) {
+                closeSourceModal();
+                return;
+            }
             if (event.key === "Escape" && !scanner?.hasAttribute("hidden")) {
                 closeScanner();
             }
