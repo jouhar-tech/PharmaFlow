@@ -77,7 +77,7 @@
             <div id="billsGrid" class="bills-grid">
                 @foreach (var bill in Model.Bills)
                 {
-                    <article class="bill-square-card">
+                    <a class="bill-square-card bill-card-link" asp-controller="Bills" asp-action="Details" asp-route-billId="@bill.BillId">
                         <div class="bill-card-head">
                             <div class="bill-card-icon" aria-hidden="true">
                                 <svg viewBox="0 0 24 24">
@@ -117,7 +117,7 @@
                             <span>TOTAL AMOUNT</span>
                             <strong>₹@bill.TotalAmount.ToString("N2", currency)</strong>
                         </div>
-                    </article>
+                    </a>
                 }
             </div>
 
@@ -187,7 +187,7 @@
         empty.hidden = true;
         grid.innerHTML = data.bills.map(bill => {
             const customer = escapeHtml(bill.customerName || "Walk-in Customer");
-            return '<article class="bill-square-card">' +
+            return '<a class="bill-square-card bill-card-link" href="/Bills/Details?billId=' + encodeURIComponent(bill.billId) + '">' +
                 '<div class="bill-card-head">' +
                     '<div class="bill-card-icon" aria-hidden="true">' + documentIcon + '</div>' +
                     '<div class="bill-card-number"><span>Invoice No:</span><strong>#' + escapeHtml(bill.billNumber) + '</strong></div>' +
@@ -196,7 +196,7 @@
                 '<div class="bill-card-detail"><span>CUSTOMER</span><strong>' + personIcon + customer + '</strong></div>' +
                 '<div class="bill-card-detail"><span>PAYMENT METHOD</span><strong>' + escapeHtml(bill.paymentMethod) + '</strong></div>' +
                 '<div class="bill-card-total"><span>TOTAL AMOUNT</span><strong>' + money(bill.totalAmount) + '</strong></div>' +
-            '</article>';
+            '</a>';
         }).join("");
     };
 
