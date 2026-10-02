@@ -1,7 +1,7 @@
 @model PharmaFlow.Models.ViewModels.GeneratedBillViewModel
 
 @{
-    ViewData["Title"] = "Invoice Generated";
+    ViewData["Title"] ??= "Invoice Generated";
     var paymentMethod = Model.PaymentMethod;
     var hasCustomerName = !string.IsNullOrWhiteSpace(Model.CustomerName);
     var hasPhoneNumber = !string.IsNullOrWhiteSpace(Model.PhoneNumber);
