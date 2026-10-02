@@ -1,3 +1,13 @@
+CREATE OR REPLACE FUNCTION public.set_updated_at()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$;
+
 -- PharmaFlow billing / sales schema
 -- Run once in Supabase SQL Editor before using Create Bill.
 -- Selling prices are stored on product_batches.selling_unit_price.
