@@ -313,6 +313,7 @@ public class ApplicationDbContext : DbContext
             entity.Property(i => i.ExpiryDate).HasColumnName("expiry_date");
             entity.Property(i => i.Quantity).HasColumnName("quantity").HasPrecision(12, 2);
             entity.Property(i => i.UnitPrice).HasColumnName("unit_price").HasPrecision(14, 2);
+            entity.Property(i => i.PurchaseUnitPrice).HasColumnName("purchase_unit_price").HasPrecision(14, 2);
             entity.Property(i => i.Mrp).HasColumnName("mrp").HasPrecision(14, 2);
             entity.Property(i => i.GstRate).HasColumnName("gst_rate").HasPrecision(5, 2);
             entity.Property(i => i.TaxableAmount).HasColumnName("taxable_amount").HasPrecision(14, 2);
