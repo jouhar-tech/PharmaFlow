@@ -82,9 +82,9 @@ namespace PharmaFlow.Controllers
                         batch.ExpiryDate <= ninetyDaysFromToday)
                     .SumAsync(batch => batch.QuantityOnHand * batch.PurchaseUnitPrice, cancellationToken);
 
-                // Until billing/sales history is available, classify stock held for more than
-                // 90 days as slow-moving inventory. This keeps the dashboard value data-driven
-                // without pretending we have sales velocity data.
+                // Until detailed sales-velocity history is added, classify stock held for more
+                // than 90 days as slow-moving inventory. This keeps the dashboard value data-driven
+                // while billing history remains separate from stock-aging analysis.
                 var slowMovingCutoffDate = today.AddDays(-90);
                 var slowMovingCutoffUtc = DateTime.SpecifyKind(
                     slowMovingCutoffDate.ToDateTime(TimeOnly.MinValue),
