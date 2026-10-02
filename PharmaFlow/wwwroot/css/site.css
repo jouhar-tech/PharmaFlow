@@ -7195,3 +7195,15 @@ body.theme-dark .bill-details-item-row {
     padding-right: 0;
   }
 }
+
+
+/* The dedicated Bill Details hero is a mobile layout; desktop keeps the normal app shell. */
+.bill-details-mobile-header {
+  display: none;
+}
+
+@media (max-width: 767.98px) {
+  .bill-details-mobile-header {
+    display: grid;
+  }
+}
