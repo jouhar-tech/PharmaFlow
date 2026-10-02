@@ -6590,7 +6590,7 @@ body.theme-dark .bills-empty-state strong {
 
   .bill-square-card {
     aspect-ratio: auto;
-    min-height: 238px;
+    min-height: 228px;
     height: auto;
     box-sizing: border-box;
     padding: .7rem .65rem .68rem;
@@ -6609,8 +6609,8 @@ body.theme-dark .bills-empty-state strong {
 
   .bill-card-total {
     position: static;
-    margin-top: auto;
-    padding-top: .62rem;
+    margin-top: .42rem;
+    padding-top: .5rem;
     flex-shrink: 0;
   }
 
@@ -6622,7 +6622,7 @@ body.theme-dark .bills-empty-state strong {
 
 @media (max-width: 420px) {
   .bill-square-card {
-    min-height: 245px;
+    min-height: 232px;
     padding: .68rem .58rem .66rem;
   }
 
@@ -6639,7 +6639,8 @@ body.theme-dark .bills-empty-state strong {
   }
 
   .bill-card-total {
-    padding-top: .65rem;
+    margin-top: .38rem;
+    padding-top: .46rem;
   }
 
   .bill-card-total span {
