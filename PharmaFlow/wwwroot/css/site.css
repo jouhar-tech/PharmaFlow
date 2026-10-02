@@ -6424,3 +6424,17 @@ body.theme-dark .bills-empty-icon {
 body.theme-dark .bills-empty-state strong {
   color: #f8fafc;
 }
+
+
+/* Generated bill: reduce the green success-header space on mobile */
+@media (max-width: 767.98px) {
+  .billing-generated-header {
+    min-height: 175px;
+  }
+}
+
+@media (max-width: 420px) {
+  .billing-generated-header {
+    min-height: 170px;
+  }
+}
