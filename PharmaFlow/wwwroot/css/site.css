@@ -3197,14 +3197,51 @@ body.theme-dark .reports-export-button { background: #245b57; color: #d9fffa; }
     color: #111 !important;
   }
 
-  body.reports-page > * { display: none !important; }
+  body.reports-page > .app-shell {
+    display: block !important;
+    width: 100% !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+  }
+
+  body.reports-page .app-sidebar,
+  body.reports-page .app-topbar,
+  body.reports-page .sidebar-overlay,
+  body.reports-page .pharmaflow-connectivity-banner,
+  body.reports-page .home-mobile-bottom-nav,
+  body.reports-page .app-footer,
+  body.reports-page .reports-mobile-page {
+    display: none !important;
+  }
+
+  body.reports-page .app-main,
+  body.reports-page .app-content {
+    display: block !important;
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+  }
+
   body.reports-page .reports-print-document {
     display: block !important;
-    width: 100%;
-    min-height: 100%;
+    visibility: visible !important;
+    width: 100% !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 4mm 3mm 5mm !important;
+    box-sizing: border-box !important;
     font-family: Arial, Helvetica, sans-serif;
-    color: #111;
-    background: #fff;
+    color: #111 !important;
+    background: #fff !important;
+  }
+
+  body.reports-page .reports-print-document * {
+    visibility: visible !important;
   }
 
   .reports-print-header {
