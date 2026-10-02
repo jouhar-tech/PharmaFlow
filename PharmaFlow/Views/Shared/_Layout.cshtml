@@ -20,6 +20,8 @@
         && ViewContext.RouteData.Values["action"]?.ToString() == "UnlimitedPlan";
     var isFeedbackPage = ViewContext.RouteData.Values["controller"]?.ToString() == "Profile"
         && ViewContext.RouteData.Values["action"]?.ToString() == "Feedback";
+    var isBillingCreatePage = ViewContext.RouteData.Values["controller"]?.ToString() == "Billing"
+        && ViewContext.RouteData.Values["action"]?.ToString() == "Create";
     var isAuthenticated = !string.IsNullOrWhiteSpace(Context.Session.GetString("SupabaseAccessToken"))
         && !string.IsNullOrWhiteSpace(Context.Session.GetString("ProfileId"));
 }
@@ -33,7 +35,7 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/PharmaFlow.styles.css" asp-append-version="true" />
 </head>
-<body class="@((isHomeDashboard ? "home-dashboard-page " : "") + (isExpiryProductsPage ? "expiry-products-page " : "") + (isInventoryPage ? "inventory-page " : "") + (isMorePage ? "more-page " : "") + (isLowStockPage ? "low-stock-page " : "") + (isReportsPage ? "reports-page " : "") + (isStaffAddPage ? "staff-add-page " : "") + (isUnlimitedPlanPage ? "unlimited-plan-detail-page " : "") + (isFeedbackPage ? "feedback-page " : ""))">
+<body class="@((isHomeDashboard ? "home-dashboard-page " : "") + (isExpiryProductsPage ? "expiry-products-page " : "") + (isInventoryPage ? "inventory-page " : "") + (isMorePage ? "more-page " : "") + (isLowStockPage ? "low-stock-page " : "") + (isReportsPage ? "reports-page " : "") + (isStaffAddPage ? "staff-add-page " : "") + (isUnlimitedPlanPage ? "unlimited-plan-detail-page " : "") + (isFeedbackPage ? "feedback-page " : "") + (isBillingCreatePage ? "billing-create-page-body " : ""))">
     <div class="app-shell">
         <aside class="app-sidebar" id="appSidebar" aria-label="Main navigation">
             <div class="sidebar-brand">
@@ -149,10 +151,10 @@
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v16H5zM8 8h8M8 12h5"/><path d="M13 16h3"/></svg>
                     <span data-i18n="inventory">Inventory</span>
                 </a>
-                <button type="button" class="home-mobile-nav-item home-mobile-nav-fab">
+                <a class="home-mobile-nav-item home-mobile-nav-fab @(isBillingCreatePage ? "is-active" : "")" asp-controller="Billing" asp-action="Create">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
                     <span data-i18n="bills">Bill</span>
-                </button>
+                </a>
                 <button type="button" class="home-mobile-nav-item">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>
                     <span data-i18n="customerManagement">Customers</span>
