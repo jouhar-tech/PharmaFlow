@@ -117,6 +117,10 @@ CREATE INDEX IF NOT EXISTS ix_sales_bill_items_product_id
 CREATE INDEX IF NOT EXISTS ix_sales_bill_items_batch_id
     ON public.sales_bill_items(batch_id);
 
+-- Safe upgrade for an installation that may already have created the bill table.
+ALTER TABLE public.sales_bill_items
+    ADD COLUMN IF NOT EXISTS purchase_unit_price NUMERIC(14,2) NOT NULL DEFAULT 0;
+
 -- Quick verification
 SELECT table_name
 FROM information_schema.tables
