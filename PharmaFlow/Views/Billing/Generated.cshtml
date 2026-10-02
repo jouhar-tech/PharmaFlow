@@ -1,0 +1,168 @@
+@model PharmaFlow.Models.ViewModels.GeneratedBillViewModel
+
+@{
+    ViewData["Title"] = "Invoice Generated";
+    var paymentMethod = Model.PaymentMethod;
+}
+
+<div class="billing-generated-page">
+    <header class="billing-generated-header">
+        <a asp-controller="Billing"
+           asp-action="Create"
+           class="billing-generated-back"
+           aria-label="Create another bill">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M19 12H5"></path>
+                <path d="m11 18-6-6 6-6"></path>
+            </svg>
+        </a>
+
+        <div class="billing-generated-success-icon" aria-hidden="true">
+            <svg viewBox="0 0 64 64">
+                <path d="m16 34 11 11 22-25"></path>
+            </svg>
+        </div>
+
+        <h1>Invoice Generated</h1>
+    </header>
+
+    <main class="billing-generated-content">
+        <section class="billing-invoice-summary-card" aria-labelledby="billingInvoiceSummaryTitle">
+            <div class="billing-summary-heading">
+                <div class="billing-summary-title-wrap">
+                    <div class="billing-summary-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M6 3.5h9l3 3V20.5H6z"></path>
+                            <path d="M14 3.5v4h4M9 11h6M9 15h6"></path>
+                        </svg>
+                    </div>
+                    <h2 id="billingInvoiceSummaryTitle">Invoice Summary</h2>
+                </div>
+            </div>
+
+            <div class="billing-summary-row">
+                <span>Invoice No:</span>
+                <strong>@Model.InvoiceNumber</strong>
+            </div>
+
+            <div class="billing-summary-row">
+                <span>Date:</span>
+                <strong>@Model.InvoiceDate.ToString("dd MMM yyyy")</strong>
+            </div>
+
+            <div class="billing-summary-divider"></div>
+
+            <div class="billing-summary-customer-row">
+                <div class="billing-customer-result">
+                    <span class="billing-summary-label">Customer Name</span>
+                    <strong>@(string.IsNullOrWhiteSpace(Model.CustomerName) ? "Walk-in Customer" : Model.CustomerName)</strong>
+                </div>
+
+                <strong class="billing-summary-amount">
+                    ₹@Model.TotalAmount.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))
+                </strong>
+            </div>
+
+            <div class="billing-summary-phone-row">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M7.1 4.8 5.7 6.2c-.8.8-.8 2.1-.1 3.1 2.1 3.1 5.1 6.1 8.2 8.2 1 .7 2.3.7 3.1-.1l1.4-1.4c.5-.5.5-1.3.1-1.9l-1.8-2.5c-.4-.6-1.2-.8-1.8-.5l-1.7.8c-1.7-1-3.1-2.5-4.1-4.1l.8-1.7c.3-.7.1-1.4-.5-1.8L9 4.7c-.6-.4-1.4-.4-1.9.1Z"></path>
+                </svg>
+                <span>@(string.IsNullOrWhiteSpace(Model.PhoneNumber) ? "Phone number not provided" : Model.PhoneNumber)</span>
+            </div>
+
+            <div class="billing-summary-divider"></div>
+
+            <div class="billing-generated-total-row">
+                <span>Total Amount:</span>
+                <strong>₹@Model.TotalAmount.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</strong>
+            </div>
+
+            <div class="billing-summary-double-line" aria-hidden="true"></div>
+
+            <div class="billing-generated-payment-row">
+                <span>Payment Method:</span>
+                <span class="billing-generated-payment-value">
+                    @if (paymentMethod == "UPI")
+                    {
+                        <span class="billing-generated-payment-icon billing-generated-payment-icon-upi" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M4 12h10"></path>
+                                <path d="m11 7 6 5-6 5"></path>
+                                <path d="M19 7v10"></path>
+                            </svg>
+                        </span>
+                    }
+                    else if (paymentMethod == "Udhaar")
+                    {
+                        <span class="billing-generated-payment-icon billing-generated-payment-icon-credit" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <rect x="5" y="4" width="14" height="16" rx="2"></rect>
+                                <path d="M8 8h8M8 12h5"></path>
+                                <circle cx="16.5" cy="16.5" r="2.5"></circle>
+                                <path d="m15.4 16.5.8.8 1.5-1.6"></path>
+                            </svg>
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="billing-generated-payment-icon billing-generated-payment-icon-cash" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <rect x="3" y="6" width="18" height="12" rx="2"></rect>
+                                <circle cx="12" cy="12" r="2.2"></circle>
+                                <path d="M6 9h.01M18 15h.01"></path>
+                            </svg>
+                        </span>
+                    }
+                    <strong>@paymentMethod</strong>
+                </span>
+            </div>
+        </section>
+
+        <div class="billing-generated-actions">
+            <button type="button" class="billing-generated-action billing-generated-print" id="billingPrintReceipt">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M7 9V4.5h10V9"></path>
+                    <path d="M6 18H4.5A1.5 1.5 0 0 1 3 16.5V11A2 2 0 0 1 5 9h14a2 2 0 0 1 2 2v5.5a1.5 1.5 0 0 1-1.5 1.5H18"></path>
+                    <path d="M7 14h10v6H7z"></path>
+                    <path d="M17.5 12h.01"></path>
+                </svg>
+                <span>Print Receipt</span>
+            </button>
+
+            <button type="button" class="billing-generated-action billing-generated-whatsapp" id="billingShareWhatsApp">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M20 11.5a8 8 0 0 1-11.8 7L4 20l1.5-4.1A8 8 0 1 1 20 11.5Z"></path>
+                    <path d="M9.4 8.2c.2-.4.4-.4.7-.4h.4c.2 0 .3.1.4.4l.6 1.5c.1.2 0 .4-.1.6l-.5.6c.7 1.2 1.6 2.1 2.8 2.8l.6-.5c.2-.2.4-.2.6-.1l1.5.6c.3.1.4.2.4.4v.4c0 .3-.1.5-.4.7-.4.3-1 .4-1.5.3-2.7-.6-5.5-3.3-6.1-6.1-.1-.5 0-1.1.3-1.5Z"></path>
+                </svg>
+                <span>Share via WhatsApp</span>
+            </button>
+        </div>
+    </main>
+</div>
+
+@section Scripts {
+<script>
+    (() => {
+        const printButton = document.getElementById("billingPrintReceipt");
+        const whatsappButton = document.getElementById("billingShareWhatsApp");
+
+        printButton?.addEventListener("click", () => window.print());
+
+        whatsappButton?.addEventListener("click", () => {
+            const invoiceNumber = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.InvoiceNumber));
+            const totalAmount = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.TotalAmount.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))));
+            const customerName = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(string.IsNullOrWhiteSpace(Model.CustomerName) ? "Walk-in Customer" : Model.CustomerName));
+            const paymentMethod = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.PaymentMethod));
+
+            const message =
+                "PharmaFlow Invoice " + invoiceNumber +
+                "\nCustomer: " + customerName +
+                "\nTotal: ₹" + totalAmount +
+                "\nPayment: " + paymentMethod;
+
+            const url = "https://wa.me/?text=" + encodeURIComponent(message);
+            window.open(url, "_blank", "noopener,noreferrer");
+        });
+    })();
+</script>
+}
