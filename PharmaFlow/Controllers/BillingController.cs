@@ -45,7 +45,7 @@ public sealed class BillingController : Controller
         if (searchTerm.Length > 80)
             searchTerm = searchTerm[..80];
 
-        var pattern = $"%{searchTerm.Replace("%", "\%").Replace("_", "\_")}%";
+        var pattern = $"%{searchTerm.Replace("%", "\\%").Replace("_", "\\_")}%";
 
         var products = await _dbContext.Products
             .AsNoTracking()
@@ -213,7 +213,7 @@ public sealed class BillingController : Controller
                     return await BillingErrorAsync(
                         transaction,
                         $"{batch.Product.ProductName} has only {batch.QuantityOnHand:0.##} units available.");
-                
+
                 if (batch.SellingUnitPrice <= 0)
                     return await BillingErrorAsync(
                         transaction,
