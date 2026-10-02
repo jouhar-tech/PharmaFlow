@@ -27,11 +27,23 @@ namespace PharmaFlow.Controllers
             var lowStockCount = 0;
             decimal expiryAtRiskValue = 0m;
             decimal slowMovingStockValue = 0m;
+            decimal todaySalesAmount = 0m;
 
             if (long.TryParse(profileIdValue, out var profileId))
             {
                 var today = DateOnly.FromDateTime(DateTime.UtcNow);
                 var ninetyDaysFromToday = today.AddDays(90);
+
+                var indiaTimeZone = TimeZoneInfo.FindSystemTimeZoneById(
+                    OperatingSystem.IsWindows() ? "India Standard Time" : "Asia/Kolkata");
+                var indiaNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, indiaTimeZone);
+                var indiaDate = DateOnly.FromDateTime(indiaNow);
+                var indiaStartUtc = TimeZoneInfo.ConvertTimeToUtc(
+                    indiaDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified),
+                    indiaTimeZone);
+                var indiaEndUtc = TimeZoneInfo.ConvertTimeToUtc(
+                    indiaDate.AddDays(1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified),
+                    indiaTimeZone);
 
                 expiringSoonCount = await _dbContext.ProductBatches
                     .AsNoTracking()
@@ -88,6 +100,15 @@ namespace PharmaFlow.Controllers
                         batch.QuantityOnHand > 0 &&
                         batch.CreatedAt <= slowMovingCutoffUtc)
                     .SumAsync(batch => batch.QuantityOnHand * batch.PurchaseUnitPrice, cancellationToken);
+
+                todaySalesAmount = await _dbContext.SalesBills
+                    .AsNoTracking()
+                    .Where(bill =>
+                        bill.ProfileId == profileId &&
+                        bill.Status == "Completed" &&
+                        bill.CreatedAt >= indiaStartUtc &&
+                        bill.CreatedAt < indiaEndUtc)
+                    .SumAsync(bill => bill.TotalAmount, cancellationToken);
             }
 
             var dashboard = new DashboardViewModel
@@ -95,7 +116,8 @@ namespace PharmaFlow.Controllers
                 ProductsExpiringSoonCount = expiringSoonCount,
                 LowStockCount = lowStockCount,
                 ExpiryAtRiskValue = expiryAtRiskValue,
-                SlowMovingStockValue = slowMovingStockValue
+                SlowMovingStockValue = slowMovingStockValue,
+                TodaySalesAmount = todaySalesAmount
             };
 
             return View(dashboard);
