@@ -6651,3 +6651,101 @@ body.theme-dark .bills-empty-state strong {
     font-size: .8rem;
   }
 }
+
+
+/* Bills / generated invoice: hide the generic white app header on mobile */
+@media (max-width: 767.98px) {
+  body.bills-page-body .app-topbar,
+  body.billing-generated-page-body .app-topbar {
+    display: none !important;
+  }
+
+  body.bills-page-body .app-content,
+  body.billing-generated-page-body .app-content {
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
+/* Generated invoice dedicated mobile header */
+.billing-generated-mobile-header {
+  display: none;
+}
+
+@media (max-width: 767.98px) {
+  .billing-generated-mobile-header {
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr) 42px;
+    align-items: center;
+    min-height: 72px;
+    padding: 0 .75rem;
+    background: linear-gradient(180deg, #a9e3d8 0%, #98dacc 100%);
+    color: #172b2b;
+  }
+
+  .billing-generated-mobile-menu {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    color: #173c3c;
+    background: transparent;
+  }
+
+  .billing-generated-mobile-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
+    min-width: 0;
+  }
+
+  .billing-generated-mobile-title h1 {
+    margin: 0;
+    color: #172b2b;
+    font-size: .95rem;
+    font-weight: 850;
+    line-height: 1.1;
+    text-align: center;
+  }
+
+  .billing-generated-mobile-title .billing-generated-success-icon {
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    margin: 0;
+  }
+
+  .billing-generated-mobile-title .billing-generated-success-icon svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .billing-generated-mobile-avatar {
+    justify-self: end;
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #2563eb;
+    color: #fff;
+    font-size: .8rem;
+    font-weight: 800;
+    text-decoration: none;
+    text-transform: uppercase;
+  }
+
+  .billing-generated-mobile-avatar:hover {
+    color: #fff;
+    text-decoration: none;
+  }
+
+  body.billing-generated-page-body .billing-generated-header {
+    display: none !important;
+  }
+}
