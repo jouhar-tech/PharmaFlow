@@ -49,8 +49,11 @@
             <div class="home-mobile-sales-head">
                 <div>
                     <span class="home-mobile-eyebrow">Today&rsquo;s Sales</span>
-                    <strong class="home-mobile-sales-total">₹0</strong>
-                    <span class="home-mobile-sales-empty-message"><span data-i18n="noSalesToday">No sales recorded today yet.</span></span>
+                    <strong class="home-mobile-sales-total">₹@Model.TodaySalesAmount.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</strong>
+                    @if (Model.TodaySalesAmount <= 0)
+            {
+                <span class="home-mobile-sales-empty-message"><span data-i18n="noSalesToday">No sales recorded today yet.</span></span>
+            }
                 </div>
                 <span class="home-mobile-sales-pill">Today</span>
             </div>
@@ -210,7 +213,7 @@
             </article>
             <article class="dashboard-card metric-card metric-success">
                 <div class="metric-icon">₹</div>
-                <div><span class="metric-label" data-i18n="todaysSales">Today's sales</span><strong class="metric-value">₹ —</strong><span class="metric-note" data-i18n="totalSalesForToday">Total sales for today</span></div>
+                <div><span class="metric-label" data-i18n="todaysSales">Today's sales</span><strong class="metric-value">₹ @Model.TodaySalesAmount.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</strong><span class="metric-note" data-i18n="totalSalesForToday">Total sales for today</span></div>
             </article>
             <article class="dashboard-card metric-card metric-purple">
                 <div class="metric-icon">⇄</div>
