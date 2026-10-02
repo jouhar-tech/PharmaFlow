@@ -6085,7 +6085,7 @@ body.theme-dark .billing-generated-item-copy span {
 
 .bill-square-card {
   min-width: 0;
-  min-height: 286px;
+  min-height: 0;
   aspect-ratio: 1 / 1;
   display: flex;
   flex-direction: column;
@@ -6280,7 +6280,7 @@ body.theme-dark .billing-generated-item-copy span {
   }
 
   .bill-square-card {
-    min-height: 290px;
+    min-height: 0;
   }
 }
 
@@ -6294,7 +6294,7 @@ body.theme-dark .billing-generated-item-copy span {
   }
 
   .bill-square-card {
-    min-height: 258px;
+    min-height: 0;
     padding: .58rem .55rem .58rem;
   }
 
