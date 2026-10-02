@@ -161,28 +161,50 @@
             </button>
         </div>
 
-        <section class="billing-receipt-print-only" aria-hidden="true">
-            <div class="billing-receipt-print-heading">
-                <strong>PharmaFlow</strong>
-                <span>Sales Receipt</span>
-            </div>
+        <section class="billing-receipt-print-only" aria-label="Printable receipt">
+            <header class="billing-receipt-brand">
+                <div class="billing-receipt-brand-mark" aria-hidden="true">
+                    <svg viewBox="0 0 48 48">
+                        <path d="M24 5v38M5 24h38"></path>
+                        <path d="M31.5 9.5c-1.9 3.2-4.1 5.3-7.1 6.4 0-2.7 1.7-5.2 4.7-7"></path>
+                        <path d="M32.5 38.5c-2.1-3.3-2.8-6.3-1.9-9.1 2.5.9 4 3.5 4.2 6.8"></path>
+                    </svg>
+                </div>
+                <div class="billing-receipt-brand-copy">
+                    <h2>@Model.BusinessName</h2>
+                    @if (!string.IsNullOrWhiteSpace(Model.BusinessPhone))
+                    {
+                        <p>Phone: @Model.BusinessPhone</p>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(Model.BusinessEmail))
+                    {
+                        <p>Email: @Model.BusinessEmail</p>
+                    }
+                    <p>Date: @Model.InvoiceDate.ToString("dd MMM yyyy")</p>
+                    <p>Invoice No: @Model.InvoiceNumber</p>
+                </div>
+            </header>
 
-            <div class="billing-receipt-print-meta">
-                <span>Invoice: @Model.InvoiceNumber</span>
-                <span>Date: @Model.InvoiceDate.ToString("dd MMM yyyy, hh:mm tt")</span>
-                <span>Customer: @customerDisplayName</span>
-                <span>Payment: @paymentMethod</span>
-            </div>
+            <section class="billing-receipt-customer">
+                <div>
+                    <span>Customer Name</span>
+                    <strong>@customerDisplayName</strong>
+                </div>
+                @if (!string.IsNullOrWhiteSpace(Model.PhoneNumber))
+                {
+                    <div>
+                        <span>Phone</span>
+                        <strong>@Model.PhoneNumber</strong>
+                    </div>
+                }
+            </section>
 
-            <table>
+            <table class="billing-receipt-table">
                 <thead>
                     <tr>
-                        <th>Item</th>
-                        <th>Batch</th>
-                        <th>Qty</th>
-                        <th>Rate</th>
-                        <th>GST</th>
-                        <th>Amount</th>
+                        <th>ITEM</th>
+                        <th>QTY</th>
+                        <th>AMOUNT</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -190,23 +212,42 @@
                     {
                         <tr>
                             <td>@item.ProductName</td>
-                            <td>@item.BatchNumber</td>
                             <td>@item.Quantity.ToString("0.##")</td>
-                            <td>₹@item.UnitPrice.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</td>
-                            <td>@item.GstRate.ToString("0.##")%</td>
                             <td>₹@item.LineTotal.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</td>
                         </tr>
                     }
                 </tbody>
             </table>
 
-            <div class="billing-receipt-print-totals">
-                <span>Taxable Amount: ₹@Model.TaxableAmount.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</span>
-                <span>CGST: ₹@Model.CgstAmount.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</span>
-                <span>SGST: ₹@Model.SgstAmount.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</span>
-                <strong>Grand Total: ₹@Model.TotalAmount.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</strong>
-            </div>
+            <section class="billing-receipt-totals">
+                <div>
+                    <span>Subtotal</span>
+                    <strong>₹@Model.Subtotal.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</strong>
+                </div>
+                @if (Model.GstAmount > 0)
+                {
+                    <div>
+                        <span>GST</span>
+                        <strong>₹@Model.GstAmount.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</strong>
+                    </div>
+                }
+                <div class="billing-receipt-grand-total">
+                    <span>Total Amount</span>
+                    <strong>₹@Model.TotalAmount.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</strong>
+                </div>
+                <div class="billing-receipt-payment">
+                    <span>Payment Method</span>
+                    <strong>@paymentMethod</strong>
+                </div>
+            </section>
+
+            <footer class="billing-receipt-footer">
+                <strong>Thank you!</strong>
+                <div class="billing-receipt-signature-line"></div>
+                <span>Authorized Signature</span>
+            </footer>
         </section>
+
     </main>
 </div>
 
