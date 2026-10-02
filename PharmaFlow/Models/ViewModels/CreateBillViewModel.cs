@@ -5,14 +5,19 @@ public sealed class CreateBillViewModel
     public string CustomerName { get; set; } = string.Empty;
     public string PhoneNumber { get; set; } = string.Empty;
     public string PaymentMethod { get; set; } = "Cash";
-    public List<CreateBillItemViewModel> Items { get; set; } = [];
+    public string ItemsJson { get; set; } = string.Empty;
 }
 
 public sealed class CreateBillItemViewModel
 {
-    public long ProductId { get; set; }
-    public string ProductName { get; set; } = string.Empty;
-    public decimal Quantity { get; set; }
-    public decimal Mrp { get; set; }
-    public decimal Amount { get; set; }
+    public long BatchId { get; init; }
+    public string ProductName { get; init; } = string.Empty;
+    public string BatchNumber { get; init; } = string.Empty;
+    public DateOnly ExpiryDate { get; init; }
+    public decimal Quantity { get; init; }
+    public decimal Mrp { get; init; }
+    public decimal UnitPrice { get; init; }
+    public decimal GstRate { get; init; }
+    public decimal LineTotal { get; init; }
+    public decimal GstAmount { get; init; }
 }
