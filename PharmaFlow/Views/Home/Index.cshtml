@@ -77,12 +77,12 @@
                 <strong>Add Stock</strong>
             </label>
 
-            <button type="button" class="home-mobile-action-card" aria-disabled="true">
+            <a class="home-mobile-action-card" asp-controller="Billing" asp-action="Create">
                 <span class="home-mobile-action-icon">
                     <svg viewBox="0 0 64 64"><path d="M17 9h28v46H17z"/><path d="M22 18h18M22 26h18M22 34h12"/><path d="M45 16v31l9-8V9z"/><path d="M49 39v10M45 45h8"/></svg>
                 </span>
                 <strong>Create Bill</strong>
-            </button>
+            </a>
 
             <a class="home-mobile-action-card home-mobile-count-card" asp-controller="ExpiryProducts" asp-action="Index">
                 <span class="home-mobile-count-badge home-mobile-expiry-count-badge" aria-label="@Model.ProductsExpiringSoonCount products expiring soon">@Model.ProductsExpiringSoonCount</span>
