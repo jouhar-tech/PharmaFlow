@@ -95,7 +95,17 @@
         <div class="app-main">
             <header class="app-topbar">
                 <button class="sidebar-toggle d-lg-none" type="button" id="sidebarToggle" data-i18n-attr="aria-label:openNavigation">☰</button>
-                <div class="topbar-title" data-page-title-key="@ViewData["Title"]">@ViewData["Title"]</div>
+                <div class="topbar-title billing-generated-topbar-title" data-page-title-key="@ViewData["Title"]">
+                    @if (isBillingGeneratedPage)
+                    {
+                        <span class="billing-topbar-success-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <path d="m5 12 4.5 4.5L19 7"></path>
+                            </svg>
+                        </span>
+                    }
+                    <span>Invoice Generated</span>
+                </div>
                 <div class="profile-menu">
                     <button type="button" class="profile-trigger" id="profileTrigger" aria-expanded="false" aria-controls="profileMenu">
                         <span class="profile-avatar">@((Context.Session.GetString("Username") ?? businessName).FirstOrDefault().ToString().ToUpperInvariant())</span>
