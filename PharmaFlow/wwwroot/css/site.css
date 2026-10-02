@@ -6461,3 +6461,65 @@ body.theme-dark .bills-empty-state strong {
     min-height: 140px;
   }
 }
+
+/* Generated bill: compact success indicator and title in the app top bar */
+.billing-generated-topbar-title {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .45rem;
+}
+
+.billing-topbar-success-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  flex: 0 0 26px;
+  border-radius: 50%;
+  background: #d9f4ee;
+  color: #3b9b8b;
+}
+
+.billing-topbar-success-icon svg {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+@media (max-width: 767.98px) {
+  body.billing-generated-page-body .app-topbar {
+    display: flex;
+    min-height: 72px;
+    padding: 0 .85rem;
+  }
+
+  body.billing-generated-page-body .billing-generated-header {
+    display: none !important;
+  }
+
+  body.billing-generated-page-body .billing-generated-content {
+    margin-top: 0;
+  }
+
+  body.billing-generated-page-body .billing-generated-topbar-title {
+    font-size: .95rem;
+    font-weight: 800;
+  }
+
+  body.billing-generated-page-body .billing-topbar-success-icon {
+    width: 27px;
+    height: 27px;
+    flex-basis: 27px;
+  }
+}
+
+@media (max-width: 420px) {
+  body.billing-generated-page-body .app-topbar {
+    min-height: 68px;
+  }
+}
