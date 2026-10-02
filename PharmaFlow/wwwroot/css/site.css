@@ -6438,3 +6438,26 @@ body.theme-dark .bills-empty-state strong {
     min-height: 170px;
   }
 }
+
+
+/* Generated bill mobile: keep title in the top app bar and remove duplicate hero title */
+@media (max-width: 767.98px) {
+  body.billing-generated-page-body .billing-generated-header h1 {
+    display: none;
+  }
+
+  body.billing-generated-page-body .billing-generated-header {
+    min-height: 145px;
+    padding-bottom: 2.25rem;
+  }
+
+  body.billing-generated-page-body .billing-generated-success-icon {
+    margin-top: 1.25rem;
+  }
+}
+
+@media (max-width: 420px) {
+  body.billing-generated-page-body .billing-generated-header {
+    min-height: 140px;
+  }
+}
