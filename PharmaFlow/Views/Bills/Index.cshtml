@@ -1,0 +1,269 @@
+@model PharmaFlow.Models.ViewModels.BillsViewModel
+
+@{
+    ViewData["Title"] = "Bills";
+    var currency = System.Globalization.CultureInfo.GetCultureInfo("en-IN");
+}
+
+<div class="bills-mobile-page">
+    <header class="bills-mobile-header">
+        <a asp-controller="Profile" asp-action="Index" class="bills-mobile-back" aria-label="Back to More">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M19 12H5"></path>
+                <path d="m11 18-6-6 6-6"></path>
+            </svg>
+        </a>
+        <h1 data-i18n="bills">Bills</h1>
+        <span class="bills-mobile-header-spacer" aria-hidden="true"></span>
+    </header>
+
+    <main class="bills-mobile-content">
+        <section class="bills-summary-card" aria-label="Bills summary">
+            <span class="bills-summary-kicker">BILLS SUMMARY</span>
+            <span class="bills-summary-title">Total Sales Bill Amount</span>
+            <strong id="billsTotalSales">₹@Model.TotalSalesAmount.ToString("N2", currency)</strong>
+            <span id="billsCountSummary">@Model.BillCount Bills</span>
+        </section>
+
+        <section class="bills-search-section">
+            <label class="bills-search-wrap" for="billsSearch">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <circle cx="11" cy="11" r="6.5"></circle>
+                    <path d="m16 16 4.5 4.5"></path>
+                </svg>
+                <input id="billsSearch"
+                       type="search"
+                       value="@Model.SearchTerm"
+                       maxlength="80"
+                       autocomplete="off"
+                       placeholder="Search product name, phone number or customer name"
+                       aria-label="Search product name, phone number or customer name" />
+            </label>
+        </section>
+
+        <nav class="bills-periods" aria-label="Bill period">
+            <a class="bills-period-chip @(Model.SelectedPeriod == "Today" ? "is-active" : "")"
+               href="@Url.Action("Index", "Bills", new { period = "Today" })">Today</a>
+            <a class="bills-period-chip @(Model.SelectedPeriod == "Last 7 Days" ? "is-active" : "")"
+               href="@Url.Action("Index", "Bills", new { period = "Last 7 Days" })">Last 7 Days</a>
+            <a class="bills-period-chip @(Model.SelectedPeriod == "1 Month" ? "is-active" : "")"
+               href="@Url.Action("Index", "Bills", new { period = "1 Month" })">1 Month</a>
+            <button type="button" class="bills-calendar" id="billsCalendar" aria-label="Choose custom date range" title="Custom date">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M7 3v3M17 3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v14H4V6a1 1 0 0 1 1-1Z"></path>
+                </svg>
+            </button>
+        </nav>
+
+        <form class="bills-custom-form" id="billsCustomForm" asp-controller="Bills" asp-action="Index" method="get" hidden>
+            <input type="hidden" name="period" value="Custom" />
+            <label>
+                From
+                <input type="date" name="startDate" value="@(Model.StartDate?.ToString("yyyy-MM-dd"))" required />
+            </label>
+            <label>
+                To
+                <input type="date" name="endDate" value="@(Model.EndDate?.ToString("yyyy-MM-dd"))" required />
+            </label>
+            <button type="submit">Apply</button>
+        </form>
+
+        <section class="bills-list-section" aria-live="polite">
+            <div id="billsLoading" class="bills-loading" hidden>
+                <span class="bills-spinner" aria-hidden="true"></span>
+                <span>Searching bills...</span>
+            </div>
+
+            <div id="billsGrid" class="bills-grid">
+                @foreach (var bill in Model.Bills)
+                {
+                    <article class="bill-square-card">
+                        <div class="bill-card-head">
+                            <div class="bill-card-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M6 3.5h9l3 3V20.5H6z"></path>
+                                    <path d="M14 3.5v4h4"></path>
+                                    <path d="M9 12h6M9 15.5h4"></path>
+                                </svg>
+                            </div>
+                            <div class="bill-card-number">
+                                <span>Invoice No:</span>
+                                <strong>#@bill.BillNumber</strong>
+                            </div>
+                        </div>
+
+                        <div class="bill-card-detail">
+                            <span>DATE</span>
+                            <strong>@bill.CreatedAt.ToString("dd MMM yyyy")</strong>
+                        </div>
+
+                        <div class="bill-card-detail">
+                            <span>CUSTOMER</span>
+                            <strong>
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <circle cx="12" cy="8" r="3.2"></circle>
+                                    <path d="M5.5 20c.8-3.3 3-5 6.5-5s5.7 1.7 6.5 5"></path>
+                                </svg>
+                                @(string.IsNullOrWhiteSpace(bill.CustomerName) ? "Walk-in Customer" : bill.CustomerName)
+                            </strong>
+                        </div>
+
+                        @if (!string.IsNullOrWhiteSpace(bill.CustomerPhone))
+                        {
+                            <div class="bill-card-detail bill-card-phone-detail">
+                                <span>PHONE</span>
+                                <strong>@bill.CustomerPhone</strong>
+                            </div>
+                        }
+
+                        <div class="bill-card-detail">
+                            <span>PAYMENT METHOD</span>
+                            <strong>@bill.PaymentMethod</strong>
+                        </div>
+
+                        @if (!string.IsNullOrWhiteSpace(bill.ProductNames))
+                        {
+                            <div class="bill-card-detail bill-card-products">
+                                <span>PRODUCT</span>
+                                <strong title="@bill.ProductNames">@bill.ProductNames</strong>
+                            </div>
+                        }
+
+                        <div class="bill-card-total">
+                            <span>TOTAL AMOUNT</span>
+                            <strong>₹@bill.TotalAmount.ToString("N2", currency)</strong>
+                        </div>
+                    </article>
+                }
+            </div>
+
+            <div class="bills-empty-state" id="billsEmptyState" @(Model.Bills.Count > 0 ? "hidden" : "")>
+                <div class="bills-empty-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M6 3.5h9l3 3V20.5H6z"></path>
+                        <path d="M9 12h6M9 15.5h4"></path>
+                    </svg>
+                </div>
+                <strong>No bills found</strong>
+                <span>Try another product, customer name or phone number.</span>
+            </div>
+        </section>
+    </main>
+</div>
+
+@section Scripts {
+<script>
+(() => {
+    const search = document.getElementById("billsSearch");
+    const grid = document.getElementById("billsGrid");
+    const total = document.getElementById("billsTotalSales");
+    const count = document.getElementById("billsCountSummary");
+    const empty = document.getElementById("billsEmptyState");
+    const loading = document.getElementById("billsLoading");
+    const calendar = document.getElementById("billsCalendar");
+    const customForm = document.getElementById("billsCustomForm");
+
+    let timer = null;
+    let requestId = 0;
+
+    const money = value => "₹" + Number(value || 0).toLocaleString("en-IN", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+
+    const escapeHtml = value => String(value || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+
+    const formatDate = value => {
+        const date = new Date(value);
+        return date.toLocaleDateString("en-IN", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric"
+        });
+    };
+
+    const documentIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h9l3 3V20.5H6z"></path><path d="M14 3.5v4h4"></path><path d="M9 12h6M9 15.5h4"></path></svg>';
+    const personIcon = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.2"></circle><path d="M5.5 20c.8-3.3 3-5 6.5-5s5.7 1.7 6.5 5"></path></svg>';
+
+    const render = data => {
+        total.textContent = money(data.totalSalesAmount);
+        count.textContent = Number(data.billCount || 0).toLocaleString("en-IN") + " Bills";
+
+        if (!data.bills || data.bills.length === 0) {
+            grid.innerHTML = "";
+            empty.hidden = false;
+            return;
+        }
+
+        empty.hidden = true;
+        grid.innerHTML = data.bills.map(bill => {
+            const customer = escapeHtml(bill.customerName || "Walk-in Customer");
+            const phone = bill.customerPhone ? '<div class="bill-card-detail bill-card-phone-detail"><span>PHONE</span><strong>' + escapeHtml(bill.customerPhone) + '</strong></div>' : "";
+            const products = bill.productNames
+                ? '<div class="bill-card-detail bill-card-products"><span>PRODUCT</span><strong title="' + escapeHtml(bill.productNames) + '">' + escapeHtml(bill.productNames) + '</strong></div>'
+                : "";
+
+            return '<article class="bill-square-card">' +
+                '<div class="bill-card-head">' +
+                    '<div class="bill-card-icon" aria-hidden="true">' + documentIcon + '</div>' +
+                    '<div class="bill-card-number"><span>Invoice No:</span><strong>#' + escapeHtml(bill.billNumber) + '</strong></div>' +
+                '</div>' +
+                '<div class="bill-card-detail"><span>DATE</span><strong>' + formatDate(bill.createdAt) + '</strong></div>' +
+                '<div class="bill-card-detail"><span>CUSTOMER</span><strong>' + personIcon + customer + '</strong></div>' +
+                phone +
+                '<div class="bill-card-detail"><span>PAYMENT METHOD</span><strong>' + escapeHtml(bill.paymentMethod) + '</strong></div>' +
+                products +
+                '<div class="bill-card-total"><span>TOTAL AMOUNT</span><strong>' + money(bill.totalAmount) + '</strong></div>' +
+            '</article>';
+        }).join("");
+    };
+
+    const runSearch = async value => {
+        const id = ++requestId;
+        loading.hidden = false;
+
+        try {
+            const url = new URL('@Url.Action("Search", "Bills")', window.location.origin);
+            url.searchParams.set("period", "@Model.SelectedPeriod");
+            url.searchParams.set("q", value);
+
+            @if (Model.SelectedPeriod == "Custom" && Model.StartDate.HasValue && Model.EndDate.HasValue)
+            {
+                <text>
+                url.searchParams.set("startDate", "@Model.StartDate.Value.ToString("yyyy-MM-dd")");
+                url.searchParams.set("endDate", "@Model.EndDate.Value.ToString("yyyy-MM-dd")");
+                </text>
+            }
+
+            const response = await fetch(url, { credentials: "same-origin" });
+            if (!response.ok) throw new Error("Search failed.");
+
+            const data = await response.json();
+
+            if (id === requestId) render(data);
+        } catch {
+            if (id === requestId) {
+                grid.innerHTML = "";
+                empty.hidden = false;
+            }
+        } finally {
+            if (id === requestId) loading.hidden = true;
+        }
+    };
+
+    search?.addEventListener("input", () => {
+        clearTimeout(timer);
+        timer = setTimeout(() => runSearch(search.value), 140);
+    });
+
+    calendar?.addEventListener("click", () => {
+        customForm?.toggleAttribute("hidden");
+    });
+})();
+</script>
+}
