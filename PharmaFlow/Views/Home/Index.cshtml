@@ -990,7 +990,10 @@
         sourceBackdrop?.addEventListener("click", closeSourceModal);
         cameraClose?.addEventListener("click", closeCameraModal);
         cameraShutter?.addEventListener("click", captureCameraPhoto);
-        cameraGallery?.addEventListener("click", () => chooseSource(uploadInput));
+        cameraGallery?.addEventListener("click", () => {
+            closeCameraModal();
+            chooseSource(uploadInput);
+        });
         cameraOrientationButtons.forEach(button => {
             button.addEventListener("click", () => updateCameraOrientation(button.dataset.cameraOrientation));
         });
