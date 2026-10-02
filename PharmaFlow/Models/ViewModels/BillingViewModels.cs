@@ -40,6 +40,9 @@ public sealed class GeneratedBillLineViewModel
 public sealed class GeneratedBillViewModel
 {
     public long BillId { get; init; }
+    public string BusinessName { get; init; } = "PharmaFlow";
+    public string? BusinessPhone { get; init; }
+    public string? BusinessEmail { get; init; }
     public string InvoiceNumber { get; init; } = string.Empty;
     public DateTime InvoiceDate { get; init; }
     public string? CustomerName { get; init; }
