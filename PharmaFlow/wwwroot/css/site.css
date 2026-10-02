@@ -6523,3 +6523,58 @@ body.theme-dark .bills-empty-state strong {
     min-height: 68px;
   }
 }
+
+/* Generated bill: invoice title in green mobile top header */
+@media (max-width: 767.98px) {
+  body.billing-generated-page-body .app-topbar {
+    display: grid !important;
+    grid-template-columns: 42px minmax(0, 1fr) 42px;
+    align-items: center;
+    min-height: 72px;
+    padding: 0 .75rem;
+    background: linear-gradient(180deg, #a9e3d8 0%, #98dacc 100%);
+    border-bottom: 0;
+    color: #172b2b;
+  }
+
+  body.billing-generated-page-body .billing-generated-topbar-title {
+    justify-self: center;
+    font-size: .95rem;
+    font-weight: 850;
+    color: #172b2b;
+    text-align: center;
+  }
+
+  body.billing-generated-page-body .app-topbar .sidebar-toggle {
+    color: #173c3c;
+  }
+
+  body.billing-generated-page-body .profile-menu {
+    justify-self: end;
+  }
+
+  body.billing-generated-page-body .profile-trigger {
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+
+  body.billing-generated-page-body .profile-trigger-text,
+  body.billing-generated-page-body .profile-chevron {
+    display: none;
+  }
+
+  body.billing-generated-page-body .billing-generated-header {
+    display: none !important;
+  }
+
+  body.billing-generated-page-body .billing-generated-content {
+    margin-top: 0;
+  }
+}
+
+@media (max-width: 420px) {
+  body.billing-generated-page-body .app-topbar {
+    min-height: 72px;
+  }
+}
