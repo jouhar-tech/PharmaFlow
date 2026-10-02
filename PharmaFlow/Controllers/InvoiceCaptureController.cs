@@ -390,7 +390,6 @@ public sealed class InvoiceCaptureController : Controller
             .Where(item =>
                 item.ProfileId == profileId &&
                 parsedIds.Contains(item.ImportId))
-            .OrderBy(item => parsedIds.IndexOf(item.ImportId))
             .Select(item => new InvoiceBatchReviewItemViewModel
             {
                 ImportId = item.ImportId,
@@ -403,8 +402,14 @@ public sealed class InvoiceCaptureController : Controller
             })
             .ToListAsync(cancellationToken);
 
-        for (var index = 0; index < imports.Count; index++)
-            imports[index].InvoiceNumber = index + 1;
+        imports = imports
+            .OrderBy(item => parsedIds.IndexOf(item.ImportId))
+            .Select((item, index) =>
+            {
+                item.InvoiceNumber = index + 1;
+                return item;
+            })
+            .ToList();
 
         ViewData["Title"] = "Review Invoices";
         return View(new InvoiceBatchReviewViewModel
