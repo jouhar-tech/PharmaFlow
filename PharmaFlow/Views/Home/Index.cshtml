@@ -253,14 +253,12 @@
         </header>
         <div class="invoice-capture-source-options">
             <button type="button" class="invoice-capture-source-option invoice-capture-source-camera"
-                    id="invoiceCaptureSourceCamera"
-                    onclick="window.PharmFlowOpenInvoiceCamera?.();">
+                    id="invoiceCaptureSourceCamera">
                 <span class="invoice-capture-source-icon" aria-hidden="true">⌕</span>
                 <span><strong>Scan Invoice</strong><small>Use camera</small></span>
             </button>
             <button type="button" class="invoice-capture-source-option invoice-capture-source-upload"
-                    id="invoiceCaptureSourceUpload"
-                    onclick="document.getElementById('invoiceCaptureSourceModal')?.setAttribute('hidden',''); document.body.classList.remove('invoice-capture-source-open'); document.getElementById('dashboardUploadInput')?.click();">
+                    id="invoiceCaptureSourceUpload">
                 <span class="invoice-capture-source-icon" aria-hidden="true">↑</span>
                 <span><strong>Upload Invoice</strong><small>From device</small></span>
             </button>
@@ -558,11 +556,6 @@
                 }
             }
         };
-
-        // Expose the camera action for the dashboard source chooser's
-        // inline fallback handler. This keeps the camera button reliable
-        // even if an older cached script missed the delegated binding.
-        window.PharmFlowOpenInvoiceCamera = openCameraScanner;
 
         const captureCameraPhoto = async () => {
             if (!cameraVideo?.videoWidth || !cameraVideo?.videoHeight) return;
