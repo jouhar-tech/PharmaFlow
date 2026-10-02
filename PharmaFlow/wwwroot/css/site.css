@@ -5528,3 +5528,257 @@ body.theme-dark .billing-generated-item-copy span {
     font-size: 15px;
   }
 }
+
+
+/* Reference-style PDF receipt */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 10mm;
+  }
+
+  html,
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+  }
+
+  body.billing-generated-page-body .app-shell,
+  body.billing-generated-page-body .app-main,
+  body.billing-generated-page-body .app-content {
+    min-height: 0 !important;
+  }
+
+  body.billing-generated-page-body .app-topbar,
+  body.billing-generated-page-body .billing-generated-header,
+  body.billing-generated-page-body .billing-invoice-summary-card,
+  body.billing-generated-page-body .billing-generated-items,
+  body.billing-generated-page-body .billing-generated-actions,
+  body.billing-generated-page-body .home-mobile-bottom-nav,
+  body.billing-generated-page-body .app-footer {
+    display: none !important;
+  }
+
+  body.billing-generated-page-body .billing-generated-page {
+    width: 100%;
+    min-height: 0;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+  }
+
+  body.billing-generated-page-body .billing-generated-content {
+    width: 110mm;
+    max-width: 110mm;
+    margin: 0 auto !important;
+    padding: 0 !important;
+  }
+
+  body.billing-generated-page-body .billing-receipt-print-only {
+    display: block !important;
+    box-sizing: border-box;
+    width: 100%;
+    margin: 0;
+    padding: 7mm 6mm 6mm;
+    color: #111;
+    background: #fff;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 10.5pt;
+    line-height: 1.3;
+  }
+
+  .billing-receipt-brand {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 3mm;
+    text-align: center;
+  }
+
+  .billing-receipt-brand-mark {
+    display: grid;
+    place-items: center;
+    width: 11mm;
+    height: 11mm;
+    flex: 0 0 11mm;
+    margin-top: 1mm;
+  }
+
+  .billing-receipt-brand-mark svg {
+    width: 11mm;
+    height: 11mm;
+    fill: none;
+    stroke: #48a36e;
+    stroke-width: 3.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .billing-receipt-brand-copy {
+    min-width: 0;
+  }
+
+  .billing-receipt-brand-copy h2 {
+    margin: 0;
+    color: #050505;
+    font-size: 22pt;
+    font-weight: 800;
+    letter-spacing: -.5pt;
+    line-height: 1.05;
+  }
+
+  .billing-receipt-brand-copy p {
+    margin: 1.4mm 0 0;
+    color: #1d1d1d;
+    font-size: 10pt;
+    line-height: 1.12;
+  }
+
+  .billing-receipt-customer {
+    margin: 5mm 0 4mm;
+    padding: 0 1mm;
+  }
+
+  .billing-receipt-customer > div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 4mm;
+    margin-top: 1.7mm;
+  }
+
+  .billing-receipt-customer span {
+    color: #1d1d1d;
+    font-size: 10.2pt;
+  }
+
+  .billing-receipt-customer strong {
+    color: #111;
+    font-size: 10.5pt;
+    font-weight: 700;
+    text-align: right;
+  }
+
+  .billing-receipt-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    margin: 2mm 0 4mm;
+    color: #111;
+  }
+
+  .billing-receipt-table th,
+  .billing-receipt-table td {
+    border: .35mm solid #232323;
+    padding: 2.4mm 2mm;
+    vertical-align: middle;
+  }
+
+  .billing-receipt-table th {
+    background: #f2f4f4;
+    font-size: 10pt;
+    font-weight: 800;
+    text-align: left;
+    letter-spacing: .2pt;
+  }
+
+  .billing-receipt-table th:nth-child(1),
+  .billing-receipt-table td:nth-child(1) {
+    width: 54%;
+    text-align: left;
+  }
+
+  .billing-receipt-table th:nth-child(2),
+  .billing-receipt-table td:nth-child(2) {
+    width: 18%;
+    text-align: center;
+  }
+
+  .billing-receipt-table th:nth-child(3),
+  .billing-receipt-table td:nth-child(3) {
+    width: 28%;
+    text-align: right;
+  }
+
+  .billing-receipt-table td {
+    font-size: 9.7pt;
+  }
+
+  .billing-receipt-table tbody tr:nth-child(even) td {
+    background: #fbfbfb;
+  }
+
+  .billing-receipt-totals {
+    margin-top: 1mm;
+  }
+
+  .billing-receipt-totals > div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 4mm;
+    margin-top: 2mm;
+    padding: 0 1mm;
+  }
+
+  .billing-receipt-totals span {
+    color: #111;
+    font-size: 10.5pt;
+  }
+
+  .billing-receipt-totals strong {
+    color: #111;
+    font-size: 10.5pt;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .billing-receipt-totals .billing-receipt-grand-total {
+    margin-top: 2.5mm;
+    padding-top: 2.5mm;
+    border-top: .4mm solid #111;
+    border-bottom: .4mm solid #111;
+    padding-bottom: 2.5mm;
+  }
+
+  .billing-receipt-totals .billing-receipt-grand-total span,
+  .billing-receipt-totals .billing-receipt-grand-total strong {
+    font-size: 15pt;
+    font-weight: 800;
+  }
+
+  .billing-receipt-payment {
+    margin-top: 3mm !important;
+  }
+
+  .billing-receipt-payment span,
+  .billing-receipt-payment strong {
+    font-size: 10.5pt;
+    font-weight: 700;
+  }
+
+  .billing-receipt-footer {
+    margin-top: 10mm;
+    text-align: center;
+  }
+
+  .billing-receipt-footer > strong {
+    display: block;
+    color: #111;
+    font-size: 14pt;
+    font-weight: 700;
+  }
+
+  .billing-receipt-signature-line {
+    width: 42mm;
+    margin: 9mm auto 1mm;
+    border-bottom: .4mm solid #111;
+  }
+
+  .billing-receipt-footer > span {
+    color: #111;
+    font-size: 10pt;
+    font-weight: 700;
+  }
+}
