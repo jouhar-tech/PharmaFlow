@@ -5273,7 +5273,7 @@ body.theme-dark .billing-search-result:hover {
 
 body.theme-dark .billing-search-result-copy strong,
 body.theme-dark .billing-search-empty strong,
-body.theme-dark .billing-loading span:last-child,
+body.theme-dark .billing-search-loading span:last-child,
 body.theme-dark .billing-line-copy strong {
   color: #f8fafc;
 }
