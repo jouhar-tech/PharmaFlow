@@ -145,10 +145,6 @@
             </svg>
             <span>Generate Bill</span>
         </button>
-
-        <p class="billing-next-step-note">
-            Bill calculation, stock deduction and receipt generation will be connected in the next billing step.
-        </p>
     </main>
 </div>
 
@@ -156,25 +152,15 @@
 <script>
     (() => {
         const paymentButtons = document.querySelectorAll(".billing-payment-option");
-        let selectedMethod = "Cash";
 
         paymentButtons.forEach(button => {
             button.addEventListener("click", () => {
-                selectedMethod = button.dataset.paymentMethod || "Cash";
-
                 paymentButtons.forEach(item => {
                     const active = item === button;
                     item.classList.toggle("is-selected", active);
                     item.setAttribute("aria-pressed", String(active));
                 });
             });
-        });
-
-        const search = document.getElementById("billingProductSearch");
-        const generate = document.getElementById("billingGenerateButton");
-
-        search?.addEventListener("input", () => {
-            generate?.classList.toggle("is-ready", search.value.trim().length > 0);
         });
     })();
 </script>
