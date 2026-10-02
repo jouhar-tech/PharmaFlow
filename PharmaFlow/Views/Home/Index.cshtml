@@ -1112,7 +1112,7 @@
 
             // Let the user add another invoice from the gallery without losing the
             // already captured camera pages.
-            uploadInput?.value = "";
+            if (uploadInput) uploadInput.value = "";
             uploadInput?.click();
         });
         cameraOrientationButtons.forEach(button => {
