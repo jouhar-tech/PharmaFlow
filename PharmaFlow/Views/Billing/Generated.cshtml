@@ -3,6 +3,7 @@
 @{
     ViewData["Title"] = "Invoice Generated";
     var paymentMethod = Model.PaymentMethod;
+    var customerDisplayName = string.IsNullOrWhiteSpace(Model.CustomerName) ? "Walk-in Customer" : Model.CustomerName;
 }
 
 <div class="billing-generated-page">
@@ -45,7 +46,7 @@
             <div class="billing-summary-customer-row">
                 <div class="billing-customer-result">
                     <span class="billing-summary-label">Customer Name</span>
-                    <strong>@(string.IsNullOrWhiteSpace(Model.CustomerName) ? "Walk-in Customer" : Model.CustomerName)</strong>
+                    <strong>@customerDisplayName</strong>
                 </div>
 
                 <strong class="billing-summary-amount">
@@ -66,6 +67,18 @@
                 <span>Total Amount:</span>
                 <strong>₹@Model.TotalAmount.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</strong>
             </div>
+
+            @if (Model.GstAmount > 0)
+            {
+                <div class="billing-generated-tax-row">
+                    <span>Taxable Amount</span>
+                    <strong>₹@Model.TaxableAmount.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</strong>
+                </div>
+                <div class="billing-generated-tax-row">
+                    <span>CGST + SGST</span>
+                    <strong>₹@Model.GstAmount.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</strong>
+                </div>
+            }
 
             <div class="billing-summary-double-line" aria-hidden="true"></div>
 
@@ -108,6 +121,26 @@
             </div>
         </section>
 
+        <section class="billing-generated-items" aria-labelledby="generatedItemsTitle">
+            <div class="billing-generated-items-heading">
+                <h2 id="generatedItemsTitle">Items</h2>
+                <span>@Model.Items.Count</span>
+            </div>
+
+            <div class="billing-generated-items-card">
+                @foreach (var item in Model.Items)
+                {
+                    <div class="billing-generated-item-row">
+                        <div class="billing-generated-item-copy">
+                            <strong>@item.ProductName</strong>
+                            <span>Batch @item.BatchNumber · Qty @item.Quantity.ToString("0.##") · GST @item.GstRate.ToString("0.##")%</span>
+                        </div>
+                        <strong>₹@item.LineTotal.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</strong>
+                    </div>
+                }
+            </div>
+        </section>
+
         <div class="billing-generated-actions">
             <button type="button" class="billing-generated-action billing-generated-print" id="billingPrintReceipt">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -122,11 +155,58 @@
             <button type="button" class="billing-generated-action billing-generated-whatsapp" id="billingShareWhatsApp">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                     <path d="M20 11.5a8 8 0 0 1-11.8 7L4 20l1.5-4.1A8 8 0 1 1 20 11.5Z"></path>
-                    <path d="M9.4 8.2c.2-.4.4-.4.7-.4h.4c.2 0 .3.1.4.4l.6 1.5c.1.2 0 .4-.1.6l-.5.6c.7 1.2 1.6 2.1 2.8 2.8l.6-.5c.2-.2.4-.2.6-.1l1.5.6c.3.1.4.2.4.4v.4c0 .3-.1.5-.4.7-.4.3-1 .4-1.5.3-2.7-.6-5.5-3.3-6.1-6.1-.1-.5 0-1.1.3-1.5Z"></path>
+                    <path d="M9.4 8.2c.2-.4.4-.4.7-.4h.4c.2 0 .3.1.4.4l.6 1.5c.1.2 0 .4-.1.6l-.5.6c.7 1.2 1.6 2.1 2.8 2.8l.6-.5c.2-.2.4-.2.6-.1l1.5.6c.3.1.4.2.4.4v.4c0 .3-.1.5-.4.7-.4.3-1 .4-1.5.3-2.7-.6-5.5-3.3-6.1-6.1-2.7-.6-5.5-3.3-6.1-6.1-.1-.5 0-1.1.3-1.5Z"></path>
                 </svg>
                 <span>Share via WhatsApp</span>
             </button>
         </div>
+
+        <section class="billing-receipt-print-only" aria-hidden="true">
+            <div class="billing-receipt-print-heading">
+                <strong>PharmaFlow</strong>
+                <span>Sales Receipt</span>
+            </div>
+
+            <div class="billing-receipt-print-meta">
+                <span>Invoice: @Model.InvoiceNumber</span>
+                <span>Date: @Model.InvoiceDate.ToString("dd MMM yyyy, hh:mm tt")</span>
+                <span>Customer: @customerDisplayName</span>
+                <span>Payment: @paymentMethod</span>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Batch</th>
+                        <th>Qty</th>
+                        <th>Rate</th>
+                        <th>GST</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr>
+                            <td>@item.ProductName</td>
+                            <td>@item.BatchNumber</td>
+                            <td>@item.Quantity.ToString("0.##")</td>
+                            <td>₹@item.UnitPrice.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</td>
+                            <td>@item.GstRate.ToString("0.##")%</td>
+                            <td>₹@item.LineTotal.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            <div class="billing-receipt-print-totals">
+                <span>Taxable Amount: ₹@Model.TaxableAmount.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</span>
+                <span>CGST: ₹@Model.CgstAmount.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</span>
+                <span>SGST: ₹@Model.SgstAmount.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</span>
+                <strong>Grand Total: ₹@Model.TotalAmount.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</strong>
+            </div>
+        </section>
     </main>
 </div>
 
@@ -140,18 +220,28 @@
 
         whatsappButton?.addEventListener("click", () => {
             const invoiceNumber = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.InvoiceNumber));
-            const totalAmount = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.TotalAmount.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))));
-            const customerName = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(string.IsNullOrWhiteSpace(Model.CustomerName) ? "Walk-in Customer" : Model.CustomerName));
+            const customerName = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(customerDisplayName));
             const paymentMethod = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.PaymentMethod));
+            const total = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.TotalAmount.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))));
+            const gst = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.GstAmount.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))));
+
+            const lines = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+                Model.Items.Select(item =>
+                    $"{item.ProductName} x {item.Quantity:0.##} = ₹{item.LineTotal.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))}"
+                ).ToArray()));
 
             const message =
                 "PharmaFlow Invoice " + invoiceNumber +
                 "\nCustomer: " + customerName +
-                "\nTotal: ₹" + totalAmount +
+                "\n" + lines.join("\n") +
+                "\nGST: ₹" + gst +
+                "\nTotal: ₹" + total +
                 "\nPayment: " + paymentMethod;
 
-            const url = "https://wa.me/?text=" + encodeURIComponent(message);
-            window.open(url, "_blank", "noopener,noreferrer");
+            window.open(
+                "https://wa.me/?text=" + encodeURIComponent(message),
+                "_blank",
+                "noopener,noreferrer");
         });
     })();
 </script>
