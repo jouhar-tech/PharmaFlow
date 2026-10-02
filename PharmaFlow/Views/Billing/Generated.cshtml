@@ -279,36 +279,62 @@
         printButton?.addEventListener("click", () => window.print());
 
         whatsappButton?.addEventListener("click", () => {
+            const businessName = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.BusinessName));
+            const businessPhone = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.BusinessPhone));
             const invoiceNumber = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.InvoiceNumber));
+            const invoiceDate = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.InvoiceDate.ToString("dd MMM yyyy")));
             const customerName = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CustomerName));
-            const phoneNumber = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.PhoneNumber));
             const paymentMethod = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.PaymentMethod));
-            const total = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.TotalAmount.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))));
-            const gst = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.GstAmount.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))));
+            const total = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.TotalAmount.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))));
 
             const lines = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
                 Model.Items.Select(item =>
-                    $"{item.ProductName} x {item.Quantity:0.##} = ₹{item.LineTotal.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))}"
-                ).ToArray()));
+                {
+                    var quantity = item.Quantity.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+                    var unitText = item.Quantity == 1 ? "strip" : "strips";
+                    var amount = item.LineTotal.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("en-IN"));
+                    return $"• {item.ProductName} ({quantity} {unitText}) - ₹{amount}";
+                }).ToArray()));
 
-            const messageParts = ["PharmaFlow Invoice " + invoiceNumber];
+            const messageParts = [];
+
+            if (businessName) {
+                messageParts.push("*" + businessName + "* 🏥");
+                messageParts.push("");
+            }
 
             if (customerName) {
-                messageParts.push("Customer: " + customerName);
+                messageParts.push("Thank you for your visit, *" + customerName + "*!");
+            } else {
+                messageParts.push("Thank you for your visit!");
             }
 
-            if (phoneNumber) {
-                messageParts.push("Phone: " + phoneNumber);
-            }
-
-            messageParts.push(lines.join("\n"));
-            messageParts.push("GST: ₹" + gst);
-            messageParts.push("Total: ₹" + total);
+            messageParts.push("");
+            messageParts.push("Your invoice has been successfully generated. Below are your billing summary details:");
+            messageParts.push("");
+            messageParts.push("📄 *Invoice Details:*");
+            messageParts.push("• Invoice No: #" + invoiceNumber);
+            messageParts.push("• Date: " + invoiceDate);
 
             if (paymentMethod) {
-                messageParts.push("Payment: " + paymentMethod);
+                messageParts.push("• Payment Mode: " + paymentMethod);
             }
 
+            messageParts.push("");
+            messageParts.push("💊 *Bill Summary:*");
+            messageParts.push(lines.join("\n"));
+            messageParts.push("");
+            messageParts.push("💰 *Total Amount Paid:* *₹" + total + "*");
+
+            if (businessPhone) {
+                messageParts.push("");
+                messageParts.push("For any queries, contact us at " + businessPhone + " or reply directly to this chat.");
+            }
+
+            messageParts.push("");
+            messageParts.push("Stay healthy!");
+
+            // WhatsApp's share endpoint opens the contact picker with this message pre-filled as a draft.
             window.open(
                 "https://wa.me/?text=" + encodeURIComponent(messageParts.join("\n")),
                 "_blank",
