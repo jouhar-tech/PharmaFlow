@@ -61,7 +61,8 @@
 
         </section>
 
-        <button type="button" class="home-mobile-scan-card" id="dashboardScanUploadTrigger">
+        <button type="button" class="home-mobile-scan-card" id="dashboardScanUploadTrigger"
+                onclick="document.getElementById('invoiceCaptureSourceModal')?.removeAttribute('hidden'); document.body.classList.add('invoice-capture-source-open');">
             <span class="home-mobile-action-icon home-mobile-scan-icon" aria-hidden="true">
                 <svg viewBox="0 0 64 64"><rect x="9" y="18" width="38" height="31" rx="5"/><path d="M18 18l5-7h12l5 7M47 25h4a4 4 0 0 1 4 4v18a4 4 0 0 1-4 4H47"/><circle cx="28" cy="33" r="8"/><path d="M42 38h12M42 44h10"/></svg>
             </span>
@@ -251,11 +252,15 @@
             <button type="button" class="invoice-capture-source-close" id="invoiceCaptureSourceClose" aria-label="Close">×</button>
         </header>
         <div class="invoice-capture-source-options">
-            <button type="button" class="invoice-capture-source-option invoice-capture-source-camera" id="invoiceCaptureSourceCamera">
+            <button type="button" class="invoice-capture-source-option invoice-capture-source-camera"
+                    id="invoiceCaptureSourceCamera"
+                    onclick="window.PharmFlowOpenInvoiceCamera?.();">
                 <span class="invoice-capture-source-icon" aria-hidden="true">⌕</span>
                 <span><strong>Scan Invoice</strong><small>Use camera</small></span>
             </button>
-            <button type="button" class="invoice-capture-source-option invoice-capture-source-upload" id="invoiceCaptureSourceUpload">
+            <button type="button" class="invoice-capture-source-option invoice-capture-source-upload"
+                    id="invoiceCaptureSourceUpload"
+                    onclick="document.getElementById('invoiceCaptureSourceModal')?.setAttribute('hidden',''); document.body.classList.remove('invoice-capture-source-open'); document.getElementById('dashboardUploadInput')?.click();">
                 <span class="invoice-capture-source-icon" aria-hidden="true">↑</span>
                 <span><strong>Upload Invoice</strong><small>From device</small></span>
             </button>
@@ -553,6 +558,11 @@
                 }
             }
         };
+
+        // Expose the camera action for the dashboard source chooser's
+        // inline fallback handler. This keeps the camera button reliable
+        // even if an older cached script missed the delegated binding.
+        window.PharmFlowOpenInvoiceCamera = openCameraScanner;
 
         const captureCameraPhoto = async () => {
             if (!cameraVideo?.videoWidth || !cameraVideo?.videoHeight) return;
