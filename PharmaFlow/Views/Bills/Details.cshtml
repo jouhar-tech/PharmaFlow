@@ -1,0 +1,270 @@
+@model PharmaFlow.Models.ViewModels.BillDetailsViewModel
+
+@{
+    ViewData["Title"] = "Bill Details";
+    var currency = System.Globalization.CultureInfo.GetCultureInfo("en-IN");
+    var hasCustomerName = !string.IsNullOrWhiteSpace(Model.CustomerName);
+    var hasPhoneNumber = !string.IsNullOrWhiteSpace(Model.PhoneNumber);
+    var hasPaymentMethod = !string.IsNullOrWhiteSpace(Model.PaymentMethod);
+}
+
+<div class="bill-details-page">
+    <header class="bill-details-mobile-header">
+        <a asp-controller="Bills" asp-action="Index" class="bill-details-back" aria-label="Back to Bills">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M19 12H5"></path>
+                <path d="m11 18-6-6 6-6"></path>
+            </svg>
+        </a>
+
+        <h1>Bill Details</h1>
+
+        <span class="bill-details-header-spacer" aria-hidden="true"></span>
+    </header>
+
+    <main class="bill-details-content">
+        <section class="bill-details-meta-card" aria-labelledby="billDetailsMetaTitle">
+            <h2 id="billDetailsMetaTitle" class="visually-hidden">Bill information</h2>
+
+            <div class="bill-details-meta-row">
+                <span class="bill-details-meta-icon" aria-hidden="true">▤</span>
+                <span class="bill-details-meta-label">Invoice No:</span>
+                <strong>@Model.InvoiceNumber</strong>
+            </div>
+
+            <div class="bill-details-meta-row">
+                <span class="bill-details-meta-icon" aria-hidden="true">▣</span>
+                <span class="bill-details-meta-label">Date</span>
+                <strong>@Model.InvoiceDate.ToString("dd MMM yyyy")</strong>
+            </div>
+
+            @if (hasCustomerName)
+            {
+                <div class="bill-details-meta-row">
+                    <span class="bill-details-meta-icon" aria-hidden="true">♙</span>
+                    <span class="bill-details-meta-label">Customer Name</span>
+                    <strong>@Model.CustomerName</strong>
+                </div>
+            }
+
+            @if (hasPhoneNumber)
+            {
+                <div class="bill-details-meta-row">
+                    <span class="bill-details-meta-icon" aria-hidden="true">⌕</span>
+                    <span class="bill-details-meta-label">Phone Number</span>
+                    <strong>@Model.PhoneNumber</strong>
+                </div>
+            }
+
+            @if (hasPaymentMethod)
+            {
+                <div class="bill-details-meta-row">
+                    <span class="bill-details-meta-icon" aria-hidden="true">▱</span>
+                    <span class="bill-details-meta-label">Payment Method</span>
+                    <strong>@Model.PaymentMethod</strong>
+                </div>
+            }
+        </section>
+
+        <section class="bill-details-items-card" aria-labelledby="billDetailsItemsTitle">
+            <header class="bill-details-items-header">
+                <h2 id="billDetailsItemsTitle">Itemized Summary</h2>
+            </header>
+
+            <div class="bill-details-items-columns">
+                <span>ITEM</span>
+                <span>QTY</span>
+                <span>AMOUNT</span>
+            </div>
+
+            <div class="bill-details-items-list">
+                @foreach (var item in Model.Items)
+                {
+                    var quantityText = item.Quantity == 1 ? "1 strip" : $"{item.Quantity:0.##} strips";
+
+                    <div class="bill-details-item-row">
+                        <div class="bill-details-item-name">@item.ProductName</div>
+                        <div class="bill-details-item-qty">@quantityText</div>
+                        <div class="bill-details-item-amount">₹@item.LineTotal.ToString("N0", currency)</div>
+                    </div>
+                }
+            </div>
+
+            <div class="bill-details-total-row">
+                <span>Total Amount</span>
+                <strong>₹@Model.TotalAmount.ToString("N0", currency)</strong>
+            </div>
+        </section>
+
+        <div class="bill-details-actions">
+            <button type="button" class="bill-details-action bill-details-print" id="billDetailsPrintReceipt">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M7 9V4.5h10V9"></path>
+                    <path d="M6 18H4.5A1.5 1.5 0 0 1 3 16.5V11A2 2 0 0 1 5 9h14a2 2 0 0 1 2 2v5.5a1.5 1.5 0 0 1-1.5 1.5H18"></path>
+                    <path d="M7 14h10v6H7z"></path>
+                </svg>
+                <span>Print Receipt</span>
+            </button>
+
+            <button type="button" class="bill-details-action bill-details-whatsapp" id="billDetailsShareWhatsApp">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M20 11.5a8 8 0 0 1-11.8 7L4 20l1.5-4.1A8 8 0 1 1 20 11.5Z"></path>
+                    <path d="M9.4 8.2c.2-.4.4-.4.7-.4h.4c.2 0 .3.1.4.4l.6 1.5c.1.2 0 .4-.1.6l-.5.6c.7.3 1.6 1.2 2.8 2.8l.6-.5c.2-.2.4-.2.6-.1l1.5.6c.3.1.4.2.4.4v.4c0 .3-.1.5-.4.7-.4.3-1 .4-1.5.3-2.7-.6-5.5-3.3-6.1-6.1-2.7-.6-5.5-3.3-6.1-6.1-.1-.5 0-1.1.3-1.5Z"></path>
+                </svg>
+                <span>Share via WhatsApp</span>
+            </button>
+        </div>
+
+        <section class="billing-receipt-print-only" aria-label="Printable receipt">
+            <header class="billing-receipt-brand">
+                <div class="billing-receipt-brand-mark" aria-hidden="true">
+                    <svg viewBox="0 0 48 48">
+                        <path d="M24 5v38M5 24h38"></path>
+                        <path d="M31.5 9.5c-1.9 3.2-4.1 5.3-7.1 6.4 0-2.7 1.7-5.2 4.7-7"></path>
+                        <path d="M32.5 38.5c-2.1-3.3-2.8-6.3-1.9-9.1 2.5.9 4 3.5 4.2 6.8"></path>
+                    </svg>
+                </div>
+                <div class="billing-receipt-brand-copy">
+                    <h2>@Model.BusinessName</h2>
+                    @if (!string.IsNullOrWhiteSpace(Model.BusinessPhone))
+                    {
+                        <p>Phone: @Model.BusinessPhone</p>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(Model.BusinessEmail))
+                    {
+                        <p>Email: @Model.BusinessEmail</p>
+                    }
+                    <p>Date: @Model.InvoiceDate.ToString("dd MMM yyyy")</p>
+                    <p>Invoice No: @Model.InvoiceNumber</p>
+                </div>
+            </header>
+
+            @if (hasCustomerName || hasPhoneNumber)
+            {
+                <section class="billing-receipt-customer">
+                    @if (hasCustomerName)
+                    {
+                        <div>
+                            <span>Customer Name</span>
+                            <strong>@Model.CustomerName</strong>
+                        </div>
+                    }
+                    @if (hasPhoneNumber)
+                    {
+                        <div>
+                            <span>Phone</span>
+                            <strong>@Model.PhoneNumber</strong>
+                        </div>
+                    }
+                </section>
+            }
+
+            <table class="billing-receipt-table">
+                <thead>
+                    <tr>
+                        <th>ITEM</th>
+                        <th>QTY</th>
+                        <th>AMOUNT</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr>
+                            <td>@item.ProductName</td>
+                            <td>@item.Quantity.ToString("0.##")</td>
+                            <td>₹@item.LineTotal.ToString("N0", currency)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            <section class="billing-receipt-totals">
+                <div class="billing-receipt-grand-total">
+                    <span>Total Amount</span>
+                    <strong>₹@Model.TotalAmount.ToString("N0", currency)</strong>
+                </div>
+                @if (hasPaymentMethod)
+                {
+                    <div class="billing-receipt-payment">
+                        <span>Payment Method</span>
+                        <strong>@Model.PaymentMethod</strong>
+                    </div>
+                }
+            </section>
+        </section>
+    </main>
+</div>
+
+@section Scripts {
+<script>
+(() => {
+    const printButton = document.getElementById("billDetailsPrintReceipt");
+    const whatsappButton = document.getElementById("billDetailsShareWhatsApp");
+
+    printButton?.addEventListener("click", () => window.print());
+
+    whatsappButton?.addEventListener("click", () => {
+        const businessName = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.BusinessName));
+        const businessPhone = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.BusinessPhone));
+        const invoiceNumber = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.InvoiceNumber));
+        const invoiceDate = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.InvoiceDate.ToString("dd MMM yyyy")));
+        const customerName = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CustomerName));
+        const paymentMethod = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.PaymentMethod));
+        const total = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.TotalAmount.ToString("N0", currency)));
+
+        const lines = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+            Model.Items.Select(item =>
+            {
+                var quantity = item.Quantity.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+                var unitText = item.Quantity == 1 ? "strip" : "strips";
+                var amount = item.LineTotal.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("en-IN"));
+                return $"• {item.ProductName} ({quantity} {unitText}) - ₹{amount}";
+            }).ToArray()));
+
+        const messageParts = [];
+
+        if (businessName) {
+            messageParts.push("*" + businessName + "* 🏥");
+            messageParts.push("");
+        }
+
+        if (customerName) {
+            messageParts.push("Thank you for your visit, *" + customerName + "*!");
+        } else {
+            messageParts.push("Thank you for your visit!");
+        }
+
+        messageParts.push("");
+        messageParts.push("Your invoice has been successfully generated. Below are your billing summary details:");
+        messageParts.push("");
+        messageParts.push("📄 *Invoice Details:*");
+        messageParts.push("• Invoice No: #" + invoiceNumber);
+        messageParts.push("• Date: " + invoiceDate);
+
+        if (paymentMethod) {
+            messageParts.push("• Payment Mode: " + paymentMethod);
+        }
+
+        messageParts.push("");
+        messageParts.push("💊 *Bill Summary:*");
+        messageParts.push(lines.join("\n"));
+        messageParts.push("");
+        messageParts.push("💰 *Total Amount Paid:* *₹" + total + "*");
+
+        if (businessPhone) {
+            messageParts.push("");
+            messageParts.push("For any queries, contact us at " + businessPhone + " or reply directly to this chat.");
+        }
+
+        messageParts.push("");
+        messageParts.push("Stay healthy!");
+
+        window.open(
+            "https://wa.me/?text=" + encodeURIComponent(messageParts.join("\n")),
+            "_blank",
+            "noopener,noreferrer");
+    });
+})();
+</script>
+}
