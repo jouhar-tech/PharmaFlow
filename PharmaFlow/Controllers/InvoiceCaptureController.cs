@@ -193,10 +193,12 @@ public sealed class InvoiceCaptureController : Controller
         {
             await using var stream = invoice.OpenReadStream();
 
-            var items = await _invoiceVisionService.ExtractAsync(
+            var visionResult = await _invoiceVisionService.ExtractAsync(
                 stream,
                 mimeType,
                 cancellationToken);
+
+            var items = visionResult.Items;
 
             if (items.Count == 0)
                 return BadRequest(new
@@ -237,6 +239,14 @@ public sealed class InvoiceCaptureController : Controller
                 OriginalFileName = safeFileName,
                 SourceType = normalizedSource,
                 RawOcrText = null,
+                DistributorName = CleanMetadata(visionResult.DistributorName, 200),
+                InvoiceNumber = CleanMetadata(visionResult.InvoiceNumber, 100),
+                InvoiceDate = TryParseInvoiceDate(visionResult.InvoiceDateText, out var invoiceDate)
+                    ? invoiceDate
+                    : null,
+                TotalAmount = visionResult.TotalAmount > 0m
+                    ? Math.Round(Math.Min(visionResult.TotalAmount, 999_999_999_999m), 2)
+                    : null,
                 OcrConfidence = items.Count == 0 ? 0m : items.Average(item => item.Confidence),
                 Status = "draft",
                 CreatedAt = now,
@@ -260,6 +270,7 @@ public sealed class InvoiceCaptureController : Controller
                     BatchNumber = item.BatchNumber,
                     ExpiryDate = hasExpiry ? expiry : null,
                     Quantity = hasQuantity ? item.Quantity : null,
+                    Mrp = item.Mrp > 0m ? Math.Round(Math.Min(item.Mrp, 999_999_999m), 2) : null,
                     Confidence = Math.Clamp(item.Confidence, 0m, 100m),
                     ValidationStatus = valid ? "ready" : "needs_review",
                     ValidationMessage = valid
@@ -315,8 +326,55 @@ public sealed class InvoiceCaptureController : Controller
                 item.ExpiryDateText,
                 item.Quantity > 0m
                     ? item.Quantity.ToString(CultureInfo.InvariantCulture)
+                    : string.Empty,
+                item.Mrp > 0m
+                    ? item.Mrp.ToString(CultureInfo.InvariantCulture)
                     : string.Empty
             }.Where(value => !string.IsNullOrWhiteSpace(value)));
+
+    private static string? CleanMetadata(string? value, int maxLength)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return null;
+
+        var normalized = Regex.Replace(value.Trim(), @"s+", " ");
+        return normalized.Length <= maxLength
+            ? normalized
+            : normalized[..maxLength].Trim();
+    }
+
+    private static bool TryParseInvoiceDate(string? value, out DateOnly date)
+    {
+        date = default;
+
+        if (string.IsNullOrWhiteSpace(value))
+            return false;
+
+        var text = value.Trim();
+
+        var formats = new[]
+        {
+            "yyyy-MM-dd",
+            "dd-MM-yyyy",
+            "dd/MM/yyyy",
+            "dd.MM.yyyy",
+            "MM-dd-yyyy",
+            "MM/dd/yyyy",
+            "yyyy/MM/dd"
+        };
+
+        return DateOnly.TryParseExact(
+                   text,
+                   formats,
+                   CultureInfo.InvariantCulture,
+                   DateTimeStyles.None,
+                   out date)
+               || DateOnly.TryParse(
+                   text,
+                   CultureInfo.InvariantCulture,
+                   DateTimeStyles.AllowWhiteSpaces,
+                   out date);
+    }
 
     private static bool TryParseVisionExpiry(string? value, out DateOnly date)
     {
