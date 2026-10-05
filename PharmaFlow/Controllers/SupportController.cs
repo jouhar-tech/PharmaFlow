@@ -72,6 +72,10 @@ public sealed class SupportController : Controller
             ? "Unlimited User"
             : "Free User";
 
+        var phoneNumber = string.IsNullOrWhiteSpace(profile.PhoneNumber)
+            ? "Not provided"
+            : profile.PhoneNumber.Trim();
+
         var lines = new List<string>
         {
             "Hi PharmaFlow Customer Support,",
@@ -80,6 +84,7 @@ public sealed class SupportController : Controller
             string.Empty,
             $"Profile ID: {profile.Id}",
             $"Name: {name}",
+            $"Phone Number: {phoneNumber}",
             $"Shop Name: {shopName}"
         };
 
