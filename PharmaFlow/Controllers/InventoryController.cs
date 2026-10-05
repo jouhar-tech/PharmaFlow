@@ -283,6 +283,12 @@ public sealed class InventoryController : Controller
             })
             .ToListAsync(cancellationToken);
 
+        var selectedBatch = batchId.HasValue
+            ? batches.FirstOrDefault(b => b.BatchId == batchId.Value)
+            : batches.FirstOrDefault(b => b.IsActive && !b.IsQuarantined)
+                ?? batches.FirstOrDefault(b => b.IsActive)
+                ?? batches.FirstOrDefault();
+
         var model = new InventoryProductDetailsViewModel
         {
             ProductId = product.ProductId,
@@ -299,11 +305,120 @@ public sealed class InventoryController : Controller
             ReorderLevel = product.ReorderLevel,
             IsPrescriptionRequired = product.IsPrescriptionRequired,
             IsActive = product.IsActive,
+            SelectedBatch = selectedBatch,
             Batches = batches
         };
 
         ViewData["Title"] = "Product Details";
         return View(model);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UpdateDetails(
+        long productId,
+        long batchId,
+        string? productName,
+        string? batchNumber,
+        decimal quantityOnHand,
+        decimal purchaseUnitPrice,
+        decimal sellingUnitPrice,
+        DateOnly expiryDate,
+        string? manufacturer,
+        decimal? gstRate,
+        string? barcode,
+        CancellationToken cancellationToken)
+    {
+        if (!TryGetProfileId(out var profileId))
+            return Unauthorized();
+
+        if (productId <= 0 || batchId <= 0)
+            return NotFound();
+
+        var product = await _dbContext.Products
+            .FirstOrDefaultAsync(
+                p => p.ProductId == productId &&
+                     p.ProfileId == profileId &&
+                     p.IsActive,
+                cancellationToken);
+
+        if (product is null)
+            return NotFound();
+
+        var batch = await _dbContext.ProductBatches
+            .FirstOrDefaultAsync(
+                b => b.BatchId == batchId &&
+                     b.ProductId == productId &&
+                     b.Product.IsActive &&
+                     b.Product.ProfileId == profileId,
+                cancellationToken);
+
+        if (batch is null)
+            return NotFound();
+
+        var normalizedName = NormalizeText(productName, 200);
+        var normalizedBatch = NormalizeText(batchNumber, 100);
+        var normalizedManufacturer = NormalizeNullableText(manufacturer, 200);
+        var normalizedBarcode = NormalizeNullableText(barcode, 100);
+
+        if (normalizedName is null)
+            ModelState.AddModelError(nameof(productName), "Product name is required.");
+
+        if (normalizedBatch is null)
+            ModelState.AddModelError(nameof(batchNumber), "Batch number is required.");
+
+        if (gstRate is < 0m or > 100m)
+            ModelState.AddModelError(nameof(gstRate), "GST rate must be between 0 and 100.");
+
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+        if (expiryDate < today)
+            ModelState.AddModelError(nameof(expiryDate), "Expiry date cannot be earlier than today.");
+
+        if (quantityOnHand < 0m || quantityOnHand > 999_999_999m)
+            ModelState.AddModelError(nameof(quantityOnHand), "Quantity is invalid.");
+
+        if (purchaseUnitPrice < 0m || purchaseUnitPrice > 999_999_999m ||
+            sellingUnitPrice < 0m || sellingUnitPrice > 999_999_999m)
+            ModelState.AddModelError(nameof(purchaseUnitPrice), "Price is invalid.");
+
+        if (!ModelState.IsValid)
+        {
+            TempData["InventoryDetailsError"] = "Please correct the highlighted details.";
+            return RedirectToAction(nameof(Details), new { productId, batchId });
+        }
+
+        var duplicateBatch = await _dbContext.ProductBatches
+            .AsNoTracking()
+            .AnyAsync(
+                b => b.ProductId == productId &&
+                     b.BatchId != batchId &&
+                     b.BatchNumber.ToLower() == normalizedBatch!.ToLower(),
+                cancellationToken);
+
+        if (duplicateBatch)
+        {
+            TempData["InventoryDetailsError"] = "Another batch with this batch number already exists for this product.";
+            return RedirectToAction(nameof(Details), new { productId, batchId });
+        }
+
+        product.ProductName = normalizedName!;
+        product.Manufacturer = normalizedManufacturer;
+        product.GstRate = gstRate;
+        product.Barcode = normalizedBarcode;
+        product.UpdatedAt = DateTime.UtcNow;
+
+        batch.BatchNumber = normalizedBatch!;
+        batch.QuantityOnHand = decimal.Round(quantityOnHand, 2, MidpointRounding.AwayFromZero);
+        batch.PurchaseUnitPrice = decimal.Round(purchaseUnitPrice, 2, MidpointRounding.AwayFromZero);
+        batch.SellingUnitPrice = decimal.Round(sellingUnitPrice, 2, MidpointRounding.AwayFromZero);
+        batch.ExpiryDate = expiryDate;
+        batch.UpdatedAt = DateTime.UtcNow;
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        TempData["InventoryDetailsSuccess"] = "Product details updated successfully.";
+        return RedirectToAction(nameof(Details), new { productId, batchId });
     }
 
     [HttpPost]
