@@ -60,19 +60,17 @@ public sealed class PurchaseController : Controller
         {
             var start = today.AddDays(-6);
             query = query.Where(invoice =>
-                invoice.InvoiceDate.HasValue
-                    ? invoice.InvoiceDate.Value >= start && invoice.InvoiceDate.Value <= today
-                    : invoice.CreatedAt.Date >= start.ToDateTime(TimeOnly.MinValue) &&
-                      invoice.CreatedAt.Date <= today.ToDateTime(TimeOnly.MaxValue));
+                invoice.InvoiceDate.HasValue &&
+                invoice.InvoiceDate.Value >= start &&
+                invoice.InvoiceDate.Value <= today);
         }
         else if (normalizedPeriod == "month")
         {
             var start = today.AddMonths(-1);
             query = query.Where(invoice =>
-                invoice.InvoiceDate.HasValue
-                    ? invoice.InvoiceDate.Value >= start && invoice.InvoiceDate.Value <= today
-                    : invoice.CreatedAt.Date >= start.ToDateTime(TimeOnly.MinValue) &&
-                      invoice.CreatedAt.Date <= today.ToDateTime(TimeOnly.MaxValue));
+                invoice.InvoiceDate.HasValue &&
+                invoice.InvoiceDate.Value >= start &&
+                invoice.InvoiceDate.Value <= today);
         }
         else if (normalizedPeriod == "custom" && from.HasValue && to.HasValue)
         {
@@ -80,10 +78,9 @@ public sealed class PurchaseController : Controller
             var toDate = to.Value;
 
             query = query.Where(invoice =>
-                invoice.InvoiceDate.HasValue
-                    ? invoice.InvoiceDate.Value >= fromDate && invoice.InvoiceDate.Value <= toDate
-                    : invoice.CreatedAt.Date >= fromDate.ToDateTime(TimeOnly.MinValue) &&
-                      invoice.CreatedAt.Date <= toDate.ToDateTime(TimeOnly.MaxValue));
+                invoice.InvoiceDate.HasValue &&
+                invoice.InvoiceDate.Value >= fromDate &&
+                invoice.InvoiceDate.Value <= toDate);
         }
 
         var rows = await query
