@@ -8123,3 +8123,243 @@ body.theme-dark .invoice-batch-review-back {
     margin: 0 auto;
   }
 }
+
+
+/* Simple native-style continuous invoice camera */
+.pharma-camera-modal[hidden] {
+  display: none !important;
+}
+
+.pharma-camera-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 7000;
+  background: #000;
+  color: #fff;
+}
+
+.pharma-camera-panel {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+}
+
+.pharma-camera-topbar {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: grid;
+  grid-template-columns: 56px minmax(0,1fr) 56px;
+  align-items: center;
+  min-height: 72px;
+  padding: max(.55rem, env(safe-area-inset-top)) .75rem .55rem;
+  background: linear-gradient(180deg, rgba(0,0,0,.62), rgba(0,0,0,0));
+}
+
+.pharma-camera-close {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(0,0,0,.42);
+  color: #fff;
+  font-size: 2rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.pharma-camera-close:active {
+  transform: scale(.95);
+}
+
+.pharma-camera-title {
+  justify-self: center;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 750;
+  text-shadow: 0 1px 5px rgba(0,0,0,.5);
+}
+
+.pharma-camera-top-spacer {
+  justify-self: end;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: rgba(0,0,0,.22);
+}
+
+.pharma-camera-view {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: #000;
+}
+
+.pharma-camera-view video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: #000;
+}
+
+.pharma-camera-bottom {
+  position: absolute;
+  z-index: 2;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 0 1rem calc(max(1rem, env(safe-area-inset-bottom)) + .8rem);
+  background: linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,.22) 16%, rgba(0,0,0,.78) 100%);
+}
+
+.pharma-camera-page {
+  width: max-content;
+  margin: 0 auto 1rem;
+  padding: .48rem .9rem;
+  border-radius: 999px;
+  background: rgba(0,0,0,.58);
+  color: #fff;
+  font-size: .82rem;
+  font-weight: 700;
+}
+
+.pharma-camera-controls {
+  display: grid;
+  grid-template-columns: 1fr 100px 1fr;
+  align-items: center;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.pharma-camera-gallery {
+  justify-self: start;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .2rem;
+  min-width: 72px;
+  padding: .3rem .25rem;
+  border: 0;
+  border-radius: .8rem;
+  background: rgba(0,0,0,.3);
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+
+.pharma-camera-gallery:active {
+  transform: scale(.96);
+}
+
+.pharma-camera-gallery-thumb {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: .72rem;
+  background: rgba(255,255,255,.1);
+  font-size: 1.35rem;
+}
+
+.pharma-camera-gallery span:last-child {
+  font-size: .76rem;
+}
+
+.pharma-camera-shutter {
+  justify-self: center;
+  display: grid;
+  place-items: center;
+  width: 88px;
+  height: 88px;
+  padding: 0;
+  border: 5px solid #fff;
+  border-radius: 50%;
+  background: rgba(255,255,255,.08);
+  box-shadow: 0 0 0 4px rgba(0,0,0,.36);
+  cursor: pointer;
+}
+
+.pharma-camera-shutter span {
+  display: block;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.pharma-camera-shutter:active {
+  transform: scale(.96);
+}
+
+.pharma-camera-done {
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 78px;
+  height: 52px;
+  padding: 0 .7rem;
+  border: 0;
+  border-radius: 999px;
+  background: #fff;
+  color: #111;
+  font: inherit;
+  font-size: .9rem;
+  font-weight: 800;
+  box-shadow: 0 5px 18px rgba(0,0,0,.22);
+  cursor: pointer;
+}
+
+.pharma-camera-done[hidden] {
+  display: none !important;
+}
+
+.pharma-camera-done:active {
+  transform: scale(.97);
+}
+
+body.pharma-camera-open {
+  overflow: hidden;
+}
+
+@media (max-width: 575.98px) {
+  .pharma-camera-topbar {
+    grid-template-columns: 50px minmax(0,1fr) 50px;
+    min-height: 66px;
+    padding-left: .6rem;
+    padding-right: .6rem;
+  }
+
+  .pharma-camera-close,
+  .pharma-camera-top-spacer {
+    width: 40px;
+    height: 40px;
+  }
+
+  .pharma-camera-title {
+    font-size: .92rem;
+  }
+
+  .pharma-camera-controls {
+    grid-template-columns: 1fr 96px 1fr;
+  }
+
+  .pharma-camera-shutter {
+    width: 84px;
+    height: 84px;
+  }
+
+  .pharma-camera-shutter span {
+    width: 68px;
+    height: 68px;
+  }
+}
