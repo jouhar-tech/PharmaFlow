@@ -1,0 +1,81 @@
+@model IReadOnlyList<PharmaFlow.Models.ViewModels.AdminUserRowViewModel>
+@{
+    ViewData["Title"] = "Unlimited Plan Users";
+}
+
+<div class="pharma-admin-page">
+    <header class="pharma-admin-subheader">
+        <a href="@Url.Action("Index", "Admin")">← Admin Dashboard</a>
+        <div>
+            <span class="pharma-admin-eyebrow">Subscription Management</span>
+            <h1>Unlimited Plan Users</h1>
+            <p>Extend, reduce or remove Unlimited access without touching the user's account ID.</p>
+        </div>
+    </header>
+
+    <section class="pharma-admin-panel">
+        <div class="pharma-admin-panel-heading">
+            <div>
+                <span class="pharma-admin-eyebrow">Active Unlimited Accounts</span>
+                <h2>@Model.Count users</h2>
+            </div>
+        </div>
+
+        <div class="pharma-admin-table-wrap">
+            <table class="pharma-admin-table">
+                <thead>
+                    <tr>
+                        <th>Profile ID</th>
+                        <th>Name / Username</th>
+                        <th>Phone</th>
+                        <th>Shop Name</th>
+                        <th>Activity</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                        <th>Edit</th>
+                        <th>Remove Unlimited</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var user in Model)
+                {
+                    <tr>
+                        <td>#@user.ProfileId</td>
+                        <td><strong>@user.Name</strong><small>@user.Username</small></td>
+                        <td>@(user.Phone ?? "—")</td>
+                        <td>@(string.IsNullOrWhiteSpace(user.ShopName) ? "—" : user.ShopName)</td>
+                        <td><span class="pharma-admin-badge @(user.IsActive ? "success" : "muted")">@(user.IsActive ? "Active" : "Inactive")</span></td>
+                        <td>@(user.SubscriptionStartsAt?.ToString("dd MMM yyyy") ?? "—")</td>
+                        <td>@(user.SubscriptionEndsAt?.ToString("dd MMM yyyy") ?? "No expiry")</td>
+                        <td><a class="pharma-admin-edit-link" href="@Url.Action("Edit", "Admin", new { id = user.ProfileId })">Edit</a></td>
+                        <td>
+                            <form asp-controller="Admin" asp-action="RemoveUnlimited" method="post" class="pharma-admin-inline-form" data-admin-confirm="Remove Unlimited access for this user? They will move to the Free Plan.">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@user.ProfileId" />
+                                <button type="submit" class="pharma-admin-danger-link">Remove</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+
+        @if (Model.Count == 0)
+        {
+            <div class="pharma-admin-empty">There are currently no active Unlimited Plan users.</div>
+        }
+    </section>
+</div>
+
+@section Scripts {
+<script>
+document.querySelectorAll("[data-admin-confirm]").forEach(form => {
+    form.addEventListener("submit", event => {
+        if (!window.confirm(form.dataset.adminConfirm)) {
+            event.preventDefault();
+        }
+    });
+});
+</script>
+}
