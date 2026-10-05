@@ -268,6 +268,43 @@
     </section>
 </div>
 
+<div class="pharma-camera-modal" id="pharmaCameraModal" hidden>
+    <section class="pharma-camera-panel" role="dialog" aria-modal="true" aria-labelledby="pharmaCameraTitle">
+        <h2 id="pharmaCameraTitle" class="visually-hidden">Scan invoices</h2>
+
+        <header class="pharma-camera-topbar">
+            <button type="button" class="pharma-camera-close" id="pharmaCameraClose" aria-label="Close camera">×</button>
+            <span class="pharma-camera-title">Scan Invoice</span>
+            <span class="pharma-camera-top-spacer" aria-hidden="true"></span>
+        </header>
+
+        <div class="pharma-camera-view">
+            <video id="pharmaCameraVideo" autoplay muted playsinline></video>
+        </div>
+
+        <div class="pharma-camera-bottom">
+            <div class="pharma-camera-page" id="pharmaCameraPage">Page 1</div>
+
+            <div class="pharma-camera-controls">
+                <button type="button" class="pharma-camera-gallery" id="pharmaCameraGallery" aria-label="Choose invoice images from gallery">
+                    <span class="pharma-camera-gallery-thumb">▧</span>
+                    <span>Gallery</span>
+                </button>
+
+                <button type="button" class="pharma-camera-shutter" id="pharmaCameraShutter" aria-label="Take invoice photo">
+                    <span></span>
+                </button>
+
+                <button type="button" class="pharma-camera-done" id="pharmaCameraDone" hidden aria-label="Continue with captured invoices">
+                    <span>Page 2</span>
+                </button>
+            </div>
+        </div>
+
+        <canvas id="pharmaCameraCanvas" hidden></canvas>
+    </section>
+</div>
+
 <div class="invoice-scanner-modal" id="invoiceScannerModal" hidden>
     <div class="invoice-scanner-backdrop" id="invoiceScannerBackdrop"></div>
     <section class="invoice-scanner-panel" role="dialog" aria-modal="true" aria-labelledby="invoiceScannerTitle">
@@ -333,6 +370,14 @@
         const sourceUpload = document.getElementById("invoiceCaptureSourceUpload");
         const sourceClose = document.getElementById("invoiceCaptureSourceClose");
         const sourceBackdrop = document.getElementById("invoiceCaptureSourceBackdrop");
+        const cameraModal = document.getElementById("pharmaCameraModal");
+        const cameraVideo = document.getElementById("pharmaCameraVideo");
+        const cameraCanvas = document.getElementById("pharmaCameraCanvas");
+        const cameraClose = document.getElementById("pharmaCameraClose");
+        const cameraGallery = document.getElementById("pharmaCameraGallery");
+        const cameraShutter = document.getElementById("pharmaCameraShutter");
+        const cameraDone = document.getElementById("pharmaCameraDone");
+        const cameraPage = document.getElementById("pharmaCameraPage");
         const selected = document.getElementById("stockCaptureSelected");
         const selectedName = document.getElementById("stockCaptureSelectedName");
         const reset = document.getElementById("stockCaptureReset");
@@ -362,6 +407,9 @@
         let enhanceText = false;
         const MAX_FILE_SIZE = 25 * 1024 * 1024;
         const MAX_PDF_PAGES = 20;
+        const MAX_CAMERA_FILES = 20;
+        let cameraStream = null;
+        let cameraFiles = [];
 
         const setBusy = (busy) => {
             [useButton, retakeButton, rotateButton, enhanceButton].forEach(button => {
@@ -374,6 +422,132 @@
                 URL.revokeObjectURL(previewUrl);
                 previewUrl = null;
             }
+        };
+
+        const updateCameraCaptureUi = () => {
+            const count = cameraFiles.length;
+            if (cameraPage) cameraPage.textContent = "Page " + (count + 1);
+            if (cameraDone) {
+                cameraDone.hidden = count === 0;
+                cameraDone.querySelector("span").textContent = "Page " + (count + 1);
+            }
+        };
+
+        const stopCamera = () => {
+            cameraStream?.getTracks().forEach(track => track.stop());
+            cameraStream = null;
+            if (cameraVideo) cameraVideo.srcObject = null;
+        };
+
+        const clearCameraFiles = () => {
+            cameraFiles = [];
+            updateCameraCaptureUi();
+        };
+
+        const closeCamera = (clearFiles = true) => {
+            stopCamera();
+            cameraModal?.setAttribute("hidden", "");
+            document.body.classList.remove("pharma-camera-open");
+            if (clearFiles) clearCameraFiles();
+        };
+
+        const openCamera = async () => {
+            closeSourceModal();
+
+            if (!navigator.mediaDevices?.getUserMedia) {
+                alert("Camera scanning is not supported by this browser. Please use Upload Invoice instead.");
+                return;
+            }
+
+            try {
+                stopCamera();
+                cameraStream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: { ideal: "environment" },
+                        width: { ideal: 1920 },
+                        height: { ideal: 1080 }
+                    },
+                    audio: false
+                });
+
+                if (!cameraVideo) throw new Error("Camera preview is unavailable.");
+
+                cameraVideo.srcObject = cameraStream;
+                await cameraVideo.play();
+                cameraModal?.removeAttribute("hidden");
+                document.body.classList.add("pharma-camera-open");
+                updateCameraCaptureUi();
+                cameraClose?.focus();
+            } catch (error) {
+                console.error("Unable to open camera.", error);
+                stopCamera();
+
+                if (error?.name === "NotAllowedError" || error?.name === "SecurityError") {
+                    alert("Camera permission was blocked. Allow camera access for PharmaFlow and try again.");
+                } else {
+                    alert("The camera could not be opened. Please use Upload Invoice instead.");
+                }
+            }
+        };
+
+        const captureCameraPhoto = async () => {
+            if (!cameraVideo?.videoWidth || !cameraVideo?.videoHeight) return;
+            if (cameraFiles.length >= MAX_CAMERA_FILES) {
+                alert("You can scan up to 20 invoices at a time.");
+                return;
+            }
+
+            cameraCanvas.width = cameraVideo.videoWidth;
+            cameraCanvas.height = cameraVideo.videoHeight;
+
+            const context = cameraCanvas.getContext("2d", { alpha: false });
+            if (!context) {
+                alert("Camera capture is not supported by this browser.");
+                return;
+            }
+
+            context.drawImage(
+                cameraVideo,
+                0,
+                0,
+                cameraVideo.videoWidth,
+                cameraVideo.videoHeight,
+                0,
+                0,
+                cameraCanvas.width,
+                cameraCanvas.height
+            );
+
+            const blob = await new Promise(resolve =>
+                cameraCanvas.toBlob(resolve, "image/jpeg", 0.94)
+            );
+
+            if (!blob) {
+                alert("The invoice photo could not be captured. Please try again.");
+                return;
+            }
+
+            cameraFiles.push(
+                new File(
+                    [blob],
+                    "invoice-camera-" + (cameraFiles.length + 1) + ".jpg",
+                    {
+                        type: "image/jpeg",
+                        lastModified: Date.now()
+                    }
+                )
+            );
+
+            updateCameraCaptureUi();
+        };
+
+        const finishCameraCapture = async () => {
+            if (cameraFiles.length === 0) return;
+
+            const files = [...cameraFiles];
+            closeCamera(false);
+            await processInvoiceFiles(files, "camera");
+            clearCameraFiles();
         };
 
         const closeSourceModal = () => {
@@ -820,22 +994,46 @@
             closeButton?.focus();
         };
 
+        const handleInputFiles = (files, sourceType) => {
+            if (!files || files.length === 0) return;
+            processInvoiceFiles(files, sourceType);
+        };
+
         const handleInput = (input, sourceType) => {
             const files = input?.files ? Array.from(input.files) : [];
             if (input) input.value = "";
-
-            if (files.length === 0) return;
-
-            processInvoiceFiles(files, sourceType);
+            handleInputFiles(files, sourceType);
         };
 
         cameraInput?.addEventListener("change", () =>
             handleInput(cameraInput, "camera")
         );
 
-        uploadInput?.addEventListener("change", () =>
-            handleInput(uploadInput, "upload")
-        );
+        uploadInput?.addEventListener("change", () => {
+            const files = uploadInput?.files ? Array.from(uploadInput.files) : [];
+            if (uploadInput) uploadInput.value = "";
+
+            if (cameraModal && !cameraModal.hasAttribute("hidden")) {
+                const images = files.filter(file =>
+                    file.type.startsWith("image/") &&
+                    file.size <= MAX_FILE_SIZE
+                );
+
+                if (images.length > 0) {
+                    cameraFiles.push(...images.slice(0, Math.max(0, MAX_CAMERA_FILES - cameraFiles.length)));
+                    updateCameraCaptureUi();
+                }
+
+                if (files.some(file => !file.type.startsWith("image/") || file.size > MAX_FILE_SIZE)) {
+                    alert("Only invoice images smaller than 25 MB can be added to the camera session.");
+                }
+
+                if (files.length > images.length) return;
+                return;
+            }
+
+            handleInputFiles(files, "upload");
+        });
 
         reset?.addEventListener("click", resetSelection);
         retakeButton?.addEventListener("click", resetSelection);
