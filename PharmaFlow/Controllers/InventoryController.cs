@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PharmaFlow.Data;
 using PharmaFlow.Filters;
+using PharmaFlow.Models;
 using PharmaFlow.Models.ViewModels;
 
 namespace PharmaFlow.Controllers;
@@ -14,6 +15,231 @@ public sealed class InventoryController : Controller
     public InventoryController(ApplicationDbContext dbContext)
     {
         _dbContext = dbContext;
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> SearchProducts(
+        string? query,
+        CancellationToken cancellationToken)
+    {
+        if (!TryGetProfileId(out var profileId))
+            return RedirectToAction("Login", "Account");
+
+        var normalizedQuery = NormalizeNullableText(query, 100) ?? string.Empty;
+
+        var productsQuery = _dbContext.Products
+            .AsNoTracking()
+            .Where(p =>
+                p.ProfileId == profileId &&
+                (
+                    !p.Batches.Any(b =>
+                        b.IsActive &&
+                        !b.IsQuarantined &&
+                        b.QuantityOnHand > 0)
+                    || !p.IsActive));
+
+        if (!string.IsNullOrWhiteSpace(normalizedQuery))
+        {
+            var search = normalizedQuery.ToLower();
+            productsQuery = productsQuery.Where(p =>
+                p.ProductName.ToLower().Contains(search) ||
+                (p.GenericName != null && p.GenericName.ToLower().Contains(search)) ||
+                (p.BrandName != null && p.BrandName.ToLower().Contains(search)) ||
+                (p.Barcode != null && p.Barcode.ToLower().Contains(search)));
+        }
+
+        var products = await productsQuery
+            .OrderBy(p => p.ProductName)
+            .Take(100)
+            .Select(p => new InventoryProductSearchItemViewModel
+            {
+                ProductId = p.ProductId,
+                ProductName = p.ProductName,
+                GenericName = p.GenericName,
+                BrandName = p.BrandName,
+                Barcode = p.Barcode,
+                LatestMrp = p.Batches
+                    .OrderByDescending(b => b.CreatedAt)
+                    .Select(b => (decimal?)b.SellingUnitPrice)
+                    .FirstOrDefault()
+            })
+            .ToListAsync(cancellationToken);
+
+        ViewData["Title"] = "Search Products";
+        return View(new InventoryProductSearchViewModel
+        {
+            Query = normalizedQuery,
+            Products = products
+        });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> AddItem(
+        long? productId,
+        CancellationToken cancellationToken)
+    {
+        if (!TryGetProfileId(out var profileId))
+            return RedirectToAction("Login", "Account");
+
+        var model = new InventoryAddItemViewModel
+        {
+            ExistingProductId = productId,
+            ExpiryDate = DateOnly.FromDateTime(DateTime.UtcNow).AddYears(2)
+        };
+
+        if (productId.HasValue)
+        {
+            var product = await _dbContext.Products
+                .AsNoTracking()
+                .Where(p => p.ProductId == productId.Value && p.ProfileId == profileId)
+                .Select(p => new
+                {
+                    p.ProductId,
+                    p.ProductName,
+                    LatestMrp = p.Batches
+                        .OrderByDescending(b => b.CreatedAt)
+                        .Select(b => (decimal?)b.SellingUnitPrice)
+                        .FirstOrDefault()
+                })
+                .SingleOrDefaultAsync(cancellationToken);
+
+            if (product is null)
+                return NotFound();
+
+            model.ProductName = product.ProductName;
+            model.Mrp = product.LatestMrp.GetValueOrDefault();
+        }
+
+        ViewData["Title"] = "Add Item";
+        return View(model);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AddItem(
+        InventoryAddItemViewModel model,
+        CancellationToken cancellationToken)
+    {
+        if (!TryGetProfileId(out var profileId))
+            return Unauthorized();
+
+        model.ProductName = NormalizeText(model.ProductName, 200) ?? string.Empty;
+
+        if (model.ExpiryDate == default)
+            model.ExpiryDate = DateOnly.FromDateTime(DateTime.UtcNow).AddYears(2);
+
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+        if (model.ExpiryDate < today)
+            ModelState.AddModelError(nameof(model.ExpiryDate), "Expiry cannot be earlier than today.");
+
+        if (model.Quantity <= 0 || model.Quantity > 999_999_999m)
+            ModelState.AddModelError(nameof(model.Quantity), "Enter a valid quantity.");
+
+        if (model.Mrp <= 0 || model.Mrp > 999_999_999m)
+            ModelState.AddModelError(nameof(model.Mrp), "Enter a valid MRP.");
+
+        if (!ModelState.IsValid)
+            return View(model);
+
+        await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+        Product? product = null;
+
+        if (model.ExistingProductId.HasValue)
+        {
+            product = await _dbContext.Products
+                .FirstOrDefaultAsync(
+                    p => p.ProductId == model.ExistingProductId.Value &&
+                         p.ProfileId == profileId,
+                    cancellationToken);
+
+            if (product is null)
+                return NotFound();
+
+            product.IsActive = true;
+            product.UpdatedAt = DateTime.UtcNow;
+        }
+        else
+        {
+            product = await _dbContext.Products
+                .FirstOrDefaultAsync(
+                    p => p.ProfileId == profileId &&
+                         p.ProductName.ToLower() == model.ProductName.ToLower(),
+                    cancellationToken);
+
+            if (product is null)
+            {
+                product = new Product
+                {
+                    ProfileId = profileId,
+                    ProductName = model.ProductName,
+                    IsActive = true,
+                    ReorderLevel = 0,
+                    IsPrescriptionRequired = false,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+
+                _dbContext.Products.Add(product);
+                await _dbContext.SaveChangesAsync(cancellationToken);
+            }
+            else
+            {
+                product.IsActive = true;
+                product.UpdatedAt = DateTime.UtcNow;
+            }
+        }
+
+        var batchNumber = $"MANUAL-{DateTime.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid():N}"[..26];
+
+        var batch = new ProductBatch
+        {
+            ProductId = product.ProductId,
+            BatchNumber = batchNumber,
+            ExpiryDate = model.ExpiryDate,
+            QuantityOnHand = decimal.Round(model.Quantity, 2, MidpointRounding.AwayFromZero),
+            PurchaseUnitPrice = 0m,
+            SellingUnitPrice = decimal.Round(model.Mrp, 2, MidpointRounding.AwayFromZero),
+            IsQuarantined = false,
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        _dbContext.ProductBatches.Add(batch);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+
+        TempData["InventoryMessage"] = "Item added to inventory successfully.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> FindByBarcode(
+        string? barcode,
+        CancellationToken cancellationToken)
+    {
+        if (!TryGetProfileId(out var profileId))
+            return Unauthorized();
+
+        var normalizedBarcode = NormalizeNullableText(barcode, 100);
+        if (normalizedBarcode is null)
+            return BadRequest(new { message = "Barcode is required." });
+
+        var product = await _dbContext.Products
+            .AsNoTracking()
+            .Where(p => p.ProfileId == profileId && p.Barcode != null && p.Barcode == normalizedBarcode)
+            .Select(p => new
+            {
+                p.ProductId,
+                p.ProductName
+            })
+            .SingleOrDefaultAsync(cancellationToken);
+
+        return product is null
+            ? NotFound(new { message = "No matching product was found for this barcode." })
+            : Ok(product);
     }
 
     [HttpGet]
