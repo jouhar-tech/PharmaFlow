@@ -11449,3 +11449,52 @@ body.theme-dark.inventory-page .inventory-barcode-secondary {
   .inventory-barcode-manual > div { flex-direction:column; }
   .inventory-barcode-manual button { width:100%; }
 }
+
+
+body.theme-dark.inventory-action-page-body .inventory-action-header {
+  background:linear-gradient(180deg,#245a55 0%,#1f514d 100%);
+}
+body.theme-dark.inventory-action-page-body .inventory-action-header h1 { color:#f8fafc; }
+body.theme-dark.inventory-action-page-body .inventory-action-back,
+body.theme-dark.inventory-action-page-body .inventory-product-search-form > input,
+body.theme-dark.inventory-action-page-body .inventory-product-search-card,
+body.theme-dark.inventory-action-page-body .inventory-action-empty,
+body.theme-dark.inventory-action-page-body .inventory-add-card,
+body.theme-dark.inventory-action-page-body .inventory-add-cancel,
+body.theme-dark.inventory-action-page-body .inventory-barcode-card {
+  background:#111c2e;
+  border-color:#2b394d;
+}
+body.theme-dark.inventory-action-page-body .inventory-action-eyebrow { color:#7dd3c7; }
+body.theme-dark.inventory-action-page-body .inventory-action-back { color:#e2e8f0; }
+body.theme-dark.inventory-action-page-body .inventory-action-header p,
+body.theme-dark.inventory-action-page-body .inventory-product-search-card p,
+body.theme-dark.inventory-action-page-body .inventory-product-search-card small,
+body.theme-dark.inventory-action-page-body .inventory-add-card-heading p,
+body.theme-dark.inventory-action-page-body .inventory-add-help,
+body.theme-dark.inventory-action-page-body .inventory-barcode-status span {
+  color:#94a3b8;
+}
+body.theme-dark.inventory-action-page-body .inventory-product-search-card h2,
+body.theme-dark.inventory-action-page-body .inventory-product-search-side > strong,
+body.theme-dark.inventory-action-page-body .inventory-add-card-heading h2,
+body.theme-dark.inventory-action-page-body .inventory-add-field label,
+body.theme-dark.inventory-action-page-body .inventory-add-input,
+body.theme-dark.inventory-action-page-body .inventory-barcode-status strong {
+  color:#f8fafc;
+}
+body.theme-dark.inventory-action-page-body .inventory-add-input,
+body.theme-dark.inventory-action-page-body .inventory-product-search-form > input {
+  background:#0f1929;
+  border-color:#334155;
+}
+body.theme-dark.inventory-action-page-body .inventory-add-note {
+  background:#102822;
+  border-color:#235b4f;
+  color:#a8c7c0;
+}
+body.theme-dark.inventory-action-page-body .inventory-barcode-secondary {
+  background:#111c2e;
+  border-color:#334155;
+  color:#dbe4ee;
+}
