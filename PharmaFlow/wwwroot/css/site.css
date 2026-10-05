@@ -7898,62 +7898,6 @@ body.invoice-camera-open {
 }
 
 
-/* Multi-invoice camera capture confirmation */
-.invoice-camera-confirm {
-  justify-self: end;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: .35rem;
-  min-width: 78px;
-  height: 52px;
-  padding: 0 .8rem;
-  border: 0;
-  border-radius: 999px;
-  background: #fff;
-  color: #111;
-  font: inherit;
-  font-size: 1rem;
-  font-weight: 800;
-  box-shadow: 0 4px 16px rgba(0,0,0,.22);
-  cursor: pointer;
-}
-
-.invoice-camera-confirm[hidden] {
-  display: none !important;
-}
-
-.invoice-camera-confirm > span:first-child {
-  font-size: 1.25rem;
-  line-height: 1;
-}
-
-.invoice-camera-confirm > span:last-child {
-  min-width: 1ch;
-}
-
-.invoice-camera-confirm:active {
-  transform: scale(.97);
-}
-
-.invoice-camera-confirm[disabled] {
-  opacity: .55;
-  cursor: wait;
-}
-
-.invoice-camera-bottom {
-  padding-bottom: calc(max(1rem, env(safe-area-inset-bottom)) + .8rem);
-}
-
-@media (max-width: 575.98px) {
-  .invoice-camera-confirm {
-    min-width: 72px;
-    height: 50px;
-    padding: 0 .7rem;
-    font-size: .95rem;
-  }
-}
-
 /* Captured-invoice review page */
 .invoice-batch-review-page {
   min-height: 100vh;
