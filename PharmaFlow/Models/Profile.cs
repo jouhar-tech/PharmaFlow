@@ -25,6 +25,21 @@ public sealed class Profile
     [Column("phone_number")]
     public string? PhoneNumber { get; set; }
 
+    [Column("full_name")]
+    public string? FullName { get; set; }
+
+    [Column("address")]
+    public string? Address { get; set; }
+
+    [Column("subscription_plan")]
+    public string SubscriptionPlan { get; set; } = "free";
+
+    [Column("subscription_starts_at")]
+    public DateTime? SubscriptionStartsAt { get; set; }
+
+    [Column("subscription_ends_at")]
+    public DateTime? SubscriptionEndsAt { get; set; }
+
     [Column("active_status")]
     public short ActiveStatus { get; set; }
 
