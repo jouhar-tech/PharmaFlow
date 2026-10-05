@@ -1,0 +1,85 @@
+@model PharmaFlow.Models.ViewModels.InventoryProductSearchViewModel
+@{
+    ViewData["Title"] = "Search Products";
+}
+
+<div class="inventory-action-page">
+    <header class="inventory-action-header">
+        <a asp-controller="Inventory" asp-action="Index" class="inventory-action-back" aria-label="Back">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5"></path><path d="m11 18-6-6"></path></svg>
+        </a>
+        <div>
+            <span class="inventory-action-eyebrow">Add Item</span>
+            <h1>Search Product from All Products</h1>
+            <p>Find medicines, cosmetics and other products that are not currently in your inventory.</p>
+        </div>
+    </header>
+
+    <form method="get" asp-action="SearchProducts" class="inventory-product-search-form" role="search">
+        <span class="inventory-product-search-icon" aria-hidden="true">⌕</span>
+        <input id="allProductsSearch"
+               name="query"
+               value="@Model.Query"
+               type="search"
+               autocomplete="off"
+               placeholder="Search by medicine, cosmetic, brand or barcode..."
+               aria-label="Search all products" />
+        @if (!string.IsNullOrWhiteSpace(Model.Query))
+        {
+            <a asp-action="SearchProducts" class="inventory-product-search-clear" aria-label="Clear search">×</a>
+        }
+        <button type="submit" class="inventory-product-search-button">Search</button>
+    </form>
+
+    <section class="inventory-product-search-results" aria-live="polite">
+        @if (Model.Products.Count == 0)
+        {
+            <div class="inventory-action-empty">
+                <div>⌕</div>
+                <h2>No products found</h2>
+                <p>Try a different product name, brand, generic name or barcode.</p>
+            </div>
+        }
+        else
+        {
+            <div class="inventory-product-search-list">
+                @foreach (var product in Model.Products)
+                {
+                    <article class="inventory-product-search-card">
+                        <div class="inventory-product-search-card-main">
+                            <div class="inventory-product-search-icon-badge">Rx</div>
+                            <div>
+                                <h2>@product.ProductName</h2>
+                                @if (!string.IsNullOrWhiteSpace(product.GenericName))
+                                {
+                                    <p>@product.GenericName</p>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(product.BrandName))
+                                {
+                                    <small>@product.BrandName</small>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(product.Barcode))
+                                {
+                                    <small>Barcode: @product.Barcode</small>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="inventory-product-search-side">
+                            @if (product.LatestMrp.GetValueOrDefault() > 0)
+                            {
+                                <span>MRP</span>
+                                <strong>₹ @product.LatestMrp.Value.ToString("N2")</strong>
+                            }
+                            <a asp-action="AddItem"
+                               asp-route-productId="@product.ProductId"
+                               class="inventory-product-add-link">
+                                Add to Inventory
+                            </a>
+                        </div>
+                    </article>
+                }
+            </div>
+        }
+    </section>
+</div>
