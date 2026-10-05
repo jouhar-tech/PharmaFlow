@@ -4,7 +4,7 @@
     data-days-left="@Model.DaysLeft"
     data-search-text="@($"{Model.ProductName} {Model.BatchNumber}")">
     <div class="expiry-product-card-top">
-        <div class="expiry-product-icon">Rx</div>
+        <div class="expiry-product-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 21a5 5 0 0 1 0-10h3a5 5 0 0 1 0 10H7Z"/><path d="m8 11 7-7a4.95 4.95 0 1 1 7 7l-7 7"/><path d="m11 8 5 5"/></svg></div>
         <div class="expiry-product-heading">
             <h3>@Model.ProductName</h3>
             <span><span data-i18n="batchNumber">Batch</span>: @Model.BatchNumber</span>
