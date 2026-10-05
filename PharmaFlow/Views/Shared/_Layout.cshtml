@@ -30,6 +30,10 @@
         && ViewContext.RouteData.Values["action"]?.ToString() == "Details";
     var isInventoryDetailsPage = ViewContext.RouteData.Values["controller"]?.ToString() == "Inventory"
         && ViewContext.RouteData.Values["action"]?.ToString() == "Details";
+    var isInventoryActionPage = ViewContext.RouteData.Values["controller"]?.ToString() == "Inventory"
+        && new[] { "AddItem", "SearchProducts", "BarcodeScanner" }.Contains(
+            ViewContext.RouteData.Values["action"]?.ToString() ?? string.Empty,
+            StringComparer.OrdinalIgnoreCase);
     var isPurchasePage = ViewContext.RouteData.Values["controller"]?.ToString() == "Purchase"
         && ViewContext.RouteData.Values["action"]?.ToString() == "Index";
     var isPurchaseDistributorPage = ViewContext.RouteData.Values["controller"]?.ToString() == "Purchase"
@@ -48,7 +52,7 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/PharmaFlow.styles.css" asp-append-version="true" />
 </head>
-<body class="@((isHomeDashboard ? "home-dashboard-page " : "") + (isExpiryProductsPage ? "expiry-products-page " : "") + (isInventoryPage ? "inventory-page " : "") + (isMorePage ? "more-page " : "") + (isLowStockPage ? "low-stock-page " : "") + (isReportsPage ? "reports-page " : "") + (isStaffAddPage ? "staff-add-page " : "") + (isUnlimitedPlanPage ? "unlimited-plan-detail-page " : "") + (isFeedbackPage ? "feedback-page " : "") + (isBillingCreatePage ? "billing-create-page-body " : "") + (isBillingGeneratedPage ? "billing-generated-page-body " : "") + (isBillsPage ? "bills-page-body " : "") + (isBillDetailsPage ? "bill-details-page-body " : "") + (isInventoryDetailsPage ? "inventory-details-page-body " : "") + (isPurchasePage ? "purchase-page-body " : "") + (isPurchaseDistributorPage ? "purchase-distributor-page-body " : "") + (isAdminPage ? "admin-page-body " : ""))">
+<body class="@((isHomeDashboard ? "home-dashboard-page " : "") + (isExpiryProductsPage ? "expiry-products-page " : "") + (isInventoryPage ? "inventory-page " : "") + (isMorePage ? "more-page " : "") + (isLowStockPage ? "low-stock-page " : "") + (isReportsPage ? "reports-page " : "") + (isStaffAddPage ? "staff-add-page " : "") + (isUnlimitedPlanPage ? "unlimited-plan-detail-page " : "") + (isFeedbackPage ? "feedback-page " : "") + (isBillingCreatePage ? "billing-create-page-body " : "") + (isBillingGeneratedPage ? "billing-generated-page-body " : "") + (isBillsPage ? "bills-page-body " : "") + (isBillDetailsPage ? "bill-details-page-body " : "") + (isInventoryDetailsPage ? "inventory-details-page-body " : "") + (isInventoryActionPage ? "inventory-action-page-body " : "") + (isPurchasePage ? "purchase-page-body " : "") + (isPurchaseDistributorPage ? "purchase-distributor-page-body " : "") + (isAdminPage ? "admin-page-body " : ""))">
     <div class="app-shell">
         <aside class="app-sidebar" id="appSidebar" aria-label="Main navigation">
             <div class="sidebar-brand">
