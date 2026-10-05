@@ -1,0 +1,189 @@
+@model PharmaFlow.Models.ViewModels.AdminDashboardViewModel
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<div class="pharma-admin-page">
+    <header class="pharma-admin-header">
+        <div>
+            <span class="pharma-admin-eyebrow">PharmaFlow Control Center</span>
+            <h1>Admin Dashboard</h1>
+            <p>Manage users, account status and subscriptions from one private portal.</p>
+        </div>
+        <form asp-controller="Admin" asp-action="Logout" method="post">
+            @Html.AntiForgeryToken()
+            <button class="pharma-admin-logout" type="submit">Admin Logout</button>
+        </form>
+    </header>
+
+    @if (TempData["AdminMessage"] is string message)
+    {
+        <div class="pharma-admin-alert">@message</div>
+    }
+
+    <section class="pharma-admin-stat-grid">
+        <a class="pharma-admin-stat" href="@Url.Action("Index", "Admin", new { status = "all", plan = "all" })">
+            <span>Total Users</span><strong>@Model.TotalUsers</strong>
+        </a>
+        <a class="pharma-admin-stat is-active" href="@Url.Action("Index", "Admin", new { status = "active", plan = "all" })">
+            <span>Active Users</span><strong>@Model.ActiveUsers</strong>
+        </a>
+        <a class="pharma-admin-stat is-inactive" href="@Url.Action("Index", "Admin", new { status = "inactive", plan = "all" })">
+            <span>Inactive Users</span><strong>@Model.InactiveUsers</strong>
+        </a>
+        <a class="pharma-admin-stat is-unlimited" href="@Url.Action("Unlimited", "Admin")">
+            <span>Unlimited Users</span><strong>@Model.UnlimitedUsers</strong>
+        </a>
+        <a class="pharma-admin-stat is-free" href="@Url.Action("Index", "Admin", new { plan = "free" })">
+            <span>Free Users</span><strong>@Model.FreeUsers</strong>
+        </a>
+        <a class="pharma-admin-stat is-warning" href="@Url.Action("Unlimited", "Admin")">
+            <span>Expiring in 30 Days</span><strong>@Model.ExpiringSoonUsers</strong>
+        </a>
+    </section>
+
+    <section class="pharma-admin-tools-grid">
+        <a href="@Url.Action("Unlimited", "Admin")" class="pharma-admin-tool-card">
+            <strong>Unlimited Plan Users</strong>
+            <span>Edit dates, extend plans or remove Unlimited access.</span>
+            <b>Open →</b>
+        </a>
+        <div class="pharma-admin-tool-card">
+            <strong>Activity Monitor</strong>
+            <span>Active status and last login are recorded from user sessions.</span>
+            <b>@Model.ActiveUsers online-status records</b>
+        </div>
+        <div class="pharma-admin-tool-card">
+            <strong>Subscription Watch</strong>
+            <span>Users with an Unlimited expiry in the next 30 days.</span>
+            <b>@Model.ExpiringSoonUsers need attention</b>
+        </div>
+    </section>
+
+    <section class="pharma-admin-panel">
+        <div class="pharma-admin-panel-heading">
+            <div>
+                <span class="pharma-admin-eyebrow">User Management</span>
+                <h2>All Users</h2>
+            </div>
+            <span>@Model.TotalUsers total</span>
+        </div>
+
+        <form asp-controller="Admin" asp-action="Index" method="get" class="pharma-admin-filters">
+            <label>
+                Search
+                <input type="search" name="search" value="@Model.Search" placeholder="Username, name, phone, shop or Profile ID" />
+            </label>
+            <label>
+                Activity
+                <select name="status">
+                    <option value="all" selected="@(Model.StatusFilter == "all")">All</option>
+                    <option value="active" selected="@(Model.StatusFilter == "active")">Active</option>
+                    <option value="inactive" selected="@(Model.StatusFilter == "inactive")">Inactive</option>
+                </select>
+            </label>
+            <label>
+                Subscription
+                <select name="plan">
+                    <option value="all" selected="@(Model.PlanFilter == "all")">All</option>
+                    <option value="unlimited" selected="@(Model.PlanFilter == "unlimited")">Unlimited Plan</option>
+                    <option value="free" selected="@(Model.PlanFilter == "free")">Free Plan</option>
+                </select>
+            </label>
+            <button type="submit">Apply Filters</button>
+            <a href="@Url.Action("Index", "Admin")">Reset</a>
+        </form>
+
+        <div class="pharma-admin-table-wrap">
+            <table class="pharma-admin-table">
+                <thead>
+                    <tr>
+                        <th>Profile ID</th>
+                        <th>User ID</th>
+                        <th>Name</th>
+                        <th>Phone</th>
+                        <th>Login Date</th>
+                        <th>Shop Name</th>
+                        <th>Address</th>
+                        <th>Activity Status</th>
+                        <th>Subscription User</th>
+                        <th>Plan Ends</th>
+                        <th>Edit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var user in Model.Users)
+                    {
+                        <tr>
+                            <td>#@user.ProfileId</td>
+                            <td class="pharma-admin-uuid">@user.UserId</td>
+                            <td><strong>@user.Name</strong><small>@user.Username</small></td>
+                            <td>@(user.Phone ?? "—")</td>
+                            <td>@(user.LoginDate?.ToString("dd MMM yyyy HH:mm") ?? "Never")</td>
+                            <td>@(string.IsNullOrWhiteSpace(user.ShopName) ? "—" : user.ShopName)</td>
+                            <td>@(string.IsNullOrWhiteSpace(user.Address) ? "—" : user.Address)</td>
+                            <td><span class="pharma-admin-badge @(user.IsActive ? "success" : "muted")">@(user.IsActive ? "Active" : "Inactive")</span></td>
+                            <td><span class="pharma-admin-badge @(user.IsUnlimited ? "unlimited" : "muted")">@(user.IsUnlimited ? "Yes" : "No")</span></td>
+                            <td>@(user.SubscriptionEndsAt?.ToString("dd MMM yyyy") ?? (user.IsUnlimited ? "No expiry" : "—"))</td>
+                            <td><a class="pharma-admin-edit-link" href="@Url.Action("Edit", "Admin", new { id = user.ProfileId })">Edit</a></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (Model.Users.Count == 0)
+        {
+            <div class="pharma-admin-empty">No users match the selected filters.</div>
+        }
+
+        <div class="pharma-admin-pagination">
+            <span>Page @Model.CurrentPage of @Model.TotalPages</span>
+            <div>
+                @if (Model.CurrentPage > 1)
+                {
+                    <a href="@Url.Action("Index", "Admin", new { status = Model.StatusFilter, plan = Model.PlanFilter, search = Model.Search, page = Model.CurrentPage - 1 })">Previous</a>
+                }
+                @if (Model.CurrentPage < Model.TotalPages)
+                {
+                    <a href="@Url.Action("Index", "Admin", new { status = Model.StatusFilter, plan = Model.PlanFilter, search = Model.Search, page = Model.CurrentPage + 1 })">Next</a>
+                }
+            </div>
+        </div>
+    </section>
+
+    <section class="pharma-admin-two-column">
+        <div class="pharma-admin-panel">
+            <div class="pharma-admin-panel-heading">
+                <div><span class="pharma-admin-eyebrow">Recent Signups</span><h2>Newest Users</h2></div>
+            </div>
+            @foreach (var user in Model.RecentUsers)
+            {
+                <a class="pharma-admin-mini-row" href="@Url.Action("Edit", "Admin", new { id = user.ProfileId })">
+                    <span><strong>@user.ShopName</strong><small>@user.Username · Profile #@user.ProfileId</small></span>
+                    <b>@user.CreatedAt.ToString("dd MMM yyyy")</b>
+                </a>
+            }
+        </div>
+
+        <div class="pharma-admin-panel">
+            <div class="pharma-admin-panel-heading">
+                <div><span class="pharma-admin-eyebrow">Subscription Watch</span><h2>Expiring Soon</h2></div>
+            </div>
+            @if (Model.ExpiringSubscriptions.Count == 0)
+            {
+                <div class="pharma-admin-empty compact">No Unlimited subscriptions expire within 30 days.</div>
+            }
+            else
+            {
+                @foreach (var user in Model.ExpiringSubscriptions)
+                {
+                    <a class="pharma-admin-mini-row" href="@Url.Action("Edit", "Admin", new { id = user.ProfileId })">
+                        <span><strong>@user.ShopName</strong><small>@user.Username · Profile #@user.ProfileId</small></span>
+                        <b>@user.SubscriptionEndsAt.ToString("dd MMM yyyy")</b>
+                    </a>
+                }
+            }
+        </div>
+    </section>
+</div>
