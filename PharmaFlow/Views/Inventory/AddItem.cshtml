@@ -1,0 +1,102 @@
+@model PharmaFlow.Models.ViewModels.InventoryAddItemViewModel
+@{
+    ViewData["Title"] = "Add Item";
+    var today = DateOnly.FromDateTime(DateTime.UtcNow);
+    var defaultExpiry = today.AddYears(2);
+}
+
+<div class="inventory-action-page">
+    <header class="inventory-action-header">
+        <a asp-controller="Inventory" asp-action="Index" class="inventory-action-back" aria-label="Back">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5"></path><path d="m11 18-6-6"></path></svg>
+        </a>
+        <div>
+            <span class="inventory-action-eyebrow">Inventory</span>
+            <h1>Add Item</h1>
+            <p>Enter the essential stock details to add this product to your inventory.</p>
+        </div>
+    </header>
+
+    <section class="inventory-add-card">
+        <div class="inventory-add-card-heading">
+            <div class="inventory-add-card-icon">+</div>
+            <div>
+                <h2>@(Model.ExistingProductId.HasValue ? "Add stock for this product" : "Add a custom product")</h2>
+                <p>Required fields are marked with <span aria-hidden="true">*</span>.</p>
+            </div>
+        </div>
+
+        <form asp-action="AddItem" method="post" class="inventory-add-form" data-online-required="true">
+            @Html.AntiForgeryToken()
+            <input asp-for="ExistingProductId" type="hidden" />
+
+            <div asp-validation-summary="ModelOnly" class="inventory-add-validation"></div>
+
+            <div class="inventory-add-form-grid">
+                <div class="inventory-add-field inventory-add-field-wide">
+                    <label asp-for="ProductName">Product Name <span>*</span></label>
+                    <input asp-for="ProductName"
+                           class="inventory-add-input"
+                           maxlength="200"
+                           autocomplete="off"
+                           placeholder="Enter medicine, cosmetic or product name" />
+                    <span asp-validation-for="ProductName" class="inventory-add-error"></span>
+                </div>
+
+                <div class="inventory-add-field">
+                    <label asp-for="Quantity">Quantity <span>*</span></label>
+                    <input asp-for="Quantity"
+                           class="inventory-add-input"
+                           type="number"
+                           min="0.01"
+                           max="999999999"
+                           step="0.01"
+                           inputmode="decimal"
+                           placeholder="Enter quantity" />
+                    <span asp-validation-for="Quantity" class="inventory-add-error"></span>
+                </div>
+
+                <div class="inventory-add-field">
+                    <label asp-for="Mrp">MRP <span>*</span></label>
+                    <div class="inventory-add-price-input">
+                        <span>₹</span>
+                        <input asp-for="Mrp"
+                               class="inventory-add-input"
+                               type="number"
+                               min="0.01"
+                               max="999999999"
+                               step="0.01"
+                               inputmode="decimal"
+                               placeholder="0.00" />
+                    </div>
+                    <span asp-validation-for="Mrp" class="inventory-add-error"></span>
+                </div>
+
+                <div class="inventory-add-field inventory-add-field-wide">
+                    <label asp-for="ExpiryDate">Expiry <span>*</span></label>
+                    <input asp-for="ExpiryDate"
+                           class="inventory-add-input"
+                           type="date"
+                           min="@today.ToString("yyyy-MM-dd")"
+                           value="@((Model.ExpiryDate == default ? defaultExpiry : Model.ExpiryDate).ToString("yyyy-MM-dd"))" />
+                    <small class="inventory-add-help">Default expiry is set to @defaultExpiry.ToString("dd MMM yyyy"). You can change it to the actual product expiry date.</small>
+                    <span asp-validation-for="ExpiryDate" class="inventory-add-error"></span>
+                </div>
+            </div>
+
+            <div class="inventory-add-note">
+                <strong>Stock entry</strong>
+                <span>A new batch is created automatically for this manual entry. Batch and purchase-cost details are generated separately where required.</span>
+            </div>
+
+            <div class="inventory-add-actions">
+                <a asp-controller="Inventory" asp-action="Index" class="inventory-add-cancel">Cancel</a>
+                <button type="submit" class="inventory-add-submit">Add to Inventory</button>
+            </div>
+        </form>
+    </section>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
