@@ -1076,6 +1076,25 @@
                 closeScanner();
             }
         });
+
+        // Allow the Inventory Add Item picker to reuse the existing invoice
+        // camera/upload flow on the dashboard without duplicating scanner code.
+        const requestedInvoiceSource = new URLSearchParams(window.location.search).get("openInvoice");
+        if (requestedInvoiceSource === "scan" || requestedInvoiceSource === "upload") {
+            window.setTimeout(() => {
+                openSourceModal();
+
+                if (requestedInvoiceSource === "scan") {
+                    sourceCamera?.click();
+                } else {
+                    sourceUpload?.click();
+                }
+
+                const cleanUrl = new URL(window.location.href);
+                cleanUrl.searchParams.delete("openInvoice");
+                window.history.replaceState({}, document.title, cleanUrl.pathname + cleanUrl.search + cleanUrl.hash);
+            }, 120);
+        }
     })();
 </script>
 }
