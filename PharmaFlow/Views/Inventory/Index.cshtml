@@ -19,12 +19,12 @@
                 id="inventoryAddItemButton"
                 aria-haspopup="dialog"
                 aria-controls="inventoryAddItemModal">
-            <span aria-hidden="true">+</span> <span data-i18n="addItemButton">Add Item</span>
+            <svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 7 8-4 8 4-8 4-8-4Z"/><path d="M4 7v10l8 4 8-4V7"/><path d="M12 12v6M9 15h6"/></svg><span data-i18n="addItemButton">Add Item</span>
         </button>
     </header>
 
     <div class="inventory-modern-search">
-        <span class="inventory-modern-search-icon" aria-hidden="true">⌕</span>
+        <span class="inventory-modern-search-icon" aria-hidden="true"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.3"/><path d="m16 16 4.5 4.5"/></svg></span>
         <input id="inventorySearch"
                type="search"
                autocomplete="off"
@@ -68,7 +68,7 @@
                              data-filter-expiring="@(item.IsExpiring ? "true" : "false")"
                              data-search-text="@($"{item.ProductName} {item.GenericName} {item.BrandName} {item.BatchNumber} {item.Barcode}")">
                         <div class="inventory-product-card-top">
-                            <div class="inventory-product-icon">Rx</div>
+                            <div class="inventory-product-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 21a5 5 0 0 1 0-10h3a5 5 0 0 1 0 10H7Z"/><path d="m8 11 7-7a4.95 4.95 0 1 1 7 7l-7 7"/><path d="m11 8 5 5"/></svg></div>
                             <div class="inventory-product-heading">
                                 <h2>@item.ProductName</h2>
                                 <span>Batch : @item.BatchNumber</span>
@@ -109,7 +109,7 @@
             </div>
 
             <div id="inventoryEmptySearch" class="inventory-modern-empty" hidden>
-                <div>⌕</div>
+                <div><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.3"/><path d="m16 16 4.5 4.5"/></svg></div>
                 <h2>No products found</h2>
                 <p>Try another product name, batch number or barcode.</p>
             </div>
