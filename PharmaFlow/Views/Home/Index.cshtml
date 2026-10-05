@@ -11,11 +11,13 @@
            type="file"
            accept="image/*"
            capture="environment"
+           multiple
            tabindex="-1" />
     <input id="dashboardUploadInput"
            class="dashboard-file-input"
            type="file"
            accept="image/*,application/pdf,.pdf"
+           multiple
            tabindex="-1" />
     <div id="invoiceCaptureAntiForgeryToken" hidden>
         @Html.AntiForgeryToken()
@@ -266,62 +268,6 @@
     </section>
 </div>
 
-<div class="invoice-camera-modal" id="invoiceCameraModal" hidden>
-    <div class="invoice-camera-backdrop"></div>
-
-    <section class="invoice-camera-panel" role="dialog" aria-modal="true" aria-labelledby="invoiceCameraTitle">
-        <header class="invoice-camera-topbar">
-            <button type="button" class="invoice-camera-close" id="invoiceCameraClose" aria-label="Close scanner">×</button>
-
-            <div class="invoice-camera-orientation" role="group" aria-label="Invoice orientation">
-                <button type="button" class="is-active" data-camera-orientation="portrait">Portrait</button>
-                <button type="button" data-camera-orientation="landscape">Landscape</button>
-            </div>
-
-            <span class="invoice-camera-profile-dot" aria-hidden="true"></span>
-        </header>
-
-        <div class="invoice-camera-fit-hint" id="invoiceCameraFitHint">Fit the whole bill inside the frame</div>
-
-        <div class="invoice-camera-stage">
-            <video id="invoiceCameraVideo" autoplay muted playsinline></video>
-
-            <div class="invoice-camera-frame invoice-camera-frame-portrait" id="invoiceCameraFrame" aria-hidden="true">
-                <span class="invoice-camera-corner invoice-camera-corner-tl"></span>
-                <span class="invoice-camera-corner invoice-camera-corner-tr"></span>
-                <span class="invoice-camera-corner invoice-camera-corner-bl"></span>
-                <span class="invoice-camera-corner invoice-camera-corner-br"></span>
-                <span class="invoice-camera-edge invoice-camera-edge-top"></span>
-                <span class="invoice-camera-edge invoice-camera-edge-right"></span>
-                <span class="invoice-camera-edge invoice-camera-edge-bottom"></span>
-                <span class="invoice-camera-edge invoice-camera-edge-left"></span>
-            </div>
-        </div>
-
-        <div class="invoice-camera-bottom">
-            <div class="invoice-camera-page">Page 1</div>
-
-            <div class="invoice-camera-controls-row">
-                <button type="button" class="invoice-camera-gallery" id="invoiceCameraGallery">
-                    <span class="invoice-camera-gallery-icon" aria-hidden="true">▧</span>
-                    <span>Gallery</span>
-                </button>
-
-                <button type="button" class="invoice-camera-shutter" id="invoiceCameraShutter" aria-label="Take invoice photo">
-                    <span></span>
-                </button>
-
-                <button type="button" class="invoice-camera-confirm" id="invoiceCameraConfirm" hidden aria-label="Continue with captured invoices">
-                    <span>Page 2</span>
-                </button>
-            </div>
-        </div>
-
-        <canvas id="invoiceCameraCanvas" hidden></canvas>
-        <h2 id="invoiceCameraTitle" class="visually-hidden">Scan invoice</h2>
-    </section>
-</div>
-
 <div class="invoice-scanner-modal" id="invoiceScannerModal" hidden>
     <div class="invoice-scanner-backdrop" id="invoiceScannerBackdrop"></div>
     <section class="invoice-scanner-panel" role="dialog" aria-modal="true" aria-labelledby="invoiceScannerTitle">
@@ -387,15 +333,6 @@
         const sourceUpload = document.getElementById("invoiceCaptureSourceUpload");
         const sourceClose = document.getElementById("invoiceCaptureSourceClose");
         const sourceBackdrop = document.getElementById("invoiceCaptureSourceBackdrop");
-        const cameraModal = document.getElementById("invoiceCameraModal");
-        const cameraVideo = document.getElementById("invoiceCameraVideo");
-        const cameraCanvas = document.getElementById("invoiceCameraCanvas");
-        const cameraClose = document.getElementById("invoiceCameraClose");
-        const cameraShutter = document.getElementById("invoiceCameraShutter");
-        const cameraGallery = document.getElementById("invoiceCameraGallery");
-        const cameraFrame = document.getElementById("invoiceCameraFrame");
-        const cameraFitHint = document.getElementById("invoiceCameraFitHint");
-        const cameraOrientationButtons = document.querySelectorAll("[data-camera-orientation]");
         const selected = document.getElementById("stockCaptureSelected");
         const selectedName = document.getElementById("stockCaptureSelectedName");
         const reset = document.getElementById("stockCaptureReset");
@@ -423,10 +360,6 @@
         let previewUrl = null;
         let rotation = 0;
         let enhanceText = false;
-        let cameraStream = null;
-        let cameraOrientation = "portrait";
-        let capturedInvoiceFiles = [];
-
         const MAX_FILE_SIZE = 25 * 1024 * 1024;
         const MAX_PDF_PAGES = 20;
 
@@ -441,40 +374,6 @@
                 URL.revokeObjectURL(previewUrl);
                 previewUrl = null;
             }
-        };
-
-        const stopCameraStream = () => {
-            cameraStream?.getTracks().forEach(track => track.stop());
-            cameraStream = null;
-            if (cameraVideo) cameraVideo.srcObject = null;
-        };
-
-        const updateCapturedInvoiceUi = () => {
-            const count = capturedInvoiceFiles.length;
-            if (cameraGallery) cameraGallery.setAttribute("aria-label", "Add another invoice from gallery");
-
-            const pageLabel = cameraModal?.querySelector(".invoice-camera-page");
-            if (pageLabel) pageLabel.textContent = "Page " + (count + 1);
-
-            const confirm = document.getElementById("invoiceCameraConfirm");
-            if (confirm) {
-                confirm.hidden = count === 0;
-                confirm.querySelector("span").textContent = "Page " + (count + 1);
-            }
-        };
-
-        const clearCapturedInvoiceFiles = () => {
-            capturedInvoiceFiles.forEach(file => {
-                if (file._previewUrl) URL.revokeObjectURL(file._previewUrl);
-            });
-            capturedInvoiceFiles = [];
-            updateCapturedInvoiceUi();
-        };
-
-        const closeCameraModal = () => {
-            stopCameraStream();
-            cameraModal?.setAttribute("hidden", "");
-            document.body.classList.remove("invoice-camera-open");
         };
 
         const closeSourceModal = () => {
@@ -494,122 +393,6 @@
                 input.value = "";
                 input.click();
             }
-        };
-
-        const updateCameraOrientation = mode => {
-            cameraOrientation = mode === "landscape" ? "landscape" : "portrait";
-            cameraFrame?.classList.toggle("invoice-camera-frame-landscape", cameraOrientation === "landscape");
-            cameraFrame?.classList.toggle("invoice-camera-frame-portrait", cameraOrientation === "portrait");
-            cameraOrientationButtons.forEach(button => {
-                button.classList.toggle("is-active", button.dataset.cameraOrientation === cameraOrientation);
-            });
-            if (cameraFitHint) {
-                cameraFitHint.textContent = cameraOrientation === "landscape"
-                    ? "Fit the whole bill inside the landscape frame"
-                    : "Fit the whole bill inside the portrait frame";
-            }
-        };
-
-        const openCameraScanner = async () => {
-            closeSourceModal();
-
-            if (!navigator.mediaDevices?.getUserMedia) {
-                alert("Camera scanning is not supported by this browser. Please use Upload Invoice instead.");
-                return;
-            }
-
-            try {
-                stopCameraStream();
-                cameraStream = await navigator.mediaDevices.getUserMedia({
-                    video: {
-                        facingMode: { ideal: "environment" },
-                        width: { ideal: 1920 },
-                        height: { ideal: 1080 }
-                    },
-                    audio: false
-                });
-
-                if (!cameraVideo) throw new Error("Camera preview is unavailable.");
-
-                cameraVideo.srcObject = cameraStream;
-                cameraVideo.setAttribute("playsinline", "");
-                cameraVideo.muted = true;
-                await cameraVideo.play();
-
-                updateCameraOrientation(cameraOrientation);
-                cameraModal?.removeAttribute("hidden");
-                document.body.classList.add("invoice-camera-open");
-                cameraClose?.focus();
-            } catch (error) {
-                console.error("Unable to open invoice camera.", error);
-                stopCameraStream();
-
-                if (error?.name === "NotAllowedError" || error?.name === "SecurityError") {
-                    alert("Camera permission was blocked. Allow camera access for PharmaFlow, then try again.");
-                } else {
-                    alert("The camera could not be opened. Please use Upload Invoice instead.");
-                }
-            }
-        };
-
-        const captureCameraPhoto = async () => {
-            if (!cameraVideo?.videoWidth || !cameraVideo?.videoHeight) return;
-
-            const frameRatio = cameraOrientation === "landscape" ? 4 / 3 : 3 / 4;
-            const sourceRatio = cameraVideo.videoWidth / cameraVideo.videoHeight;
-
-            let cropWidth = cameraVideo.videoWidth;
-            let cropHeight = cameraVideo.videoHeight;
-
-            if (sourceRatio > frameRatio) {
-                cropWidth = Math.round(cameraVideo.videoHeight * frameRatio);
-            } else {
-                cropHeight = Math.round(cameraVideo.videoWidth / frameRatio);
-            }
-
-            const offsetX = Math.round((cameraVideo.videoWidth - cropWidth) / 2);
-            const offsetY = Math.round((cameraVideo.videoHeight - cropHeight) / 2);
-
-            cameraCanvas.width = cropWidth;
-            cameraCanvas.height = cropHeight;
-
-            const context = cameraCanvas.getContext("2d", { alpha: false });
-            if (!context) {
-                alert("Camera capture is not supported by this browser.");
-                return;
-            }
-
-            context.drawImage(
-                cameraVideo,
-                offsetX,
-                offsetY,
-                cropWidth,
-                cropHeight,
-                0,
-                0,
-                cropWidth,
-                cropHeight
-            );
-
-            const blob = await new Promise(resolve =>
-                cameraCanvas.toBlob(resolve, "image/jpeg", 0.94)
-            );
-
-            if (!blob) {
-                alert("The invoice photo could not be captured. Please try again.");
-                return;
-            }
-
-            const file = new File([blob], "invoice-camera-scan-" + (capturedInvoiceFiles.length + 1) + ".jpg", {
-                type: "image/jpeg",
-                lastModified: Date.now()
-            });
-
-            capturedInvoiceFiles.push(file);
-            updateCapturedInvoiceUi();
-
-            // Keep the live camera open so the user can photograph the next invoice.
-            cameraShutter?.focus();
         };
 
         const closeScanner = () => {
@@ -715,67 +498,6 @@
             scannerPreview?.style.removeProperty("--scanner-image-ratio");
             scannerImage?.style.removeProperty("width");
             scannerImage?.style.removeProperty("height");
-        };
-
-        const confirmCapturedInvoices = async () => {
-            const files = [...capturedInvoiceFiles];
-            if (files.length === 0) return;
-
-            if (window.pharmaFlowConnectivity && !window.pharmaFlowConnectivity.isOnline()) {
-                window.pharmaFlowConnectivity.requireOnline();
-                return;
-            }
-
-            cameraModal?.setAttribute("hidden", "");
-            stopCameraStream();
-
-            updateOcrStatus(
-                "Preparing captured invoices...",
-                "Uploading " + files.length + " invoice" + (files.length === 1 ? "" : "s") + " for AI analysis.",
-                5
-            );
-            setBusy?.(false);
-
-            try {
-                const importIds = [];
-
-                for (let index = 0; index < files.length; index++) {
-                    const current = index + 1;
-                    updateOcrStatus(
-                        "Analyzing invoice " + current + " of " + files.length + "...",
-                        "AI is reading this invoice before moving to the next one.",
-                        Math.round((index / files.length) * 90) + 5
-                    );
-
-                    const importId = await postVisionForParsing(
-                        files[index],
-                        "Analyzing invoice " + current + " of " + files.length + "..."
-                    );
-
-                    importIds.push(importId);
-                }
-
-                updateOcrStatus(
-                    "Invoices analyzed",
-                    files.length + " invoice" + (files.length === 1 ? "" : "s") + " ready for review.",
-                    100
-                );
-
-                window.location.assign(
-                    "/InvoiceCapture/BatchReview?ids=" +
-                    encodeURIComponent(importIds.join(","))
-                );
-            } catch (error) {
-                console.error("Multiple invoice analysis failed.", error);
-                cameraModal?.removeAttribute("hidden");
-                document.body.classList.add("invoice-camera-open");
-                updateCapturedInvoiceUi();
-                updateOcrStatus(
-                    "Invoice analysis failed",
-                    error?.message || "One or more invoices could not be analyzed.",
-                    0
-                );
-            }
         };
 
         const showPreviewBlob = (blob) => {
@@ -940,44 +662,103 @@
             return payload.importId;
         };
 
-        const useScan = async () => {
-            if (!pendingFile) return;
+        const processInvoiceFiles = async (files, sourceType) => {
+            const selectedFiles = Array.from(files || []).filter(Boolean);
+
+            if (selectedFiles.length === 0) return;
+
+            if (selectedFiles.length > 20) {
+                alert("You can scan or upload up to 20 invoices at a time.");
+                return;
+            }
+
+            const validFiles = [];
+            for (const file of selectedFiles) {
+                const isImage = file.type.startsWith("image/");
+                const isPdf = file.type === "application/pdf" ||
+                    file.name.toLowerCase().endsWith(".pdf");
+
+                if (!isImage && !isPdf) {
+                    alert("Please select only invoice images or PDF files.");
+                    return;
+                }
+
+                if (file.size > MAX_FILE_SIZE) {
+                    alert("Each invoice file must be smaller than 25 MB.");
+                    return;
+                }
+
+                validFiles.push(file);
+            }
 
             if (window.pharmaFlowConnectivity && !window.pharmaFlowConnectivity.isOnline()) {
                 window.pharmaFlowConnectivity.requireOnline();
                 return;
             }
 
+            pendingSourceType = sourceType;
             resetOcrUi();
-            setBusy(true);
+            updateOcrStatus(
+                selectedFiles.length === 1
+                    ? "Preparing invoice..."
+                    : "Preparing " + selectedFiles.length + " invoices...",
+                selectedFiles.length === 1
+                    ? "Uploading the invoice for AI analysis."
+                    : "Uploading the captured invoices for AI analysis.",
+                5
+            );
 
             try {
-                let finalFile = pendingFile;
+                const importIds = [];
 
-                if (pendingFile.type.startsWith("image/")) {
-                    finalFile = await processImage(pendingFile);
-                    window.pharmaFlowInvoiceCapture = finalFile;
-                    showFinalSelection(finalFile);
-                } else {
-                    window.pharmaFlowInvoiceCapture = pendingFile;
+                for (let index = 0; index < validFiles.length; index++) {
+                    const current = index + 1;
+
+                    updateOcrStatus(
+                        validFiles.length === 1
+                            ? "Analyzing invoice..."
+                            : "Analyzing invoice " + current + " of " + validFiles.length + "...",
+                        "AI is extracting Product, Batch, Expiry and Quantity.",
+                        Math.round((index / validFiles.length) * 90) + 5
+                    );
+
+                    const importId = await postVisionForParsing(
+                        validFiles[index],
+                        validFiles.length === 1
+                            ? "Analyzing invoice..."
+                            : "Analyzing invoice " + current + " of " + validFiles.length + "..."
+                    );
+
+                    importIds.push(importId);
                 }
 
-                const importId = await postVisionForParsing(finalFile);
                 updateOcrStatus(
-                    "Invoice analyzed",
-                    "Opening the review screen so you can verify every extracted stock row.",
+                    "Invoice analysis complete",
+                    validFiles.length === 1
+                        ? "Opening the invoice review screen."
+                        : validFiles.length + " invoices are ready for review.",
                     100
                 );
-                window.location.assign("/InvoiceCapture/Review?id=" + encodeURIComponent(importId));
+
+                if (importIds.length === 1) {
+                    window.location.assign(
+                        "/InvoiceCapture/Review?id=" +
+                        encodeURIComponent(importIds[0])
+                    );
+                    return;
+                }
+
+                window.location.assign(
+                    "/InvoiceCapture/BatchReview?ids=" +
+                    encodeURIComponent(importIds.join(","))
+                );
             } catch (error) {
                 console.error("Invoice AI processing failed.", error);
                 updateOcrStatus(
                     "Invoice analysis failed",
-                    error?.message || "The invoice could not be analyzed.",
+                    error?.message || "One or more invoices could not be analyzed.",
                     0
                 );
-            } finally {
-                setBusy(false);
             }
         };
 
@@ -1040,44 +821,12 @@
         };
 
         const handleInput = (input, sourceType) => {
-            const file = input?.files?.[0];
-            if (!file) return;
+            const files = input?.files ? Array.from(input.files) : [];
+            if (input) input.value = "";
 
-            if (cameraModal && !cameraModal.hasAttribute("hidden") && input === uploadInput) {
-                const isImage = file.type.startsWith("image/");
-                const isPdf = file.type === "application/pdf" ||
-                    file.name.toLowerCase().endsWith(".pdf");
+            if (files.length === 0) return;
 
-                if (!isImage || isPdf || file.size > MAX_FILE_SIZE) {
-                    input.value = "";
-                    alert(isPdf
-                        ? "Gallery capture supports invoice images only while the camera scanner is open."
-                        : "Please choose an invoice image smaller than 25 MB.");
-                    return;
-                }
-
-                capturedInvoiceFiles.push(file);
-                updateCapturedInvoiceUi();
-                return;
-            }
-
-            const isImage = file.type.startsWith("image/");
-            const isPdf = file.type === "application/pdf" ||
-                file.name.toLowerCase().endsWith(".pdf");
-
-            if (!isImage && !isPdf) {
-                input.value = "";
-                alert("Please select an invoice image or PDF.");
-                return;
-            }
-
-            if (file.size > MAX_FILE_SIZE) {
-                input.value = "";
-                alert("Please choose an invoice file smaller than 25 MB.");
-                return;
-            }
-
-            openScanner(file, isPdf ? "pdf" : sourceType);
+            processInvoiceFiles(files, sourceType);
         };
 
         cameraInput?.addEventListener("change", () =>
@@ -1087,33 +836,6 @@
         uploadInput?.addEventListener("change", () =>
             handleInput(uploadInput, "upload")
         );
-
-        sourceTrigger?.addEventListener("click", openSourceModal);
-        sourceCamera?.addEventListener("click", openCameraScanner);
-        sourceUpload?.addEventListener("click", () => chooseSource(uploadInput));
-        sourceClose?.addEventListener("click", closeSourceModal);
-        sourceBackdrop?.addEventListener("click", closeSourceModal);
-        cameraClose?.addEventListener("click", () => {
-            closeCameraModal();
-            clearCapturedInvoiceFiles();
-        });
-        cameraShutter?.addEventListener("click", captureCameraPhoto);
-        document.getElementById("invoiceCameraConfirm")?.addEventListener("click", confirmCapturedInvoices);
-        cameraGallery?.addEventListener("click", () => {
-            if (cameraModal?.hasAttribute("hidden")) {
-                chooseSource(uploadInput);
-                return;
-            }
-
-            // Let the user add another invoice from the gallery without losing the
-            // already captured camera pages.
-            if (uploadInput) uploadInput.value = "";
-            uploadInput?.click();
-        });
-        cameraOrientationButtons.forEach(button => {
-            button.addEventListener("click", () => updateCameraOrientation(button.dataset.cameraOrientation));
-        });
-        updateCapturedInvoiceUi();
 
         reset?.addEventListener("click", resetSelection);
         retakeButton?.addEventListener("click", resetSelection);
