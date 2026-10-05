@@ -1,0 +1,163 @@
+@model PharmaFlow.Models.ViewModels.AdminUserEditViewModel
+@{
+    ViewData["Title"] = "Edit User";
+}
+
+<div class="pharma-admin-page">
+    <header class="pharma-admin-subheader">
+        <a href="@Url.Action("Index", "Admin")">← Admin Dashboard</a>
+        <div>
+            <span class="pharma-admin-eyebrow">User Management</span>
+            <h1>Edit User</h1>
+            <p>Profile #@Model.ProfileId</p>
+        </div>
+    </header>
+
+    @if (TempData["AdminMessage"] is string message)
+    {
+        <div class="pharma-admin-alert">@message</div>
+    }
+
+    <section class="pharma-admin-panel">
+        <div class="pharma-admin-user-identity">
+            <div>
+                <span>Profile ID</span>
+                <strong>#@Model.ProfileId</strong>
+            </div>
+            <div>
+                <span>Supabase User ID</span>
+                <code>@Model.UserId</code>
+            </div>
+            <div>
+                <span>Account Created</span>
+                <strong>@Model.CreatedAt.ToString("dd MMM yyyy HH:mm")</strong>
+            </div>
+            <div>
+                <span>Last Login</span>
+                <strong>@(Model.LastLoginAt?.ToString("dd MMM yyyy HH:mm") ?? "Never")</strong>
+            </div>
+            <div>
+                <span>Last Logout</span>
+                <strong>@(Model.LastLogoutAt?.ToString("dd MMM yyyy HH:mm") ?? "Never")</strong>
+            </div>
+        </div>
+    </section>
+
+    <form asp-controller="Admin" asp-action="Edit" method="post" class="pharma-admin-edit-form">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="ProfileId" />
+
+        <section class="pharma-admin-panel">
+            <div class="pharma-admin-panel-heading">
+                <div>
+                    <span class="pharma-admin-eyebrow">Account Details</span>
+                    <h2>User Information</h2>
+                </div>
+            </div>
+
+            <div asp-validation-summary="ModelOnly" class="pharma-admin-validation"></div>
+
+            <div class="pharma-admin-edit-grid">
+                <label>
+                    Username *
+                    <input asp-for="Username" maxlength="50" required />
+                </label>
+
+                <label>
+                    Name
+                    <input asp-for="Name" maxlength="120" />
+                </label>
+
+                <label>
+                    Phone
+                    <input asp-for="Phone" maxlength="20" inputmode="tel" />
+                </label>
+
+                <label>
+                    Shop Name
+                    <input asp-for="ShopName" maxlength="120" />
+                </label>
+
+                <label class="pharma-admin-field-wide">
+                    Address
+                    <textarea asp-for="Address" maxlength="500" rows="3"></textarea>
+                </label>
+
+                <label class="pharma-admin-readonly-field">
+                    Email
+                    <input asp-for="Email" readonly />
+                    <small>Email is managed by Supabase authentication. Changing this text here would not change the login credential.</small>
+                </label>
+
+                <label class="pharma-admin-readonly-field">
+                    User ID
+                    <input value="@Model.UserId" readonly />
+                    <small>Read-only. This is the authentication identity.</small>
+                </label>
+
+                <label class="pharma-admin-check-field">
+                    <input asp-for="IsActive" />
+                    <span>Account Active</span>
+                </label>
+            </div>
+        </section>
+
+        <section class="pharma-admin-panel">
+            <div class="pharma-admin-panel-heading">
+                <div>
+                    <span class="pharma-admin-eyebrow">Subscription Management</span>
+                    <h2>Plan & Period</h2>
+                </div>
+            </div>
+
+            <div class="pharma-admin-subscription-grid">
+                <label>
+                    Plan
+                    <select asp-for="SubscriptionPlan" id="adminSubscriptionPlan">
+                        <option value="free">Free Plan</option>
+                        <option value="unlimited">Unlimited Plan</option>
+                    </select>
+                </label>
+
+                <label>
+                    Start Date
+                    <input asp-for="SubscriptionStartsAt" type="date" id="adminSubscriptionStart" />
+                </label>
+
+                <label>
+                    End Date
+                    <input asp-for="SubscriptionEndsAt" type="date" id="adminSubscriptionEnd" />
+                </label>
+            </div>
+
+            <div class="pharma-admin-subscription-help">
+                <strong>Manage subscription period</strong>
+                <span>Set a future end date to extend access. Move the end date earlier to reduce access. Leave End Date empty for an Unlimited plan with no expiry.</span>
+            </div>
+
+            <div class="pharma-admin-form-actions">
+                <a href="@Url.Action("Index", "Admin")">Cancel</a>
+                <button type="submit">Save All User Changes</button>
+            </div>
+        </section>
+    </form>
+</div>
+
+@section Scripts {
+<script>
+(() => {
+    const plan = document.getElementById("adminSubscriptionPlan");
+    const start = document.getElementById("adminSubscriptionStart");
+    const end = document.getElementById("adminSubscriptionEnd");
+
+    const updateSubscriptionFields = () => {
+        const unlimited = plan?.value === "unlimited";
+        if (start) start.disabled = !unlimited;
+        if (end) end.disabled = !unlimited;
+    };
+
+    plan?.addEventListener("change", updateSubscriptionFields);
+    updateSubscriptionFields();
+})();
+</script>
+}
