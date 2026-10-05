@@ -5,7 +5,7 @@
             addStock: "Add stock",
             more: "More",
             inventory: "Inventory",
-            orderItems: "Order items",
+            purchase: "Purchase",
             bills: "Bills",
             reports: "Reports",
             addStaff: "Add Staff",
@@ -232,7 +232,7 @@
             addStock: "ಸ್ಟಾಕ್ ಸೇರಿಸಿ",
             more: "ಇನ್ನಷ್ಟು",
             inventory: "ಇನ್ವೆಂಟರಿ",
-            orderItems: "ವಸ್ತುಗಳನ್ನು ಆರ್ಡರ್ ಮಾಡಿ",
+            purchase: "ಖರೀದಿ",
             bills: "ಬಿಲ್‌ಗಳು",
             reports: "ವರದಿಗಳು",
             addStaff: "ಸಿಬ್ಬಂದಿ ಸೇರಿಸಿ",
@@ -455,6 +455,7 @@
         },
 
         hi: {
+            purchase: "खरीद",
             dashboard: "डैशबोर्ड",
             addStock: "स्टॉक जोड़ें",
             more: "अधिक",
