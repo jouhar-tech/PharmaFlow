@@ -8465,6 +8465,36 @@ body.pharma-camera-open {
   border: 1px solid #bce8dc;
 }
 
+.inventory-details-alert.error {
+  background: #fff1f2;
+  color: #b4232f;
+  border: 1px solid #fecdd3;
+}
+
+.inventory-details-content-simple {
+  max-width: 760px;
+}
+
+.inventory-details-main-card {
+  margin-top: 0;
+}
+
+.inventory-details-simple-grid .inventory-details-field-full {
+  grid-column: 1 / -1;
+}
+
+body.theme-dark .inventory-details-alert.success {
+  background: #102822;
+  color: #a7f3d0;
+  border-color: #245b50;
+}
+
+body.theme-dark .inventory-details-alert.error {
+  background: #2a1518;
+  color: #fecaca;
+  border-color: #7f1d1d;
+}
+
 .inventory-details-hero-card,
 .inventory-details-card,
 .inventory-details-stats {
