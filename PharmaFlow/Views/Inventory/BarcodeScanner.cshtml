@@ -1,0 +1,145 @@
+@{
+    ViewData["Title"] = "Scan Barcode";
+}
+
+<div class="inventory-action-page inventory-barcode-page">
+    <header class="inventory-action-header">
+        <a asp-controller="Inventory" asp-action="Index" class="inventory-action-back" aria-label="Back">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5"></path><path d="m11 18-6-6"></path></svg>
+        </a>
+        <div>
+            <span class="inventory-action-eyebrow">Add Item</span>
+            <h1>Scan Barcode</h1>
+            <p>Scan a product barcode to find a matching product quickly.</p>
+        </div>
+    </header>
+
+    <section class="inventory-barcode-card">
+        <div class="inventory-barcode-preview">
+            <video id="inventoryBarcodeVideo" autoplay muted playsinline></video>
+            <div class="inventory-barcode-frame" aria-hidden="true"></div>
+        </div>
+
+        <div id="inventoryBarcodeStatus" class="inventory-barcode-status" role="status" aria-live="polite">
+            <strong>Ready to scan</strong>
+            <span>Allow camera access and place the barcode inside the frame.</span>
+        </div>
+
+        <div class="inventory-barcode-actions">
+            <button type="button" id="inventoryBarcodeStart" class="inventory-barcode-primary">Start Camera</button>
+            <a asp-controller="Inventory" asp-action="Index" class="inventory-barcode-secondary">Cancel</a>
+        </div>
+
+        <div class="inventory-barcode-manual">
+            <label for="inventoryBarcodeManualInput">Enter barcode manually</label>
+            <div>
+                <input id="inventoryBarcodeManualInput" type="text" inputmode="numeric" autocomplete="off" maxlength="100" placeholder="Type barcode number" />
+                <button type="button" id="inventoryBarcodeManualButton">Find Product</button>
+            </div>
+        </div>
+    </section>
+</div>
+
+@section Scripts {
+<script>
+(() => {
+    const video = document.getElementById("inventoryBarcodeVideo");
+    const start = document.getElementById("inventoryBarcodeStart");
+    const status = document.getElementById("inventoryBarcodeStatus");
+    const manualInput = document.getElementById("inventoryBarcodeManualInput");
+    const manualButton = document.getElementById("inventoryBarcodeManualButton");
+
+    let stream = null;
+    let detector = null;
+    let scanning = false;
+
+    const setStatus = (title, message) => {
+        if (!status) return;
+        status.innerHTML = "<strong>" + title + "</strong><span>" + message + "</span>";
+    };
+
+    const stop = () => {
+        stream?.getTracks().forEach(track => track.stop());
+        stream = null;
+        scanning = false;
+    };
+
+    const findBarcode = async (barcode) => {
+        const normalized = String(barcode || "").trim();
+        if (!normalized) return;
+
+        setStatus("Searching...", "Checking your product records for this barcode.");
+
+        const response = await fetch("/Inventory/FindByBarcode?barcode=" + encodeURIComponent(normalized), {
+            credentials: "same-origin"
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            stop();
+            window.location.assign("/Inventory/AddItem?productId=" + encodeURIComponent(data.productId));
+            return;
+        }
+
+        setStatus("Product not found", "No matching product was found. You can search the product library instead.");
+    };
+
+    const scanLoop = async () => {
+        if (!scanning || !detector || !video?.readyState) return;
+
+        try {
+            const matches = await detector.detect(video);
+            const value = matches?.[0]?.rawValue;
+            if (value) {
+                scanning = false;
+                await findBarcode(value);
+                return;
+            }
+        } catch {
+            // Keep scanning; transient camera frames can fail detection.
+        }
+
+        if (scanning) window.requestAnimationFrame(scanLoop);
+    };
+
+    start?.addEventListener("click", async () => {
+        if (stream) return;
+
+        if (!("BarcodeDetector" in window)) {
+            setStatus("Barcode scanning is unavailable", "This browser does not support camera barcode detection. Use the manual barcode field below.");
+            return;
+        }
+
+        try {
+            detector = new BarcodeDetector();
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: { ideal: "environment" } },
+                audio: false
+            });
+
+            video.srcObject = stream;
+            await video.play();
+            scanning = true;
+            start.textContent = "Scanning...";
+            start.disabled = true;
+            setStatus("Scanning...", "Hold the barcode steady inside the frame.");
+            scanLoop();
+        } catch {
+            stop();
+            setStatus("Camera unavailable", "Please allow camera access or enter the barcode manually.");
+        }
+    });
+
+    manualButton?.addEventListener("click", () => findBarcode(manualInput?.value));
+
+    manualInput?.addEventListener("keydown", event => {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            findBarcode(manualInput.value);
+        }
+    });
+
+    window.addEventListener("pagehide", stop);
+})();
+</script>
+}
