@@ -515,7 +515,6 @@ public sealed class InvoiceCaptureController : Controller
             .FirstOrDefaultAsync(
                 item => item.ImportId == model.ImportId && item.ProfileId == profileId,
                 cancellationToken);
-
         if (import is null)
             return NotFound();
 
@@ -523,6 +522,26 @@ public sealed class InvoiceCaptureController : Controller
         {
             return RedirectToAction(nameof(Review), new { id = import.ImportId });
         }
+
+        model.DistributorName = CleanMetadata(model.DistributorName, 200) ?? string.Empty;
+        model.InvoiceNumber = CleanMetadata(model.InvoiceNumber, 100) ?? string.Empty;
+
+        if (model.TotalAmount is < 0m or > 999_999_999_999m)
+        {
+            model.ErrorMessage = "Total purchased amount is invalid.";
+            return View("Review", model);
+        }
+
+        import.DistributorName = string.IsNullOrWhiteSpace(model.DistributorName)
+            ? null
+            : model.DistributorName;
+        import.InvoiceNumber = string.IsNullOrWhiteSpace(model.InvoiceNumber)
+            ? null
+            : model.InvoiceNumber;
+        import.InvoiceDate = model.InvoiceDate;
+        import.TotalAmount = model.TotalAmount is > 0m
+            ? decimal.Round(model.TotalAmount.Value, 2, MidpointRounding.AwayFromZero)
+            : null;
 
         if (!ModelState.IsValid)
         {
@@ -934,6 +953,10 @@ public sealed class InvoiceCaptureController : Controller
             ImportId = import.ImportId,
             OriginalFileName = import.OriginalFileName,
             SourceType = import.SourceType,
+            DistributorName = import.DistributorName ?? string.Empty,
+            InvoiceNumber = import.InvoiceNumber ?? string.Empty,
+            InvoiceDate = import.InvoiceDate,
+            TotalAmount = import.TotalAmount,
             OcrConfidence = import.OcrConfidence,
             Status = import.Status,
             ErrorMessage = import.ErrorMessage,
