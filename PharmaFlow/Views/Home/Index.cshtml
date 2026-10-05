@@ -1035,6 +1035,22 @@
             handleInputFiles(files, "upload");
         });
 
+        sourceTrigger?.addEventListener("click", openSourceModal);
+        sourceClose?.addEventListener("click", closeSourceModal);
+        sourceBackdrop?.addEventListener("click", closeSourceModal);
+        sourceCamera?.addEventListener("click", openCamera);
+        sourceUpload?.addEventListener("click", () => chooseSource(uploadInput));
+
+        cameraClose?.addEventListener("click", () => closeCamera(true));
+        cameraGallery?.addEventListener("click", () => {
+            if (uploadInput) {
+                uploadInput.value = "";
+                uploadInput.click();
+            }
+        });
+        cameraShutter?.addEventListener("click", captureCameraPhoto);
+        cameraDone?.addEventListener("click", finishCameraCapture);
+
         reset?.addEventListener("click", resetSelection);
         retakeButton?.addEventListener("click", resetSelection);
         closeButton?.addEventListener("click", closeScanner);
@@ -1064,7 +1080,7 @@
 
         document.addEventListener("keydown", event => {
             if (event.key === "Escape" && !cameraModal?.hasAttribute("hidden")) {
-                closeCameraModal();
+                closeCamera(true);
                 clearCapturedInvoiceFiles();
                 return;
             }
