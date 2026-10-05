@@ -6,9 +6,17 @@
 
 <div class="inventory-page-modern">
     <header class="inventory-modern-header">
-        <a asp-controller="Home" asp-action="Index" class="inventory-modern-back" aria-label="Back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5"></path><path d="m11 18-6-6 6-6"></path></svg></a>
+        <a asp-controller="Home" asp-action="Index" class="inventory-modern-back" aria-label="Back">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5"></path><path d="m11 18-6-6"></path></svg>
+        </a>
         <h1 data-i18n="inventory">Inventory</h1>
-        <a href="@Url.Action("Index", "Home")#add-stock" class="inventory-add-item" data-i18n="addItem">+ Add Stock</a>
+        <button type="button"
+                class="inventory-add-item"
+                id="inventoryAddItemButton"
+                aria-haspopup="dialog"
+                aria-controls="inventoryAddItemModal">
+            <span aria-hidden="true">+</span> <span data-i18n="addItemButton">Add Item</span>
+        </button>
     </header>
 
     <div class="inventory-modern-search">
@@ -105,7 +113,124 @@
     </main>
 </div>
 
+<div class="inventory-add-item-modal" id="inventoryAddItemModal" hidden>
+    <div class="inventory-add-item-backdrop" id="inventoryAddItemBackdrop"></div>
+    <section class="inventory-add-item-panel"
+             role="dialog"
+             aria-modal="true"
+             aria-labelledby="inventoryAddItemTitle">
+        <header class="inventory-add-item-panel-header">
+            <div>
+                <span class="inventory-add-item-eyebrow" data-i18n="addItemButton">Add Item</span>
+                <h2 id="inventoryAddItemTitle" data-i18n="addItemModalTitle">How would you like to add an item?</h2>
+                <p data-i18n="addItemModalDescription">Choose the quickest way to add a product or stock to your inventory.</p>
+            </div>
+            <button type="button"
+                    class="inventory-add-item-close"
+                    id="inventoryAddItemClose"
+                    data-i18n-attr="aria-label:closeAddItemOptions">×</button>
+        </header>
+
+        <div class="inventory-add-item-options">
+            <a asp-action="AddItem" class="inventory-add-item-option inventory-option-custom">
+                <span class="inventory-add-item-option-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14"/><rect x="3.5" y="3.5" width="17" height="17" rx="4"/></svg>
+                </span>
+                <span>
+                    <strong data-i18n="addCustomProduct">Add Custom Product</strong>
+                    <small data-i18n="addCustomProductHint">Create a product manually and enter its stock details.</small>
+                </span>
+                <span class="inventory-add-item-option-arrow" aria-hidden="true">›</span>
+            </a>
+
+            <a asp-action="SearchProducts" class="inventory-add-item-option inventory-option-search">
+                <span class="inventory-add-item-option-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none"><circle cx="10.8" cy="10.8" r="6.3"/><path d="m16 16 4.5 4.5"/><path d="M8 10.8h5.6M10.8 8v5.6"/></svg>
+                </span>
+                <span>
+                    <strong data-i18n="searchProductAll">Search Product from All Products</strong>
+                    <small data-i18n="searchProductAllHint">Find medicines, cosmetics and other products that are not currently in your inventory.</small>
+                </span>
+                <span class="inventory-add-item-option-arrow" aria-hidden="true">›</span>
+            </a>
+
+            <a href="@Url.Action("Index", "Home")?openInvoice=scan"
+               class="inventory-add-item-option inventory-option-invoice">
+                <span class="inventory-add-item-option-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none"><path d="M7 3.5h10v17H7z"/><path d="M9.5 7.5h5M9.5 10.5h5M9.5 13.5h3"/></svg>
+                </span>
+                <span>
+                    <strong data-i18n="scanInvoice">Scan Invoice</strong>
+                    <small data-i18n="scanInvoiceOptionHint">Scan a supplier invoice with your camera and extract stock details.</small>
+                </span>
+                <span class="inventory-add-item-option-arrow" aria-hidden="true">›</span>
+            </a>
+
+            <a href="@Url.Action("Index", "Home")?openInvoice=upload"
+               class="inventory-add-item-option inventory-option-upload">
+                <span class="inventory-add-item-option-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none"><path d="M7 3.5h10v17H7z"/><path d="M12 16V8M9.2 10.8 12 8l2.8 2.8"/></svg>
+                </span>
+                <span>
+                    <strong data-i18n="uploadInvoice">Upload Invoice</strong>
+                    <small data-i18n="uploadInvoiceOptionHint">Upload an invoice image or PDF and extract product details.</small>
+                </span>
+                <span class="inventory-add-item-option-arrow" aria-hidden="true">›</span>
+            </a>
+
+            <a asp-action="BarcodeScanner" class="inventory-add-item-option inventory-option-barcode">
+                <span class="inventory-add-item-option-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none"><path d="M4 5v14M7 5v14M10 5v14M14 5v14M17 5v14M20 5v14"/></svg>
+                </span>
+                <span>
+                    <strong data-i18n="scanBarcode">Scan Barcode</strong>
+                    <small data-i18n="scanBarcodeHint">Scan a product barcode to find a matching product quickly.</small>
+                </span>
+                <span class="inventory-add-item-option-arrow" aria-hidden="true">›</span>
+            </a>
+        </div>
+
+        <button type="button"
+                class="inventory-add-item-cancel"
+                id="inventoryAddItemCancel"
+                data-i18n="cancel">Cancel</button>
+    </section>
+</div>
+
 @section Scripts {
+<script>
+(() => {
+    const modal = document.getElementById("inventoryAddItemModal");
+    const trigger = document.getElementById("inventoryAddItemButton");
+    const close = document.getElementById("inventoryAddItemClose");
+    const backdrop = document.getElementById("inventoryAddItemBackdrop");
+    const cancel = document.getElementById("inventoryAddItemCancel");
+
+    if (!modal || !trigger) return;
+
+    let lastFocused = null;
+
+    const setOpen = open => {
+        modal.hidden = !open;
+        document.body.classList.toggle("inventory-add-item-open", open);
+        if (open) {
+            lastFocused = document.activeElement;
+            close?.focus();
+        } else {
+            lastFocused?.focus?.();
+        }
+    };
+
+    trigger.addEventListener("click", () => setOpen(true));
+    close?.addEventListener("click", () => setOpen(false));
+    backdrop?.addEventListener("click", () => setOpen(false));
+    cancel?.addEventListener("click", () => setOpen(false));
+
+    document.addEventListener("keydown", event => {
+        if (event.key === "Escape" && !modal.hidden) setOpen(false);
+    });
+})();
+</script>
 <script>
 (function () {
     const search = document.getElementById('inventorySearch');
