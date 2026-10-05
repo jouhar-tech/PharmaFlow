@@ -2,10 +2,7 @@
 
 @{
     ViewData["Title"] = "Product Details";
-    var activeBatches = Model.Batches.Where(b => b.IsActive).ToList();
-    var inactiveBatches = Model.Batches.Where(b => !b.IsActive).ToList();
-    var totalQuantity = activeBatches.Sum(b => b.QuantityOnHand);
-    var totalStockValue = activeBatches.Sum(b => b.QuantityOnHand * b.SellingUnitPrice);
+    var batch = Model.SelectedBatch;
 }
 
 <div class="inventory-details-page">
@@ -16,11 +13,17 @@
                 <path d="m11 18-6-6 6-6"></path>
             </svg>
         </a>
+
         <div class="inventory-details-header-copy">
             <span>Inventory</span>
             <h1>Product Details</h1>
         </div>
-        <button type="button" class="inventory-details-delete-top" id="inventoryRemoveProductButton">Remove</button>
+
+        <button type="button"
+                class="inventory-details-delete-top"
+                id="inventoryRemoveProductButton">
+            Remove
+        </button>
     </header>
 
     @if (TempData["InventoryDetailsSuccess"] is string successMessage)
@@ -28,240 +31,162 @@
         <div class="inventory-details-alert success" role="status">@successMessage</div>
     }
 
-    <main class="inventory-details-content">
-        <section class="inventory-details-hero-card">
-            <div class="inventory-details-product-icon">Rx</div>
-            <div class="inventory-details-product-copy">
-                <h2>@Model.ProductName</h2>
-                @if (!string.IsNullOrWhiteSpace(Model.GenericName))
-                {
-                    <p>@Model.GenericName</p>
-                }
-                @if (!string.IsNullOrWhiteSpace(Model.BrandName))
-                {
-                    <span>@Model.BrandName</span>
-                }
-            </div>
-        </section>
+    @if (TempData["InventoryDetailsError"] is string errorMessage)
+    {
+        <div class="inventory-details-alert error" role="alert">@errorMessage</div>
+    }
 
-        <section class="inventory-details-stats">
-            <div>
-                <span>Total Quantity</span>
-                <strong>@totalQuantity.ToString("0.##")</strong>
-            </div>
-            <div>
-                <span>Active Batches</span>
-                <strong>@activeBatches.Count</strong>
-            </div>
-            <div>
-                <span>Stock Value</span>
-                <strong>₹ @totalStockValue.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</strong>
-            </div>
-        </section>
-
-        <section class="inventory-details-card">
+    <main class="inventory-details-content inventory-details-content-simple">
+        <section class="inventory-details-card inventory-details-main-card">
             <div class="inventory-details-section-heading">
                 <div>
-                    <span class="section-kicker">Product</span>
-                    <h2>Product Information</h2>
+                    <span class="section-kicker">Inventory</span>
+                    <h2>Product Details</h2>
                 </div>
             </div>
 
-            <form asp-controller="Inventory" asp-action="UpdateProduct" method="post" class="inventory-details-form">
-                @Html.AntiForgeryToken()
-                <input type="hidden" name="productId" value="@Model.ProductId" />
-
-                <div class="inventory-details-form-grid">
-                    <label>
-                        <span>Product Name *</span>
-                        <input type="text" name="productName" value="@Model.ProductName" maxlength="200" required />
-                    </label>
-
-                    <label>
-                        <span>Generic Name</span>
-                        <input type="text" name="genericName" value="@Model.GenericName" maxlength="200" />
-                    </label>
-
-                    <label>
-                        <span>Brand Name</span>
-                        <input type="text" name="brandName" value="@Model.BrandName" maxlength="200" />
-                    </label>
-
-                    <label>
-                        <span>Dosage Form</span>
-                        <input type="text" name="dosageForm" value="@Model.DosageForm" maxlength="100" />
-                    </label>
-
-                    <label>
-                        <span>Strength</span>
-                        <input type="text" name="strength" value="@Model.Strength" maxlength="100" />
-                    </label>
-
-                    <label>
-                        <span>Pack Size</span>
-                        <input type="text" name="packSize" value="@Model.PackSize" maxlength="100" />
-                    </label>
-
-                    <label>
-                        <span>Barcode</span>
-                        <input type="text" name="barcode" value="@Model.Barcode" maxlength="100" inputmode="numeric" />
-                    </label>
-
-                    <label>
-                        <span>Manufacturer</span>
-                        <input type="text" name="manufacturer" value="@Model.Manufacturer" maxlength="200" />
-                    </label>
-
-                    <label>
-                        <span>HSN Code</span>
-                        <input type="text" name="hsnCode" value="@Model.HsnCode" maxlength="20" />
-                    </label>
-
-                    <label>
-                        <span>GST Rate (%)</span>
-                        <input type="number" name="gstRate" value="@(Model.GstRate?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "")" min="0" max="100" step="0.01" inputmode="decimal" />
-                    </label>
-
-                    <label>
-                        <span>Reorder Level</span>
-                        <input type="number" name="reorderLevel" value="@Model.ReorderLevel.ToString(System.Globalization.CultureInfo.InvariantCulture)" min="0" max="999999" step="0.01" inputmode="decimal" />
-                    </label>
-
-                    <label class="inventory-details-checkbox">
-                        <input type="checkbox" name="isPrescriptionRequired" value="true" checked="@Model.IsPrescriptionRequired" />
-                        <span>Prescription required</span>
-                    </label>
-                </div>
-
-                <div class="inventory-details-form-actions">
-                    <button type="submit" class="inventory-details-primary-button">Save Product Changes</button>
-                </div>
-            </form>
-        </section>
-
-        <section class="inventory-details-card">
-            <div class="inventory-details-section-heading">
-                <div>
-                    <span class="section-kicker">Stock</span>
-                    <h2>Batches</h2>
-                </div>
-                <span class="inventory-details-batch-count">@activeBatches.Count</span>
-            </div>
-
-            @if (activeBatches.Count == 0)
+            @if (batch is null)
             {
-                <div class="inventory-details-empty">No active batches are available for this product.</div>
+                <div class="inventory-details-empty">
+                    No active stock batch is available for this product.
+                </div>
             }
             else
             {
-                <div class="inventory-details-batches">
-                    @foreach (var batch in activeBatches)
-                    {
-                        <article class="inventory-details-batch">
-                            <div class="inventory-details-batch-heading">
-                                <div>
-                                    <span class="section-kicker">Batch</span>
-                                    <h3>@batch.BatchNumber</h3>
-                                </div>
-                                @if (batch.IsQuarantined)
-                                {
-                                    <span class="inventory-details-status quarantined">Quarantined</span>
-                                }
-                                else
-                                {
-                                    <span class="inventory-details-status active">Active</span>
-                                }
-                            </div>
+                <form asp-controller="Inventory"
+                      asp-action="UpdateDetails"
+                      method="post"
+                      class="inventory-details-form">
+                    @Html.AntiForgeryToken()
 
-                            <form asp-controller="Inventory" asp-action="UpdateBatch" method="post" class="inventory-details-form">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="productId" value="@Model.ProductId" />
-                                <input type="hidden" name="batchId" value="@batch.BatchId" />
+                    <input type="hidden" name="productId" value="@Model.ProductId" />
+                    <input type="hidden" name="batchId" value="@batch.BatchId" />
 
-                                <div class="inventory-details-form-grid">
-                                    <label>
-                                        <span>Batch Number *</span>
-                                        <input type="text" name="batchNumber" value="@batch.BatchNumber" maxlength="100" required />
-                                    </label>
+                    <div class="inventory-details-form-grid inventory-details-simple-grid">
+                        <label>
+                            <span>Product Name</span>
+                            <input type="text"
+                                   name="productName"
+                                   value="@Model.ProductName"
+                                   maxlength="200"
+                                   required />
+                        </label>
 
-                                    <label>
-                                        <span>Quantity *</span>
-                                        <input type="number" name="quantityOnHand" value="@batch.QuantityOnHand.ToString(System.Globalization.CultureInfo.InvariantCulture)" min="0" max="999999999" step="0.01" inputmode="decimal" required />
-                                    </label>
+                        <label>
+                            <span>Batch Number</span>
+                            <input type="text"
+                                   name="batchNumber"
+                                   value="@batch.BatchNumber"
+                                   maxlength="100"
+                                   required />
+                        </label>
 
-                                    <label>
-                                        <span>MRP / Selling Price *</span>
-                                        <input type="number" name="sellingUnitPrice" value="@batch.SellingUnitPrice.ToString(System.Globalization.CultureInfo.InvariantCulture)" min="0" max="999999999" step="0.01" inputmode="decimal" required />
-                                    </label>
+                        <label>
+                            <span>Quantity</span>
+                            <input type="number"
+                                   name="quantityOnHand"
+                                   value="@batch.QuantityOnHand.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                                   min="0"
+                                   max="999999999"
+                                   step="0.01"
+                                   inputmode="decimal"
+                                   required />
+                        </label>
 
-                                    <label>
-                                        <span>Purchase Price</span>
-                                        <input type="number" name="purchaseUnitPrice" value="@batch.PurchaseUnitPrice.ToString(System.Globalization.CultureInfo.InvariantCulture)" min="0" max="999999999" step="0.01" inputmode="decimal" />
-                                    </label>
+                        <label>
+                            <span>Purchase Price</span>
+                            <input type="number"
+                                   name="purchaseUnitPrice"
+                                   value="@batch.PurchaseUnitPrice.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                                   min="0"
+                                   max="999999999"
+                                   step="0.01"
+                                   inputmode="decimal"
+                                   required />
+                        </label>
 
-                                    <label>
-                                        <span>Expiry Date *</span>
-                                        <input type="date" name="expiryDate" value="@batch.ExpiryDate.ToString("yyyy-MM-dd")" required />
-                                    </label>
+                        <label>
+                            <span>MRP</span>
+                            <input type="number"
+                                   name="sellingUnitPrice"
+                                   value="@batch.SellingUnitPrice.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                                   min="0"
+                                   max="999999999"
+                                   step="0.01"
+                                   inputmode="decimal"
+                                   required />
+                        </label>
 
-                                    <label>
-                                        <span>Manufacturing Date</span>
-                                        <input type="date" name="manufacturingDate" value="@(batch.ManufacturingDate?.ToString("yyyy-MM-dd") ?? "")" />
-                                    </label>
+                        <label>
+                            <span>Expiry Date</span>
+                            <input type="date"
+                                   name="expiryDate"
+                                   value="@batch.ExpiryDate.ToString("yyyy-MM-dd")"
+                                   required />
+                        </label>
 
-                                    <label>
-                                        <span>Location</span>
-                                        <input type="text" name="location" value="@batch.Location" maxlength="120" />
-                                    </label>
+                        <label>
+                            <span>Manufacturer</span>
+                            <input type="text"
+                                   name="manufacturer"
+                                   value="@Model.Manufacturer"
+                                   maxlength="200" />
+                        </label>
 
-                                    <label>
-                                        <span>Supplier ID</span>
-                                        <input type="number" name="supplierId" value="@(batch.SupplierId?.ToString() ?? "")" min="1" step="1" inputmode="numeric" />
-                                    </label>
+                        <label>
+                            <span>GST Rate</span>
+                            <input type="number"
+                                   name="gstRate"
+                                   value="@(Model.GstRate?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "")"
+                                   min="0"
+                                   max="100"
+                                   step="0.01"
+                                   inputmode="decimal" />
+                        </label>
 
-                                    <label class="inventory-details-checkbox">
-                                        <input type="checkbox" name="isQuarantined" value="true" checked="@batch.IsQuarantined" />
-                                        <span>Quarantine this batch</span>
-                                    </label>
-                                </div>
+                        <label class="inventory-details-field-full">
+                            <span>Barcode</span>
+                            <input type="text"
+                                   name="barcode"
+                                   value="@Model.Barcode"
+                                   maxlength="100"
+                                   inputmode="numeric" />
+                        </label>
+                    </div>
 
-                                <div class="inventory-details-form-actions">
-                                    <button type="submit" class="inventory-details-secondary-button">Save Batch Changes</button>
-                                </div>
-                            </form>
-                        </article>
-                    }
-                </div>
+                    <div class="inventory-details-form-actions">
+                        <button type="submit" class="inventory-details-primary-button">
+                            Save Changes
+                        </button>
+                    </div>
+                </form>
             }
         </section>
-
-        @if (inactiveBatches.Count > 0)
-        {
-            <details class="inventory-details-inactive">
-                <summary>Inactive batches (@inactiveBatches.Count)</summary>
-                <div>
-                    @foreach (var batch in inactiveBatches)
-                    {
-                        <span>@batch.BatchNumber · @batch.QuantityOnHand.ToString("0.##") units</span>
-                    }
-                </div>
-            </details>
-        }
     </main>
 </div>
 
 <div class="inventory-remove-modal" id="inventoryRemoveModal" hidden>
     <div class="inventory-remove-backdrop" id="inventoryRemoveBackdrop"></div>
-    <section class="inventory-remove-panel" role="dialog" aria-modal="true" aria-labelledby="inventoryRemoveTitle">
+    <section class="inventory-remove-panel"
+             role="dialog"
+             aria-modal="true"
+             aria-labelledby="inventoryRemoveTitle">
         <h2 id="inventoryRemoveTitle">Remove product?</h2>
         <p>This will hide the product and all of its batches from active inventory. Existing sales history remains preserved.</p>
 
         <form asp-controller="Inventory" asp-action="RemoveProduct" method="post">
             @Html.AntiForgeryToken()
             <input type="hidden" name="productId" value="@Model.ProductId" />
+
             <div class="inventory-remove-actions">
-                <button type="button" class="inventory-remove-cancel" id="inventoryRemoveCancel">Cancel</button>
-                <button type="submit" class="inventory-remove-confirm">Remove Product</button>
+                <button type="button"
+                        class="inventory-remove-cancel"
+                        id="inventoryRemoveCancel">
+                    Cancel
+                </button>
+                <button type="submit" class="inventory-remove-confirm">
+                    Remove Product
+                </button>
             </div>
         </form>
     </section>
