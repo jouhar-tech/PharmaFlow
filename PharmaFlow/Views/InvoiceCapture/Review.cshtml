@@ -41,6 +41,22 @@
             <strong>@Model.SourceType</strong>
         </div>
         <div>
+            <span>Distributor</span>
+            <strong>@(string.IsNullOrWhiteSpace(Model.DistributorName) ? "Not captured" : Model.DistributorName)</strong>
+        </div>
+        <div>
+            <span>Invoice No</span>
+            <strong>@(string.IsNullOrWhiteSpace(Model.InvoiceNumber) ? "Not captured" : Model.InvoiceNumber)</strong>
+        </div>
+        <div>
+            <span>Invoice Date</span>
+            <strong>@(Model.InvoiceDate?.ToString("dd MMM yyyy") ?? "Not captured")</strong>
+        </div>
+        <div>
+            <span>Total Amount</span>
+            <strong>@(Model.TotalAmount.HasValue ? "₹ " + Model.TotalAmount.Value.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN")) : "Not captured")</strong>
+        </div>
+        <div>
             <span data-i18n="ocrConfidence">OCR confidence</span>
             <strong>@Model.OcrConfidence.ToString("N0")%</strong>
         </div>
@@ -58,6 +74,10 @@
             <input type="hidden" asp-for="OriginalFileName" />
             <input type="hidden" asp-for="SourceType" />
             <input type="hidden" asp-for="OcrConfidence" />
+            <input type="hidden" asp-for="DistributorName" />
+            <input type="hidden" asp-for="InvoiceNumber" />
+            <input type="hidden" asp-for="InvoiceDate" />
+            <input type="hidden" asp-for="TotalAmount" />
 
             <div class="invoice-review-toolbar">
                 <div>
@@ -66,6 +86,25 @@
                 </div>
                 <button type="button" class="btn btn-outline-secondary" id="invoiceAddRow" data-i18n="addRow">Add row</button>
             </div>
+
+            <section class="invoice-review-purchase-meta">
+                <div>
+                    <label>Distributor
+                        <input class="form-control" name="DistributorName" value="@Model.DistributorName" maxlength="200" required />
+                    </label>
+                    <label>Invoice No
+                        <input class="form-control" name="InvoiceNumber" value="@Model.InvoiceNumber" maxlength="100" required />
+                    </label>
+                </div>
+                <div>
+                    <label>Invoice Date
+                        <input class="form-control" name="InvoiceDate" type="date" value="@Model.InvoiceDate?.ToString("yyyy-MM-dd")" required />
+                    </label>
+                    <label>Total Purchased Amount
+                        <input class="form-control" name="TotalAmount" type="number" min="0" max="999999999999" step="0.01" value="@(Model.TotalAmount?.ToString(System.Globalization.CultureInfo.InvariantCulture))" required />
+                    </label>
+                </div>
+            </section>
 
             <div class="invoice-review-table-wrap">
                 <table class="invoice-review-table">
@@ -76,6 +115,7 @@
                             <th data-i18n="batchNumber">Batch No</th>
                             <th data-i18n="expiryDate">Expiry Date</th>
                             <th data-i18n="quantity">Qty</th>
+                            <th>MRP</th>
                             <th data-i18n="confidence">Confidence</th>
                             <th data-i18n="validation">Validation</th>
                             <th aria-label="Actions"></th>
@@ -118,6 +158,15 @@
                                            max="1000000"
                                            step="0.01"
                                            required />
+                                </td>
+                                <td>
+                                    <input class="form-control invoice-review-input"
+                                           name="Items[@i].Mrp"
+                                           value="@(item.Mrp?.ToString(System.Globalization.CultureInfo.InvariantCulture))"
+                                           type="number"
+                                           min="0"
+                                           max="999999999"
+                                           step="0.01" />
                                 </td>
                                 <td>
                                     <span class="invoice-confidence-badge">@item.Confidence.ToString("N0")%</span>
@@ -170,6 +219,7 @@
                         <th data-i18n="batchNumber">Batch No</th>
                         <th data-i18n="expiryDate">Expiry Date</th>
                         <th data-i18n="quantity">Qty</th>
+                        <th>MRP</th>
                         <th data-i18n="validation">Status</th>
                     </tr>
                 </thead>
@@ -182,6 +232,7 @@
                             <td>@item.BatchNumber</td>
                             <td>@item.ExpiryDate?.ToString("dd MMM yyyy")</td>
                             <td>@item.Quantity</td>
+                            <td>@(item.Mrp.HasValue ? "₹ " + item.Mrp.Value.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN")) : "—")</td>
                             <td><span class="invoice-validation-badge is-ready" data-i18n="saved">Saved</span></td>
                         </tr>
                     }
@@ -250,6 +301,7 @@
                 <td><input class="form-control invoice-review-input is-missing" name="Items[${index}].BatchNumber" maxlength="100" required /></td>
                 <td><input class="form-control invoice-review-input is-missing" name="Items[${index}].ExpiryDate" type="date" required /></td>
                 <td><input class="form-control invoice-review-input is-missing" name="Items[${index}].Quantity" type="number" min="0.01" max="1000000" step="0.01" required /></td>
+                <td><input class="form-control invoice-review-input" name="Items[${index}].Mrp" type="number" min="0" max="999999999" step="0.01" /></td>
                 <td><span class="invoice-confidence-badge">—</span></td>
                 <td><span class="invoice-validation-badge is-review">New row needs review.</span></td>
                 <td><button type="button" class="invoice-row-remove" title="Remove row" aria-label="Remove row">×</button></td>`;
