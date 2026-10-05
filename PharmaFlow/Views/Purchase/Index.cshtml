@@ -1,0 +1,141 @@
+@model PharmaFlow.Models.ViewModels.PurchaseListViewModel
+
+@{
+    ViewData["Title"] = "Purchase";
+}
+
+<div class="purchase-page">
+    <header class="purchase-header">
+        <a asp-controller="Profile" asp-action="Index" class="purchase-back" aria-label="Back to More">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M19 12H5"></path>
+                <path d="m11 18-6-6 6-6"></path>
+            </svg>
+        </a>
+        <h1>Purchase</h1>
+        <span class="purchase-header-spacer" aria-hidden="true"></span>
+    </header>
+
+    <main class="purchase-content">
+        <section class="purchase-summary-card" aria-label="Purchase summary">
+            <div>
+                <span>Total Purchased Amount</span>
+                <strong>₹ @Model.TotalPurchasedAmount.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</strong>
+            </div>
+            <small>@Model.InvoiceCount invoice@(Model.InvoiceCount == 1 ? "" : "s")</small>
+        </section>
+
+        <section class="purchase-filters-section">
+            <div class="purchase-filter-chips" role="tablist" aria-label="Purchase period">
+                <a class="purchase-filter-chip @(Model.Period == "all" ? "is-active" : "")"
+                   asp-controller="Purchase" asp-action="Index" asp-route-period="all">All</a>
+                <a class="purchase-filter-chip @(Model.Period == "last7" ? "is-active" : "")"
+                   asp-controller="Purchase" asp-action="Index" asp-route-period="last7">Last 7 Days</a>
+                <a class="purchase-filter-chip @(Model.Period == "month" ? "is-active" : "")"
+                   asp-controller="Purchase" asp-action="Index" asp-route-period="month">1 Month</a>
+                <button type="button" class="purchase-filter-chip @(Model.Period == "custom" ? "is-active" : "")" id="purchaseCustomToggle">Custom Date</button>
+            </div>
+
+            <form asp-controller="Purchase" asp-action="Index" method="get" class="purchase-custom-form @(Model.Period == "custom" ? "is-visible" : "")" id="purchaseCustomForm">
+                <input type="hidden" name="period" value="custom" />
+                <label>
+                    From
+                    <input type="date" name="from" value="@Model.FromDate?.ToString("yyyy-MM-dd")" required />
+                </label>
+                <label>
+                    To
+                    <input type="date" name="to" value="@Model.ToDate?.ToString("yyyy-MM-dd")" required />
+                </label>
+                <button type="submit">Apply</button>
+            </form>
+        </section>
+
+        <section class="purchase-distributor-section">
+            <div class="purchase-search">
+                <span aria-hidden="true">⌕</span>
+                <input type="search"
+                       id="purchaseDistributorSearch"
+                       autocomplete="off"
+                       placeholder="Search distributors..."
+                       aria-label="Search distributors" />
+                <button type="button" id="purchaseDistributorClear" hidden aria-label="Clear search">×</button>
+            </div>
+
+            @if (Model.Distributors.Count == 0)
+            {
+                <div class="purchase-empty">
+                    <div>▤</div>
+                    <h2>No purchase records</h2>
+                    <p>Scan and save purchase invoices to build your distributor history.</p>
+                </div>
+            }
+            else
+            {
+                <div class="purchase-distributor-list" id="purchaseDistributorList">
+                    @foreach (var distributor in Model.Distributors)
+                    {
+                        <a class="purchase-distributor-card"
+                           asp-controller="Purchase"
+                           asp-action="Distributor"
+                           asp-route-name="@distributor.Name"
+                           data-distributor-name="@distributor.Name">
+                            <span class="purchase-distributor-icon">▤</span>
+                            <span class="purchase-distributor-copy">
+                                <strong>@distributor.Name</strong>
+                                <small>@distributor.InvoiceCount invoice@(distributor.InvoiceCount == 1 ? "" : "s")</small>
+                            </span>
+                            <span class="purchase-distributor-amount">₹ @distributor.TotalAmount.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</span>
+                            <span class="purchase-chevron">›</span>
+                        </a>
+                    }
+                </div>
+
+                <div class="purchase-empty" id="purchaseSearchEmpty" hidden>
+                    <div>⌕</div>
+                    <h2>No distributors found</h2>
+                    <p>Try another distributor name.</p>
+                </div>
+            }
+        </section>
+    </main>
+</div>
+
+@section Scripts {
+<script>
+(() => {
+    const customToggle = document.getElementById("purchaseCustomToggle");
+    const customForm = document.getElementById("purchaseCustomForm");
+    const search = document.getElementById("purchaseDistributorSearch");
+    const clear = document.getElementById("purchaseDistributorClear");
+    const cards = [...document.querySelectorAll(".purchase-distributor-card")];
+    const empty = document.getElementById("purchaseSearchEmpty");
+
+    customToggle?.addEventListener("click", () => {
+        customForm?.classList.toggle("is-visible");
+    });
+
+    const updateSearch = () => {
+        const term = (search?.value || "").trim().toLocaleLowerCase();
+        let visible = 0;
+
+        cards.forEach(card => {
+            const name = (card.dataset.distributorName || "").toLocaleLowerCase();
+            const show = !term || name.includes(term);
+            card.hidden = !show;
+            if (show) visible++;
+        });
+
+        if (clear) clear.hidden = !term;
+        if (empty) empty.hidden = visible !== 0;
+    };
+
+    search?.addEventListener("input", updateSearch);
+    clear?.addEventListener("click", () => {
+        if (!search) return;
+        search.value = "";
+        search.focus();
+        updateSearch();
+    });
+})();
+</script>
+}
