@@ -11690,3 +11690,24 @@ body.theme-dark.inventory-page .inventory-action-success {
   background:#102822;
   color:#9ed6ca;
 }
+
+
+/* Consistent PharmaFlow feature icon system */
+.pharma-feature-icon {
+  display:block;
+  width:21px;
+  height:21px;
+  flex:0 0 auto;
+}
+.sidebar-icon .pharma-feature-icon { width:18px; height:18px; margin:0 auto; }
+.metric-icon .pharma-feature-icon { width:22px; height:22px; margin:0 auto; }
+.heading-icon .pharma-feature-icon { width:20px; height:20px; margin:0 auto; }
+.more-mobile-row-icon .pharma-feature-icon { width:21px; height:21px; margin:0 auto; }
+.inventory-modern-search-icon .pharma-feature-icon,
+.low-stock-modern-search-icon .pharma-feature-icon,
+.expiry-modern-search-icon .pharma-feature-icon { width:19px; height:19px; margin:0 auto; }
+.inventory-product-icon .pharma-feature-icon { width:24px; height:24px; margin:0 auto; }
+.expiry-modern-risk-icon .pharma-feature-icon { width:21px; height:21px; margin:0 auto; }
+.expiry-summary-icon .pharma-feature-icon { width:20px; height:20px; margin:0 auto; }
+.bill-details-meta-icon .pharma-feature-icon { width:18px; height:18px; margin:0 auto; }
+.add-staff-field-icon .pharma-feature-icon { width:18px; height:18px; margin:0 auto; }
