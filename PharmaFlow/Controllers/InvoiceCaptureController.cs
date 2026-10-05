@@ -844,6 +844,9 @@ public sealed class InvoiceCaptureController : Controller
                 entity.BatchNumber = item.BatchNumber.Trim();
                 entity.ExpiryDate = item.ExpiryDate;
                 entity.Quantity = item.Quantity;
+                entity.Mrp = item.Mrp is > 0m
+                    ? decimal.Round(Math.Min(item.Mrp.Value, 999_999_999m), 2, MidpointRounding.AwayFromZero)
+                    : null;
                 entity.Confidence = Math.Clamp(item.Confidence, 0m, 100m);
                 entity.ValidationStatus = "saved";
                 entity.ValidationMessage = "Saved to stock.";
@@ -940,6 +943,7 @@ public sealed class InvoiceCaptureController : Controller
                     ExpiryDate = item.ExpiryDate,
                     Quantity = item.Quantity,
                     Confidence = item.Confidence,
+                    Mrp = item.Mrp,
                     ValidationStatus = validation.Status,
                     ValidationMessage = validation.Message,
                     MatchedProductId = validation.ProductId,
