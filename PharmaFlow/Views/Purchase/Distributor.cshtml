@@ -1,0 +1,88 @@
+@model PharmaFlow.Models.ViewModels.PurchaseDistributorDetailsViewModel
+
+@{
+    ViewData["Title"] = Model.DistributorName;
+}
+
+<div class="purchase-distributor-page">
+    <header class="purchase-distributor-header">
+        <a asp-controller="Purchase" asp-action="Index" class="purchase-distributor-back" aria-label="Back to Purchase">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M19 12H5"></path>
+                <path d="m11 18-6-6 6-6"></path>
+            </svg>
+        </a>
+        <div>
+            <span>Purchase</span>
+            <h1>@Model.DistributorName</h1>
+        </div>
+    </header>
+
+    <main class="purchase-distributor-content">
+        <section class="purchase-distributor-summary">
+            <div>
+                <span>Total Purchased</span>
+                <strong>₹ @Model.TotalAmount.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</strong>
+            </div>
+            <div>
+                <span>Invoices</span>
+                <strong>@Model.InvoiceCount</strong>
+            </div>
+        </section>
+
+        <section class="purchase-invoices-section">
+            <div class="purchase-section-title">
+                <div>
+                    <span class="section-kicker">Distributor invoices</span>
+                    <h2>Scanned Invoices</h2>
+                </div>
+            </div>
+
+            <div class="purchase-invoices-list">
+                @foreach (var invoice in Model.Invoices)
+                {
+                    <details class="purchase-invoice-dropdown">
+                        <summary>
+                            <span class="purchase-invoice-main">
+                                <strong>Invoice No: @invoice.InvoiceNumber</strong>
+                                <small>@(invoice.InvoiceDate?.ToString("dd MMM yyyy") ?? "Date not captured")</small>
+                            </span>
+                            <span class="purchase-invoice-amount">₹ @invoice.TotalAmount.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</span>
+                            <span class="purchase-invoice-chevron" aria-hidden="true">›</span>
+                        </summary>
+
+                        <div class="purchase-invoice-body">
+                            @if (invoice.Items.Count == 0)
+                            {
+                                <div class="purchase-invoice-empty">No product rows were saved for this invoice.</div>
+                            }
+                            else
+                            {
+                                <div class="purchase-products-grid">
+                                    <div class="purchase-product-grid-head">
+                                        <span>PRODUCT NAME</span>
+                                        <span>BATCH NO</span>
+                                        <span>QTY</span>
+                                        <span>MRP</span>
+                                        <span>EXP</span>
+                                    </div>
+
+                                    @foreach (var item in invoice.Items)
+                                    {
+                                        <div class="purchase-product-grid-row">
+                                            <strong>@item.ProductName</strong>
+                                            <span>@item.BatchNumber</span>
+                                            <span>@item.Quantity.ToString("0.##")</span>
+                                            <span>@(item.Mrp.HasValue ? "₹ " + item.Mrp.Value.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN")) : "—")</span>
+                                            <span>@(item.ExpiryDate?.ToString("dd MMM yyyy") ?? "—")</span>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </details>
+                }
+            </div>
+        </section>
+    </main>
+</div>
