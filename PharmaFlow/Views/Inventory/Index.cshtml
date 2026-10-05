@@ -47,8 +47,12 @@
             <div id="inventoryProductsGrid" class="inventory-products-grid">
                 @foreach (var item in Model.Items)
                 {
-                    <article class="inventory-product-card"
-                             data-filter-low="@(item.IsLowStock ? "true" : "false")"
+                    <a class="inventory-product-card inventory-product-card-link"
+                       asp-controller="Inventory"
+                       asp-action="Details"
+                       asp-route-productId="@item.ProductId"
+                       asp-route-batchId="@item.BatchId"
+                       data-filter-low="@(item.IsLowStock ? "true" : "false")"
                              data-filter-expiring="@(item.IsExpiring ? "true" : "false")"
                              data-search-text="@($"{item.ProductName} {item.GenericName} {item.BrandName} {item.BatchNumber} {item.Barcode}")">
                         <div class="inventory-product-card-top">
@@ -88,7 +92,7 @@
                         {
                             <span class="inventory-status-badge expiring">Expiring soon</span>
                         }
-                    </article>
+                    </a>
                 }
             </div>
 
