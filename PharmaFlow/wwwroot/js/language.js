@@ -455,12 +455,11 @@
         },
 
         hi: {
-            purchase: "खरीद",
             dashboard: "डैशबोर्ड",
             addStock: "स्टॉक जोड़ें",
             more: "अधिक",
             inventory: "इन्वेंटरी",
-            orderItems: "आइटम ऑर्डर करें",
+            purchase: "खरीद",
             bills: "बिल",
             reports: "रिपोर्ट",
             addStaff: "स्टाफ जोड़ें",
