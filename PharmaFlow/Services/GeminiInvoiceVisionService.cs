@@ -8,7 +8,7 @@ namespace PharmaFlow.Services;
 
 public interface IInvoiceVisionService
 {
-    Task<IReadOnlyList<InvoiceVisionItem>> ExtractAsync(
+    Task<InvoiceVisionResult> ExtractAsync(
         Stream fileStream,
         string mimeType,
         CancellationToken cancellationToken);
@@ -69,6 +69,26 @@ public sealed class GeminiInvoiceVisionService : IInvoiceVisionService
             type = "object",
             properties = new
             {
+                distributorName = new
+                {
+                    type = "string",
+                    description = "Distributor/supplier company name printed on the invoice. Preserve the legal/trading name exactly as visible. Empty string if not readable."
+                },
+                invoiceNumber = new
+                {
+                    type = "string",
+                    description = "Supplier invoice/bill number. Do not use GSTIN, phone number, order number or customer reference. Empty string if not readable."
+                },
+                invoiceDate = new
+                {
+                    type = "string",
+                    description = "Invoice date as YYYY-MM-DD. Empty string if not readable."
+                },
+                totalAmount = new
+                {
+                    type = "number",
+                    description = "Final invoice grand total/payable amount printed on the invoice. Use 0 when unreadable."
+                },
                 items = new
                 {
                     type = "array",
@@ -97,23 +117,28 @@ public sealed class GeminiInvoiceVisionService : IInvoiceVisionService
                                 type = "number",
                                 description = "Billed quantity only, not free quantity. Use 0 when unreadable."
                             },
+                            mrp = new
+                            {
+                                type = "number",
+                                description = "Maximum Retail Price / MRP printed for this product row. Use 0 when unreadable."
+                            },
                             confidence = new
                             {
                                 type = "number",
                                 description = "Your confidence for this row from 0 to 100."
                             }
                         },
-                        required = new[] { "productName", "batchNumber", "expiryDate", "quantity", "confidence" }
+                        required = new[] { "productName", "batchNumber", "expiryDate", "quantity", "mrp", "confidence" }
                     }
                 }
             },
-            required = new[] { "items" }
+            required = new[] { "distributorName", "invoiceNumber", "invoiceDate", "totalAmount", "items" }
         };
 
         var prompt = """
-Read this pharmacy purchase invoice visually and extract the STOCK TABLE only.
+Read this pharmacy purchase invoice visually and extract the invoice header metadata and STOCK TABLE.
 
-Return one item for every genuine stock/product row in the invoice.
+Return the distributor/company name, supplier invoice number, invoice date, final invoice grand total, and one item for every genuine stock/product row in the invoice.
 
 The stock table typically contains columns similar to:
 Sl No, HSN/SAC, Rack No, Item Description, Quantity/Billed, Free, Pack, Batch, Exp Date, MRP, Trade Price, Discount, Taxable Value, GST.
@@ -123,7 +148,8 @@ For EVERY row, extract ONLY:
 2. Batch Number
 3. Expiry Date
 4. Billed Quantity
-5. Confidence
+5. MRP
+6. Confidence
 
 Rules:
 - Use the visual table structure, not only OCR text.
@@ -133,7 +159,12 @@ Rules:
 - Batch must come from the Batch column. Do not use HSN, rack, price, invoice number or GST number as the batch.
 - Expiry may be MM/YY, MM-YY, MM/YYYY, DD/MM/YYYY or similar. Convert it to YYYY-MM-DD. For a month-only expiry such as 05-29, use the last day of that month (2029-05-31).
 - If any required field cannot be read confidently, return an empty string for text fields or 0 for quantity and lower the row confidence. Do not guess.
-- Ignore headers, supplier/customer details, invoice metadata, payment details, notices, tax summaries, grand totals, and footer text.
+- For metadata, identify the distributor/supplier name, supplier invoice number, invoice date, and final grand total from the invoice header/footer.
+- Do not confuse distributor name with customer/pharmacy name.
+- The invoice number must be the supplier's printed invoice/bill number, not an order number or GSTIN.
+- The totalAmount must be the final invoice grand total/payable amount, not a line MRP total or tax subtotal.
+- For each stock row, extract the MRP column when present.
+- Ignore customer details, notices, and unrelated footer text. The distributor name, invoice number, invoice date, and grand total are required invoice-level metadata.
 - Do not merge two different product rows.
 - Return JSON that exactly matches the supplied schema.
 """;
@@ -262,7 +293,7 @@ Rules:
         if (extracted?.Items is null)
             throw new InvalidOperationException("The AI service returned no invoice rows.");
 
-        return extracted.Items
+        var items = extracted.Items
             .Take(200)
             .Select((item, index) => NormalizeItem(item, index + 1))
             .Where(item =>
@@ -271,6 +302,15 @@ Rules:
                 !string.IsNullOrWhiteSpace(item.ExpiryDateText) ||
                 item.Quantity > 0m)
             .ToList();
+
+        return new InvoiceVisionResult(
+            Clean(extracted.DistributorName, 200),
+            Clean(extracted.InvoiceNumber, 100),
+            Clean(extracted.InvoiceDate, 20),
+            extracted.TotalAmount > 0m
+                ? Math.Min(extracted.TotalAmount, 999_999_999_999m)
+                : 0m,
+            items);
     }
 
     private static InvoiceVisionItem NormalizeItem(
@@ -282,6 +322,7 @@ Rules:
         var expiryText = Clean(item.ExpiryDate, 20);
         var confidence = Math.Clamp(item.Confidence, 0m, 100m);
         var quantity = item.Quantity > 0m ? Math.Min(item.Quantity, 1_000_000m) : 0m;
+        var mrp = item.Mrp > 0m ? Math.Min(item.Mrp, 999_999_999m) : 0m;
 
         return new InvoiceVisionItem(
             rowNumber,
@@ -289,6 +330,7 @@ Rules:
             batch,
             expiryText,
             quantity,
+            mrp,
             confidence);
     }
 
@@ -360,6 +402,18 @@ Rules:
 
     private sealed class GeminiInvoiceResponse
     {
+        [JsonPropertyName("distributorName")]
+        public string? DistributorName { get; set; }
+
+        [JsonPropertyName("invoiceNumber")]
+        public string? InvoiceNumber { get; set; }
+
+        [JsonPropertyName("invoiceDate")]
+        public string? InvoiceDate { get; set; }
+
+        [JsonPropertyName("totalAmount")]
+        public decimal TotalAmount { get; set; }
+
         [JsonPropertyName("items")]
         public List<GeminiInvoiceItem> Items { get; set; } = [];
     }
@@ -378,10 +432,20 @@ Rules:
         [JsonPropertyName("quantity")]
         public decimal Quantity { get; set; }
 
+        [JsonPropertyName("mrp")]
+        public decimal Mrp { get; set; }
+
         [JsonPropertyName("confidence")]
         public decimal Confidence { get; set; }
     }
 }
+
+public sealed record InvoiceVisionResult(
+    string DistributorName,
+    string InvoiceNumber,
+    string InvoiceDateText,
+    decimal TotalAmount,
+    IReadOnlyList<InvoiceVisionItem> Items);
 
 public sealed record InvoiceVisionItem(
     int RowNumber,
@@ -389,4 +453,5 @@ public sealed record InvoiceVisionItem(
     string BatchNumber,
     string ExpiryDateText,
     decimal Quantity,
+    decimal Mrp,
     decimal Confidence);
