@@ -6,6 +6,10 @@ public sealed class InvoiceImport
     public long ProfileId { get; set; }
     public string OriginalFileName { get; set; } = string.Empty;
     public string SourceType { get; set; } = "upload";
+    public string? DistributorName { get; set; }
+    public string? InvoiceNumber { get; set; }
+    public DateOnly? InvoiceDate { get; set; }
+    public decimal? TotalAmount { get; set; }
     public string? RawOcrText { get; set; }
     public decimal OcrConfidence { get; set; }
     public string Status { get; set; } = "draft";
