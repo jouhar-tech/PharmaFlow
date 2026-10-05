@@ -83,11 +83,15 @@
             <span class="more-mobile-chevron">›</span>
         </a>
 
-        <a href="#" class="more-mobile-row">
+        <button type="button"
+                class="more-mobile-row more-mobile-support-trigger"
+                id="moreMobileSupportTrigger"
+                aria-haspopup="dialog"
+                aria-controls="moreMobileSupportModal">
             <span class="more-mobile-row-icon">♧</span>
             <span class="more-mobile-row-label" data-i18n="customerSupport">Customer Support</span>
             <span class="more-mobile-chevron">›</span>
-        </a>
+        </button>
 
         <a asp-controller="Profile" asp-action="Feedback" class="more-mobile-row">
             <span class="more-mobile-row-icon">▱</span>
@@ -104,6 +108,75 @@
     <div class="more-mobile-legal">
         <a href="#">Terms and Conditions</a>
         <a href="#">Privacy Policy</a>
+    </div>
+
+    <div class="more-support-modal" id="moreMobileSupportModal" hidden>
+        <div class="more-support-modal-backdrop" data-support-close></div>
+
+        <section class="more-support-dialog"
+                 role="dialog"
+                 aria-modal="true"
+                 aria-labelledby="moreSupportTitle">
+            <button type="button"
+                    class="more-support-close"
+                    data-support-close
+                    data-i18n-attr="aria-label:closeSupportOptions">
+                <span aria-hidden="true">&times;</span>
+            </button>
+
+            <div class="more-support-dialog-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none">
+                    <path d="M6.5 4.5h11A2.5 2.5 0 0 1 20 7v7a2.5 2.5 0 0 1-2.5 2.5h-5.2L8 20v-3.5H6.5A2.5 2.5 0 0 1 4 14V7a2.5 2.5 0 0 1 2.5-2.5Z"/>
+                    <path d="M8 9h8M8 12h5"/>
+                </svg>
+            </div>
+
+            <h2 id="moreSupportTitle" data-i18n="supportPopupTitle">How would you like to contact us?</h2>
+            <p data-i18n="supportPopupDescription">
+                Choose a contact method. Your PharmaFlow account details will be included automatically.
+            </p>
+
+            <div class="more-support-actions">
+                <a asp-controller="Support"
+                   asp-action="WhatsApp"
+                   class="more-support-option more-support-whatsapp">
+                    <span class="more-support-option-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <path d="M20 11.5a8 8 0 0 1-11.9 7L4 20l1.5-4A8 8 0 1 1 20 11.5Z"/>
+                            <path d="M8.7 8.4c.2-.5.4-.5.8-.5h.4c.2 0 .4.1.5.4l.6 1.4c.1.3.1.5-.1.7l-.5.6c-.1.2-.2.3 0 .6.3.5 1.2 1.7 2.8 2.3.3.1.5.1.7-.1l.6-.7c.2-.2.4-.2.7-.1l1.3.6c.3.1.4.3.3.6-.2.7-.8 1.4-1.5 1.6-.4.1-.9.2-1.5 0-2.8-.7-5.7-3.5-6.1-4.4-.4-.8-.7-1.9-.1-3Z"/>
+                        </svg>
+                    </span>
+                    <span>
+                        <strong data-i18n="chatOnWhatsApp">Chat on WhatsApp</strong>
+                        <small>+91 96116 78864</small>
+                    </span>
+                    <span class="more-support-option-arrow" aria-hidden="true">›</span>
+                </a>
+
+                <a asp-controller="Support"
+                   asp-action="Email"
+                   class="more-support-option more-support-email">
+                    <span class="more-support-option-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                            <rect x="3.5" y="5.5" width="17" height="13" rx="2"/>
+                            <path d="m5 7 7 5 7-5"/>
+                        </svg>
+                    </span>
+                    <span>
+                        <strong data-i18n="emailUs">Email Us</strong>
+                        <small>mahammadjouhar@gmail.com</small>
+                    </span>
+                    <span class="more-support-option-arrow" aria-hidden="true">›</span>
+                </a>
+
+                <button type="button"
+                        class="more-support-cancel"
+                        data-support-close
+                        data-i18n="cancel">
+                    Cancel
+                </button>
+            </div>
+        </section>
     </div>
 </div>
 
@@ -184,6 +257,43 @@
             window.addEventListener('storage', () => {
                 const selected = localStorage.getItem('pharmaflow-language') || 'en';
                 language.value = selected;
+            });
+        })();
+    </script>
+    <script>
+        (() => {
+            const trigger = document.getElementById('moreMobileSupportTrigger');
+            const modal = document.getElementById('moreMobileSupportModal');
+            if (!trigger || !modal) return;
+
+            let lastFocused = null;
+
+            const setOpen = (open) => {
+                modal.hidden = !open;
+                document.body.classList.toggle('support-modal-open', open);
+
+                if (open) {
+                    lastFocused = document.activeElement;
+                    modal.querySelector('.more-support-close')?.focus();
+                } else {
+                    lastFocused?.focus?.();
+                }
+            };
+
+            trigger.addEventListener('click', () => setOpen(true));
+
+            modal.querySelectorAll('[data-support-close]').forEach(element => {
+                element.addEventListener('click', () => setOpen(false));
+            });
+
+            modal.querySelectorAll('.more-support-option').forEach(link => {
+                link.addEventListener('click', () => setOpen(false));
+            });
+
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape' && !modal.hidden) {
+                    setOpen(false);
+                }
             });
         })();
     </script>
