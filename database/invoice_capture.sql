@@ -128,3 +128,21 @@ FROM information_schema.tables
 WHERE table_schema = 'public'
   AND table_name IN ('invoice_imports', 'invoice_import_items')
 ORDER BY table_name;
+
+
+
+-- Purchase metadata required by the Purchase screen.
+ALTER TABLE public.invoice_imports
+    ADD COLUMN IF NOT EXISTS distributor_name VARCHAR(200) NULL,
+    ADD COLUMN IF NOT EXISTS invoice_number VARCHAR(100) NULL,
+    ADD COLUMN IF NOT EXISTS invoice_date DATE NULL,
+    ADD COLUMN IF NOT EXISTS total_amount NUMERIC(14,2) NULL;
+
+ALTER TABLE public.invoice_import_items
+    ADD COLUMN IF NOT EXISTS mrp NUMERIC(14,2) NULL;
+
+CREATE INDEX IF NOT EXISTS ix_invoice_imports_profile_distributor
+    ON public.invoice_imports(profile_id, distributor_name);
+
+CREATE INDEX IF NOT EXISTS ix_invoice_imports_profile_invoice_date
+    ON public.invoice_imports(profile_id, invoice_date);
