@@ -35,7 +35,7 @@ public sealed class GeminiInvoiceVisionService : IInvoiceVisionService
         _httpClient.Timeout = TimeSpan.FromMinutes(2);
     }
 
-    public async Task<IReadOnlyList<InvoiceVisionItem>> ExtractAsync(
+    public async Task<InvoiceVisionResult> ExtractAsync(
         Stream fileStream,
         string mimeType,
         CancellationToken cancellationToken)
