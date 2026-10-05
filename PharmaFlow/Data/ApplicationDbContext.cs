@@ -99,6 +99,10 @@ public class ApplicationDbContext : DbContext
             entity.Property(item => item.ProfileId).HasColumnName("profile_id");
             entity.Property(item => item.OriginalFileName).HasColumnName("original_file_name");
             entity.Property(item => item.SourceType).HasColumnName("source_type");
+            entity.Property(item => item.DistributorName).HasColumnName("distributor_name");
+            entity.Property(item => item.InvoiceNumber).HasColumnName("invoice_number");
+            entity.Property(item => item.InvoiceDate).HasColumnName("invoice_date");
+            entity.Property(item => item.TotalAmount).HasColumnName("total_amount").HasPrecision(14, 2);
             entity.Property(item => item.RawOcrText).HasColumnName("raw_ocr_text");
             entity.Property(item => item.OcrConfidence).HasColumnName("ocr_confidence");
             entity.Property(item => item.Status).HasColumnName("status");
@@ -129,6 +133,7 @@ public class ApplicationDbContext : DbContext
             entity.Property(item => item.BatchNumber).HasColumnName("batch_number");
             entity.Property(item => item.ExpiryDate).HasColumnName("expiry_date");
             entity.Property(item => item.Quantity).HasColumnName("quantity");
+            entity.Property(item => item.Mrp).HasColumnName("mrp").HasPrecision(14, 2);
             entity.Property(item => item.Confidence).HasColumnName("confidence");
             entity.Property(item => item.ValidationStatus).HasColumnName("validation_status");
             entity.Property(item => item.ValidationMessage).HasColumnName("validation_message");
