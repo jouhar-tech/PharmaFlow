@@ -10479,3 +10479,38 @@ body.theme-dark .purchase-product-grid-row {
     justify-content: center;
   }
 }
+
+
+@media (min-width: 768px) {
+  body.admin-page-body .app-sidebar,
+  body.admin-page-body .app-topbar,
+  body.admin-page-body .home-mobile-bottom-nav,
+  body.admin-page-body .app-footer {
+    display: none !important;
+  }
+
+  body.admin-page-body .app-main,
+  body.admin-page-body .app-content {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+}
+
+@media (max-width: 767.98px) {
+  body.admin-page-body .app-sidebar,
+  body.admin-page-body .app-topbar,
+  body.admin-page-body .home-mobile-bottom-nav,
+  body.admin-page-body .app-footer {
+    display: none !important;
+  }
+
+  body.admin-page-body .app-main,
+  body.admin-page-body .app-content {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+}
