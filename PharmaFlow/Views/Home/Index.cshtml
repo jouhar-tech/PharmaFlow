@@ -200,42 +200,42 @@
 
         <section class="dashboard-grid" aria-label="Pharmacy overview">
             <a asp-controller="ExpiryProducts" asp-action="Index" class="dashboard-card metric-card metric-warning metric-card-link">
-                <div class="metric-icon">⌛</div>
+                <div class="metric-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M7 3v4M17 3v4M3.5 9.5h17"/></svg></div>
                 <div><span class="metric-label" data-i18n="productsExpiringSoon">Products expiring soon</span><strong class="metric-value">@Model.ProductsExpiringSoonCount</strong><span class="metric-note" data-i18n="reviewUpcomingExpiries">Critical + upcoming stock</span><span class="metric-at-risk-value">At-risk ₹ @Model.ExpiryAtRiskValue.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</span></div>
             </a>
             <a asp-controller="LowStock" asp-action="Index" class="dashboard-card metric-card metric-info metric-card-link">
-                <div class="metric-icon">▤</div>
+                <div class="metric-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 7 8-4 8 4-8 4-8-4Z"/><path d="M4 7v10l8 4 8-4V7"/><path d="M9 15h6"/></svg></div>
                 <div><span class="metric-label" data-i18n="lowStockDetailsMetric">Low stock details</span><strong class="metric-value">@Model.LowStockCount</strong><span class="metric-note" data-i18n="itemsBelowReorderLevel">Quantity below 3</span></div>
             </a>
             <article class="dashboard-card metric-card metric-danger">
-                <div class="metric-icon">!</div>
+                <div class="metric-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 7 8-4 8 4-8 4-8-4Z"/><path d="M4 7v10l8 4 8-4V7M12 11v10"/></svg></div>
                 <div><span class="metric-label" data-i18n="outOfStockItems">Out-of-stock items</span><strong class="metric-value">—</strong><span class="metric-note" data-i18n="productsNeedingReplenishment">Products needing replenishment</span></div>
             </article>
             <article class="dashboard-card metric-card metric-expired">
-                <div class="metric-icon">⟳</div>
+                <div class="metric-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M7 3v4M17 3v4M3.5 9.5h17"/></svg></div>
                 <div><span class="metric-label" data-i18n="productsAlreadyExpired">Products already expired</span><strong class="metric-value">—</strong><span class="metric-note" data-i18n="checkAndQuarantineStock">Check and quarantine stock</span></div>
             </article>
             <article class="dashboard-card metric-card metric-success">
-                <div class="metric-icon">₹</div>
+                <div class="metric-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 5h12M6 9h10M9 5.5c3.5 0 6 1.8 6 4.5s-2.5 4.5-6 4.5l7 5"/></svg></div>
                 <div><span class="metric-label" data-i18n="todaysSales">Today's sales</span><strong class="metric-value">₹ @Model.TodaySalesAmount.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</strong><span class="metric-note" data-i18n="totalSalesForToday">Total sales for today</span></div>
             </article>
             <article class="dashboard-card metric-card metric-purple">
-                <div class="metric-icon">⇄</div>
+                <div class="metric-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4.5h14v15H5z"/><path d="M8 8h8M8 12h8M8 16h4"/></svg></div>
                 <div><span class="metric-label" data-i18n="customerDebitCredit">Customer debit / credit</span><strong class="metric-value">₹ —</strong><span class="metric-note" data-i18n="pendingCustomerBalances">Pending customer balances</span></div>
             </article>
         </section>
 
         <section class="dashboard-section-grid">
             <article class="dashboard-card detail-card">
-                <div class="card-heading"><div><span class="section-kicker" data-i18n="payables">Payables</span><h2 data-i18n="supplierPendingPayments">Supplier pending payments</h2></div><span class="heading-icon">▣</span></div>
-                <div class="empty-state"><span>₹</span><p data-i18n="noSupplierPaymentData">No supplier payment data available yet.</p></div>
+                <div class="card-heading"><div><span class="section-kicker" data-i18n="payables">Payables</span><h2 data-i18n="supplierPendingPayments">Supplier pending payments</h2></div><span class="heading-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-2.5-1.6L13 21l-3-1.6L7.5 21 6 20V3Z"/><path d="M9 8h6M9 12h6M9 16h3"/></svg></span></div>
+                <div class="empty-state"><span><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 5h12M6 9h10M9 5.5c3.5 0 6 1.8 6 4.5s-2.5 4.5-6 4.5l7 5"/></svg></span><p data-i18n="noSupplierPaymentData">No supplier payment data available yet.</p></div>
             </article>
             <article class="dashboard-card detail-card">
-                <div class="card-heading"><div><span class="section-kicker" data-i18n="inventoryTrends">Inventory trends</span><h2 data-i18n="fastMovingProducts">Fast-moving products</h2></div><span class="heading-icon">↗</span></div>
-                <div class="empty-state"><span>↗</span><p data-i18n="fastMovingInsights">Fast-moving product insights will appear here.</p></div>
+                <div class="card-heading"><div><span class="section-kicker" data-i18n="inventoryTrends">Inventory trends</span><h2 data-i18n="fastMovingProducts">Fast-moving products</h2></div><span class="heading-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 15 5-5 4 4 7-8"/><path d="M15 6h5v5"/></svg></span></div>
+                <div class="empty-state"><span><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 15 5-5 4 4 7-8"/><path d="M15 6h5v5"/></svg></span><p data-i18n="fastMovingInsights">Fast-moving product insights will appear here.</p></div>
             </article>
             <article class="dashboard-card detail-card">
-                <div class="card-heading"><div><span class="section-kicker" data-i18n="inventoryTrends">Inventory trends</span><h2 data-i18n="slowMovingProducts">Slow-moving products</h2></div><span class="heading-icon">↘</span></div>
+                <div class="card-heading"><div><span class="section-kicker" data-i18n="inventoryTrends">Inventory trends</span><h2 data-i18n="slowMovingProducts">Slow-moving products</h2></div><span class="heading-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 9 5 5 4-4 7 8"/><path d="M15 18h5v-5"/></svg></span></div>
                 <div class="empty-state"><span>↘</span><p data-i18n="slowMovingInsights">Slow-moving product insights will appear here.</p></div>
             </article>
         </section>
