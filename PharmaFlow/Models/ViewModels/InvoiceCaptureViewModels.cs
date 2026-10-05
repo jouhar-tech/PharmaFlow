@@ -5,6 +5,10 @@ public sealed class InvoiceReviewViewModel
     public long ImportId { get; set; }
     public string OriginalFileName { get; set; } = string.Empty;
     public string SourceType { get; set; } = "upload";
+    public string DistributorName { get; set; } = string.Empty;
+    public string InvoiceNumber { get; set; } = string.Empty;
+    public DateOnly? InvoiceDate { get; set; }
+    public decimal? TotalAmount { get; set; }
     public decimal OcrConfidence { get; set; }
     public string Status { get; set; } = "draft";
     public string? ErrorMessage { get; set; }
@@ -21,6 +25,7 @@ public sealed class InvoiceReviewItemViewModel
     public string BatchNumber { get; set; } = string.Empty;
     public DateOnly? ExpiryDate { get; set; }
     public decimal? Quantity { get; set; }
+    public decimal? Mrp { get; set; }
     public decimal Confidence { get; set; }
     public string ValidationStatus { get; set; } = "needs_review";
     public string? ValidationMessage { get; set; }
