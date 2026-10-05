@@ -34,6 +34,7 @@
         && ViewContext.RouteData.Values["action"]?.ToString() == "Index";
     var isPurchaseDistributorPage = ViewContext.RouteData.Values["controller"]?.ToString() == "Purchase"
         && ViewContext.RouteData.Values["action"]?.ToString() == "Distributor";
+    var isAdminPage = ViewContext.RouteData.Values["controller"]?.ToString() == "Admin";
     var isAuthenticated = !string.IsNullOrWhiteSpace(Context.Session.GetString("SupabaseAccessToken"))
         && !string.IsNullOrWhiteSpace(Context.Session.GetString("ProfileId"));
 }
@@ -47,7 +48,7 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/PharmaFlow.styles.css" asp-append-version="true" />
 </head>
-<body class="@((isHomeDashboard ? "home-dashboard-page " : "") + (isExpiryProductsPage ? "expiry-products-page " : "") + (isInventoryPage ? "inventory-page " : "") + (isMorePage ? "more-page " : "") + (isLowStockPage ? "low-stock-page " : "") + (isReportsPage ? "reports-page " : "") + (isStaffAddPage ? "staff-add-page " : "") + (isUnlimitedPlanPage ? "unlimited-plan-detail-page " : "") + (isFeedbackPage ? "feedback-page " : "") + (isBillingCreatePage ? "billing-create-page-body " : "") + (isBillingGeneratedPage ? "billing-generated-page-body " : "") + (isBillsPage ? "bills-page-body " : "") + (isBillDetailsPage ? "bill-details-page-body " : "") + (isInventoryDetailsPage ? "inventory-details-page-body " : "") + (isPurchasePage ? "purchase-page-body " : "") + (isPurchaseDistributorPage ? "purchase-distributor-page-body " : ""))">
+<body class="@((isHomeDashboard ? "home-dashboard-page " : "") + (isExpiryProductsPage ? "expiry-products-page " : "") + (isInventoryPage ? "inventory-page " : "") + (isMorePage ? "more-page " : "") + (isLowStockPage ? "low-stock-page " : "") + (isReportsPage ? "reports-page " : "") + (isStaffAddPage ? "staff-add-page " : "") + (isUnlimitedPlanPage ? "unlimited-plan-detail-page " : "") + (isFeedbackPage ? "feedback-page " : "") + (isBillingCreatePage ? "billing-create-page-body " : "") + (isBillingGeneratedPage ? "billing-generated-page-body " : "") + (isBillsPage ? "bills-page-body " : "") + (isBillDetailsPage ? "bill-details-page-body " : "") + (isInventoryDetailsPage ? "inventory-details-page-body " : "") + (isPurchasePage ? "purchase-page-body " : "") + (isPurchaseDistributorPage ? "purchase-distributor-page-body " : "") + (isAdminPage ? "admin-page-body " : ""))">
     <div class="app-shell">
         <aside class="app-sidebar" id="appSidebar" aria-label="Main navigation">
             <div class="sidebar-brand">
