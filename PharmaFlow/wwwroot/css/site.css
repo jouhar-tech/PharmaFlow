@@ -11498,3 +11498,21 @@ body.theme-dark.inventory-action-page-body .inventory-barcode-secondary {
   border-color:#334155;
   color:#dbe4ee;
 }
+
+
+.inventory-action-success {
+  max-width:980px;
+  margin:0 auto .75rem;
+  padding:.7rem .8rem;
+  border:1px solid #bde5dc;
+  border-radius:.7rem;
+  background:#eaf8f4;
+  color:#176b5d;
+  font-size:.68rem;
+  font-weight:800;
+}
+body.theme-dark.inventory-page .inventory-action-success {
+  border-color:#245b50;
+  background:#102822;
+  color:#9ed6ca;
+}
