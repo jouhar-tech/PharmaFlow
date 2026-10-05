@@ -65,16 +65,16 @@
 
             <div class="sidebar-caption" data-i18n="workspace">Workspace</div>
             <nav class="sidebar-nav">
-                <a class="sidebar-link active" asp-area="" asp-controller="Home" asp-action="Index"><span class="sidebar-icon">▦</span><span data-i18n="dashboard">Dashboard</span></a>
-                <a class="sidebar-link" asp-controller="ExpiryProducts" asp-action="Index"><span class="sidebar-icon">⌛</span><span data-i18n="expiringDetails">Expiring Details</span><span class="sidebar-badge">Voice</span></a>
-                <a class="sidebar-link" href="#"><span class="sidebar-icon">▤</span><span data-i18n="lowStockDetails">Low Stock Details</span><span class="sidebar-badge">Voice</span></a>
+                <a class="sidebar-link active" asp-area="" asp-controller="Home" asp-action="Index"><span class="sidebar-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.2"/><rect x="14" y="3" width="7" height="7" rx="1.2"/><rect x="3" y="14" width="7" height="7" rx="1.2"/><rect x="14" y="14" width="7" height="7" rx="1.2"/></svg></span><span data-i18n="dashboard">Dashboard</span></a>
+                <a class="sidebar-link" asp-controller="ExpiryProducts" asp-action="Index"><span class="sidebar-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M7 3v4M17 3v4M3.5 9.5h17"/></svg></span><span data-i18n="expiringDetails">Expiring Details</span><span class="sidebar-badge">Voice</span></a>
+                <a class="sidebar-link" href="#"><span class="sidebar-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 7 8-4 8 4-8 4-8-4Z"/><path d="M4 7v10l8 4 8-4V7"/><path d="M9 15h6"/></svg></span><span data-i18n="lowStockDetails">Low Stock Details</span><span class="sidebar-badge">Voice</span></a>
 
-                <a class="sidebar-link" href="#"><span class="sidebar-icon">♙</span><span data-i18n="customerManagement">Customer Management</span><span class="sidebar-badge">Voice</span></a>
-                <a class="sidebar-link" href="#"><span class="sidebar-icon">↗</span><span data-i18n="topSellingLowSelling">Top Selling / Low Selling</span></a>
+                <a class="sidebar-link" href="#"><span class="sidebar-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 20v-1.2a4.5 4.5 0 0 0-4.5-4.5H7.5A4.5 4.5 0 0 0 3 18.8V20"/><circle cx="9.5" cy="7.5" r="3.2"/><path d="M16 4.8a3.2 3.2 0 0 1 0 5.4M21 20v-1.2a4.5 4.5 0 0 0-3.1-4.3"/></svg></span><span data-i18n="customerManagement">Customer Management</span><span class="sidebar-badge">Voice</span></a>
+                <a class="sidebar-link" href="#"><span class="sidebar-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 15 5-5 4 4 7-8"/><path d="M15 6h5v5"/></svg></span><span data-i18n="topSellingLowSelling">Top Selling / Low Selling</span></a>
 @if (!isStaffUser)
                 {
                 <button type="button" class="sidebar-link sidebar-dropdown-toggle" aria-expanded="false" aria-controls="salesReportsMenu">
-                    <span class="sidebar-icon">▥</span>
+                    <span class="sidebar-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span>
                     <span data-i18n="salesReports">Sales Reports</span>
                     <span class="sidebar-menu-arrow">⌄</span>
                 </button>
@@ -86,7 +86,7 @@
                 </div>
 
                 <button type="button" class="sidebar-link sidebar-dropdown-toggle" aria-expanded="false" aria-controls="managementReportsMenu">
-                    <span class="sidebar-icon">▦</span>
+                    <span class="sidebar-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.2"/><rect x="14" y="3" width="7" height="7" rx="1.2"/><rect x="3" y="14" width="7" height="7" rx="1.2"/><rect x="14" y="14" width="7" height="7" rx="1.2"/></svg></span>
                     <span data-i18n="managementReports">Management Reports</span>
                     <span class="sidebar-menu-arrow">⌄</span>
                 </button>
@@ -129,14 +129,14 @@
                             </div>
                         </div>
                         <div class="profile-dropdown-divider"></div>
-                        <a asp-controller="Profile" asp-action="Index" class="profile-menu-item"><span>👤</span><span data-i18n="editProfile">Edit Profile</span></a>
-                        <button type="button" class="profile-menu-item profile-appearance-toggle" id="appearanceToggle" aria-expanded="false"><span>◐</span><span data-i18n="appearance">Appearance</span><span class="menu-item-arrow">›</span></button>
+                        <a asp-controller="Profile" asp-action="Index" class="profile-menu-item"><span><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 20v-1.2a4.5 4.5 0 0 0-4.5-4.5H7.5A4.5 4.5 0 0 0 3 18.8V20"/><circle cx="9.5" cy="7.5" r="3.2"/><path d="M16 4.8a3.2 3.2 0 0 1 0 5.4M21 20v-1.2a4.5 4.5 0 0 0-3.1-4.3"/></svg></span><span data-i18n="editProfile">Edit Profile</span></a>
+                        <button type="button" class="profile-menu-item profile-appearance-toggle" id="appearanceToggle" aria-expanded="false"><span><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v2M12 19v2M5.6 5.6 7 7M17 17l1.4 1.4M3 12h2M19 12h2M5.6 18.4 7 17"/><circle cx="12" cy="12" r="3.5"/><path d="M18.5 5.5a6.8 6.8 0 0 1-9 9 6.8 6.8 0 0 0 9-9Z"/></svg></span><span data-i18n="appearance">Appearance</span><span class="menu-item-arrow">›</span></button>
                         <div class="appearance-panel" id="appearancePanel" hidden>
                             <button type="button" data-theme-choice="light" data-i18n="light">Light</button>
                             <button type="button" data-theme-choice="dark" data-i18n="dark">Dark</button>
                             <button type="button" data-theme-choice="system" data-i18n="system">System</button>
                         </div>
-                        <button type="button" class="profile-menu-item profile-language-toggle" id="languageToggle" aria-expanded="false"><span>文</span><span data-i18n="language">Language</span><span class="menu-item-arrow">›</span></button>
+                        <button type="button" class="profile-menu-item profile-language-toggle" id="languageToggle" aria-expanded="false"><span><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h9M8.5 3v2M6 8c1.2 3.2 3.4 5.5 7 7M11 8c-1.2 2.8-3.2 5-6 6M14 17l3-7 3 7M15 14h4"/></svg></span><span data-i18n="language">Language</span><span class="menu-item-arrow">›</span></button>
                         <div class="appearance-panel language-panel" id="languagePanel" hidden>
                             <button type="button" data-language-choice="en">English</button>
                             <button type="button" data-language-choice="kn">ಕನ್ನಡ</button>
