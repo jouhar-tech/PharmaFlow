@@ -1,0 +1,41 @@
+@model PharmaFlow.Models.ViewModels.AdminLoginViewModel
+@{
+    Layout = null;
+    ViewData["Title"] = "Admin Login";
+}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PharmaFlow Admin Login</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="pharma-admin-auth-body">
+    <main class="pharma-admin-auth-page">
+        <section class="pharma-admin-auth-card">
+            <div class="pharma-admin-auth-icon">⚙</div>
+            <span class="section-kicker">Restricted Area</span>
+            <h1>PharmaFlow Admin</h1>
+            <p>Private administration portal. Users cannot access this area without the admin credentials.</p>
+
+            <form asp-controller="Admin" asp-action="Login" method="post">
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="ModelOnly" class="pharma-admin-validation"></div>
+
+                <label>
+                    Username
+                    <input asp-for="Username" autocomplete="username" autofocus />
+                </label>
+
+                <label>
+                    Password
+                    <input asp-for="Password" type="password" autocomplete="current-password" />
+                </label>
+
+                <button type="submit">Sign in to Admin</button>
+            </form>
+        </section>
+    </main>
+</body>
+</html>
