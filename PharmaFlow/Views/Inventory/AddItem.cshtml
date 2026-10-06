@@ -26,10 +26,20 @@
             </div>
         </div>
 
+        @if (!string.IsNullOrWhiteSpace(Model.ExternalSource))
+        {
+            <div class="inventory-add-note">
+                <strong>Product source</strong>
+                <span>@(Model.ExternalSource == "india-medicine-api" ? "Indian Medicine Catalog" : Model.ExternalSource == "openfda-ndc" ? "openFDA" : "Open Food Facts")</span>
+            </div>
+        }
+
         <form asp-action="AddItem" method="post" class="inventory-add-form" data-online-required="true">
             @Html.AntiForgeryToken()
             <input asp-for="ExistingProductId" type="hidden" />
             <input asp-for="CatalogId" type="hidden" />
+            <input asp-for="ExternalSource" type="hidden" />
+            <input asp-for="ExternalId" type="hidden" />
 
             <div asp-validation-summary="ModelOnly" class="inventory-add-validation"></div>
 
