@@ -9,6 +9,8 @@ public sealed class CustomerManagementViewModel
     public decimal TotalOwedToYou { get; init; }
     public decimal TotalOwedByYou { get; init; }
     public IReadOnlyList<CustomerListItemViewModel> Customers { get; init; } = [];
+    public int PendingReminderTotal { get; init; }
+    public IReadOnlyList<CustomerReminderCustomerOptionViewModel> ReminderCustomers { get; init; } = [];
 }
 
 public sealed class CustomerListItemViewModel
@@ -104,6 +106,13 @@ public sealed class CustomerReminderCreateViewModel
 
     [Display(Name = "Reminder Date")]
     public DateOnly? ReminderDate { get; set; }
+}
+
+public sealed class CustomerReminderCustomerOptionViewModel
+{
+    public long CustomerId { get; init; }
+    public string FullName { get; init; } = string.Empty;
+    public string? PhoneNumber { get; init; }
 }
 
 public sealed class CustomerReminderSearchItemViewModel
