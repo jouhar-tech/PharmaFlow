@@ -5,6 +5,7 @@ namespace PharmaFlow.Models.ViewModels;
 public sealed class InventoryAddItemViewModel
 {
     public long? ExistingProductId { get; set; }
+    public long? CatalogId { get; set; }
 
     [Required(ErrorMessage = "Product Name is required.")]
     [StringLength(200, MinimumLength = 2, ErrorMessage = "Product Name must be between 2 and 200 characters.")]
@@ -26,12 +27,17 @@ public sealed class InventoryAddItemViewModel
 
 public sealed class InventoryProductSearchItemViewModel
 {
-    public long ProductId { get; init; }
+    public long CatalogId { get; init; }
+    public string Source { get; init; } = string.Empty;
+    public string ProductType { get; init; } = string.Empty;
     public string ProductName { get; init; } = string.Empty;
     public string? GenericName { get; init; }
     public string? BrandName { get; init; }
+    public string? Manufacturer { get; init; }
+    public string? DosageForm { get; init; }
+    public string? Strength { get; init; }
+    public string? PackSize { get; init; }
     public string? Barcode { get; init; }
-    public decimal? LatestMrp { get; init; }
 }
 
 public sealed class InventoryProductSearchViewModel
