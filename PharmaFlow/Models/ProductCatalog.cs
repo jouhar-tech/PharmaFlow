@@ -20,5 +20,6 @@ public sealed class ProductCatalog
     public string? SourceUrl { get; set; }
     public DateTime FirstSeenAt { get; set; }
     public DateTime LastSyncedAt { get; set; }
+    public DateTime CacheExpiresAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }
