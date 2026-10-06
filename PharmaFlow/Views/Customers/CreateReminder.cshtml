@@ -1,0 +1,322 @@
+@model PharmaFlow.Models.ViewModels.CustomerReminderCreateViewModel
+@{
+    ViewData["Title"] = "Add Reminder";
+    var today = DateOnly.FromDateTime(DateTime.UtcNow).ToString("yyyy-MM-dd");
+}
+
+<div class="customer-form-page customer-reminder-page">
+    <header class="customer-form-header">
+        <a asp-controller="Customers" asp-action="Details" asp-route-id="@Model.CustomerId" class="customer-back-button" aria-label="Back to customer details">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/><path d="M9 12h11"/></svg>
+        </a>
+        <div>
+            <div class="customer-page-eyebrow">Customer Request</div>
+            <h1>Add Product Reminder</h1>
+            <p>Record a product the customer has asked your pharmacy to arrange for them.</p>
+        </div>
+    </header>
+
+    <div class="customer-reminder-customer-bar">
+        <span class="customer-avatar">@string.Concat(Model.CustomerName.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(part => part[0])).ToUpperInvariant()</span>
+        <div>
+            <span>Reminder for</span>
+            <strong>@Model.CustomerName</strong>
+        </div>
+    </div>
+
+    <form asp-controller="Customers" asp-action="CreateReminder" method="post" class="customer-form-card customer-reminder-form" novalidate>
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="CustomerId" />
+        <input type="hidden" asp-for="CatalogId" id="customerReminderCatalogId" />
+        <input type="hidden" asp-for="ProductSource" id="customerReminderProductSource" />
+        <input type="hidden" asp-for="ProductExternalId" id="customerReminderProductExternalId" />
+        <input type="hidden" asp-for="GenericName" id="customerReminderGenericName" />
+        <input type="hidden" asp-for="BrandName" id="customerReminderBrandName" />
+        <input type="hidden" asp-for="Manufacturer" id="customerReminderManufacturer" />
+        <input type="hidden" asp-for="DosageForm" id="customerReminderDosageForm" />
+        <input type="hidden" asp-for="Strength" id="customerReminderStrength" />
+        <input type="hidden" asp-for="PackSize" id="customerReminderPackSize" />
+        <input type="hidden" asp-for="Barcode" id="customerReminderBarcode" />
+
+        <div asp-validation-summary="ModelOnly" class="customer-validation-summary"></div>
+
+        <div class="customer-form-section-title">
+            <span class="customer-form-section-icon">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h12v16H6z"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>
+            </span>
+            <div>
+                <h2>Product Request</h2>
+                <p>Search the same global product database used by Inventory, including products not currently stocked.</p>
+            </div>
+        </div>
+
+        <div class="customer-form-field customer-form-field-wide">
+            <label for="customerReminderProductSearch">Search Product or Medicine <span>*</span></label>
+            <div class="customer-reminder-search-wrap">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>
+                <input id="customerReminderProductSearch"
+                       type="search"
+                       class="customer-form-input customer-reminder-search-input"
+                       autocomplete="off"
+                       maxlength="100"
+                       placeholder="Search medicine, tablet, brand or product" />
+            </div>
+            <small>Search by product name, medicine, tablet or brand. Results use the same external product sources as Inventory.</small>
+            <div class="customer-reminder-search-results" id="customerReminderSearchResults" hidden></div>
+            <span asp-validation-for="ProductName" class="customer-field-error"></span>
+        </div>
+
+        <div class="customer-reminder-selected" id="customerReminderSelected" hidden>
+            <div class="customer-reminder-selected-icon">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>
+            </div>
+            <div>
+                <span>Selected product</span>
+                <strong id="customerReminderSelectedName"></strong>
+                <small id="customerReminderSelectedMeta"></small>
+            </div>
+            <button type="button" class="customer-reminder-clear" id="customerReminderClear" aria-label="Clear selected product">×</button>
+        </div>
+
+        <div class="customer-reminder-manual">
+            <button type="button" class="customer-reminder-manual-toggle" id="customerReminderManualToggle">
+                Can't find the product? Enter it manually
+            </button>
+        </div>
+
+        <div class="customer-form-grid">
+            <div class="customer-form-field customer-form-field-wide">
+                <label asp-for="ProductName">Requested Product Name <span>*</span></label>
+                <input asp-for="ProductName"
+                       id="customerReminderProductName"
+                       class="customer-form-input"
+                       maxlength="200"
+                       autocomplete="off"
+                       placeholder="Enter the product name if it is not listed" />
+                <small>Manual entry is available when the requested product is not found in the global search.</small>
+            </div>
+
+            <div class="customer-form-field">
+                <label asp-for="ReminderDate">Reminder Date</label>
+                <input asp-for="ReminderDate"
+                       class="customer-form-input"
+                       type="date"
+                       min="@today" />
+                <small>Optional. Use this for the date you plan to follow up or arrange the product.</small>
+                <span asp-validation-for="ReminderDate" class="customer-field-error"></span>
+            </div>
+
+            <div class="customer-form-field">
+                <label>Request Status</label>
+                <div class="customer-reminder-status-preview">
+                    <span class="customer-reminder-status-dot"></span>
+                    <strong>Pending</strong>
+                    <small>New customer request</small>
+                </div>
+            </div>
+
+            <div class="customer-form-field customer-form-field-wide">
+                <label asp-for="Note">Request Notes</label>
+                <textarea asp-for="Note"
+                          class="customer-form-input customer-form-textarea"
+                          maxlength="500"
+                          rows="3"
+                          placeholder="Example: Customer requested 2 strips; call when stock arrives."></textarea>
+                <small>Capture quantity, strength, pack size or any special instruction that should not be lost.</small>
+                <span asp-validation-for="Note" class="customer-field-error"></span>
+            </div>
+        </div>
+
+        <div class="customer-form-safety-note">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5 20 7v5.2c0 4.1-3.1 7.6-8 8.8-4.9-1.2-8-4.7-8-8.8V7z"/><path d="M12 8v4M12 16h.01"/></svg>
+            <div>
+                <strong>Reminder does not change stock</strong>
+                <span>This request is only a follow-up record. It does not add stock or reserve inventory. Track it from <b>Pending</b> to <b>Ordered</b> and <b>Completed</b>.</span>
+            </div>
+        </div>
+
+        <div class="customer-form-actions">
+            <a asp-controller="Customers" asp-action="Details" asp-route-id="@Model.CustomerId" class="customer-cancel-button">Cancel</a>
+            <button type="submit" class="customer-primary-button" id="customerReminderSave">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v14H5z"/><path d="M8 5v5h8V5M9 15h6"/></svg>
+                <span>Save Reminder</span>
+            </button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+<script>
+(() => {
+    const searchInput = document.getElementById("customerReminderProductSearch");
+    const searchResults = document.getElementById("customerReminderSearchResults");
+    const selected = document.getElementById("customerReminderSelected");
+    const selectedName = document.getElementById("customerReminderSelectedName");
+    const selectedMeta = document.getElementById("customerReminderSelectedMeta");
+    const clearButton = document.getElementById("customerReminderClear");
+    const manualToggle = document.getElementById("customerReminderManualToggle");
+    const productNameInput = document.getElementById("customerReminderProductName");
+    const form = document.querySelector(".customer-reminder-form");
+
+    const fields = {
+        catalogId: document.getElementById("customerReminderCatalogId"),
+        source: document.getElementById("customerReminderProductSource"),
+        externalId: document.getElementById("customerReminderProductExternalId"),
+        genericName: document.getElementById("customerReminderGenericName"),
+        brandName: document.getElementById("customerReminderBrandName"),
+        manufacturer: document.getElementById("customerReminderManufacturer"),
+        dosageForm: document.getElementById("customerReminderDosageForm"),
+        strength: document.getElementById("customerReminderStrength"),
+        packSize: document.getElementById("customerReminderPackSize"),
+        barcode: document.getElementById("customerReminderBarcode")
+    };
+
+    let timer = null;
+    let sequence = 0;
+
+    const escapeHtml = value => String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+
+    const clearSelection = () => {
+        Object.values(fields).forEach(field => { if (field) field.value = ""; });
+        selected.hidden = true;
+        selectedName.textContent = "";
+        selectedMeta.textContent = "";
+    };
+
+    const selectProduct = item => {
+        fields.catalogId.value = item.catalogId ?? "";
+        fields.source.value = item.source ?? "";
+        fields.externalId.value = item.externalId ?? "";
+        fields.genericName.value = item.genericName ?? "";
+        fields.brandName.value = item.brandName ?? "";
+        fields.manufacturer.value = item.manufacturer ?? "";
+        fields.dosageForm.value = item.dosageForm ?? "";
+        fields.strength.value = item.strength ?? "";
+        fields.packSize.value = item.packSize ?? "";
+        fields.barcode.value = item.barcode ?? "";
+
+        productNameInput.value = item.productName ?? "";
+        selectedName.textContent = item.productName ?? "";
+        selectedMeta.textContent = [
+            item.genericName,
+            item.brandName,
+            item.packSize,
+            item.isAlreadyInInventory ? "Already in inventory" : "Not currently in inventory"
+        ].filter(Boolean).join(" · ");
+
+        selected.hidden = false;
+        searchResults.hidden = true;
+        searchInput.value = "";
+    };
+
+    const render = items => {
+        if (!items.length) {
+            searchResults.innerHTML =
+                '<div class="customer-reminder-search-empty">' +
+                '<strong>No matching product found</strong>' +
+                '<span>Try another name, brand or strength, or enter the product manually below.</span>' +
+                '</div>';
+            searchResults.hidden = false;
+            return;
+        }
+
+        searchResults.innerHTML = items.map((item, index) =>
+            '<button type="button" class="customer-reminder-search-result" data-index="' + index + '">' +
+                '<span class="customer-reminder-result-icon">' +
+                    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8.5 12 4l7 4.5-7 4.5z"/><path d="M5 8.5V16l7 4 7-4V8.5"/></svg>' +
+                '</span>' +
+                '<span class="customer-reminder-result-copy">' +
+                    '<strong>' + escapeHtml(item.productName) + '</strong>' +
+                    '<small>' + escapeHtml([item.genericName, item.brandName, item.dosageForm, item.strength].filter(Boolean).join(" · ") || "Product database result") + '</small>' +
+                '</span>' +
+                '<span class="customer-reminder-result-tag ' + (item.isAlreadyInInventory ? "is-in-stock" : "is-external") + '">' +
+                    (item.isAlreadyInInventory ? "In inventory" : "Not in inventory") +
+                '</span>' +
+            '</button>'
+        ).join("");
+
+        searchResults.hidden = false;
+
+        searchResults.querySelectorAll(".customer-reminder-search-result").forEach(button => {
+            button.addEventListener("click", () => {
+                const item = items[Number(button.dataset.index)];
+                if (item) selectProduct(item);
+            });
+        });
+    };
+
+    const search = async query => {
+        const currentSequence = ++sequence;
+        const trimmed = query.trim();
+
+        if (trimmed.length < 2) {
+            searchResults.hidden = true;
+            searchResults.innerHTML = "";
+            return;
+        }
+
+        searchResults.hidden = false;
+        searchResults.innerHTML =
+            '<div class="customer-reminder-search-loading">' +
+            '<span class="customer-reminder-spinner"></span>' +
+            '<span>Searching all products...</span>' +
+            '</div>';
+
+        try {
+            const response = await fetch(
+                '@Url.Action("SearchProducts", "Customers")?customerId=@Model.CustomerId&query=' + encodeURIComponent(trimmed),
+                { credentials: "same-origin" });
+
+            if (currentSequence !== sequence) return;
+            if (!response.ok) throw new Error("Search failed");
+
+            render(await response.json());
+        } catch {
+            if (currentSequence !== sequence) return;
+            searchResults.innerHTML =
+                '<div class="customer-reminder-search-empty">' +
+                '<strong>Product search is unavailable</strong>' +
+                '<span>Check your internet connection and try again.</span>' +
+                '</div>';
+            searchResults.hidden = false;
+        }
+    };
+
+    searchInput?.addEventListener("input", () => {
+        clearTimeout(timer);
+        timer = setTimeout(() => search(searchInput.value), 220);
+    });
+
+    clearButton?.addEventListener("click", () => {
+        clearSelection();
+        productNameInput.focus();
+    });
+
+    manualToggle?.addEventListener("click", () => {
+        clearSelection();
+        productNameInput.focus();
+    });
+
+    form?.addEventListener("submit", event => {
+        const productName = productNameInput.value.trim();
+        if (!productName) {
+            event.preventDefault();
+            productNameInput.focus();
+        }
+    });
+
+    document.addEventListener("click", event => {
+        if (!event.target.closest(".customer-reminder-search-wrap") &&
+            !event.target.closest(".customer-reminder-search-results")) {
+            searchResults.hidden = true;
+        }
+    });
+})();
+</script>
+}
