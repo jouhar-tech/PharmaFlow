@@ -13,6 +13,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Profile> Profiles => Set<Profile>();
     public DbSet<Feedback> Feedback => Set<Feedback>();
     public DbSet<Product> Products => Set<Product>();
+    public DbSet<ProductCatalog> ProductCatalog => Set<ProductCatalog>();
     public DbSet<ProductBatch> ProductBatches => Set<ProductBatch>();
     public DbSet<InvoiceImport> InvoiceImports => Set<InvoiceImport>();
     public DbSet<InvoiceImportItem> InvoiceImportItems => Set<InvoiceImportItem>();
@@ -47,6 +48,11 @@ public class ApplicationDbContext : DbContext
             entity.ToTable("products", "public");
             entity.HasKey(p => p.ProductId);
             entity.Property(p => p.ProductId).HasColumnName("product_id");
+            entity.Property(p => p.CatalogId).HasColumnName("catalog_id");
+            entity.HasOne<ProductCatalog>()
+                .WithMany()
+                .HasForeignKey(p => p.CatalogId)
+                .OnDelete(DeleteBehavior.SetNull);
             entity.Property(p => p.ProfileId).HasColumnName("profile_id");
             entity.Property(p => p.ProductName).HasColumnName("product_name");
             entity.Property(p => p.GenericName).HasColumnName("generic_name");
@@ -185,6 +191,7 @@ public class ApplicationDbContext : DbContext
             entity.ToTable("profiles", "public");
             entity.HasKey(p => p.Id);
             entity.Property(p => p.Id).HasColumnName("id");
+            entity.Property(p => p.CatalogId).HasColumnName("catalog_id");
             entity.Property(p => p.UserId).HasColumnName("user_id");
             entity.Property(p => p.Username).HasColumnName("username");
             entity.Property(p => p.Email).HasColumnName("email");
@@ -200,6 +207,34 @@ public class ApplicationDbContext : DbContext
             entity.Property(p => p.LastLogoutAt).HasColumnName("last_logout_at");
             entity.Property(p => p.CreatedAt).HasColumnName("created_at");
             entity.Property(p => p.NotificationCycleStartAt).HasColumnName("notification_cycle_start_at");
+        });
+
+        modelBuilder.Entity<ProductCatalog>(entity =>
+        {
+            entity.ToTable("product_catalog", "public");
+            entity.HasKey(c => c.CatalogId);
+            entity.Property(c => c.CatalogId).HasColumnName("catalog_id");
+            entity.Property(c => c.Source).HasColumnName("source").HasMaxLength(50);
+            entity.Property(c => c.ExternalId).HasColumnName("external_id").HasMaxLength(160);
+            entity.Property(c => c.ProductType).HasColumnName("product_type").HasMaxLength(40);
+            entity.Property(c => c.ProductName).HasColumnName("product_name").HasMaxLength(200);
+            entity.Property(c => c.GenericName).HasColumnName("generic_name").HasMaxLength(500);
+            entity.Property(c => c.BrandName).HasColumnName("brand_name").HasMaxLength(160);
+            entity.Property(c => c.Manufacturer).HasColumnName("manufacturer").HasMaxLength(200);
+            entity.Property(c => c.DosageForm).HasColumnName("dosage_form").HasMaxLength(100);
+            entity.Property(c => c.Strength).HasColumnName("strength").HasMaxLength(100);
+            entity.Property(c => c.PackSize).HasColumnName("pack_size").HasMaxLength(100);
+            entity.Property(c => c.Barcode).HasColumnName("barcode").HasMaxLength(100);
+            entity.Property(c => c.HsnCode).HasColumnName("hsn_code").HasMaxLength(50);
+            entity.Property(c => c.GstRate).HasColumnName("gst_rate").HasPrecision(5, 2);
+            entity.Property(c => c.IsPrescriptionRequired).HasColumnName("is_prescription_required");
+            entity.Property(c => c.SourceUrl).HasColumnName("source_url").HasMaxLength(500);
+            entity.Property(c => c.FirstSeenAt).HasColumnName("first_seen_at");
+            entity.Property(c => c.LastSyncedAt).HasColumnName("last_synced_at");
+            entity.Property(c => c.UpdatedAt).HasColumnName("updated_at");
+            entity.HasIndex(c => new { c.Source, c.ExternalId }).IsUnique();
+            entity.HasIndex(c => c.Barcode);
+            entity.HasIndex(c => c.ProductName);
         });
 
         modelBuilder.Entity<PushDeviceSubscription>(entity =>
