@@ -13,7 +13,7 @@
         <div>
             <span class="inventory-action-eyebrow">Inventory</span>
             <h1>Add Item</h1>
-            <p>Enter the essential stock details to add this product to your inventory.</p>
+            <p>Enter the essential stock details to add this product to your inventory. Global catalog details are filled from the selected source.</p>
         </div>
     </header>
 
@@ -29,6 +29,7 @@
         <form asp-action="AddItem" method="post" class="inventory-add-form" data-online-required="true">
             @Html.AntiForgeryToken()
             <input asp-for="ExistingProductId" type="hidden" />
+            <input asp-for="CatalogId" type="hidden" />
 
             <div asp-validation-summary="ModelOnly" class="inventory-add-validation"></div>
 
