@@ -37,6 +37,12 @@ public sealed class InventoryController : Controller
 
         if (results.Count > 0)
         {
+            var candidateCatalogIds = results
+                .Where(item => item.CatalogId.HasValue)
+                .Select(item => item.CatalogId!.Value)
+                .Distinct()
+                .ToArray();
+
             var candidateBarcodes = results
                 .Where(item => !string.IsNullOrWhiteSpace(item.Barcode))
                 .Select(item => item.Barcode!.Trim())
@@ -54,10 +60,7 @@ public sealed class InventoryController : Controller
                 .Where(p =>
                     p.ProfileId == profileId &&
                     (
-                        (p.CatalogId.HasValue &&
-                         results.Where(item => item.CatalogId.HasValue)
-                               .Select(item => item.CatalogId!.Value)
-                               .Contains(p.CatalogId.Value))
+                        (p.CatalogId.HasValue && candidateCatalogIds.Contains(p.CatalogId.Value))
                         || (p.Barcode != null && candidateBarcodes.Contains(p.Barcode))
                         || candidateNames.Contains(p.ProductName.ToLower())
                     ))
