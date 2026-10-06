@@ -1,0 +1,112 @@
+@model PharmaFlow.Models.ViewModels.CustomerPaymentPageViewModel
+@{
+    ViewData["Title"] = "Record Payment";
+    var balance = Model.CurrentBalance;
+}
+
+<div class="customer-form-page customer-payment-page">
+    <header class="customer-form-header">
+        <a asp-controller="Customers" asp-action="Details" asp-route-id="@Model.CustomerId" class="customer-back-button" aria-label="Back to customer details">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/><path d="M9 12h11"/></svg>
+        </a>
+        <div>
+            <div class="customer-page-eyebrow">Balance Settlement</div>
+            <h1>Record Payment</h1>
+            <p>Update the outstanding balance for <strong>@Model.CustomerName</strong>.</p>
+        </div>
+    </header>
+
+    <div class="customer-payment-balance-card @(balance > 0 ? "is-receivable" : "is-payable")">
+        <span>Current balance</span>
+        @if (balance > 0)
+        {
+            <strong>₹@balance.ToString("N2")</strong>
+            <small>Owed to your pharmacy</small>
+        }
+        else
+        {
+            <strong>₹@Math.Abs(balance).ToString("N2")</strong>
+            <small>Owed by your pharmacy</small>
+        }
+    </div>
+
+    <form asp-controller="Customers" asp-action="Payment" method="post" class="customer-form-card" novalidate>
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="CustomerId" />
+
+        <div asp-validation-summary="ModelOnly" class="customer-validation-summary"></div>
+
+        <div class="customer-form-section-title">
+            <span class="customer-form-section-icon">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16v10H4z"/><path d="M8 12h8M9 9v6M15 9v6"/></svg>
+            </span>
+            <div>
+                <h2>Settlement Details</h2>
+                <p>Record only the amount actually received or paid.</p>
+            </div>
+        </div>
+
+        <div class="customer-form-grid">
+            <div class="customer-form-field customer-form-field-wide">
+                <label>Payment Action</label>
+                <div class="customer-balance-choice-group">
+                    @if (Model.CustomerOwesYou)
+                    {
+                        <label class="customer-balance-choice is-selected">
+                            <input asp-for="PaymentType" type="radio" value="CustomerPayment" checked />
+                            <span>
+                                <strong>Customer paid you</strong>
+                                <small>Reduce the amount the customer owes your pharmacy.</small>
+                            </span>
+                        </label>
+                    }
+                    else
+                    {
+                        <label class="customer-balance-choice is-selected">
+                            <input asp-for="PaymentType" type="radio" value="PaymentToCustomer" checked />
+                            <span>
+                                <strong>You paid the customer</strong>
+                                <small>Reduce the amount your pharmacy owes the customer.</small>
+                            </span>
+                        </label>
+                    }
+                </div>
+            </div>
+
+            <div class="customer-form-field">
+                <label asp-for="Amount">Amount <span>*</span></label>
+                <div class="customer-money-input">
+                    <span>₹</span>
+                    <input asp-for="Amount"
+                           class="customer-form-input"
+                           type="number"
+                           min="0.01"
+                           max="@Math.Abs(balance).ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                           step="0.01"
+                           inputmode="decimal"
+                           placeholder="0.00" />
+                </div>
+                <small>Maximum allowed: ₹@Math.Abs(balance).ToString("N2").</small>
+                <span asp-validation-for="Amount" class="customer-field-error"></span>
+            </div>
+
+            <div class="customer-form-field">
+                <label asp-for="Note">Note</label>
+                <input asp-for="Note" class="customer-form-input" maxlength="500" placeholder="Optional payment reference" />
+                <span asp-validation-for="Note" class="customer-field-error"></span>
+            </div>
+        </div>
+
+        <div class="customer-form-actions">
+            <a asp-controller="Customers" asp-action="Details" asp-route-id="@Model.CustomerId" class="customer-cancel-button">Cancel</a>
+            <button type="submit" class="customer-primary-button">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>
+                <span>Save Payment</span>
+            </button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
