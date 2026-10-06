@@ -66,6 +66,28 @@ public sealed class CustomersController : Controller
             .AsNoTracking()
             .Where(customer => customer.ProfileId == profileId);
 
+        var reminderCustomerOptions = await _dbContext.Customers
+            .AsNoTracking()
+            .Where(customer => customer.ProfileId == profileId)
+            .OrderBy(customer => customer.FullName)
+            .ThenBy(customer => customer.CustomerId)
+            .Select(customer => new CustomerReminderCustomerOptionViewModel
+            {
+                CustomerId = customer.CustomerId,
+                FullName = string.IsNullOrWhiteSpace(customer.FullName)
+                    ? "Unnamed Customer"
+                    : customer.FullName.Trim(),
+                PhoneNumber = customer.PhoneNumber
+            })
+            .ToListAsync(cancellationToken);
+
+        var pendingReminderTotal = await _dbContext.CustomerReminders
+            .AsNoTracking()
+            .CountAsync(reminder =>
+                reminder.ProfileId == profileId &&
+                (reminder.Status == "Pending" || reminder.Status == "Ordered"),
+                cancellationToken);
+
         HashSet<long>? searchIds = null;
 
         if (!string.IsNullOrWhiteSpace(searchTerm))
@@ -200,7 +222,9 @@ public sealed class CustomersController : Controller
             Filter = normalizedFilter,
             TotalOwedToYou = totalOwedToYou,
             TotalOwedByYou = totalOwedByYou,
-            Customers = items
+            Customers = items,
+            PendingReminderTotal = pendingReminderTotal,
+            ReminderCustomers = reminderCustomerOptions
         });
     }
 
