@@ -81,7 +81,7 @@ public sealed class CustomerReminderViewModel
 public sealed class CustomerReminderCreateViewModel
 {
     public long CustomerId { get; init; }
-    public string CustomerName { get; init; } = string.Empty;
+    public string CustomerName { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Select a product or enter a product name.")]
     [StringLength(200, ErrorMessage = "Product name cannot exceed 200 characters.")]
