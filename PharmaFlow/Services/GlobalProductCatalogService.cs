@@ -8,12 +8,44 @@ namespace PharmaFlow.Services;
 
 public interface IGlobalProductCatalogService
 {
-    Task<IReadOnlyList<ProductCatalog>> SearchAsync(string query, CancellationToken cancellationToken);
+    Task<IReadOnlyList<GlobalProductSearchResult>> SearchAsync(
+        string query,
+        CancellationToken cancellationToken);
+
+    Task<GlobalProductSearchResult?> GetAsync(
+        string source,
+        string externalId,
+        long? catalogId,
+        CancellationToken cancellationToken);
+}
+
+public sealed class GlobalProductSearchResult
+{
+    public long? CatalogId { get; init; }
+    public string Source { get; init; } = string.Empty;
+    public string ExternalId { get; init; } = string.Empty;
+    public string ProductType { get; init; } = string.Empty;
+    public string ProductName { get; init; } = string.Empty;
+    public string? GenericName { get; init; }
+    public string? BrandName { get; init; }
+    public string? Manufacturer { get; init; }
+    public string? DosageForm { get; init; }
+    public string? Strength { get; init; }
+    public string? PackSize { get; init; }
+    public string? Barcode { get; init; }
+    public string? HsnCode { get; init; }
+    public decimal? GstRate { get; init; }
+    public bool IsPrescriptionRequired { get; init; }
+    public string? SourceUrl { get; init; }
 }
 
 public sealed class GlobalProductCatalogService : IGlobalProductCatalogService
 {
     private const int ProviderLimit = 20;
+    private const string IndiaSource = "india-medicine-api";
+    private const string OpenFdaSource = "openfda-ndc";
+    private const string OpenFoodFactsSource = "openfoodfacts";
+
     private readonly ApplicationDbContext _dbContext;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IConfiguration _configuration;
@@ -31,7 +63,7 @@ public sealed class GlobalProductCatalogService : IGlobalProductCatalogService
         _logger = logger;
     }
 
-    public async Task<IReadOnlyList<ProductCatalog>> SearchAsync(
+    public async Task<IReadOnlyList<GlobalProductSearchResult>> SearchAsync(
         string query,
         CancellationToken cancellationToken)
     {
@@ -39,141 +71,177 @@ public sealed class GlobalProductCatalogService : IGlobalProductCatalogService
         if (normalizedQuery.Length < 2)
             return [];
 
-        var providerTasks = new[]
-        {
-            SearchIndiaMedicinesAsync(normalizedQuery, cancellationToken),
-            SearchOpenFdaAsync(normalizedQuery, cancellationToken),
-            SearchOpenFoodFactsAsync(normalizedQuery, cancellationToken)
-        };
+        var indiaTask = SearchIndiaMedicinesAsync(normalizedQuery, cancellationToken);
+        var openFdaTask = SearchOpenFdaAsync(normalizedQuery, cancellationToken);
+        var openFoodFactsTask = SearchOpenFoodFactsAsync(normalizedQuery, cancellationToken);
 
-        var providerResults = await Task.WhenAll(providerTasks);
+        var indiaResults = await indiaTask;
+        var openFdaResults = await openFdaTask;
+        var openFoodFactsResults = await openFoodFactsTask;
 
-        var externalResults = providerResults
-            .SelectMany(static items => items)
-            .Where(static item => !string.IsNullOrWhiteSpace(item.ExternalId) &&
-                                  !string.IsNullOrWhiteSpace(item.ProductName))
-            .GroupBy(static item => $"{item.Source}:{item.ExternalId}", StringComparer.OrdinalIgnoreCase)
-            .Select(static group => group.First())
-            .Take(60)
-            .ToList();
+        // Only Indian medicine results are persisted in product_catalog.
+        // OpenFDA and Open Food Facts remain live API results.
+        if (indiaResults.Count > 0)
+            await CacheIndiaResultsAsync(indiaResults, cancellationToken);
 
-        await UpsertCatalogAsync(externalResults, cancellationToken);
+        var resultByKey = new Dictionary<string, GlobalProductSearchResult>(
+            StringComparer.OrdinalIgnoreCase);
 
-        var pattern = $"%{EscapeLikePattern(normalizedQuery)}%";
+        foreach (var item in indiaResults)
+            resultByKey[$"{item.Source}:{item.ExternalId}"] = item;
 
-        return await _dbContext.ProductCatalog
-            .AsNoTracking()
-            .Where(item =>
-                EF.Functions.ILike(item.ProductName, pattern) ||
-                (item.GenericName != null && EF.Functions.ILike(item.GenericName, pattern)) ||
-                (item.BrandName != null && EF.Functions.ILike(item.BrandName, pattern)) ||
-                (item.Manufacturer != null && EF.Functions.ILike(item.Manufacturer, pattern)) ||
-                (item.Barcode != null && EF.Functions.ILike(item.Barcode, pattern)))
-            .OrderBy(item => item.ProductName)
-            .ThenBy(item => item.Source)
+        foreach (var item in openFdaResults)
+            resultByKey[$"{item.Source}:{item.ExternalId}"] = item;
+
+        foreach (var item in openFoodFactsResults)
+            resultByKey[$"{item.Source}:{item.ExternalId}"] = item;
+
+        return resultByKey.Values
+            .OrderBy(item => ProductTypeSort(item.ProductType))
+            .ThenBy(item => item.ProductName)
             .Take(100)
-            .ToListAsync(cancellationToken);
+            .ToList();
     }
 
-    private async Task UpsertCatalogAsync(
-        IReadOnlyList<CatalogCandidate> candidates,
+    public async Task<GlobalProductSearchResult?> GetAsync(
+        string source,
+        string externalId,
+        long? catalogId,
         CancellationToken cancellationToken)
     {
-        if (candidates.Count == 0)
-            return;
+        var normalizedSource = NormalizeSource(source);
+        var normalizedExternalId = NormalizeExternalId(externalId);
 
-        foreach (var item in candidates)
+        if (string.IsNullOrWhiteSpace(normalizedSource) ||
+            string.IsNullOrWhiteSpace(normalizedExternalId))
+            return null;
+
+        if (normalizedSource == IndiaSource)
         {
-            var existing = await _dbContext.ProductCatalog
+            if (!catalogId.HasValue || catalogId.Value <= 0)
+                return null;
+
+            var catalog = await _dbContext.ProductCatalog
+                .AsNoTracking()
                 .SingleOrDefaultAsync(
-                    catalog => catalog.Source == item.Source &&
-                               catalog.ExternalId == item.ExternalId,
+                    item => item.CatalogId == catalogId.Value &&
+                            item.Source == IndiaSource &&
+                            item.ExternalId == normalizedExternalId,
                     cancellationToken);
+
+            return catalog is null ? null : MapCatalog(catalog);
+        }
+
+        return normalizedSource switch
+        {
+            OpenFdaSource => await GetOpenFdaAsync(normalizedExternalId, cancellationToken),
+            OpenFoodFactsSource => await GetOpenFoodFactsAsync(normalizedExternalId, cancellationToken),
+            _ => null
+        };
+    }
+
+    private async Task CacheIndiaResultsAsync(
+        IReadOnlyList<GlobalProductSearchResult> results,
+        CancellationToken cancellationToken)
+    {
+        var now = DateTime.UtcNow;
+        var cacheDays = Math.Clamp(
+            _configuration.GetValue<int?>("GlobalProductCatalog:IndiaCacheDays") ?? 30,
+            1,
+            365);
+
+        var externalIds = results
+            .Select(item => item.ExternalId)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        var existingRows = await _dbContext.ProductCatalog
+            .Where(item =>
+                item.Source == IndiaSource &&
+                externalIds.Contains(item.ExternalId))
+            .ToListAsync(cancellationToken);
+
+        foreach (var result in results)
+        {
+            var existing = existingRows.FirstOrDefault(
+                item => string.Equals(
+                    item.ExternalId,
+                    result.ExternalId,
+                    StringComparison.OrdinalIgnoreCase));
 
             if (existing is null)
             {
-                _dbContext.ProductCatalog.Add(MapCandidate(item));
+                _dbContext.ProductCatalog.Add(new ProductCatalog
+                {
+                    Source = IndiaSource,
+                    ExternalId = result.ExternalId,
+                    ProductType = result.ProductType,
+                    ProductName = result.ProductName,
+                    GenericName = result.GenericName,
+                    BrandName = result.BrandName,
+                    Manufacturer = result.Manufacturer,
+                    DosageForm = result.DosageForm,
+                    Strength = result.Strength,
+                    PackSize = result.PackSize,
+                    Barcode = result.Barcode,
+                    HsnCode = result.HsnCode,
+                    GstRate = result.GstRate,
+                    IsPrescriptionRequired = result.IsPrescriptionRequired,
+                    SourceUrl = result.SourceUrl,
+                    FirstSeenAt = now,
+                    LastSyncedAt = now,
+                    CacheExpiresAt = now.AddDays(cacheDays),
+                    UpdatedAt = now
+                });
+
                 continue;
             }
 
-            ApplyCandidate(existing, item);
+            ApplyResult(existing, result, now, cacheDays);
         }
 
-        try
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        // Remove expired, unreferenced search-cache rows. Selected products remain
+        // because their products.catalog_id still references the catalog row.
+        var expiredRows = await _dbContext.ProductCatalog
+            .Where(item =>
+                item.Source == IndiaSource &&
+                item.CacheExpiresAt < now &&
+                !_dbContext.Products.Any(product => product.CatalogId == item.CatalogId))
+            .OrderBy(item => item.CacheExpiresAt)
+            .Take(200)
+            .ToListAsync(cancellationToken);
+
+        if (expiredRows.Count > 0)
         {
+            _dbContext.ProductCatalog.RemoveRange(expiredRows);
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
-        catch (DbUpdateException ex)
-        {
-            _logger.LogWarning(ex, "Global catalog cache update encountered a database conflict.");
-            _dbContext.ChangeTracker.Clear();
-        }
     }
 
-    private static void ApplyCandidate(ProductCatalog target, CatalogCandidate item)
-    {
-        target.ProductType = item.ProductType;
-        target.ProductName = item.ProductName;
-        target.GenericName = item.GenericName;
-        target.BrandName = item.BrandName;
-        target.Manufacturer = item.Manufacturer;
-        target.DosageForm = item.DosageForm;
-        target.Strength = item.Strength;
-        target.PackSize = item.PackSize;
-        target.Barcode = item.Barcode;
-        target.HsnCode = item.HsnCode;
-        target.GstRate = item.GstRate;
-        target.IsPrescriptionRequired = item.IsPrescriptionRequired;
-        target.SourceUrl = item.SourceUrl;
-        target.LastSyncedAt = DateTime.UtcNow;
-        target.UpdatedAt = DateTime.UtcNow;
-    }
-
-    private static ProductCatalog MapCandidate(CatalogCandidate item)
-    {
-        var now = DateTime.UtcNow;
-
-        return new ProductCatalog
-        {
-            Source = item.Source,
-            ExternalId = item.ExternalId,
-            ProductType = item.ProductType,
-            ProductName = item.ProductName,
-            GenericName = item.GenericName,
-            BrandName = item.BrandName,
-            Manufacturer = item.Manufacturer,
-            DosageForm = item.DosageForm,
-            Strength = item.Strength,
-            PackSize = item.PackSize,
-            Barcode = item.Barcode,
-            HsnCode = item.HsnCode,
-            GstRate = item.GstRate,
-            IsPrescriptionRequired = item.IsPrescriptionRequired,
-            SourceUrl = item.SourceUrl,
-            FirstSeenAt = now,
-            LastSyncedAt = now,
-            UpdatedAt = now
-        };
-    }
-
-    private async Task<IReadOnlyList<CatalogCandidate>> SearchIndiaMedicinesAsync(
+    private async Task<IReadOnlyList<GlobalProductSearchResult>> SearchIndiaMedicinesAsync(
         string query,
         CancellationToken cancellationToken)
     {
         var baseUrl = _configuration["GlobalProductCatalog:IndiaMedicineApiBaseUrl"];
         if (string.IsNullOrWhiteSpace(baseUrl))
+        {
+            _logger.LogWarning("India Medicine API base URL is not configured.");
             return [];
+        }
 
         try
         {
             var client = _httpClientFactory.CreateClient("IndiaMedicine");
-            var url = $"{baseUrl.TrimEnd('/')}/search?q={Uri.EscapeDataString(query)}&limit={ProviderLimit}";
+            var url =
+                $"{baseUrl.TrimEnd('/')}/search?q={Uri.EscapeDataString(query)}&limit={ProviderLimit}";
 
-            var response = await client.GetAsync(url, cancellationToken);
+            using var response = await client.GetAsync(url, cancellationToken);
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogWarning(
-                    "India medicine provider returned HTTP {StatusCode}.",
+                    "India Medicine API returned HTTP {StatusCode}.",
                     response.StatusCode);
                 return [];
             }
@@ -182,17 +250,18 @@ public sealed class GlobalProductCatalogService : IGlobalProductCatalogService
                 cancellationToken: cancellationToken);
 
             return payload?.Results?
-                .Select(item => new CatalogCandidate
+                .Where(item => item.Id > 0 && !string.IsNullOrWhiteSpace(item.ProductName))
+                .Select(item => new GlobalProductSearchResult
                 {
-                    Source = "india-medicine-api",
+                    Source = IndiaSource,
                     ExternalId = item.Id.ToString(),
                     ProductType = "medicine",
-                    ProductName = item.ProductName?.Trim() ?? string.Empty,
+                    ProductName = item.ProductName!.Trim(),
                     GenericName = item.SaltComposition?.Trim(),
                     DosageForm = item.DosageForm?.Trim(),
                     IsPrescriptionRequired = item.IsPrescriptionRequired
                 })
-                .Where(item => !string.IsNullOrWhiteSpace(item.ProductName))
+                .Take(ProviderLimit)
                 .ToList()
                 ?? [];
         }
@@ -202,12 +271,58 @@ public sealed class GlobalProductCatalogService : IGlobalProductCatalogService
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "India medicine provider search failed.");
+            _logger.LogWarning(ex, "India Medicine API search failed.");
             return [];
         }
     }
 
-    private async Task<IReadOnlyList<CatalogCandidate>> SearchOpenFdaAsync(
+    private async Task<GlobalProductSearchResult?> GetIndiaMedicineAsync(
+        string externalId,
+        CancellationToken cancellationToken)
+    {
+        var baseUrl = _configuration["GlobalProductCatalog:IndiaMedicineApiBaseUrl"];
+        if (string.IsNullOrWhiteSpace(baseUrl) ||
+            !int.TryParse(externalId, out var medicineId) ||
+            medicineId <= 0)
+            return null;
+
+        try
+        {
+            var client = _httpClientFactory.CreateClient("IndiaMedicine");
+            var url = $"{baseUrl.TrimEnd('/')}/medicine/{medicineId}";
+
+            using var response = await client.GetAsync(url, cancellationToken);
+            if (!response.IsSuccessStatusCode)
+                return null;
+
+            var item = await response.Content.ReadFromJsonAsync<IndiaMedicineResult>(
+                cancellationToken: cancellationToken);
+
+            return item is null || item.Id <= 0 || string.IsNullOrWhiteSpace(item.ProductName)
+                ? null
+                : new GlobalProductSearchResult
+                {
+                    Source = IndiaSource,
+                    ExternalId = item.Id.ToString(),
+                    ProductType = "medicine",
+                    ProductName = item.ProductName!.Trim(),
+                    GenericName = item.SaltComposition?.Trim(),
+                    DosageForm = item.DosageForm?.Trim(),
+                    IsPrescriptionRequired = item.IsPrescriptionRequired
+                };
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "India Medicine API detail lookup failed.");
+            return null;
+        }
+    }
+
+    private async Task<IReadOnlyList<GlobalProductSearchResult>> SearchOpenFdaAsync(
         string query,
         CancellationToken cancellationToken)
     {
@@ -218,15 +333,23 @@ public sealed class GlobalProductCatalogService : IGlobalProductCatalogService
         {
             var client = _httpClientFactory.CreateClient("OpenFda");
             var safeQuery = EscapeOpenFdaValue(query);
-            var searchExpression = $"brand_name:\"{safeQuery}\" OR generic_name:\"{safeQuery}\"";
-            var url =
-                $"/drug/ndc.json?search={Uri.EscapeDataString(searchExpression)}&limit={ProviderLimit}";
+            var searchExpression =
+                $"brand_name:\"{safeQuery}\" OR generic_name:\"{safeQuery}\"";
 
-            var response = await client.GetAsync(url, cancellationToken);
+            var apiKey = _configuration["GlobalProductCatalog:OpenFdaApiKey"];
+            var keyPart = string.IsNullOrWhiteSpace(apiKey)
+                ? string.Empty
+                : $"&api_key={Uri.EscapeDataString(apiKey.Trim())}";
+
+            var url =
+                $"/drug/ndc.json?search={Uri.EscapeDataString(searchExpression)}" +
+                $"&limit={ProviderLimit}{keyPart}";
+
+            using var response = await client.GetAsync(url, cancellationToken);
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogWarning(
-                    "openFDA provider returned HTTP {StatusCode}.",
+                    "openFDA returned HTTP {StatusCode}.",
                     response.StatusCode);
                 return [];
             }
@@ -235,21 +358,10 @@ public sealed class GlobalProductCatalogService : IGlobalProductCatalogService
                 cancellationToken: cancellationToken);
 
             return payload?.Results?
-                .Select(item => new CatalogCandidate
-                {
-                    Source = "openfda-ndc",
-                    ExternalId = FirstNonEmpty(item.PackageNdc, item.ProductNdc, item.ApplicationNumber)
-                                 ?? Guid.NewGuid().ToString("N"),
-                    ProductType = "medicine",
-                    ProductName = FirstNonEmpty(item.BrandName, item.GenericName) ?? string.Empty,
-                    GenericName = item.GenericName,
-                    BrandName = item.BrandName,
-                    Manufacturer = item.ManufacturerName,
-                    DosageForm = item.DosageForm,
-                    Barcode = FirstOpenFdaValue(item.OpenFda?.Upc),
-                    IsPrescriptionRequired = IsPrescription(item.ProductType)
-                })
-                .Where(item => !string.IsNullOrWhiteSpace(item.ProductName))
+                .Select(MapOpenFda)
+                .Where(item => item is not null)
+                .Select(item => item!)
+                .Take(ProviderLimit)
                 .ToList()
                 ?? [];
         }
@@ -259,12 +371,52 @@ public sealed class GlobalProductCatalogService : IGlobalProductCatalogService
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "openFDA provider search failed.");
+            _logger.LogWarning(ex, "openFDA search failed.");
             return [];
         }
     }
 
-    private async Task<IReadOnlyList<CatalogCandidate>> SearchOpenFoodFactsAsync(
+    private async Task<GlobalProductSearchResult?> GetOpenFdaAsync(
+        string externalId,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var client = _httpClientFactory.CreateClient("OpenFda");
+            var safeId = EscapeOpenFdaValue(externalId);
+            var searchExpression =
+                $"package_ndc:\"{safeId}\" OR product_ndc:\"{safeId}\"";
+
+            var apiKey = _configuration["GlobalProductCatalog:OpenFdaApiKey"];
+            var keyPart = string.IsNullOrWhiteSpace(apiKey)
+                ? string.Empty
+                : $"&api_key={Uri.EscapeDataString(apiKey.Trim())}";
+
+            var url =
+                $"/drug/ndc.json?search={Uri.EscapeDataString(searchExpression)}" +
+                $"&limit=1{keyPart}";
+
+            using var response = await client.GetAsync(url, cancellationToken);
+            if (!response.IsSuccessStatusCode)
+                return null;
+
+            var payload = await response.Content.ReadFromJsonAsync<OpenFdaNdcSearchResponse>(
+                cancellationToken: cancellationToken);
+
+            return payload?.Results?.Select(MapOpenFda).FirstOrDefault();
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "openFDA detail lookup failed.");
+            return null;
+        }
+    }
+
+    private async Task<IReadOnlyList<GlobalProductSearchResult>> SearchOpenFoodFactsAsync(
         string query,
         CancellationToken cancellationToken)
     {
@@ -281,11 +433,11 @@ public sealed class GlobalProductCatalogService : IGlobalProductCatalogService
                 "&product_type=all" +
                 "&fields=code,product_name,brands,categories,quantity,manufacturing_places,url";
 
-            var response = await client.GetAsync(url, cancellationToken);
+            using var response = await client.GetAsync(url, cancellationToken);
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogWarning(
-                    "Open Food Facts provider returned HTTP {StatusCode}.",
+                    "Open Food Facts returned HTTP {StatusCode}.",
                     response.StatusCode);
                 return [];
             }
@@ -294,20 +446,11 @@ public sealed class GlobalProductCatalogService : IGlobalProductCatalogService
                 cancellationToken: cancellationToken);
 
             return payload?.Products?
-                .Select(item => new CatalogCandidate
-                {
-                    Source = "openfoodfacts",
-                    ExternalId = item.Code?.Trim() ?? string.Empty,
-                    ProductType = NormalizeProductType(item.Categories),
-                    ProductName = item.ProductName?.Trim() ?? string.Empty,
-                    BrandName = item.Brands?.Trim(),
-                    Manufacturer = item.ManufacturingPlaces?.Trim(),
-                    PackSize = item.Quantity?.Trim(),
-                    Barcode = item.Code?.Trim(),
-                    SourceUrl = item.Url?.Trim()
-                })
-                .Where(item => !string.IsNullOrWhiteSpace(item.ProductName) &&
-                               !string.IsNullOrWhiteSpace(item.ExternalId))
+                .Select(MapOpenFoodFacts)
+                .Where(item => item is not null)
+                .Select(item => item!)
+                .Where(item => !string.IsNullOrWhiteSpace(item.ExternalId))
+                .Take(ProviderLimit)
                 .ToList()
                 ?? [];
         }
@@ -317,10 +460,157 @@ public sealed class GlobalProductCatalogService : IGlobalProductCatalogService
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Open Food Facts provider search failed.");
+            _logger.LogWarning(ex, "Open Food Facts search failed.");
             return [];
         }
     }
+
+    private async Task<GlobalProductSearchResult?> GetOpenFoodFactsAsync(
+        string barcode,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var client = _httpClientFactory.CreateClient("OpenFoodFacts");
+            var url =
+                $"/api/v2/product/{Uri.EscapeDataString(barcode)}.json" +
+                "?fields=code,product_name,brands,categories,quantity,manufacturing_places,url";
+
+            using var response = await client.GetAsync(url, cancellationToken);
+            if (!response.IsSuccessStatusCode)
+                return null;
+
+            var payload = await response.Content.ReadFromJsonAsync<OpenFoodFactsProductResponse>(
+                cancellationToken: cancellationToken);
+
+            return payload?.Product is null
+                ? null
+                : MapOpenFoodFacts(payload.Product);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Open Food Facts detail lookup failed.");
+            return null;
+        }
+    }
+
+    private static GlobalProductSearchResult? MapOpenFda(OpenFdaNdcResult item)
+    {
+        var externalId = FirstNonEmpty(item.PackageNdc, item.ProductNdc);
+        var productName = FirstNonEmpty(item.BrandName, item.GenericName);
+
+        if (string.IsNullOrWhiteSpace(externalId) ||
+            string.IsNullOrWhiteSpace(productName))
+            return null;
+
+        return new GlobalProductSearchResult
+        {
+            Source = OpenFdaSource,
+            ExternalId = externalId,
+            ProductType = "medicine",
+            ProductName = productName,
+            GenericName = item.GenericName?.Trim(),
+            BrandName = item.BrandName?.Trim(),
+            Manufacturer = item.ManufacturerName?.Trim(),
+            DosageForm = item.DosageForm?.Trim(),
+            Barcode = FirstOpenFdaValue(item.OpenFda?.Upc),
+            IsPrescriptionRequired = IsPrescription(item.ProductType)
+        };
+    }
+
+    private static GlobalProductSearchResult? MapOpenFoodFacts(OpenFoodFactsProduct item)
+    {
+        var externalId = item.Code?.Trim();
+        var productName = item.ProductName?.Trim();
+
+        if (string.IsNullOrWhiteSpace(externalId) ||
+            string.IsNullOrWhiteSpace(productName))
+            return null;
+
+        return new GlobalProductSearchResult
+        {
+            Source = OpenFoodFactsSource,
+            ExternalId = externalId,
+            ProductType = NormalizeProductType(item.Categories),
+            ProductName = productName,
+            BrandName = item.Brands?.Trim(),
+            Manufacturer = item.ManufacturingPlaces?.Trim(),
+            PackSize = item.Quantity?.Trim(),
+            Barcode = externalId,
+            SourceUrl = item.Url?.Trim()
+        };
+    }
+
+    private static GlobalProductSearchResult MapCatalog(ProductCatalog item) =>
+        new()
+        {
+            CatalogId = item.CatalogId,
+            Source = item.Source,
+            ExternalId = item.ExternalId,
+            ProductType = item.ProductType,
+            ProductName = item.ProductName,
+            GenericName = item.GenericName,
+            BrandName = item.BrandName,
+            Manufacturer = item.Manufacturer,
+            DosageForm = item.DosageForm,
+            Strength = item.Strength,
+            PackSize = item.PackSize,
+            Barcode = item.Barcode,
+            HsnCode = item.HsnCode,
+            GstRate = item.GstRate,
+            IsPrescriptionRequired = item.IsPrescriptionRequired,
+            SourceUrl = item.SourceUrl
+        };
+
+    private static void ApplyResult(
+        ProductCatalog target,
+        GlobalProductSearchResult source,
+        DateTime now,
+        int cacheDays)
+    {
+        target.ProductType = source.ProductType;
+        target.ProductName = source.ProductName;
+        target.GenericName = source.GenericName;
+        target.BrandName = source.BrandName;
+        target.Manufacturer = source.Manufacturer;
+        target.DosageForm = source.DosageForm;
+        target.Strength = source.Strength;
+        target.PackSize = source.PackSize;
+        target.Barcode = source.Barcode;
+        target.HsnCode = source.HsnCode;
+        target.GstRate = source.GstRate;
+        target.IsPrescriptionRequired = source.IsPrescriptionRequired;
+        target.SourceUrl = source.SourceUrl;
+        target.LastSyncedAt = now;
+        target.CacheExpiresAt = now.AddDays(cacheDays);
+        target.UpdatedAt = now;
+    }
+
+    private static int ProductTypeSort(string? productType) =>
+        productType switch
+        {
+            "medicine" => 0,
+            "cosmetic" => 1,
+            _ => 2
+        };
+
+    private static string NormalizeSource(string? source) =>
+        source?.Trim().ToLowerInvariant() switch
+        {
+            IndiaSource => IndiaSource,
+            OpenFdaSource => OpenFdaSource,
+            OpenFoodFactsSource => OpenFoodFactsSource,
+            _ => string.Empty
+        };
+
+    private static string NormalizeExternalId(string? value) =>
+        string.IsNullOrWhiteSpace(value)
+            ? string.Empty
+            : value.Trim()[..Math.Min(value.Trim().Length, 160)];
 
     private static string NormalizeQuery(string query)
     {
@@ -331,9 +621,6 @@ public sealed class GlobalProductCatalogService : IGlobalProductCatalogService
         return trimmed.Length <= 100 ? trimmed : trimmed[..100];
     }
 
-    private static string EscapeLikePattern(string value) =>
-        value.Replace("\", "\\").Replace("%", "\%").Replace("_", "\_");
-
     private static string EscapeOpenFdaValue(string value) =>
         value.Replace("\", "\\").Replace(""", "\"");
 
@@ -342,9 +629,7 @@ public sealed class GlobalProductCatalogService : IGlobalProductCatalogService
             ? "product"
             : categories.Contains("beauty", StringComparison.OrdinalIgnoreCase)
                 ? "cosmetic"
-                : categories.Contains("pet", StringComparison.OrdinalIgnoreCase)
-                    ? "pet-product"
-                    : "product";
+                : "product";
 
     private static bool IsPrescription(string? productType) =>
         !string.IsNullOrWhiteSpace(productType) &&
@@ -355,25 +640,6 @@ public sealed class GlobalProductCatalogService : IGlobalProductCatalogService
 
     private static string? FirstOpenFdaValue(string[]? values) =>
         values?.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value))?.Trim();
-
-    private sealed class CatalogCandidate
-    {
-        public string Source { get; init; } = string.Empty;
-        public string ExternalId { get; init; } = string.Empty;
-        public string ProductType { get; init; } = string.Empty;
-        public string ProductName { get; init; } = string.Empty;
-        public string? GenericName { get; init; }
-        public string? BrandName { get; init; }
-        public string? Manufacturer { get; init; }
-        public string? DosageForm { get; init; }
-        public string? Strength { get; init; }
-        public string? PackSize { get; init; }
-        public string? Barcode { get; init; }
-        public string? HsnCode { get; init; }
-        public decimal? GstRate { get; init; }
-        public bool IsPrescriptionRequired { get; init; }
-        public string? SourceUrl { get; init; }
-    }
 
     private sealed class IndiaMedicineSearchResponse
     {
@@ -413,9 +679,6 @@ public sealed class GlobalProductCatalogService : IGlobalProductCatalogService
         [JsonPropertyName("package_ndc")]
         public string? PackageNdc { get; init; }
 
-        [JsonPropertyName("application_number")]
-        public string? ApplicationNumber { get; init; }
-
         [JsonPropertyName("brand_name")]
         public string? BrandName { get; init; }
 
@@ -445,6 +708,12 @@ public sealed class GlobalProductCatalogService : IGlobalProductCatalogService
     {
         [JsonPropertyName("products")]
         public List<OpenFoodFactsProduct>? Products { get; init; }
+    }
+
+    private sealed class OpenFoodFactsProductResponse
+    {
+        [JsonPropertyName("product")]
+        public OpenFoodFactsProduct? Product { get; init; }
     }
 
     private sealed class OpenFoodFactsProduct
