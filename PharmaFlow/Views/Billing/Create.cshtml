@@ -39,6 +39,23 @@
             </div>
         }
 
+        <section class="billing-product-search" aria-label="Add medicine">
+            <label class="billing-search-wrap" for="billingProductSearch">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <circle cx="11" cy="11" r="6.5"></circle>
+                    <path d="m16 16 4.5 4.5"></path>
+                </svg>
+                <input id="billingProductSearch"
+                       type="search"
+                       autocomplete="off"
+                       maxlength="80"
+                       placeholder="Search medicine or drug"
+                       aria-label="Search medicine or drug" />
+            </label>
+
+            <div class="billing-search-results" id="billingSearchResults" hidden></div>
+        </section>
+
         <section class="billing-customer-card" aria-labelledby="billingCustomerTitle">
             <div class="billing-section-heading">
                 <div class="billing-section-icon billing-section-icon-customer" aria-hidden="true">
@@ -82,23 +99,6 @@
                 </div>
                 <small class="billing-field-hint">For Udhaar, provide a customer name or valid 10-digit phone number.</small>
             </div>
-        </section>
-
-        <section class="billing-product-search" aria-label="Add medicine">
-            <label class="billing-search-wrap" for="billingProductSearch">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <circle cx="11" cy="11" r="6.5"></circle>
-                    <path d="m16 16 4.5 4.5"></path>
-                </svg>
-                <input id="billingProductSearch"
-                       type="search"
-                       autocomplete="off"
-                       maxlength="80"
-                       placeholder="Search medicine or drug"
-                       aria-label="Search medicine or drug" />
-            </label>
-
-            <div class="billing-search-results" id="billingSearchResults" hidden></div>
         </section>
 
         <section class="billing-items-section" aria-labelledby="billingItemsTitle">
