@@ -10,11 +10,19 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 builder.Services.AddHttpClient<ISupabaseAuthService, SupabaseAuthService>();
 builder.Services.AddHttpClient<IInvoiceVisionService, GeminiInvoiceVisionService>();
-builder.Services.AddHttpClient("IndiaMedicine");
-builder.Services.AddHttpClient("OpenFda", client => client.BaseAddress = new Uri("https://api.fda.gov"));
+builder.Services.AddHttpClient("IndiaMedicine", client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(8);
+});
+builder.Services.AddHttpClient("OpenFda", client =>
+{
+    client.BaseAddress = new Uri("https://api.fda.gov");
+    client.Timeout = TimeSpan.FromSeconds(8);
+});
 builder.Services.AddHttpClient("OpenFoodFacts", client =>
 {
     client.BaseAddress = new Uri("https://world.openfoodfacts.org");
+    client.Timeout = TimeSpan.FromSeconds(8);
     client.DefaultRequestHeaders.UserAgent.ParseAdd("PharmaFlow/1.0 (pharmaflow-app)");
 });
 builder.Services.AddScoped<IGlobalProductCatalogService, GlobalProductCatalogService>();
