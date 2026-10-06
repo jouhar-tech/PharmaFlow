@@ -51,6 +51,9 @@ ALTER TABLE public.product_catalog
 ALTER TABLE public.product_catalog
     ALTER COLUMN source SET DEFAULT 'india-medicine-api';
 
+ALTER TABLE public.products
+    ADD COLUMN IF NOT EXISTS catalog_id BIGINT NULL;
+
 -- If the earlier implementation stored OpenFDA/Open Food Facts rows,
 -- detach those catalog links from pharmacy products before enforcing the
 -- India-only catalog rule.
@@ -84,9 +87,6 @@ CREATE INDEX IF NOT EXISTS ix_product_catalog_brand_name
 
 CREATE INDEX IF NOT EXISTS ix_product_catalog_cache_expires_at
     ON public.product_catalog(cache_expires_at);
-
-ALTER TABLE public.products
-    ADD COLUMN IF NOT EXISTS catalog_id BIGINT NULL;
 
 ALTER TABLE public.products
     DROP CONSTRAINT IF EXISTS fk_products_catalog;
