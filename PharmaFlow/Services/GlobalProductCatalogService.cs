@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using PharmaFlow.Data;
 using PharmaFlow.Models;
@@ -210,7 +211,7 @@ public sealed class GlobalProductCatalogService : IGlobalProductCatalogService
         string query,
         CancellationToken cancellationToken)
     {
-        if (!_configuration.GetValue<bool?>("GlobalProductCatalog:OpenFdaEnabled") ?? true)
+        if (!(_configuration.GetValue<bool?>("GlobalProductCatalog:OpenFdaEnabled") ?? true))
             return [];
 
         try
@@ -376,54 +377,97 @@ public sealed class GlobalProductCatalogService : IGlobalProductCatalogService
 
     private sealed class IndiaMedicineSearchResponse
     {
+        [JsonPropertyName("results")]
         public List<IndiaMedicineResult>? Results { get; init; }
     }
 
     private sealed class IndiaMedicineResult
     {
+        [JsonPropertyName("id")]
         public int Id { get; init; }
+
+        [JsonPropertyName("product_name")]
         public string? ProductName { get; init; }
+
+        [JsonPropertyName("salt_composition")]
         public string? SaltComposition { get; init; }
+
+        [JsonPropertyName("dosage_form")]
         public string? DosageForm { get; init; }
+
+        [JsonPropertyName("is_prescription_required")]
         public bool IsPrescriptionRequired { get; init; }
     }
 
     private sealed class OpenFdaNdcSearchResponse
     {
+        [JsonPropertyName("results")]
         public List<OpenFdaNdcResult>? Results { get; init; }
     }
 
     private sealed class OpenFdaNdcResult
     {
+        [JsonPropertyName("product_ndc")]
         public string? ProductNdc { get; init; }
+
+        [JsonPropertyName("package_ndc")]
         public string? PackageNdc { get; init; }
+
+        [JsonPropertyName("application_number")]
         public string? ApplicationNumber { get; init; }
+
+        [JsonPropertyName("brand_name")]
         public string? BrandName { get; init; }
+
+        [JsonPropertyName("generic_name")]
         public string? GenericName { get; init; }
+
+        [JsonPropertyName("manufacturer_name")]
         public string? ManufacturerName { get; init; }
+
+        [JsonPropertyName("dosage_form")]
         public string? DosageForm { get; init; }
+
+        [JsonPropertyName("product_type")]
         public string? ProductType { get; init; }
+
+        [JsonPropertyName("openfda")]
         public OpenFdaIdentifiers? OpenFda { get; init; }
     }
 
     private sealed class OpenFdaIdentifiers
     {
+        [JsonPropertyName("upc")]
         public string[]? Upc { get; init; }
     }
 
     private sealed class OpenFoodFactsSearchResponse
     {
+        [JsonPropertyName("products")]
         public List<OpenFoodFactsProduct>? Products { get; init; }
     }
 
     private sealed class OpenFoodFactsProduct
     {
+        [JsonPropertyName("code")]
         public string? Code { get; init; }
+
+        [JsonPropertyName("product_name")]
         public string? ProductName { get; init; }
+
+        [JsonPropertyName("brands")]
         public string? Brands { get; init; }
+
+        [JsonPropertyName("categories")]
         public string? Categories { get; init; }
+
+        [JsonPropertyName("quantity")]
         public string? Quantity { get; init; }
+
+        [JsonPropertyName("manufacturing_places")]
         public string? ManufacturingPlaces { get; init; }
+
+        [JsonPropertyName("url")]
         public string? Url { get; init; }
     }
 }
