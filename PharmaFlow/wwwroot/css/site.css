@@ -12028,15 +12028,72 @@ body.theme-dark.customer-details-page-body .customer-detail-balance.is-payable {
   body.customer-management-page-body .app-topbar,
   body.customer-form-page-body .app-topbar,
   body.customer-details-page-body .app-topbar,
-  body.customer-payment-page-body .app-topbar { display:none; }
+  body.customer-payment-page-body .app-topbar,
+  body.customer-reminder-page-body .app-topbar { display:none; }
   body.customer-management-page-body .app-content,
   body.customer-form-page-body .app-content,
   body.customer-details-page-body .app-content,
-  body.customer-payment-page-body .app-content { padding:0 !important; }
+  body.customer-payment-page-body .app-content,
+  body.customer-reminder-page-body .app-content { padding:0 !important; }
   .customer-management-page,
   .customer-form-page,
   .customer-details-page { width:100%; max-width:none; padding:.8rem .7rem 6rem; box-sizing:border-box; }
   .customer-page-header { align-items:flex-start; }
+  /* Reminder page uses the same green mobile page header as Inventory/other modern pages. */
+  body.customer-reminder-page-body .customer-reminder-page {
+    width:100%;
+    max-width:none;
+    padding:0 0 6rem;
+    box-sizing:border-box;
+  }
+  body.customer-reminder-page-body .customer-form-header {
+    display:grid;
+    grid-template-columns:40px minmax(0,1fr);
+    align-items:start;
+    gap:.55rem;
+    margin:0;
+    padding:.65rem .75rem .8rem;
+    background:linear-gradient(180deg,#a9e3d8 0%,#98dacc 100%);
+  }
+  body.customer-reminder-page-body .customer-form-header .customer-back-button {
+    width:36px;
+    height:36px;
+    border:0;
+    border-radius:50%;
+    background:transparent;
+    color:#0f2826;
+  }
+  body.customer-reminder-page-body .customer-form-header .customer-back-button:hover {
+    border:0;
+    background:rgba(255,255,255,.26);
+    color:#0f2826;
+  }
+  body.customer-reminder-page-body .customer-form-header .customer-page-eyebrow {
+    margin-top:.02rem;
+    font-size:.5rem;
+    color:#0f6f68;
+  }
+  body.customer-reminder-page-body .customer-form-header h1 {
+    margin:0;
+    color:#111827;
+    font-size:1.28rem;
+    font-weight:850;
+    letter-spacing:-.035em;
+  }
+  body.customer-reminder-page-body .customer-form-header p {
+    margin:.14rem 0 0;
+    color:#4f6c68;
+    font-size:.55rem;
+    line-height:1.4;
+  }
+  body.customer-reminder-page-body .customer-reminder-customer-bar,
+  body.customer-reminder-page-body .customer-reminder-form {
+    margin-left:.7rem;
+    margin-right:.7rem;
+  }
+  body.customer-reminder-page-body .customer-reminder-customer-bar {
+    margin-top:.7rem;
+  }
   .customer-page-header h1,
   .customer-form-header h1,
   .customer-details-header h1 { font-size:1.27rem; }
