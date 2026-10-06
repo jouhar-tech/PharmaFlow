@@ -6,6 +6,8 @@ public sealed class InventoryAddItemViewModel
 {
     public long? ExistingProductId { get; set; }
     public long? CatalogId { get; set; }
+    public string? ExternalSource { get; set; }
+    public string? ExternalId { get; set; }
 
     [Required(ErrorMessage = "Product Name is required.")]
     [StringLength(200, MinimumLength = 2, ErrorMessage = "Product Name must be between 2 and 200 characters.")]
@@ -27,8 +29,9 @@ public sealed class InventoryAddItemViewModel
 
 public sealed class InventoryProductSearchItemViewModel
 {
-    public long CatalogId { get; init; }
+    public long? CatalogId { get; init; }
     public string Source { get; init; } = string.Empty;
+    public string ExternalId { get; init; } = string.Empty;
     public string ProductType { get; init; } = string.Empty;
     public string ProductName { get; init; } = string.Empty;
     public string? GenericName { get; init; }
