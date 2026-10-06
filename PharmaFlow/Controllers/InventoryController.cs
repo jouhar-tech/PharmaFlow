@@ -11,10 +11,14 @@ namespace PharmaFlow.Controllers;
 public sealed class InventoryController : Controller
 {
     private readonly ApplicationDbContext _dbContext;
+    private readonly IGlobalProductCatalogService _globalProductCatalogService;
 
-    public InventoryController(ApplicationDbContext dbContext)
+    public InventoryController(
+        ApplicationDbContext dbContext,
+        IGlobalProductCatalogService globalProductCatalogService)
     {
         _dbContext = dbContext;
+        _globalProductCatalogService = globalProductCatalogService;
     }
 
     [HttpGet]
@@ -26,64 +30,79 @@ public sealed class InventoryController : Controller
             return RedirectToAction("Login", "Account");
 
         var normalizedQuery = NormalizeNullableText(query, 100) ?? string.Empty;
+        var products = new List<ProductCatalog>();
 
-        var productsQuery = _dbContext.Products
-            .AsNoTracking()
-            .Where(p =>
-                p.ProfileId == profileId &&
-                (
-                    !p.Batches.Any(b =>
-                        b.IsActive &&
-                        !b.IsQuarantined &&
-                        b.QuantityOnHand > 0)
-                    || !p.IsActive));
-
-        if (!string.IsNullOrWhiteSpace(normalizedQuery))
+        if (normalizedQuery.Length >= 2)
         {
-            var search = normalizedQuery.ToLower();
-            productsQuery = productsQuery.Where(p =>
-                p.ProductName.ToLower().Contains(search) ||
-                (p.GenericName != null && p.GenericName.ToLower().Contains(search)) ||
-                (p.BrandName != null && p.BrandName.ToLower().Contains(search)) ||
-                (p.Barcode != null && p.Barcode.ToLower().Contains(search)));
-        }
+            products = (await _globalProductCatalogService.SearchAsync(
+                normalizedQuery,
+                cancellationToken)).ToList();
 
-        var products = await productsQuery
-            .OrderBy(p => p.ProductName)
-            .Take(100)
-            .Select(p => new InventoryProductSearchItemViewModel
+            var catalogIds = products
+                .Select(item => item.CatalogId)
+                .Distinct()
+                .ToArray();
+
+            if (catalogIds.Length > 0)
             {
-                ProductId = p.ProductId,
-                ProductName = p.ProductName,
-                GenericName = p.GenericName,
-                BrandName = p.BrandName,
-                Barcode = p.Barcode,
-                LatestMrp = p.Batches
-                    .OrderByDescending(b => b.CreatedAt)
-                    .Select(b => (decimal?)b.SellingUnitPrice)
-                    .FirstOrDefault()
-            })
-            .ToListAsync(cancellationToken);
+                var inventoryCatalogIds = await _dbContext.Products
+                    .AsNoTracking()
+                    .Where(p =>
+                        p.ProfileId == profileId &&
+                        p.CatalogId.HasValue &&
+                        catalogIds.Contains(p.CatalogId.Value))
+                    .Select(p => p.CatalogId!.Value)
+                    .Distinct()
+                    .ToListAsync(cancellationToken);
+
+                if (inventoryCatalogIds.Count > 0)
+                {
+                    products = products
+                        .Where(item => !inventoryCatalogIds.Contains(item.CatalogId))
+                        .ToList();
+                }
+            }
+        }
 
         ViewData["Title"] = "Search Products";
         return View(new InventoryProductSearchViewModel
         {
             Query = normalizedQuery,
             Products = products
+                .Select(item => new InventoryProductSearchItemViewModel
+                {
+                    CatalogId = item.CatalogId,
+                    Source = item.Source,
+                    ProductType = item.ProductType,
+                    ProductName = item.ProductName,
+                    GenericName = item.GenericName,
+                    BrandName = item.BrandName,
+                    Manufacturer = item.Manufacturer,
+                    DosageForm = item.DosageForm,
+                    Strength = item.Strength,
+                    PackSize = item.PackSize,
+                    Barcode = item.Barcode
+                })
+                .ToList()
         });
     }
 
     [HttpGet]
     public async Task<IActionResult> AddItem(
         long? productId,
+        long? catalogId,
         CancellationToken cancellationToken)
     {
         if (!TryGetProfileId(out var profileId))
             return RedirectToAction("Login", "Account");
 
+        if (productId.HasValue && catalogId.HasValue)
+            return BadRequest();
+
         var model = new InventoryAddItemViewModel
         {
             ExistingProductId = productId,
+            CatalogId = catalogId,
             ExpiryDate = DateOnly.FromDateTime(DateTime.UtcNow).AddYears(2)
         };
 
@@ -109,6 +128,32 @@ public sealed class InventoryController : Controller
             model.ProductName = product.ProductName;
             model.Mrp = product.LatestMrp.GetValueOrDefault();
         }
+        else if (catalogId.HasValue)
+        {
+            var catalogProduct = await _dbContext.ProductCatalog
+                .AsNoTracking()
+                .SingleOrDefaultAsync(
+                    item => item.CatalogId == catalogId.Value,
+                    cancellationToken);
+
+            if (catalogProduct is null)
+                return NotFound();
+
+            var alreadyInInventory = await _dbContext.Products
+                .AsNoTracking()
+                .AnyAsync(
+                    p => p.ProfileId == profileId &&
+                         p.CatalogId == catalogProduct.CatalogId,
+                    cancellationToken);
+
+            if (alreadyInInventory)
+            {
+                TempData["InventoryMessage"] = "This product is already linked to your inventory.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            model.ProductName = catalogProduct.ProductName;
+        }
 
         ViewData["Title"] = "Add Item";
         return View(model);
@@ -123,7 +168,28 @@ public sealed class InventoryController : Controller
         if (!TryGetProfileId(out var profileId))
             return Unauthorized();
 
-        model.ProductName = NormalizeText(model.ProductName, 200) ?? string.Empty;
+        ProductCatalog? catalogProduct = null;
+
+        if (model.ExistingProductId.HasValue && model.CatalogId.HasValue)
+            return BadRequest();
+
+        if (model.CatalogId.HasValue)
+        {
+            catalogProduct = await _dbContext.ProductCatalog
+                .AsNoTracking()
+                .SingleOrDefaultAsync(
+                    item => item.CatalogId == model.CatalogId.Value,
+                    cancellationToken);
+
+            if (catalogProduct is null)
+                return NotFound();
+
+            model.ProductName = catalogProduct.ProductName;
+        }
+        else
+        {
+            model.ProductName = NormalizeText(model.ProductName, 200) ?? string.Empty;
+        }
 
         if (model.ExpiryDate == default)
             model.ExpiryDate = DateOnly.FromDateTime(DateTime.UtcNow).AddYears(2);
@@ -144,7 +210,7 @@ public sealed class InventoryController : Controller
 
         await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
-        Product? product = null;
+        Product? product;
 
         if (model.ExistingProductId.HasValue)
         {
@@ -159,6 +225,46 @@ public sealed class InventoryController : Controller
 
             product.IsActive = true;
             product.UpdatedAt = DateTime.UtcNow;
+        }
+        else if (catalogProduct is not null)
+        {
+            product = await _dbContext.Products
+                .FirstOrDefaultAsync(
+                    p => p.ProfileId == profileId &&
+                         p.CatalogId == catalogProduct.CatalogId,
+                    cancellationToken);
+
+            if (product is null)
+            {
+                product = new Product
+                {
+                    ProfileId = profileId,
+                    CatalogId = catalogProduct.CatalogId,
+                    ProductName = catalogProduct.ProductName,
+                    GenericName = catalogProduct.GenericName,
+                    BrandName = catalogProduct.BrandName,
+                    DosageForm = catalogProduct.DosageForm,
+                    Strength = catalogProduct.Strength,
+                    PackSize = catalogProduct.PackSize,
+                    Barcode = catalogProduct.Barcode,
+                    Manufacturer = catalogProduct.Manufacturer,
+                    HsnCode = catalogProduct.HsnCode,
+                    GstRate = catalogProduct.GstRate,
+                    IsPrescriptionRequired = catalogProduct.IsPrescriptionRequired,
+                    IsActive = true,
+                    ReorderLevel = 0,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+
+                _dbContext.Products.Add(product);
+                await _dbContext.SaveChangesAsync(cancellationToken);
+            }
+            else
+            {
+                product.IsActive = true;
+                product.UpdatedAt = DateTime.UtcNow;
+            }
         }
         else
         {
