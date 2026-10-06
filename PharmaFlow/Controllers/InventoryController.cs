@@ -124,10 +124,19 @@ public sealed class InventoryController : Controller
         if (!TryGetProfileId(out var profileId))
             return RedirectToAction("Login", "Account");
 
-        if (productId.HasValue || (catalogId.HasValue && (!string.IsNullOrWhiteSpace(source) || !string.IsNullOrWhiteSpace(externalId))))
+        if (productId.HasValue &&
+            (catalogId.HasValue ||
+             !string.IsNullOrWhiteSpace(source) ||
+             !string.IsNullOrWhiteSpace(externalId)))
             return BadRequest();
 
-        if (!catalogId.HasValue && string.IsNullOrWhiteSpace(source) != string.IsNullOrWhiteSpace(externalId))
+        if (catalogId.HasValue &&
+            (string.IsNullOrWhiteSpace(source) ||
+             string.IsNullOrWhiteSpace(externalId)))
+            return BadRequest();
+
+        if (!catalogId.HasValue &&
+            string.IsNullOrWhiteSpace(source) != string.IsNullOrWhiteSpace(externalId))
             return BadRequest();
 
         var model = new InventoryAddItemViewModel
