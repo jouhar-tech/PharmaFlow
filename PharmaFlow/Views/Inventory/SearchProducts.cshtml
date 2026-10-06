@@ -41,7 +41,7 @@
 
     <div class="inventory-product-search-source-note">
         <strong>Global product search</strong>
-        <span>Results are collected from external product datasets and cached in PharmaFlow. Always verify medicine details, MRP, batch and expiry against the physical stock before saving.</span>
+        <span>Indian medicines use the PharmaFlow medicine cache. Other medicines and general products are fetched live from external APIs. Always verify MRP, batch and expiry against the physical stock.</span>
     </div>
 
     <section class="inventory-product-search-results" aria-live="polite">
@@ -157,6 +157,8 @@
                         <div class="inventory-product-search-side">
                             <a asp-action="AddItem"
                                asp-route-catalogId="@product.CatalogId"
+                               asp-route-source="@(product.CatalogId.HasValue ? "india-medicine-api" : product.Source)"
+                               asp-route-externalId="@product.ExternalId"
                                class="inventory-product-add-link">
                                 Add to Inventory
                             </a>
