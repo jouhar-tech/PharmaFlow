@@ -50,7 +50,6 @@ public class ApplicationDbContext : DbContext
             entity.ToTable("products", "public");
             entity.HasKey(p => p.ProductId);
             entity.Property(p => p.ProductId).HasColumnName("product_id");
-            entity.Property(p => p.CatalogId).HasColumnName("catalog_id");
             entity.HasOne<ProductCatalog>()
                 .WithMany()
                 .HasForeignKey(p => p.CatalogId)
