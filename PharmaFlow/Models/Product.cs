@@ -4,6 +4,7 @@ public sealed class Product
 {
     public long ProductId { get; set; }
     public long ProfileId { get; set; }
+    public long? CatalogId { get; set; }
     public string ProductName { get; set; } = string.Empty;
     public string? GenericName { get; set; }
     public string? BrandName { get; set; }
