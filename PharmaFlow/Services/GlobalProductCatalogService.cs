@@ -82,7 +82,7 @@ public sealed class GlobalProductCatalogService : IGlobalProductCatalogService
         // Only Indian medicine results are persisted in product_catalog.
         // OpenFDA and Open Food Facts remain live API results.
         if (indiaResults.Count > 0)
-            await CacheIndiaResultsAsync(indiaResults, cancellationToken);
+            indiaResults = await CacheIndiaResultsAsync(indiaResults, cancellationToken);
 
         var resultByKey = new Dictionary<string, GlobalProductSearchResult>(
             StringComparer.OrdinalIgnoreCase);
@@ -140,7 +140,7 @@ public sealed class GlobalProductCatalogService : IGlobalProductCatalogService
         };
     }
 
-    private async Task CacheIndiaResultsAsync(
+    private async Task<IReadOnlyList<GlobalProductSearchResult>> CacheIndiaResultsAsync(
         IReadOnlyList<GlobalProductSearchResult> results,
         CancellationToken cancellationToken)
     {
@@ -218,6 +218,40 @@ public sealed class GlobalProductCatalogService : IGlobalProductCatalogService
             _dbContext.ProductCatalog.RemoveRange(expiredRows);
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
+
+        var cachedRows = await _dbContext.ProductCatalog
+            .AsNoTracking()
+            .Where(item =>
+                item.Source == IndiaSource &&
+                externalIds.Contains(item.ExternalId))
+            .Select(item => new { item.CatalogId, item.ExternalId })
+            .ToListAsync(cancellationToken);
+
+        var catalogIdByExternalId = cachedRows
+            .ToDictionary(item => item.ExternalId, item => item.CatalogId, StringComparer.OrdinalIgnoreCase);
+
+        return results
+            .Where(item => catalogIdByExternalId.ContainsKey(item.ExternalId))
+            .Select(item => new GlobalProductSearchResult
+            {
+                CatalogId = catalogIdByExternalId[item.ExternalId],
+                Source = item.Source,
+                ExternalId = item.ExternalId,
+                ProductType = item.ProductType,
+                ProductName = item.ProductName,
+                GenericName = item.GenericName,
+                BrandName = item.BrandName,
+                Manufacturer = item.Manufacturer,
+                DosageForm = item.DosageForm,
+                Strength = item.Strength,
+                PackSize = item.PackSize,
+                Barcode = item.Barcode,
+                HsnCode = item.HsnCode,
+                GstRate = item.GstRate,
+                IsPrescriptionRequired = item.IsPrescriptionRequired,
+                SourceUrl = item.SourceUrl
+            })
+            .ToList();
     }
 
     private async Task<IReadOnlyList<GlobalProductSearchResult>> SearchIndiaMedicinesAsync(
