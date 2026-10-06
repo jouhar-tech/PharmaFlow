@@ -1,0 +1,133 @@
+@model PharmaFlow.Models.ViewModels.CustomerDetailsViewModel
+@{
+    ViewData["Title"] = "Customer Details";
+}
+
+<div class="customer-details-page">
+    <header class="customer-details-header">
+        <a asp-controller="Customers" asp-action="Index" class="customer-back-button" aria-label="Back to customer management">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/><path d="M9 12h11"/></svg>
+        </a>
+        <div class="customer-details-identity">
+            <span class="customer-avatar customer-avatar-large">
+                @string.Concat(Model.FullName.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(part => part[0])).ToUpperInvariant()
+            </span>
+            <div>
+                <div class="customer-page-eyebrow">Customer Account</div>
+                <h1>@Model.FullName</h1>
+                <p>
+                    @(string.IsNullOrWhiteSpace(Model.PhoneNumber) ? "No phone number" : $"+91 {Model.PhoneNumber}")
+                    <span>·</span>
+                    @Model.BillCount bill@(Model.BillCount == 1 ? "" : "s")
+                </p>
+            </div>
+        </div>
+        @if (Model.CurrentBalance != 0)
+        {
+            <a asp-controller="Customers" asp-action="Payment" asp-route-id="@Model.CustomerId" class="customer-primary-button">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16v10H4z"/><path d="M8 12h8M9 9v6M15 9v6"/></svg>
+                <span>Record Payment</span>
+            </a>
+        }
+    </header>
+
+    @if (TempData["CustomerSuccess"] is string successMessage)
+    {
+        <div class="customer-alert customer-alert-success" role="status">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>
+            <span>@successMessage</span>
+        </div>
+    }
+
+    <section class="customer-detail-summary">
+        <div class="customer-detail-balance @(Model.CurrentBalance > 0 ? "is-receivable" : Model.CurrentBalance < 0 ? "is-payable" : "is-settled")">
+            <span>Current balance</span>
+            @if (Model.CurrentBalance > 0)
+            {
+                <strong>₹@Model.CurrentBalance.ToString("N2")</strong>
+                <small>Owed to you</small>
+            }
+            else if (Model.CurrentBalance < 0)
+            {
+                <strong>₹@Math.Abs(Model.CurrentBalance).ToString("N2")</strong>
+                <small>Owed by you</small>
+            }
+            else
+            {
+                <strong>₹0.00</strong>
+                <small>Settled</small>
+            }
+        </div>
+
+        <div class="customer-contact-card">
+            <span>Customer information</span>
+            <strong>@(string.IsNullOrWhiteSpace(Model.PhoneNumber) ? "Phone number not added" : $"+91 {Model.PhoneNumber}")</strong>
+            <small>Customer since @Model.CreatedAt.ToLocalTime().ToString("dd MMM yyyy")</small>
+        </div>
+    </section>
+
+    <section class="customer-history-section" aria-labelledby="customerHistoryTitle">
+        <div class="customer-history-heading">
+            <div>
+                <h2 id="customerHistoryTitle">Account History</h2>
+                <span>Every Udhaar, payment and opening balance entry is recorded here.</span>
+            </div>
+        </div>
+
+        @if (Model.Transactions.Count == 0)
+        {
+            <div class="customer-empty-state customer-empty-state-compact">
+                <div class="customer-empty-icon">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h12v16H6z"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>
+                </div>
+                <h3>No balance activity yet</h3>
+                <p>When an Udhaar bill or opening balance is added, it will appear here.</p>
+            </div>
+        }
+        else
+        {
+            <div class="customer-history-list">
+                @foreach (var item in Model.Transactions)
+                {
+                    <article class="customer-history-item">
+                        <span class="customer-history-icon @(item.BalanceChange > 0 ? "is-positive" : "is-negative")">
+                            @if (item.BalanceChange > 0)
+                            {
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 19 0-14M6 9l6-6 6 6"/></svg>
+                            }
+                            else
+                            {
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 5 0 14M18 15l-6 6-6-6"/></svg>
+                            }
+                        </span>
+
+                        <div class="customer-history-copy">
+                            <strong>@item.EntryLabel</strong>
+                            <span>@item.Description</span>
+                            @if (item.BillId.HasValue)
+                            {
+                                <a asp-controller="Bills" asp-action="Details" asp-route-billId="@item.BillId">Bill @item.BillNumber</a>
+                            }
+                            <small>@item.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, hh:mm tt")</small>
+                        </div>
+
+                        <div class="customer-history-amount">
+                            <strong class="@(item.BalanceChange > 0 ? "is-positive" : "is-negative")">
+                                @(item.BalanceChange > 0 ? "+" : "-")₹@Math.Abs(item.BalanceChange).ToString("N2")
+                            </strong>
+                            <span>
+                                Balance ₹@Math.Abs(item.BalanceAfter).ToString("N2")
+                                @(item.BalanceAfter > 0 ? "owed to you" : item.BalanceAfter < 0 ? "owed by you" : "settled")
+                            </span>
+                        </div>
+                    </article>
+                }
+            </div>
+        }
+    </section>
+
+    <div class="customer-page-note">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 10v6M12 7h.01"/></svg>
+        <span>Customers are not deleted from financial history. Use the account history to reconcile Udhaar and payments safely.</span>
+    </div>
+</div>
