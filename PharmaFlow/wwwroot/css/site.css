@@ -12079,3 +12079,353 @@ body.theme-dark.customer-details-page-body .customer-detail-balance.is-payable {
   .customer-history-amount { grid-column:2; text-align:left; padding-top:.15rem; }
   .customer-history-amount span { white-space:normal; }
 }
+
+
+/* Customer product reminders */
+.customer-secondary-primary-button {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:.4rem;
+  min-height:40px;
+  padding:0 .72rem;
+  border:1px solid #b8dcd5;
+  border-radius:.65rem;
+  background:#eef9f6;
+  color:#0f766e;
+  font:inherit;
+  font-size:.61rem;
+  font-weight:900;
+  text-decoration:none;
+  white-space:nowrap;
+}
+.customer-secondary-primary-button:hover { color:#0d5f59; border-color:#8cc8bf; background:#e5f6f1; }
+.customer-secondary-primary-button svg { width:17px; height:17px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+.customer-reminders-section {
+  margin-bottom:.85rem;
+  padding:.85rem;
+  border:1px solid #e0e7ed;
+  border-radius:1rem;
+  background:#fff;
+  box-shadow:0 6px 22px rgba(15,23,42,.04);
+}
+.customer-reminders-heading {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:.75rem;
+  margin-bottom:.65rem;
+}
+.customer-reminders-heading h2 { margin:0; color:#1c2732; font-size:.9rem; font-weight:900; }
+.customer-reminders-heading > div > span { display:block; margin-top:.12rem; color:#87949f; font-size:.58rem; line-height:1.45; }
+.customer-reminder-list { display:grid; gap:.5rem; }
+.customer-reminder-card {
+  display:grid;
+  grid-template-columns:38px minmax(0,1fr) auto;
+  gap:.62rem;
+  align-items:start;
+  padding:.7rem;
+  border:1px solid #e5ebef;
+  border-radius:.76rem;
+  background:#fcfeff;
+}
+.customer-reminder-card.is-due { border-color:#efc777; box-shadow:0 0 0 2px rgba(234,179,8,.06); }
+.customer-reminder-icon {
+  display:grid;
+  place-items:center;
+  width:38px;
+  height:38px;
+  border-radius:.68rem;
+  background:#eaf7f4;
+  color:#0f766e;
+}
+.customer-reminder-icon svg { width:19px; height:19px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+.customer-reminder-main { min-width:0; }
+.customer-reminder-title-row { display:flex; align-items:center; gap:.42rem; flex-wrap:wrap; }
+.customer-reminder-title-row > strong { color:#1b2731; font-size:.67rem; font-weight:900; }
+.customer-reminder-status {
+  display:inline-flex;
+  align-items:center;
+  min-height:22px;
+  padding:0 .42rem;
+  border-radius:999px;
+  font-size:.5rem;
+  font-weight:900;
+}
+.customer-reminder-status-pending { background:#eef4ff; color:#2563eb; }
+.customer-reminder-status-ordered { background:#fff5df; color:#a16207; }
+.customer-reminder-status-completed { background:#eaf7f4; color:#0f766e; }
+.customer-reminder-status-cancelled { background:#f2f4f6; color:#64748b; }
+.customer-reminder-product-meta,
+.customer-reminder-note,
+.customer-reminder-date { display:block; }
+.customer-reminder-product-meta { margin-top:.18rem; color:#74828c; font-size:.55rem; }
+.customer-reminder-note { margin-top:.2rem; color:#4e5e69; font-size:.58rem; line-height:1.42; }
+.customer-reminder-date { margin-top:.22rem; color:#97a2aa; font-size:.51rem; }
+.customer-reminder-actions { display:flex; flex-wrap:wrap; gap:.35rem; justify-content:flex-end; }
+.customer-reminder-actions form { margin:0; }
+.customer-reminder-action-button {
+  min-height:31px;
+  padding:0 .5rem;
+  border:1px solid #d2dde4;
+  border-radius:.52rem;
+  background:#fff;
+  color:#53626d;
+  font:inherit;
+  font-size:.52rem;
+  font-weight:850;
+  cursor:pointer;
+}
+.customer-reminder-action-button:hover { border-color:#aacfc8; color:#0f766e; }
+.customer-reminder-action-button.is-complete { border-color:#b8dcd5; color:#0f766e; background:#f4fbf9; }
+.customer-reminder-action-button.is-cancel { border-color:#e4caca; color:#b45353; background:#fffafa; }
+.customer-reminder-empty {
+  display:flex;
+  align-items:center;
+  gap:.7rem;
+  padding:.75rem;
+  border:1px dashed #cfdbe2;
+  border-radius:.72rem;
+  background:#fbfdfe;
+}
+.customer-reminder-empty > div:last-child { min-width:0; }
+.customer-reminder-empty strong,
+.customer-reminder-empty span { display:block; }
+.customer-reminder-empty strong { color:#26333f; font-size:.62rem; font-weight:900; }
+.customer-reminder-empty span { margin-top:.12rem; color:#7d8a96; font-size:.56rem; line-height:1.45; }
+.customer-list-reminder-count { color:#b45309; font-weight:850; }
+
+.customer-reminder-customer-bar {
+  display:flex;
+  align-items:center;
+  gap:.65rem;
+  margin-bottom:.8rem;
+  padding:.72rem .8rem;
+  border:1px solid #dfe8ed;
+  border-radius:.82rem;
+  background:#fff;
+}
+.customer-reminder-customer-bar > div { min-width:0; }
+.customer-reminder-customer-bar > div > span,
+.customer-reminder-customer-bar > div > strong { display:block; }
+.customer-reminder-customer-bar > div > span { color:#7d8b96; font-size:.55rem; }
+.customer-reminder-customer-bar > div > strong { margin-top:.1rem; color:#1d2a35; font-size:.67rem; font-weight:900; }
+.customer-reminder-search-wrap { position:relative; }
+.customer-reminder-search-wrap > svg {
+  position:absolute;
+  left:.7rem;
+  top:50%;
+  transform:translateY(-50%);
+  width:18px;
+  height:18px;
+  fill:none;
+  stroke:#82909c;
+  stroke-width:1.8;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  pointer-events:none;
+  z-index:1;
+}
+.customer-reminder-search-input { padding-left:2.3rem; }
+.customer-reminder-search-results {
+  position:relative;
+  z-index:3;
+  display:grid;
+  gap:.35rem;
+  max-height:320px;
+  overflow:auto;
+  margin-top:.45rem;
+  padding:.35rem;
+  border:1px solid #dce5eb;
+  border-radius:.72rem;
+  background:#fff;
+  box-shadow:0 10px 30px rgba(15,23,42,.08);
+}
+.customer-reminder-search-result {
+  display:grid;
+  grid-template-columns:34px minmax(0,1fr) auto;
+  gap:.5rem;
+  align-items:center;
+  width:100%;
+  min-height:54px;
+  padding:.45rem;
+  border:1px solid transparent;
+  border-radius:.6rem;
+  background:#fff;
+  text-align:left;
+  cursor:pointer;
+}
+.customer-reminder-search-result:hover { border-color:#c5e4de; background:#f5fbf9; }
+.customer-reminder-result-icon {
+  display:grid;
+  place-items:center;
+  width:34px;
+  height:34px;
+  border-radius:.55rem;
+  background:#edf7f5;
+  color:#0f766e;
+}
+.customer-reminder-result-icon svg { width:17px; height:17px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+.customer-reminder-result-copy { min-width:0; }
+.customer-reminder-result-copy strong,
+.customer-reminder-result-copy small { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.customer-reminder-result-copy strong { color:#1d2a35; font-size:.61rem; font-weight:900; }
+.customer-reminder-result-copy small { margin-top:.12rem; color:#7b8994; font-size:.53rem; }
+.customer-reminder-result-tag {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:22px;
+  padding:0 .38rem;
+  border-radius:999px;
+  font-size:.48rem;
+  font-weight:900;
+  white-space:nowrap;
+}
+.customer-reminder-result-tag.is-in-stock { background:#eaf7f4; color:#0f766e; }
+.customer-reminder-result-tag.is-external { background:#fff5df; color:#a16207; }
+.customer-reminder-search-empty,
+.customer-reminder-search-loading {
+  display:grid;
+  justify-items:center;
+  gap:.16rem;
+  padding:1.2rem .75rem;
+  text-align:center;
+}
+.customer-reminder-search-empty strong { color:#34434e; font-size:.62rem; font-weight:900; }
+.customer-reminder-search-empty span,
+.customer-reminder-search-loading span { color:#7e8c97; font-size:.55rem; line-height:1.45; }
+.customer-reminder-spinner {
+  width:18px;
+  height:18px;
+  border:2px solid #d7e7e3;
+  border-top-color:#0f766e;
+  border-radius:50%;
+  animation:customerReminderSpin .7s linear infinite;
+}
+@keyframes customerReminderSpin { to { transform:rotate(360deg); } }
+.customer-reminder-selected {
+  display:grid;
+  grid-template-columns:34px minmax(0,1fr) auto;
+  gap:.5rem;
+  align-items:center;
+  margin-top:.55rem;
+  padding:.55rem .6rem;
+  border:1px solid #b8dcd5;
+  border-radius:.65rem;
+  background:#f3fbf9;
+}
+.customer-reminder-selected-icon {
+  display:grid;
+  place-items:center;
+  width:34px;
+  height:34px;
+  border-radius:.55rem;
+  background:#e4f5f1;
+  color:#0f766e;
+}
+.customer-reminder-selected-icon svg { width:17px; height:17px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+.customer-reminder-selected > div:nth-child(2) { min-width:0; }
+.customer-reminder-selected > div:nth-child(2) span,
+.customer-reminder-selected > div:nth-child(2) strong,
+.customer-reminder-selected > div:nth-child(2) small { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.customer-reminder-selected > div:nth-child(2) span { color:#6d817c; font-size:.5rem; font-weight:800; }
+.customer-reminder-selected > div:nth-child(2) strong { margin-top:.08rem; color:#1c2a34; font-size:.62rem; font-weight:900; }
+.customer-reminder-selected > div:nth-child(2) small { margin-top:.08rem; color:#73918a; font-size:.5rem; }
+.customer-reminder-clear {
+  width:28px;
+  height:28px;
+  border:0;
+  border-radius:.5rem;
+  background:transparent;
+  color:#60706f;
+  font-size:1.2rem;
+  line-height:1;
+  cursor:pointer;
+}
+.customer-reminder-clear:hover { background:#e6f3f0; color:#0f766e; }
+.customer-reminder-manual { margin-top:.45rem; }
+.customer-reminder-manual-toggle {
+  padding:0;
+  border:0;
+  background:transparent;
+  color:#0f766e;
+  font:inherit;
+  font-size:.55rem;
+  font-weight:850;
+  text-decoration:underline;
+  cursor:pointer;
+}
+.customer-reminder-status-preview {
+  display:grid;
+  grid-template-columns:auto 1fr;
+  align-items:center;
+  column-gap:.42rem;
+  min-height:43px;
+  padding:.45rem .6rem;
+  border:1px solid #d8e2e8;
+  border-radius:.64rem;
+  background:#f8fafb;
+}
+.customer-reminder-status-preview strong { color:#2563eb; font-size:.6rem; font-weight:900; }
+.customer-reminder-status-preview small { grid-column:2; color:#84909b; font-size:.52rem; }
+.customer-reminder-status-dot { width:8px; height:8px; border-radius:50%; background:#2563eb; box-shadow:0 0 0 3px #eaf0ff; }
+
+body.theme-dark.customer-details-page-body .customer-reminders-section,
+body.theme-dark.customer-reminder-page-body .customer-form-card,
+body.theme-dark.customer-reminder-page-body .customer-reminder-customer-bar,
+body.theme-dark.customer-details-page-body .customer-reminder-card,
+body.theme-dark.customer-reminder-page-body .customer-reminder-search-results {
+  background:#111c2e;
+  border-color:#2b394d;
+}
+body.theme-dark.customer-details-page-body .customer-reminders-heading h2,
+body.theme-dark.customer-details-page-body .customer-reminder-title-row>strong,
+body.theme-dark.customer-details-page-body .customer-reminder-note,
+body.theme-dark.customer-reminder-page-body .customer-reminder-customer-bar > div > strong,
+body.theme-dark.customer-reminder-page-body .customer-reminder-result-copy strong,
+body.theme-dark.customer-reminder-page-body .customer-reminder-selected > div:nth-child(2) strong,
+body.theme-dark.customer-reminder-page-body .customer-reminder-status-preview strong {
+  color:#f8fafc;
+}
+body.theme-dark.customer-details-page-body .customer-reminders-heading > div > span,
+body.theme-dark.customer-details-page-body .customer-reminder-product-meta,
+body.theme-dark.customer-details-page-body .customer-reminder-date,
+body.theme-dark.customer-reminder-page-body .customer-reminder-customer-bar > div > span,
+body.theme-dark.customer-reminder-page-body .customer-form-field small,
+body.theme-dark.customer-reminder-page-body .customer-reminder-selected > div:nth-child(2) span,
+body.theme-dark.customer-reminder-page-body .customer-reminder-selected > div:nth-child(2) small,
+body.theme-dark.customer-reminder-page-body .customer-reminder-result-copy small,
+body.theme-dark.customer-reminder-page-body .customer-reminder-search-empty span,
+body.theme-dark.customer-reminder-page-body .customer-reminder-search-loading span,
+body.theme-dark.customer-reminder-page-body .customer-reminder-status-preview small {
+  color:#94a3b8;
+}
+body.theme-dark.customer-details-page-body .customer-reminder-card,
+body.theme-dark.customer-details-page-body .customer-reminder-empty,
+body.theme-dark.customer-reminder-page-body .customer-reminder-search-result,
+body.theme-dark.customer-reminder-page-body .customer-reminder-search-result:hover,
+body.theme-dark.customer-reminder-page-body .customer-reminder-status-preview {
+  background:#0f1929;
+  border-color:#334155;
+}
+body.theme-dark.customer-reminder-page-body .customer-reminder-search-result:hover { background:#102822; }
+body.theme-dark.customer-reminder-page-body .customer-reminder-selected { background:#102822; border-color:#36766c; }
+body.theme-dark.customer-reminder-page-body .customer-form-input,
+body.theme-dark.customer-reminder-page-body .customer-reminder-search-results { color:#f8fafc; }
+body.theme-dark.customer-reminder-page-body .customer-reminder-search-input,
+body.theme-dark.customer-reminder-page-body .customer-form-input { background:#0f1929; border-color:#334155; }
+body.theme-dark.customer-reminder-page-body .customer-reminder-customer-bar { background:#111c2e; }
+body.theme-dark.customer-reminder-page-body .customer-secondary-primary-button { background:#102822; border-color:#36766c; color:#8ed1c5; }
+
+@media (max-width:767.98px) {
+  .customer-reminders-heading { align-items:flex-start; flex-direction:column; }
+  .customer-secondary-primary-button { width:100%; }
+  .customer-reminder-card { grid-template-columns:34px minmax(0,1fr); }
+  .customer-reminder-actions { grid-column:1 / -1; justify-content:stretch; }
+  .customer-reminder-actions form { flex:1 1 auto; }
+  .customer-reminder-action-button { width:100%; }
+  .customer-reminder-search-result { grid-template-columns:34px minmax(0,1fr); }
+  .customer-reminder-result-tag { grid-column:2; justify-self:start; }
+  .customer-reminder-page .customer-form-header { align-items:flex-start; }
+}
