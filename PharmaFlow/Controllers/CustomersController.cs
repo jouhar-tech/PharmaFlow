@@ -6,6 +6,7 @@ using PharmaFlow.Data;
 using PharmaFlow.Filters;
 using PharmaFlow.Models;
 using PharmaFlow.Models.ViewModels;
+using PharmaFlow.Services;
 
 namespace PharmaFlow.Controllers;
 
@@ -13,13 +14,16 @@ namespace PharmaFlow.Controllers;
 public sealed class CustomersController : Controller
 {
     private readonly ApplicationDbContext _dbContext;
+    private readonly IGlobalProductCatalogService _globalProductCatalogService;
     private readonly ILogger<CustomersController> _logger;
 
     public CustomersController(
         ApplicationDbContext dbContext,
+        IGlobalProductCatalogService globalProductCatalogService,
         ILogger<CustomersController> logger)
     {
         _dbContext = dbContext;
+        _globalProductCatalogService = globalProductCatalogService;
         _logger = logger;
     }
 
@@ -158,6 +162,18 @@ public sealed class CustomersController : Controller
                 .Select(group => new { CustomerId = group.Key, Count = group.Count() })
                 .ToDictionaryAsync(row => row.CustomerId, row => row.Count, cancellationToken);
 
+        var pendingReminderCounts = customerIds.Count == 0
+            ? new Dictionary<long, int>()
+            : await _dbContext.CustomerReminders
+                .AsNoTracking()
+                .Where(reminder =>
+                    reminder.ProfileId == profileId &&
+                    customerIds.Contains(reminder.CustomerId) &&
+                    (reminder.Status == "Pending" || reminder.Status == "Ordered"))
+                .GroupBy(reminder => reminder.CustomerId)
+                .Select(group => new { CustomerId = group.Key, Count = group.Count() })
+                .ToDictionaryAsync(row => row.CustomerId, row => row.Count, cancellationToken);
+
         var items = customers
             .Select(customer =>
             {
@@ -172,7 +188,8 @@ public sealed class CustomersController : Controller
                     PhoneNumber = customer.PhoneNumber,
                     CurrentBalance = balanceRow?.Balance ?? 0m,
                     LastActivityAt = balanceRow?.LastActivityAt ?? customer.UpdatedAt,
-                    BillCount = billCounts.GetValueOrDefault(customer.CustomerId)
+                    BillCount = billCounts.GetValueOrDefault(customer.CustomerId),
+                    PendingReminderCount = pendingReminderCounts.GetValueOrDefault(customer.CustomerId)
                 };
             })
             .ToList();
@@ -371,6 +388,29 @@ public sealed class CustomersController : Controller
                 bill => bill.ProfileId == profileId && bill.CustomerId == id,
                 cancellationToken);
 
+        var reminders = await _dbContext.CustomerReminders
+            .AsNoTracking()
+            .Where(reminder =>
+                reminder.ProfileId == profileId &&
+                reminder.CustomerId == id)
+            .OrderBy(reminder => reminder.Status == "Completed" || reminder.Status == "Cancelled")
+            .ThenBy(reminder => reminder.ReminderDate ?? DateOnly.MaxValue)
+            .ThenByDescending(reminder => reminder.CreatedAt)
+            .Select(reminder => new CustomerReminderViewModel
+            {
+                ReminderId = reminder.ReminderId,
+                ProductName = reminder.ProductName,
+                GenericName = reminder.GenericName,
+                BrandName = reminder.BrandName,
+                ProductSource = reminder.ProductSource,
+                Status = reminder.Status,
+                Note = reminder.Note,
+                ReminderDate = reminder.ReminderDate,
+                CreatedAt = reminder.CreatedAt,
+                CompletedAt = reminder.CompletedAt
+            })
+            .ToListAsync(cancellationToken);
+
         return View(new CustomerDetailsViewModel
         {
             CustomerId = customer.CustomerId,
@@ -384,8 +424,287 @@ public sealed class CustomersController : Controller
             Transactions = transactions
                 .OrderByDescending(item => item.CreatedAt)
                 .ThenByDescending(item => item.LedgerEntryId)
-                .ToList()
+                .ToList(),
+            Reminders = reminders
         });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> SearchProducts(
+        long customerId,
+        string? query,
+        CancellationToken cancellationToken)
+    {
+        if (!TryGetProfileId(out var profileId))
+            return Unauthorized();
+
+        var customerExists = await _dbContext.Customers
+            .AsNoTracking()
+            .AnyAsync(
+                customer => customer.CustomerId == customerId && customer.ProfileId == profileId,
+                cancellationToken);
+
+        if (!customerExists)
+            return NotFound();
+
+        var normalizedQuery = NormalizeNullableText(query, 100) ?? string.Empty;
+        if (normalizedQuery.Length < 2)
+            return Ok(Array.Empty<CustomerReminderSearchItemViewModel>());
+
+        var results = await _globalProductCatalogService.SearchAsync(
+            normalizedQuery,
+            cancellationToken);
+
+        var catalogIds = results
+            .Where(item => item.CatalogId.HasValue)
+            .Select(item => item.CatalogId!.Value)
+            .Distinct()
+            .ToArray();
+
+        var barcodes = results
+            .Where(item => !string.IsNullOrWhiteSpace(item.Barcode))
+            .Select(item => item.Barcode!.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        var productNames = results
+            .Select(item => item.ProductName.Trim())
+            .Where(name => !string.IsNullOrWhiteSpace(name))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        var localProducts = await _dbContext.Products
+            .AsNoTracking()
+            .Where(product =>
+                product.ProfileId == profileId &&
+                (
+                    (product.CatalogId.HasValue && catalogIds.Contains(product.CatalogId.Value)) ||
+                    (product.Barcode != null && barcodes.Contains(product.Barcode)) ||
+                    productNames.Contains(product.ProductName)
+                ))
+            .Select(product => new
+            {
+                product.CatalogId,
+                product.Barcode,
+                product.ProductName
+            })
+            .ToListAsync(cancellationToken);
+
+        var localCatalogIds = localProducts
+            .Where(product => product.CatalogId.HasValue)
+            .Select(product => product.CatalogId!.Value)
+            .ToHashSet();
+
+        var localBarcodes = localProducts
+            .Where(product => !string.IsNullOrWhiteSpace(product.Barcode))
+            .Select(product => product.Barcode!.Trim())
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        var localNames = localProducts
+            .Select(product => product.ProductName.Trim())
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        return Ok(results
+            .Select(item => new CustomerReminderSearchItemViewModel
+            {
+                CatalogId = item.CatalogId,
+                Source = item.Source,
+                ExternalId = item.ExternalId,
+                ProductType = item.ProductType,
+                ProductName = item.ProductName,
+                GenericName = item.GenericName,
+                BrandName = item.BrandName,
+                Manufacturer = item.Manufacturer,
+                DosageForm = item.DosageForm,
+                Strength = item.Strength,
+                PackSize = item.PackSize,
+                Barcode = item.Barcode,
+                IsAlreadyInInventory =
+                    (item.CatalogId.HasValue && localCatalogIds.Contains(item.CatalogId.Value)) ||
+                    (!string.IsNullOrWhiteSpace(item.Barcode) && localBarcodes.Contains(item.Barcode.Trim())) ||
+                    localNames.Contains(item.ProductName.Trim())
+            })
+            .Take(100)
+            .ToList());
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> CreateReminder(
+        long customerId,
+        CancellationToken cancellationToken)
+    {
+        if (!TryGetProfileId(out var profileId))
+            return Unauthorized();
+
+        var customer = await _dbContext.Customers
+            .AsNoTracking()
+            .SingleOrDefaultAsync(
+                item => item.CustomerId == customerId && item.ProfileId == profileId,
+                cancellationToken);
+
+        if (customer is null)
+            return NotFound();
+
+        ViewData["Title"] = "Add Reminder";
+        return View(new CustomerReminderCreateViewModel
+        {
+            CustomerId = customer.CustomerId,
+            CustomerName = string.IsNullOrWhiteSpace(customer.FullName)
+                ? "Unnamed Customer"
+                : customer.FullName.Trim()
+        });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CreateReminder(
+        CustomerReminderCreateViewModel model,
+        CancellationToken cancellationToken)
+    {
+        if (!TryGetProfileId(out var profileId))
+            return Unauthorized();
+
+        var customer = await _dbContext.Customers
+            .AsNoTracking()
+            .SingleOrDefaultAsync(
+                item => item.CustomerId == model.CustomerId && item.ProfileId == profileId,
+                cancellationToken);
+
+        if (customer is null)
+            return NotFound();
+
+        var productName = model.ProductName?.Trim();
+        if (string.IsNullOrWhiteSpace(productName))
+            ModelState.AddModelError(nameof(model.ProductName), "Select a product or enter a product name.");
+
+        if (!string.IsNullOrWhiteSpace(model.ProductSource) ||
+            !string.IsNullOrWhiteSpace(model.ProductExternalId) ||
+            model.CatalogId.HasValue)
+        {
+            if (string.IsNullOrWhiteSpace(model.ProductSource) ||
+                string.IsNullOrWhiteSpace(model.ProductExternalId))
+            {
+                ModelState.AddModelError(string.Empty, "The selected product reference is incomplete. Search and select the product again.");
+            }
+        }
+
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        if (model.ReminderDate.HasValue && model.ReminderDate.Value < today)
+            ModelState.AddModelError(nameof(model.ReminderDate), "Reminder date cannot be earlier than today.");
+
+        GlobalProductSearchResult? selectedProduct = null;
+        if (ModelState.IsValid &&
+            !string.IsNullOrWhiteSpace(model.ProductSource) &&
+            !string.IsNullOrWhiteSpace(model.ProductExternalId))
+        {
+            selectedProduct = await _globalProductCatalogService.GetAsync(
+                model.ProductSource.Trim(),
+                model.ProductExternalId.Trim(),
+                model.CatalogId,
+                cancellationToken);
+
+            if (selectedProduct is null)
+            {
+                ModelState.AddModelError(string.Empty, "The selected product is no longer available from the product database. Search again or enter the product name manually.");
+            }
+        }
+
+        if (!ModelState.IsValid)
+        {
+            model.ProductName = productName ?? string.Empty;
+            model.CustomerName = string.IsNullOrWhiteSpace(customer.FullName)
+                ? "Unnamed Customer"
+                : customer.FullName.Trim();
+            return View(model);
+        }
+
+        var reminder = new CustomerReminder
+        {
+            ProfileId = profileId,
+            CustomerId = customer.CustomerId,
+            CatalogId = selectedProduct?.CatalogId,
+            ProductSource = selectedProduct?.Source,
+            ProductExternalId = selectedProduct?.ExternalId,
+            ProductName = selectedProduct?.ProductName ?? productName!,
+            GenericName = selectedProduct?.GenericName ?? NormalizeNullableText(model.GenericName, 500),
+            BrandName = selectedProduct?.BrandName ?? NormalizeNullableText(model.BrandName, 160),
+            Manufacturer = selectedProduct?.Manufacturer ?? NormalizeNullableText(model.Manufacturer, 200),
+            DosageForm = selectedProduct?.DosageForm ?? NormalizeNullableText(model.DosageForm, 100),
+            Strength = selectedProduct?.Strength ?? NormalizeNullableText(model.Strength, 100),
+            PackSize = selectedProduct?.PackSize ?? NormalizeNullableText(model.PackSize, 100),
+            Barcode = selectedProduct?.Barcode ?? NormalizeNullableText(model.Barcode, 100),
+            Note = NormalizeNullableText(model.Note, 500),
+            ReminderDate = model.ReminderDate,
+            Status = "Pending",
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        try
+        {
+            _dbContext.CustomerReminders.Add(reminder);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+
+            TempData["CustomerSuccess"] =
+                $"Reminder added for {reminder.ProductName}.";
+
+            return RedirectToAction(nameof(Details), new { id = customer.CustomerId });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Failed to create customer reminder for profile {ProfileId}, customer {CustomerId}.",
+                profileId,
+                customer.CustomerId);
+
+            ModelState.AddModelError(string.Empty, "The reminder could not be saved. No changes were made.");
+            model.CustomerName = string.IsNullOrWhiteSpace(customer.FullName)
+                ? "Unnamed Customer"
+                : customer.FullName.Trim();
+            return View(model);
+        }
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UpdateReminderStatus(
+        long reminderId,
+        string? status,
+        CancellationToken cancellationToken)
+    {
+        if (!TryGetProfileId(out var profileId))
+            return Unauthorized();
+
+        var normalizedStatus = NormalizeReminderStatus(status);
+        if (normalizedStatus is null)
+            return BadRequest();
+
+        var reminder = await _dbContext.CustomerReminders
+            .SingleOrDefaultAsync(
+                item => item.ReminderId == reminderId && item.ProfileId == profileId,
+                cancellationToken);
+
+        if (reminder is null)
+            return NotFound();
+
+        reminder.Status = normalizedStatus;
+        reminder.CompletedAt = normalizedStatus == "Completed"
+            ? DateTime.UtcNow
+            : null;
+        reminder.UpdatedAt = DateTime.UtcNow;
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        TempData["CustomerSuccess"] = normalizedStatus switch
+        {
+            "Ordered" => $"Marked {reminder.ProductName} as ordered.",
+            "Completed" => $"Completed reminder for {reminder.ProductName}.",
+            "Cancelled" => $"Cancelled reminder for {reminder.ProductName}.",
+            _ => $"Reminder reopened for {reminder.ProductName}."
+        };
+
+        return RedirectToAction(nameof(Details), new { id = reminder.CustomerId });
     }
 
     [HttpGet]
@@ -549,6 +868,27 @@ public sealed class CustomersController : Controller
             .Select(entry => (decimal?)entry.BalanceChange)
             .SumAsync(cancellationToken) ?? 0m;
     }
+
+    private static string? NormalizeNullableText(string? value, int maxLength)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return null;
+
+        var normalized = value.Trim();
+        return normalized.Length <= maxLength
+            ? normalized
+            : normalized[..maxLength].Trim();
+    }
+
+    private static string? NormalizeReminderStatus(string? value) =>
+        value?.Trim() switch
+        {
+            "Pending" => "Pending",
+            "Ordered" => "Ordered",
+            "Completed" => "Completed",
+            "Cancelled" => "Cancelled",
+            _ => null
+        };
 
     private static string NormalizeFilter(string? filter) =>
         filter?.Trim().ToLowerInvariant() switch
