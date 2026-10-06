@@ -656,7 +656,7 @@ public sealed class GlobalProductCatalogService : IGlobalProductCatalogService
     }
 
     private static string EscapeOpenFdaValue(string value) =>
-        value.Replace("\", "\\").Replace(""", "\"");
+        value.Replace("\\", "\\\\").Replace("\"", "\\\"");
 
     private static string NormalizeProductType(string? categories) =>
         string.IsNullOrWhiteSpace(categories)
