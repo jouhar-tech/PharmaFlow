@@ -1,0 +1,187 @@
+@model PharmaFlow.Models.ViewModels.CustomerManagementViewModel
+@{
+    ViewData["Title"] = "Manage Customer";
+    var filter = Model.Filter;
+}
+
+<div class="customer-management-page">
+    <header class="customer-page-header">
+        <div class="customer-page-header-main">
+            <div class="customer-page-eyebrow">Customer Accounts</div>
+            <h1>Manage Customer</h1>
+            <p>Track customer credit, payments received, and amounts your pharmacy owes in one place.</p>
+        </div>
+        <a asp-controller="Customers" asp-action="Create" class="customer-primary-button">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+            <span>Add Customer</span>
+        </a>
+    </header>
+
+    @if (TempData["CustomerSuccess"] is string successMessage)
+    {
+        <div class="customer-alert customer-alert-success" role="status">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>
+            <span>@successMessage</span>
+        </div>
+    }
+
+    @if (TempData["CustomerError"] is string errorMessage)
+    {
+        <div class="customer-alert customer-alert-error" role="alert">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5M12 16h.01"/></svg>
+            <span>@errorMessage</span>
+        </div>
+    }
+
+    <section class="customer-balance-grid" aria-label="Customer balances">
+        <article class="customer-balance-card customer-balance-card-receivable">
+            <div class="customer-balance-card-icon">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16v10H4z"/><path d="M8 12h8M9 9v6M15 9v6"/></svg>
+            </div>
+            <div>
+                <span>Total owed to you</span>
+                <strong>₹@Model.TotalOwedToYou.ToString("N2")</strong>
+                <small>Customer credit outstanding</small>
+            </div>
+        </article>
+
+        <article class="customer-balance-card customer-balance-card-payable">
+            <div class="customer-balance-card-icon">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16v10H4z"/><path d="M8 12h8M9 9v6M15 9v6"/></svg>
+            </div>
+            <div>
+                <span>Total owed by you</span>
+                <strong>₹@Model.TotalOwedByYou.ToString("N2")</strong>
+                <small>Amounts payable to customers</small>
+            </div>
+        </article>
+    </section>
+
+    <section class="customer-tools-card">
+        <div class="customer-search-wrap">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>
+            <input id="customerSearch"
+                   type="search"
+                   value="@Model.SearchTerm"
+                   maxlength="80"
+                   autocomplete="off"
+                   placeholder="Search by customer name, phone or outstanding amount"
+                   aria-label="Search by customer name, phone or outstanding amount" />
+        </div>
+
+        <div class="customer-filter-row" role="group" aria-label="Customer balance filters">
+            <a asp-controller="Customers" asp-action="Index" asp-route-q="@Model.SearchTerm" asp-route-filter="all" class="customer-filter-button @(filter == "all" ? "is-active" : "")">All</a>
+            <a asp-controller="Customers" asp-action="Index" asp-route-q="@Model.SearchTerm" asp-route-filter="owed-to-you" class="customer-filter-button customer-filter-receivable @(filter == "owed-to-you" ? "is-active" : "")">Owed to you</a>
+            <a asp-controller="Customers" asp-action="Index" asp-route-q="@Model.SearchTerm" asp-route-filter="owed-by-you" class="customer-filter-button customer-filter-payable @(filter == "owed-by-you" ? "is-active" : "")">Owed by you</a>
+            <a asp-controller="Customers" asp-action="Index" asp-route-q="@Model.SearchTerm" asp-route-filter="settled" class="customer-filter-button @(filter == "settled" ? "is-active" : "")">Settled</a>
+        </div>
+
+        <small class="customer-search-hint">Search by name or mobile number, or enter the current outstanding amount such as 500.</small>
+    </section>
+
+    <section class="customer-list-section" aria-labelledby="customerListTitle">
+        <div class="customer-list-heading">
+            <div>
+                <h2 id="customerListTitle">Customers</h2>
+                <span>@Model.Customers.Count customer@(Model.Customers.Count == 1 ? "" : "s") shown</span>
+            </div>
+        </div>
+
+        @if (Model.Customers.Count == 0)
+        {
+            <div class="customer-empty-state">
+                <div class="customer-empty-icon">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3.5 19c.6-3 2.5-4.5 5.5-4.5s4.9 1.5 5.5 4.5"/><path d="M16 9h5M18.5 6.5v5"/></svg>
+                </div>
+                <h3>No customers found</h3>
+                <p>Try another name, phone number or amount, or add a new customer.</p>
+                <a asp-controller="Customers" asp-action="Create" class="customer-secondary-button">Add Customer</a>
+            </div>
+        }
+        else
+        {
+            <div class="customer-list">
+                @foreach (var customer in Model.Customers)
+                {
+                    var initials = string.Concat(
+                        customer.FullName
+                            .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                            .Take(2)
+                            .Select(part => part[0]))
+                        .ToUpperInvariant();
+
+                    <article class="customer-list-card">
+                        <div class="customer-list-identity">
+                            <span class="customer-avatar">@initials</span>
+                            <div>
+                                <strong>@customer.FullName</strong>
+                                <span>
+                                    @(string.IsNullOrWhiteSpace(customer.PhoneNumber)
+                                        ? "No phone number"
+                                        : $"+91 {customer.PhoneNumber}")
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="customer-list-balance">
+                            @if (customer.CurrentBalance > 0)
+                            {
+                                <span class="customer-balance-status customer-balance-status-receivable">Owed to you</span>
+                                <strong>₹@customer.CurrentBalance.ToString("N2")</strong>
+                            }
+                            else if (customer.CurrentBalance < 0)
+                            {
+                                <span class="customer-balance-status customer-balance-status-payable">Owed by you</span>
+                                <strong>₹@Math.Abs(customer.CurrentBalance).ToString("N2")</strong>
+                            }
+                            else
+                            {
+                                <span class="customer-balance-status customer-balance-status-settled">Settled</span>
+                                <strong>₹0.00</strong>
+                            }
+                        </div>
+
+                        <div class="customer-list-meta">
+                            <span>@customer.BillCount bill@(customer.BillCount == 1 ? "" : "s")</span>
+                            <span>Updated @customer.LastActivityAt.ToLocalTime().ToString("dd MMM yyyy")</span>
+                        </div>
+
+                        <div class="customer-list-action">
+                            <a asp-controller="Customers" asp-action="Details" asp-route-id="@customer.CustomerId" class="customer-view-button">View Details</a>
+                        </div>
+                    </article>
+                }
+            </div>
+        }
+    </section>
+
+    <div class="customer-page-note">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 10v6M12 7h.01"/></svg>
+        <span>Udhaar bills are added to the customer's balance automatically. Use <strong>Record Payment</strong> from a customer profile to settle outstanding amounts.</span>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    (() => {
+        const input = document.getElementById("customerSearch");
+        if (!input) return;
+
+        let timer = null;
+        input.addEventListener("input", () => {
+            clearTimeout(timer);
+            const search = input.value.trim();
+
+            timer = setTimeout(() => {
+                const url = new URL(window.location.href);
+                if (search) {
+                    url.searchParams.set("q", search);
+                } else {
+                    url.searchParams.delete("q");
+                }
+                window.location.assign(url.toString());
+            }, 220);
+        });
+    })();
+</script>
+}
