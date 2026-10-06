@@ -11,19 +11,27 @@
         <div>
             <span class="inventory-action-eyebrow">Add Item</span>
             <h1>Search Product from All Products</h1>
-            <p>Find medicines, cosmetics and other products that are not currently in your inventory.</p>
+            <p>Search external product catalogs for medicines, cosmetics and other retail products that are not already in your inventory.</p>
         </div>
     </header>
 
     <form method="get" asp-action="SearchProducts" class="inventory-product-search-form" role="search">
-        <span class="inventory-product-search-icon" aria-hidden="true">⌕</span>
+        <span class="inventory-product-search-icon" aria-hidden="true">
+            <svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="10.8" cy="10.8" r="6.3"></circle>
+                <path d="m16 16 4.5 4.5"></path>
+            </svg>
+        </span>
         <input id="allProductsSearch"
                name="query"
                value="@Model.Query"
                type="search"
+               minlength="2"
+               maxlength="100"
                autocomplete="off"
-               placeholder="Search by medicine, cosmetic, brand or barcode..."
-               aria-label="Search all products" />
+               placeholder="Search medicine, brand, cosmetic, product or barcode..."
+               aria-label="Search all products"
+               required />
         @if (!string.IsNullOrWhiteSpace(Model.Query))
         {
             <a asp-action="SearchProducts" class="inventory-product-search-clear" aria-label="Clear search">×</a>
@@ -31,13 +39,37 @@
         <button type="submit" class="inventory-product-search-button">Search</button>
     </form>
 
+    <div class="inventory-product-search-source-note">
+        <strong>Global product search</strong>
+        <span>Results are collected from external product datasets and cached in PharmaFlow. Always verify medicine details, MRP, batch and expiry against the physical stock before saving.</span>
+    </div>
+
     <section class="inventory-product-search-results" aria-live="polite">
-        @if (Model.Products.Count == 0)
+        @if (string.IsNullOrWhiteSpace(Model.Query))
         {
             <div class="inventory-action-empty">
-                <div>⌕</div>
+                <div>
+                    <svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="10.8" cy="10.8" r="6.3"></circle>
+                        <path d="m16 16 4.5 4.5"></path>
+                    </svg>
+                </div>
+                <h2>Search the global catalog</h2>
+                <p>Enter at least 2 characters to find medicines, cosmetics and other products.</p>
+            </div>
+        }
+        else if (Model.Products.Count == 0)
+        {
+            <div class="inventory-action-empty">
+                <div>
+                    <svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <circle cx="10.8" cy="10.8" r="6.3"></circle>
+                        <path d="m16 16 4.5 4.5"></path>
+                        <path d="m9 9 3.5 3.5M12.5 9 9 12.5"></path>
+                    </svg>
+                </div>
                 <h2>No products found</h2>
-                <p>Try a different product name, brand, generic name or barcode.</p>
+                <p>Try the brand name, generic name, a shorter product name or the barcode.</p>
             </div>
         }
         else
@@ -45,19 +77,76 @@
             <div class="inventory-product-search-list">
                 @foreach (var product in Model.Products)
                 {
+                    var sourceLabel = product.Source switch
+                    {
+                        "india-medicine-api" => "Indian Medicine Catalog",
+                        "openfda-ndc" => "Drug Catalog",
+                        "openfoodfacts" => "Open Product Catalog",
+                        _ => product.Source
+                    };
+
+                    var typeLabel = product.ProductType switch
+                    {
+                        "medicine" => "Medicine",
+                        "cosmetic" => "Cosmetic",
+                        "pet-product" => "Other Product",
+                        _ => "Product"
+                    };
+
                     <article class="inventory-product-search-card">
                         <div class="inventory-product-search-card-main">
-                            <div class="inventory-product-search-icon-badge">Rx</div>
-                            <div>
+                            <div class="inventory-product-search-icon-badge" aria-hidden="true">
+                                <svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                    @if (product.ProductType == "medicine")
+                                    {
+                                        <path d="M7 21a5 5 0 0 1 0-10h3a5 5 0 0 1 0 10H7Z"></path>
+                                        <path d="m8 11 7-7a4.95 4.95 0 1 1 7 7l-7 7"></path>
+                                    }
+                                    else
+                                    {
+                                        <rect x="5" y="3.5" width="14" height="17" rx="2"></rect>
+                                        <path d="M8 8h8M8 12h8M8 16h5"></path>
+                                    }
+                                </svg>
+                            </div>
+
+                            <div class="inventory-product-search-card-copy">
+                                <div class="inventory-product-search-tags">
+                                    <span>@typeLabel</span>
+                                    <span>@sourceLabel</span>
+                                </div>
+
                                 <h2>@product.ProductName</h2>
+
                                 @if (!string.IsNullOrWhiteSpace(product.GenericName))
                                 {
                                     <p>@product.GenericName</p>
                                 }
+
                                 @if (!string.IsNullOrWhiteSpace(product.BrandName))
                                 {
-                                    <small>@product.BrandName</small>
+                                    <small>Brand: @product.BrandName</small>
                                 }
+
+                                @if (!string.IsNullOrWhiteSpace(product.Manufacturer))
+                                {
+                                    <small>Manufacturer: @product.Manufacturer</small>
+                                }
+
+                                @if (!string.IsNullOrWhiteSpace(product.DosageForm) ||
+                                    !string.IsNullOrWhiteSpace(product.Strength) ||
+                                    !string.IsNullOrWhiteSpace(product.PackSize))
+                                {
+                                    <small>
+                                        @string.Join(" · ", new[]
+                                        {
+                                            product.DosageForm,
+                                            product.Strength,
+                                            product.PackSize
+                                        }.Where(value => !string.IsNullOrWhiteSpace(value)))
+                                    </small>
+                                }
+
                                 @if (!string.IsNullOrWhiteSpace(product.Barcode))
                                 {
                                     <small>Barcode: @product.Barcode</small>
@@ -66,13 +155,8 @@
                         </div>
 
                         <div class="inventory-product-search-side">
-                            @if (product.LatestMrp.GetValueOrDefault() > 0)
-                            {
-                                <span>MRP</span>
-                                <strong>₹ @product.LatestMrp.Value.ToString("N2")</strong>
-                            }
                             <a asp-action="AddItem"
-                               asp-route-productId="@product.ProductId"
+                               asp-route-catalogId="@product.CatalogId"
                                class="inventory-product-add-link">
                                 Add to Inventory
                             </a>
