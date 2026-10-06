@@ -11232,6 +11232,58 @@ body.inventory-add-item-open { overflow:hidden; }
   font-size:1.15rem;
 }
 
+.inventory-product-search-source-note {
+  max-width:980px;
+  margin:0 auto .85rem;
+  padding:.7rem .8rem;
+  display:flex;
+  gap:.45rem;
+  flex-wrap:wrap;
+  align-items:baseline;
+  border:1px solid #dbe9ee;
+  border-radius:.75rem;
+  background:#f7fbfc;
+  color:#5d6e7a;
+  font-size:.6rem;
+  line-height:1.45;
+}
+.inventory-product-search-source-note strong {
+  color:#1769c2;
+  font-size:.62rem;
+  font-weight:850;
+}
+.inventory-product-search-card-copy { min-width:0; }
+.inventory-product-search-tags {
+  display:flex;
+  flex-wrap:wrap;
+  gap:.3rem;
+  margin-bottom:.28rem;
+}
+.inventory-product-search-tags span {
+  display:inline-flex;
+  align-items:center;
+  min-height:20px;
+  padding:0 .42rem;
+  border-radius:999px;
+  background:#eef5fa;
+  color:#4d6475;
+  font-size:.5rem;
+  font-weight:800;
+}
+.inventory-product-search-tags span:first-child {
+  background:#e8f7f3;
+  color:#0f766e;
+}
+.inventory-product-search-icon-badge .pharma-feature-icon {
+  width:22px;
+  height:22px;
+  margin:0 auto;
+}
+.inventory-action-empty > div .pharma-feature-icon {
+  width:30px;
+  height:30px;
+  margin:0 auto;
+}
 .inventory-product-search-results { max-width:980px; margin:0 auto; }
 .inventory-product-search-list { display:grid; gap:.65rem; }
 .inventory-product-search-card {
@@ -11599,6 +11651,17 @@ body.theme-dark.inventory-page .inventory-barcode-secondary {
   .inventory-product-search-form > input { min-height:46px; }
   .inventory-product-search-card { grid-template-columns:1fr; }
   .inventory-product-search-side { justify-items:start; }
+  .inventory-product-search-source-note {
+    margin-bottom:.7rem;
+    font-size:.58rem;
+  }
+  .inventory-product-search-card {
+    grid-template-columns:1fr;
+    align-items:stretch;
+  }
+  .inventory-product-search-side {
+    justify-items:stretch;
+  }
   .inventory-product-add-link { width:100%; }
   .inventory-add-item-modal { align-items:end; padding:0; }
   .inventory-add-item-backdrop { background:rgba(15,23,42,.46); }
@@ -11625,6 +11688,20 @@ body.theme-dark.inventory-page .inventory-barcode-secondary {
 }
 
 
+body.theme-dark.inventory-action-page-body .inventory-product-search-source-note {
+  background:#0f1b2a;
+  border-color:#2b394d;
+  color:#a6b4c2;
+}
+body.theme-dark.inventory-action-page-body .inventory-product-search-source-note strong { color:#7dd3fc; }
+body.theme-dark.inventory-action-page-body .inventory-product-search-tags span {
+  background:#182638;
+  color:#b4c1cf;
+}
+body.theme-dark.inventory-action-page-body .inventory-product-search-tags span:first-child {
+  background:#102822;
+  color:#8ed1c5;
+}
 body.theme-dark.inventory-action-page-body .inventory-action-header {
   background:linear-gradient(180deg,#245a55 0%,#1f514d 100%);
 }
