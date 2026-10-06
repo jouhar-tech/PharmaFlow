@@ -6,6 +6,12 @@
 
 <div class="customer-management-page">
     <header class="customer-page-header">
+        <a asp-controller="Home"
+           asp-action="Index"
+           class="customer-page-back"
+           aria-label="Back to Home">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5"></path><path d="m11 18-6-6"></path></svg>
+        </a>
         <div class="customer-page-header-main">
             <div class="customer-page-eyebrow">Customer Accounts</div>
             <h1>Manage Customer</h1>
@@ -55,6 +61,26 @@
                 <small>Amounts payable to customers</small>
             </div>
         </article>
+    </section>
+
+    <section class="customer-reminder-quick-card" aria-label="Customer reminders">
+        <div class="customer-reminder-quick-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M6 4h12v16H6z"></path><path d="M9 8h6M9 12h6M9 16h4"></path></svg>
+        </div>
+        <div class="customer-reminder-quick-copy">
+            <span>Customer reminders</span>
+            <strong>Product requests</strong>
+            <p>Track medicines customers ask you to order.</p>
+            <small><b>@Model.PendingReminderTotal</b> pending request@(Model.PendingReminderTotal == 1 ? "" : "s")</small>
+        </div>
+        <button type="button"
+                class="customer-reminder-quick-button"
+                id="customerAddReminderButton"
+                aria-haspopup="dialog"
+                aria-controls="customerReminderPicker">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+            <span>Add Reminder</span>
+        </button>
     </section>
 
     <section class="customer-tools-card">
@@ -159,6 +185,49 @@
         }
     </section>
 
+    <div class="customer-reminder-picker-backdrop" id="customerReminderPicker" hidden>
+        <section class="customer-reminder-picker" role="dialog" aria-modal="true" aria-labelledby="customerReminderPickerTitle">
+            <div class="customer-reminder-picker-header">
+                <div>
+                    <span>Customer reminders</span>
+                    <h2 id="customerReminderPickerTitle">Choose a customer</h2>
+                </div>
+                <button type="button" class="customer-reminder-picker-close" id="customerReminderPickerClose" aria-label="Close">×</button>
+            </div>
+            <div class="customer-reminder-picker-search">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.3"></circle><path d="m16 16 4.5 4.5"></path></svg>
+                <input id="customerReminderCustomerSearch"
+                       type="search"
+                       autocomplete="off"
+                       maxlength="80"
+                       placeholder="Search customer name or phone"
+                       aria-label="Search customer name or phone">
+            </div>
+            <div class="customer-reminder-picker-list" id="customerReminderPickerList">
+                @foreach (var reminderCustomer in Model.ReminderCustomers)
+                {
+                    <a asp-controller="Customers"
+                       asp-action="CreateReminder"
+                       asp-route-customerId="@reminderCustomer.CustomerId"
+                       class="customer-reminder-picker-item"
+                       data-customer-search="@($"{reminderCustomer.FullName} {reminderCustomer.PhoneNumber}")">
+                        <span class="customer-reminder-picker-avatar">
+                            @string.Concat(reminderCustomer.FullName.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(part => part[0])).ToUpperInvariant()
+                        </span>
+                        <span class="customer-reminder-picker-identity">
+                            <strong>@reminderCustomer.FullName</strong>
+                            <small>@(string.IsNullOrWhiteSpace(reminderCustomer.PhoneNumber) ? "No phone number" : $"+91 {reminderCustomer.PhoneNumber}")</small>
+                        </span>
+                        <span class="customer-reminder-picker-arrow">›</span>
+                    </a>
+                }
+                <div class="customer-reminder-picker-empty" id="customerReminderPickerEmpty" hidden>
+                    No matching customer found.
+                </div>
+            </div>
+        </section>
+    </div>
+
     <div class="customer-page-note">
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 10v6M12 7h.01"/></svg>
         <span>Udhaar bills are added to the customer's balance automatically. Use <strong>Record Payment</strong> from a customer profile to settle outstanding amounts.</span>
@@ -185,6 +254,57 @@
                 }
                 window.location.assign(url.toString());
             }, 220);
+        });
+
+        const picker = document.getElementById("customerReminderPicker");
+        const pickerClose = document.getElementById("customerReminderPickerClose");
+        const pickerButton = document.getElementById("customerAddReminderButton");
+        const pickerSearch = document.getElementById("customerReminderCustomerSearch");
+        const pickerItems = [...document.querySelectorAll(".customer-reminder-picker-item")];
+        const pickerEmpty = document.getElementById("customerReminderPickerEmpty");
+
+        const closePicker = () => {
+            picker?.setAttribute("hidden", "");
+            document.body.classList.remove("customer-reminder-picker-open");
+        };
+
+        const openPicker = () => {
+            if (!picker) return;
+            picker.removeAttribute("hidden");
+            document.body.classList.add("customer-reminder-picker-open");
+            if (pickerSearch) {
+                pickerSearch.value = "";
+                pickerItems.forEach(item => item.removeAttribute("hidden"));
+                pickerEmpty?.setAttribute("hidden", "");
+                window.setTimeout(() => pickerSearch.focus(), 0);
+            }
+        };
+
+        pickerButton?.addEventListener("click", openPicker);
+        pickerClose?.addEventListener("click", closePicker);
+
+        picker?.addEventListener("click", event => {
+            if (event.target === picker) closePicker();
+        });
+
+        pickerSearch?.addEventListener("input", () => {
+            const term = pickerSearch.value.trim().toLowerCase();
+            let visible = 0;
+
+            pickerItems.forEach(item => {
+                const text = (item.dataset.customerSearch || "").toLowerCase();
+                const show = !term || text.includes(term);
+                item.toggleAttribute("hidden", !show);
+                if (show) visible++;
+            });
+
+            pickerEmpty?.toggleAttribute("hidden", visible !== 0);
+        });
+
+        document.addEventListener("keydown", event => {
+            if (event.key === "Escape" && picker && !picker.hasAttribute("hidden")) {
+                closePicker();
+            }
         });
     })();
 </script>
