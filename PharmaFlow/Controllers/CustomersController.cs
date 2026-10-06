@@ -93,16 +93,30 @@ public sealed class CustomersController : Controller
         HashSet<long>? filterIds = null;
         if (normalizedFilter != "all")
         {
-            filterIds = balanceRows
-                .Where(row => normalizedFilter switch
-                {
-                    "owed-to-you" => row.Balance > 0,
-                    "owed-by-you" => row.Balance < 0,
-                    "settled" => row.Balance == 0,
-                    _ => true
-                })
-                .Select(row => row.CustomerId)
-                .ToHashSet();
+            if (normalizedFilter == "settled")
+            {
+                var allCustomerIds = await customerQuery
+                    .Select(customer => customer.CustomerId)
+                    .ToListAsync(cancellationToken);
+
+                filterIds = allCustomerIds
+                    .Where(customerId =>
+                        !balanceByCustomer.TryGetValue(customerId, out var row) ||
+                        row.Balance == 0)
+                    .ToHashSet();
+            }
+            else
+            {
+                filterIds = balanceRows
+                    .Where(row => normalizedFilter switch
+                    {
+                        "owed-to-you" => row.Balance > 0,
+                        "owed-by-you" => row.Balance < 0,
+                        _ => false
+                    })
+                    .Select(row => row.CustomerId)
+                    .ToHashSet();
+            }
         }
 
         if (searchIds is not null && filterIds is not null)
