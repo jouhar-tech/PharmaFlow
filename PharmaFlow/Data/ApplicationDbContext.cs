@@ -23,6 +23,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<PharmaFlowSavingsEvent> PharmaFlowSavingsEvents => Set<PharmaFlowSavingsEvent>();
     public DbSet<Customer> Customers => Set<Customer>();
     public DbSet<CustomerLedgerEntry> CustomerLedgerEntries => Set<CustomerLedgerEntry>();
+    public DbSet<CustomerReminder> CustomerReminders => Set<CustomerReminder>();
     public DbSet<SalesBill> SalesBills => Set<SalesBill>();
     public DbSet<SalesBillItem> SalesBillItems => Set<SalesBillItem>();
 
@@ -342,6 +343,48 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(e => new { e.ProfileId, e.CustomerId, e.CreatedAt });
             entity.HasIndex(e => new { e.ProfileId, e.CreatedAt });
             entity.HasIndex(e => e.BillId);
+        });
+
+        modelBuilder.Entity<CustomerReminder>(entity =>
+        {
+            entity.ToTable("customer_reminders", "public");
+            entity.HasKey(r => r.ReminderId);
+            entity.Property(r => r.ReminderId).HasColumnName("reminder_id");
+            entity.Property(r => r.ProfileId).HasColumnName("profile_id");
+            entity.Property(r => r.CustomerId).HasColumnName("customer_id");
+            entity.Property(r => r.CatalogId).HasColumnName("catalog_id");
+            entity.Property(r => r.ProductSource).HasColumnName("product_source").HasMaxLength(50);
+            entity.Property(r => r.ProductExternalId).HasColumnName("product_external_id").HasMaxLength(160);
+            entity.Property(r => r.ProductName).HasColumnName("product_name").HasMaxLength(200);
+            entity.Property(r => r.GenericName).HasColumnName("generic_name").HasMaxLength(500);
+            entity.Property(r => r.BrandName).HasColumnName("brand_name").HasMaxLength(160);
+            entity.Property(r => r.Manufacturer).HasColumnName("manufacturer").HasMaxLength(200);
+            entity.Property(r => r.DosageForm).HasColumnName("dosage_form").HasMaxLength(100);
+            entity.Property(r => r.Strength).HasColumnName("strength").HasMaxLength(100);
+            entity.Property(r => r.PackSize).HasColumnName("pack_size").HasMaxLength(100);
+            entity.Property(r => r.Barcode).HasColumnName("barcode").HasMaxLength(100);
+            entity.Property(r => r.Note).HasColumnName("note").HasMaxLength(500);
+            entity.Property(r => r.ReminderDate).HasColumnName("reminder_date");
+            entity.Property(r => r.Status).HasColumnName("status").HasMaxLength(20);
+            entity.Property(r => r.CompletedAt).HasColumnName("completed_at");
+            entity.Property(r => r.CreatedAt).HasColumnName("created_at");
+            entity.Property(r => r.UpdatedAt).HasColumnName("updated_at");
+
+            entity.HasOne<Profile>()
+                .WithMany()
+                .HasForeignKey(r => r.ProfileId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne<Customer>()
+                .WithMany()
+                .HasForeignKey(r => r.CustomerId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne<ProductCatalog>()
+                .WithMany()
+                .HasForeignKey(r => r.CatalogId)
+                .OnDelete(DeleteBehavior.SetNull);
+            entity.HasIndex(r => new { r.ProfileId, r.CustomerId, r.Status });
+            entity.HasIndex(r => new { r.ProfileId, r.ReminderDate, r.Status });
+            entity.HasIndex(r => new { r.ProfileId, r.ProductName });
         });
 
         modelBuilder.Entity<SalesBill>(entity =>
