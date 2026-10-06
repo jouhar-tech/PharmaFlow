@@ -127,7 +127,7 @@ public sealed class BillingController : Controller
 
         if (paymentMethod == "Udhaar" && customerName is null && phoneNumber is null)
         {
-            TempData["BillingError"] = "For Udhaar, enter the customer name or a valid phone number.";
+            TempData["BillingError"] = "For Udhaar, enter the customer name or a valid 10-digit mobile number. The customer will be linked automatically.";
             return RedirectToAction(nameof(Create));
         }
 
@@ -338,6 +338,22 @@ public sealed class BillingController : Controller
 
             _dbContext.SalesBills.Add(bill);
             await _dbContext.SaveChangesAsync(cancellationToken);
+
+            if (paymentMethod == "Udhaar" && customer is not null && grossTotal > 0)
+            {
+                _dbContext.CustomerLedgerEntries.Add(new CustomerLedgerEntry
+                {
+                    ProfileId = profileId,
+                    CustomerId = customer.CustomerId,
+                    BillId = bill.BillId,
+                    EntryType = "UdhaarSale",
+                    BalanceChange = grossTotal,
+                    Description = $"Udhaar sale · Bill {bill.BillNumber}",
+                    CreatedAt = now
+                });
+
+                await _dbContext.SaveChangesAsync(cancellationToken);
+            }
 
             foreach (var line in itemResults)
             {
