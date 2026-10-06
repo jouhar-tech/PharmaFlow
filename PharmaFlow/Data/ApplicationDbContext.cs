@@ -231,6 +231,7 @@ public class ApplicationDbContext : DbContext
             entity.Property(c => c.SourceUrl).HasColumnName("source_url").HasMaxLength(500);
             entity.Property(c => c.FirstSeenAt).HasColumnName("first_seen_at");
             entity.Property(c => c.LastSyncedAt).HasColumnName("last_synced_at");
+            entity.Property(c => c.CacheExpiresAt).HasColumnName("cache_expires_at");
             entity.Property(c => c.UpdatedAt).HasColumnName("updated_at");
             entity.HasIndex(c => new { c.Source, c.ExternalId }).IsUnique();
             entity.HasIndex(c => c.Barcode);
