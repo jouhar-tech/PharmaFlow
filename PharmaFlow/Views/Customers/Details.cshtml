@@ -66,6 +66,113 @@
         </div>
     </section>
 
+    <section class="customer-reminders-section" aria-labelledby="customerRemindersTitle">
+        <div class="customer-reminders-heading">
+            <div>
+                <div class="customer-page-eyebrow">Customer Requests</div>
+                <h2 id="customerRemindersTitle">Product Requests & Reminders</h2>
+                <span>Keep track of medicines or products this customer has asked you to arrange.</span>
+            </div>
+            <a asp-controller="Customers" asp-action="CreateReminder" asp-route-customerId="@Model.CustomerId" class="customer-secondary-primary-button">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                <span>Add Reminder</span>
+            </a>
+        </div>
+
+        @if (Model.Reminders.Count == 0)
+        {
+            <div class="customer-reminder-empty">
+                <div class="customer-empty-icon">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h12v16H6z"/><path d="M9 8h6M9 12h4"/></svg>
+                </div>
+                <div>
+                    <strong>No product reminders yet</strong>
+                    <span>When a customer asks you to arrange a medicine or product, add it here so the request is not forgotten.</span>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="customer-reminder-list">
+                @foreach (var reminder in Model.Reminders)
+                {
+                    var statusClass = reminder.Status.ToLowerInvariant();
+                    <article class="customer-reminder-card @(reminder.IsDue ? "is-due" : "")">
+                        <div class="customer-reminder-icon">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h10v16H7z"/><path d="M10 8h4M10 12h4M10 16h2"/></svg>
+                        </div>
+
+                        <div class="customer-reminder-main">
+                            <div class="customer-reminder-title-row">
+                                <strong>@reminder.ProductName</strong>
+                                <span class="customer-reminder-status customer-reminder-status-@statusClass">@reminder.Status</span>
+                            </div>
+
+                            @if (!string.IsNullOrWhiteSpace(reminder.GenericName) ||
+                                 !string.IsNullOrWhiteSpace(reminder.BrandName))
+                            {
+                                <span class="customer-reminder-product-meta">
+                                    @string.Join(" · ", new[] { reminder.GenericName, reminder.BrandName }.Where(value => !string.IsNullOrWhiteSpace(value)))
+                                </span>
+                            }
+
+                            @if (!string.IsNullOrWhiteSpace(reminder.Note))
+                            {
+                                <span class="customer-reminder-note">@reminder.Note</span>
+                            }
+
+                            <small class="customer-reminder-date">
+                                Requested @reminder.CreatedAt.ToLocalTime().ToString("dd MMM yyyy")
+                                @if (reminder.ReminderDate.HasValue)
+                                {
+                                    <span> · Follow up @reminder.ReminderDate.Value.ToString("dd MMM yyyy")</span>
+                                }
+                            </small>
+                        </div>
+
+                        <div class="customer-reminder-actions">
+                            @if (reminder.Status == "Pending")
+                            {
+                                <form asp-controller="Customers" asp-action="UpdateReminderStatus" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="reminderId" value="@reminder.ReminderId" />
+                                    <input type="hidden" name="status" value="Ordered" />
+                                    <button type="submit" class="customer-reminder-action-button">Mark Ordered</button>
+                                </form>
+                            }
+
+                            @if (reminder.Status is "Pending" or "Ordered")
+                            {
+                                <form asp-controller="Customers" asp-action="UpdateReminderStatus" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="reminderId" value="@reminder.ReminderId" />
+                                    <input type="hidden" name="status" value="Completed" />
+                                    <button type="submit" class="customer-reminder-action-button is-complete">Complete</button>
+                                </form>
+
+                                <form asp-controller="Customers" asp-action="UpdateReminderStatus" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="reminderId" value="@reminder.ReminderId" />
+                                    <input type="hidden" name="status" value="Cancelled" />
+                                    <button type="submit" class="customer-reminder-action-button is-cancel">Cancel</button>
+                                </form>
+                            }
+                            else if (reminder.Status is "Completed" or "Cancelled")
+                            {
+                                <form asp-controller="Customers" asp-action="UpdateReminderStatus" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="reminderId" value="@reminder.ReminderId" />
+                                    <input type="hidden" name="status" value="Pending" />
+                                    <button type="submit" class="customer-reminder-action-button">Reopen</button>
+                                </form>
+                            }
+                        </div>
+                    </article>
+                }
+            </div>
+        }
+    </section>
+
     <section class="customer-history-section" aria-labelledby="customerHistoryTitle">
         <div class="customer-history-heading">
             <div>
