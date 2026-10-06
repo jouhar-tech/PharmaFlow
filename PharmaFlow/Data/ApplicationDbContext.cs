@@ -22,6 +22,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<NotificationDispatchLog> NotificationDispatchLogs => Set<NotificationDispatchLog>();
     public DbSet<PharmaFlowSavingsEvent> PharmaFlowSavingsEvents => Set<PharmaFlowSavingsEvent>();
     public DbSet<Customer> Customers => Set<Customer>();
+    public DbSet<CustomerLedgerEntry> CustomerLedgerEntries => Set<CustomerLedgerEntry>();
     public DbSet<SalesBill> SalesBills => Set<SalesBill>();
     public DbSet<SalesBillItem> SalesBillItems => Set<SalesBillItem>();
 
@@ -312,6 +313,35 @@ public class ApplicationDbContext : DbContext
                 .HasForeignKey(c => c.ProfileId)
                 .OnDelete(DeleteBehavior.Cascade);
             entity.HasIndex(c => new { c.ProfileId, c.PhoneNumber });
+        });
+
+        modelBuilder.Entity<CustomerLedgerEntry>(entity =>
+        {
+            entity.ToTable("customer_ledger_entries", "public");
+            entity.HasKey(e => e.LedgerEntryId);
+            entity.Property(e => e.LedgerEntryId).HasColumnName("ledger_entry_id");
+            entity.Property(e => e.ProfileId).HasColumnName("profile_id");
+            entity.Property(e => e.CustomerId).HasColumnName("customer_id");
+            entity.Property(e => e.BillId).HasColumnName("bill_id");
+            entity.Property(e => e.EntryType).HasColumnName("entry_type").HasMaxLength(40);
+            entity.Property(e => e.BalanceChange).HasColumnName("balance_change").HasPrecision(14, 2);
+            entity.Property(e => e.Description).HasColumnName("description").HasMaxLength(500);
+            entity.Property(e => e.CreatedAt).HasColumnName("created_at");
+            entity.HasOne<Profile>()
+                .WithMany()
+                .HasForeignKey(e => e.ProfileId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne<Customer>()
+                .WithMany()
+                .HasForeignKey(e => e.CustomerId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<SalesBill>()
+                .WithMany()
+                .HasForeignKey(e => e.BillId)
+                .OnDelete(DeleteBehavior.SetNull);
+            entity.HasIndex(e => new { e.ProfileId, e.CustomerId, e.CreatedAt });
+            entity.HasIndex(e => new { e.ProfileId, e.CreatedAt });
+            entity.HasIndex(e => e.BillId);
         });
 
         modelBuilder.Entity<SalesBill>(entity =>
