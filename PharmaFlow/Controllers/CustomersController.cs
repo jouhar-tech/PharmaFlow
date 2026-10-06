@@ -1,0 +1,589 @@
+using System.Data;
+using System.Globalization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using PharmaFlow.Data;
+using PharmaFlow.Filters;
+using PharmaFlow.Models;
+using PharmaFlow.Models.ViewModels;
+
+namespace PharmaFlow.Controllers;
+
+[SessionAuthorize]
+public sealed class CustomersController : Controller
+{
+    private readonly ApplicationDbContext _dbContext;
+    private readonly ILogger<CustomersController> _logger;
+
+    public CustomersController(
+        ApplicationDbContext dbContext,
+        ILogger<CustomersController> logger)
+    {
+        _dbContext = dbContext;
+        _logger = logger;
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Index(
+        string? q,
+        string? filter,
+        CancellationToken cancellationToken)
+    {
+        if (!TryGetProfileId(out var profileId))
+            return Unauthorized();
+
+        var searchTerm = q?.Trim() ?? string.Empty;
+        if (searchTerm.Length > 80)
+            searchTerm = searchTerm[..80];
+
+        var normalizedFilter = NormalizeFilter(filter);
+
+        var balanceRows = await _dbContext.CustomerLedgerEntries
+            .AsNoTracking()
+            .Where(entry => entry.ProfileId == profileId)
+            .GroupBy(entry => entry.CustomerId)
+            .Select(group => new CustomerBalanceRow
+            {
+                CustomerId = group.Key,
+                Balance = group.Sum(entry => entry.BalanceChange),
+                LastActivityAt = group.Max(entry => entry.CreatedAt)
+            })
+            .ToListAsync(cancellationToken);
+
+        var balanceByCustomer = balanceRows.ToDictionary(row => row.CustomerId, row => row);
+        var totalOwedToYou = balanceRows
+            .Where(row => row.Balance > 0)
+            .Sum(row => row.Balance);
+        var totalOwedByYou = balanceRows
+            .Where(row => row.Balance < 0)
+            .Sum(row => Math.Abs(row.Balance));
+
+        var customerQuery = _dbContext.Customers
+            .AsNoTracking()
+            .Where(customer => customer.ProfileId == profileId);
+
+        HashSet<long>? searchIds = null;
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            var pattern = $"%{searchTerm.Replace("%", "\\%").Replace("_", "\\_")}%";
+
+            var textIds = await customerQuery
+                .Where(customer =>
+                    (customer.FullName != null && EF.Functions.ILike(customer.FullName, pattern, "\\"))
+                    || (customer.PhoneNumber != null && EF.Functions.ILike(customer.PhoneNumber, pattern, "\\")))
+                .Select(customer => customer.CustomerId)
+                .ToListAsync(cancellationToken);
+
+            var amountIds = new List<long>();
+            if (TryParseMoney(searchTerm, out var searchedAmount))
+            {
+                amountIds = balanceRows
+                    .Where(row => Math.Abs(row.Balance) == searchedAmount)
+                    .Select(row => row.CustomerId)
+                    .ToList();
+            }
+
+            searchIds = textIds
+                .Concat(amountIds)
+                .Distinct()
+                .ToHashSet();
+        }
+
+        HashSet<long>? filterIds = null;
+        if (normalizedFilter != "all")
+        {
+            filterIds = balanceRows
+                .Where(row => normalizedFilter switch
+                {
+                    "owed-to-you" => row.Balance > 0,
+                    "owed-by-you" => row.Balance < 0,
+                    "settled" => row.Balance == 0,
+                    _ => true
+                })
+                .Select(row => row.CustomerId)
+                .ToHashSet();
+        }
+
+        if (searchIds is not null && filterIds is not null)
+        {
+            searchIds.IntersectWith(filterIds);
+            customerQuery = searchIds.Count == 0
+                ? customerQuery.Where(_ => false)
+                : customerQuery.Where(customer => searchIds.Contains(customer.CustomerId));
+        }
+        else if (searchIds is not null)
+        {
+            customerQuery = searchIds.Count == 0
+                ? customerQuery.Where(_ => false)
+                : customerQuery.Where(customer => searchIds.Contains(customer.CustomerId));
+        }
+        else if (filterIds is not null)
+        {
+            customerQuery = filterIds.Count == 0
+                ? customerQuery.Where(_ => false)
+                : customerQuery.Where(customer => filterIds.Contains(customer.CustomerId));
+        }
+
+        var customers = await customerQuery
+            .OrderBy(customer => customer.FullName)
+            .ThenBy(customer => customer.CustomerId)
+            .ToListAsync(cancellationToken);
+
+        var customerIds = customers.Select(customer => customer.CustomerId).ToList();
+
+        var billCounts = customerIds.Count == 0
+            ? new Dictionary<long, int>()
+            : await _dbContext.SalesBills
+                .AsNoTracking()
+                .Where(bill =>
+                    bill.ProfileId == profileId &&
+                    bill.CustomerId.HasValue &&
+                    customerIds.Contains(bill.CustomerId.Value))
+                .GroupBy(bill => bill.CustomerId!.Value)
+                .Select(group => new { CustomerId = group.Key, Count = group.Count() })
+                .ToDictionaryAsync(row => row.CustomerId, row => row.Count, cancellationToken);
+
+        var items = customers
+            .Select(customer =>
+            {
+                balanceByCustomer.TryGetValue(customer.CustomerId, out var balanceRow);
+
+                return new CustomerListItemViewModel
+                {
+                    CustomerId = customer.CustomerId,
+                    FullName = string.IsNullOrWhiteSpace(customer.FullName)
+                        ? "Unnamed Customer"
+                        : customer.FullName.Trim(),
+                    PhoneNumber = customer.PhoneNumber,
+                    CurrentBalance = balanceRow?.Balance ?? 0m,
+                    LastActivityAt = balanceRow?.LastActivityAt ?? customer.UpdatedAt,
+                    BillCount = billCounts.GetValueOrDefault(customer.CustomerId)
+                };
+            })
+            .ToList();
+
+        return View(new CustomerManagementViewModel
+        {
+            SearchTerm = searchTerm,
+            Filter = normalizedFilter,
+            TotalOwedToYou = totalOwedToYou,
+            TotalOwedByYou = totalOwedByYou,
+            Customers = items
+        });
+    }
+
+    [HttpGet]
+    public IActionResult Create()
+    {
+        return View(new CustomerCreateViewModel());
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Create(
+        CustomerCreateViewModel model,
+        CancellationToken cancellationToken)
+    {
+        if (!TryGetProfileId(out var profileId))
+            return Unauthorized();
+
+        var fullName = model.FullName?.Trim();
+        var phoneNumber = NormalizePhoneNumber(model.PhoneNumber);
+        var balanceType = NormalizeBalanceType(model.BalanceType);
+
+        if (string.IsNullOrWhiteSpace(fullName))
+            ModelState.AddModelError(nameof(model.FullName), "Enter the customer's name.");
+
+        if (!string.IsNullOrWhiteSpace(model.PhoneNumber) && phoneNumber is null)
+            ModelState.AddModelError(nameof(model.PhoneNumber), "Enter a valid 10-digit Indian mobile number.");
+
+        if (model.OpeningBalance < 0)
+            ModelState.AddModelError(nameof(model.OpeningBalance), "Opening balance cannot be negative.");
+
+        if (model.OpeningBalance > 1_000_000_000m)
+            ModelState.AddModelError(nameof(model.OpeningBalance), "Opening balance is too large.");
+
+        if (!ModelState.IsValid)
+            return View(model);
+
+        await using var transaction = await _dbContext.Database.BeginTransactionAsync(
+            IsolationLevel.Serializable,
+            cancellationToken);
+
+        try
+        {
+            if (phoneNumber is not null)
+            {
+                var duplicate = await _dbContext.Customers
+                    .AsNoTracking()
+                    .AnyAsync(customer =>
+                        customer.ProfileId == profileId &&
+                        customer.PhoneNumber == phoneNumber,
+                        cancellationToken);
+
+                if (duplicate)
+                {
+                    await transaction.RollbackAsync(cancellationToken);
+                    ModelState.AddModelError(
+                        nameof(model.PhoneNumber),
+                        "A customer with this phone number already exists. Open that customer instead of creating a duplicate.");
+                    return View(model);
+                }
+            }
+
+            var now = DateTime.UtcNow;
+            var customer = new Customer
+            {
+                ProfileId = profileId,
+                FullName = fullName,
+                PhoneNumber = phoneNumber,
+                CreatedAt = now,
+                UpdatedAt = now
+            };
+
+            _dbContext.Customers.Add(customer);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+
+            if (model.OpeningBalance > 0)
+            {
+                var balanceChange = balanceType == "OwedByYou"
+                    ? -decimal.Round(model.OpeningBalance, 2, MidpointRounding.AwayFromZero)
+                    : decimal.Round(model.OpeningBalance, 2, MidpointRounding.AwayFromZero);
+
+                _dbContext.CustomerLedgerEntries.Add(new CustomerLedgerEntry
+                {
+                    ProfileId = profileId,
+                    CustomerId = customer.CustomerId,
+                    EntryType = "OpeningBalance",
+                    BalanceChange = balanceChange,
+                    Description = string.IsNullOrWhiteSpace(model.Note)
+                        ? "Opening customer balance"
+                        : model.Note.Trim(),
+                    CreatedAt = now
+                });
+
+                await _dbContext.SaveChangesAsync(cancellationToken);
+            }
+
+            await transaction.CommitAsync(cancellationToken);
+
+            TempData["CustomerSuccess"] =
+                model.OpeningBalance > 0
+                    ? "Customer and opening balance saved successfully."
+                    : "Customer saved successfully.";
+
+            return RedirectToAction(nameof(Details), new { id = customer.CustomerId });
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            _logger.LogError(
+                ex,
+                "Failed to create customer for profile {ProfileId}.",
+                profileId);
+
+            ModelState.AddModelError(
+                string.Empty,
+                "The customer could not be saved. No customer or balance changes were made.");
+            return View(model);
+        }
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Details(
+        long id,
+        CancellationToken cancellationToken)
+    {
+        if (!TryGetProfileId(out var profileId))
+            return Unauthorized();
+
+        var customer = await _dbContext.Customers
+            .AsNoTracking()
+            .SingleOrDefaultAsync(
+                item => item.CustomerId == id && item.ProfileId == profileId,
+                cancellationToken);
+
+        if (customer is null)
+            return NotFound();
+
+        var entries = await _dbContext.CustomerLedgerEntries
+            .AsNoTracking()
+            .Where(entry =>
+                entry.ProfileId == profileId &&
+                entry.CustomerId == id)
+            .OrderBy(entry => entry.CreatedAt)
+            .ThenBy(entry => entry.LedgerEntryId)
+            .ToListAsync(cancellationToken);
+
+        var billIds = entries
+            .Where(entry => entry.BillId.HasValue)
+            .Select(entry => entry.BillId!.Value)
+            .Distinct()
+            .ToList();
+
+        var billNumbers = billIds.Count == 0
+            ? new Dictionary<long, string>()
+            : await _dbContext.SalesBills
+                .AsNoTracking()
+                .Where(bill => bill.ProfileId == profileId && billIds.Contains(bill.BillId))
+                .ToDictionaryAsync(bill => bill.BillId, bill => bill.BillNumber, cancellationToken);
+
+        var runningBalance = 0m;
+        var transactions = new List<CustomerTransactionViewModel>(entries.Count);
+
+        foreach (var entry in entries)
+        {
+            runningBalance += entry.BalanceChange;
+
+            transactions.Add(new CustomerTransactionViewModel
+            {
+                LedgerEntryId = entry.LedgerEntryId,
+                EntryType = entry.EntryType,
+                Description = entry.Description ?? string.Empty,
+                BalanceChange = entry.BalanceChange,
+                BalanceAfter = runningBalance,
+                BillId = entry.BillId,
+                BillNumber = entry.BillId.HasValue && billNumbers.TryGetValue(entry.BillId.Value, out var billNumber)
+                    ? billNumber
+                    : null,
+                CreatedAt = entry.CreatedAt
+            });
+        }
+
+        var billCount = await _dbContext.SalesBills
+            .AsNoTracking()
+            .CountAsync(
+                bill => bill.ProfileId == profileId && bill.CustomerId == id,
+                cancellationToken);
+
+        return View(new CustomerDetailsViewModel
+        {
+            CustomerId = customer.CustomerId,
+            FullName = string.IsNullOrWhiteSpace(customer.FullName)
+                ? "Unnamed Customer"
+                : customer.FullName.Trim(),
+            PhoneNumber = customer.PhoneNumber,
+            CreatedAt = customer.CreatedAt,
+            CurrentBalance = runningBalance,
+            BillCount = billCount,
+            Transactions = transactions
+                .OrderByDescending(item => item.CreatedAt)
+                .ThenByDescending(item => item.LedgerEntryId)
+                .ToList()
+        });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Payment(
+        long id,
+        CancellationToken cancellationToken)
+    {
+        if (!TryGetProfileId(out var profileId))
+            return Unauthorized();
+
+        var customer = await _dbContext.Customers
+            .AsNoTracking()
+            .SingleOrDefaultAsync(
+                item => item.CustomerId == id && item.ProfileId == profileId,
+                cancellationToken);
+
+        if (customer is null)
+            return NotFound();
+
+        var balance = await GetCurrentBalanceAsync(profileId, id, cancellationToken);
+
+        if (balance == 0m)
+        {
+            TempData["CustomerSuccess"] = "This customer is already settled.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        return View(new CustomerPaymentPageViewModel
+        {
+            CustomerId = id,
+            CustomerName = string.IsNullOrWhiteSpace(customer.FullName)
+                ? "Unnamed Customer"
+                : customer.FullName.Trim(),
+            CurrentBalance = balance,
+            PaymentType = balance > 0 ? "CustomerPayment" : "PaymentToCustomer"
+        });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Payment(
+        CustomerPaymentPageViewModel model,
+        CancellationToken cancellationToken)
+    {
+        if (!TryGetProfileId(out var profileId))
+            return Unauthorized();
+
+        if (model.Amount <= 0)
+            ModelState.AddModelError(nameof(model.Amount), "Enter a payment amount greater than ₹0.");
+
+        var paymentType = model.PaymentType?.Trim();
+
+        await using var transaction = await _dbContext.Database.BeginTransactionAsync(
+            IsolationLevel.Serializable,
+            cancellationToken);
+
+        try
+        {
+            var customer = await _dbContext.Customers
+                .SingleOrDefaultAsync(
+                    item => item.CustomerId == model.CustomerId && item.ProfileId == profileId,
+                    cancellationToken);
+
+            if (customer is null)
+                return NotFound();
+
+            var balance = await GetCurrentBalanceAsync(profileId, model.CustomerId, cancellationToken);
+
+            if (balance == 0m)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                ModelState.AddModelError(string.Empty, "This customer is already settled.");
+            }
+            else if (balance > 0 && paymentType != "CustomerPayment")
+            {
+                ModelState.AddModelError(string.Empty, "This customer owes you money, so record the payment received from the customer.");
+            }
+            else if (balance < 0 && paymentType != "PaymentToCustomer")
+            {
+                ModelState.AddModelError(string.Empty, "You owe this customer money, so record the payment you made to the customer.");
+            }
+            else if (model.Amount > Math.Abs(balance))
+            {
+                ModelState.AddModelError(
+                    nameof(model.Amount),
+                    $"The maximum payment for this balance is ₹{Math.Abs(balance):N2}.");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                await transaction.RollbackAsync(cancellationToken);
+                return View(new CustomerPaymentPageViewModel
+                {
+                    CustomerId = customer.CustomerId,
+                    CustomerName = string.IsNullOrWhiteSpace(customer.FullName)
+                        ? "Unnamed Customer"
+                        : customer.FullName.Trim(),
+                    CurrentBalance = balance,
+                    PaymentType = balance > 0 ? "CustomerPayment" : "PaymentToCustomer",
+                    Amount = model.Amount,
+                    Note = model.Note
+                });
+            }
+
+            var roundedAmount = decimal.Round(model.Amount, 2, MidpointRounding.AwayFromZero);
+            var balanceChange = paymentType == "CustomerPayment"
+                ? -roundedAmount
+                : roundedAmount;
+
+            _dbContext.CustomerLedgerEntries.Add(new CustomerLedgerEntry
+            {
+                ProfileId = profileId,
+                CustomerId = customer.CustomerId,
+                EntryType = paymentType == "CustomerPayment"
+                    ? "CustomerPayment"
+                    : "PaymentToCustomer",
+                BalanceChange = balanceChange,
+                Description = string.IsNullOrWhiteSpace(model.Note)
+                    ? paymentType == "CustomerPayment"
+                        ? "Payment received from customer"
+                        : "Payment made to customer"
+                    : model.Note.Trim(),
+                CreatedAt = DateTime.UtcNow
+            });
+
+            customer.UpdatedAt = DateTime.UtcNow;
+
+            await _dbContext.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+
+            TempData["CustomerSuccess"] = "Payment recorded successfully.";
+            return RedirectToAction(nameof(Details), new { id = customer.CustomerId });
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            _logger.LogError(
+                ex,
+                "Failed to record customer payment for profile {ProfileId}, customer {CustomerId}.",
+                profileId,
+                model.CustomerId);
+
+            ModelState.AddModelError(
+                string.Empty,
+                "The payment could not be recorded. No balance changes were saved.");
+
+            return View(model);
+        }
+    }
+
+    private async Task<decimal> GetCurrentBalanceAsync(
+        long profileId,
+        long customerId,
+        CancellationToken cancellationToken)
+    {
+        return await _dbContext.CustomerLedgerEntries
+            .AsNoTracking()
+            .Where(entry =>
+                entry.ProfileId == profileId &&
+                entry.CustomerId == customerId)
+            .Select(entry => (decimal?)entry.BalanceChange)
+            .SumAsync(cancellationToken) ?? 0m;
+    }
+
+    private static string NormalizeFilter(string? filter) =>
+        filter?.Trim().ToLowerInvariant() switch
+        {
+            "owed-to-you" => "owed-to-you",
+            "owed-by-you" => "owed-by-you",
+            "settled" => "settled",
+            _ => "all"
+        };
+
+    private static string NormalizeBalanceType(string? value) =>
+        value?.Trim() switch
+        {
+            "OwedByYou" => "OwedByYou",
+            _ => "OwedToYou"
+        };
+
+    private static bool TryParseMoney(string value, out decimal amount)
+    {
+        return decimal.TryParse(
+            value.Replace(",", string.Empty),
+            NumberStyles.Number,
+            CultureInfo.InvariantCulture,
+            out amount) && amount >= 0;
+    }
+
+    private static string? NormalizePhoneNumber(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return null;
+
+        var normalized = new string(value.Where(char.IsDigit).ToArray());
+
+        if (normalized.StartsWith("91", StringComparison.Ordinal) && normalized.Length == 12)
+            normalized = normalized[2..];
+
+        if (normalized.Length != 10 || normalized[0] is < '6' or > '9')
+            return null;
+
+        return normalized;
+    }
+
+    private bool TryGetProfileId(out long profileId) =>
+        long.TryParse(HttpContext.Session.GetString("ProfileId"), out profileId);
+
+    private sealed class CustomerBalanceRow
+    {
+        public long CustomerId { get; init; }
+        public decimal Balance { get; init; }
+        public DateTime LastActivityAt { get; init; }
+    }
+}
