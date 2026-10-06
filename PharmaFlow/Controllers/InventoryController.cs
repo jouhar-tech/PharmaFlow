@@ -31,49 +31,71 @@ public sealed class InventoryController : Controller
             return RedirectToAction("Login", "Account");
 
         var normalizedQuery = NormalizeNullableText(query, 100) ?? string.Empty;
-        var products = new List<ProductCatalog>();
+        var results = normalizedQuery.Length >= 2
+            ? (await _globalProductCatalogService.SearchAsync(normalizedQuery, cancellationToken)).ToList()
+            : [];
 
-        if (normalizedQuery.Length >= 2)
+        if (results.Count > 0)
         {
-            products = (await _globalProductCatalogService.SearchAsync(
-                normalizedQuery,
-                cancellationToken)).ToList();
+            var candidateBarcodes = results
+                .Where(item => !string.IsNullOrWhiteSpace(item.Barcode))
+                .Select(item => item.Barcode!.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
 
-            var catalogIds = products
-                .Select(item => item.CatalogId)
+            var candidateNames = results
+                .Select(item => item.ProductName.Trim().ToLower())
+                .Where(name => !string.IsNullOrWhiteSpace(name))
                 .Distinct()
                 .ToArray();
 
-            if (catalogIds.Length > 0)
-            {
-                var inventoryCatalogIds = await _dbContext.Products
-                    .AsNoTracking()
-                    .Where(p =>
-                        p.ProfileId == profileId &&
-                        p.CatalogId.HasValue &&
-                        catalogIds.Contains(p.CatalogId.Value))
-                    .Select(p => p.CatalogId!.Value)
-                    .Distinct()
-                    .ToListAsync(cancellationToken);
+            var existingProducts = await _dbContext.Products
+                .AsNoTracking()
+                .Where(p =>
+                    p.ProfileId == profileId &&
+                    (
+                        (p.CatalogId.HasValue &&
+                         results.Where(item => item.CatalogId.HasValue)
+                               .Select(item => item.CatalogId!.Value)
+                               .Contains(p.CatalogId.Value))
+                        || (p.Barcode != null && candidateBarcodes.Contains(p.Barcode))
+                        || candidateNames.Contains(p.ProductName.ToLower())
+                    ))
+                .Select(p => new { p.CatalogId, p.Barcode, p.ProductName })
+                .ToListAsync(cancellationToken);
 
-                if (inventoryCatalogIds.Count > 0)
-                {
-                    products = products
-                        .Where(item => !inventoryCatalogIds.Contains(item.CatalogId))
-                        .ToList();
-                }
-            }
+            var existingCatalogIds = existingProducts
+                .Where(item => item.CatalogId.HasValue)
+                .Select(item => item.CatalogId!.Value)
+                .ToHashSet();
+
+            var existingBarcodes = existingProducts
+                .Where(item => !string.IsNullOrWhiteSpace(item.Barcode))
+                .Select(item => item.Barcode!.Trim())
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            var existingNames = existingProducts
+                .Select(item => item.ProductName.Trim())
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            results = results
+                .Where(item =>
+                    !(item.CatalogId.HasValue && existingCatalogIds.Contains(item.CatalogId.Value)) &&
+                    !(item.Barcode != null && existingBarcodes.Contains(item.Barcode.Trim())) &&
+                    !existingNames.Contains(item.ProductName.Trim()))
+                .ToList();
         }
 
         ViewData["Title"] = "Search Products";
         return View(new InventoryProductSearchViewModel
         {
             Query = normalizedQuery,
-            Products = products
+            Products = results
                 .Select(item => new InventoryProductSearchItemViewModel
                 {
                     CatalogId = item.CatalogId,
                     Source = item.Source,
+                    ExternalId = item.ExternalId,
                     ProductType = item.ProductType,
                     ProductName = item.ProductName,
                     GenericName = item.GenericName,
@@ -92,18 +114,25 @@ public sealed class InventoryController : Controller
     public async Task<IActionResult> AddItem(
         long? productId,
         long? catalogId,
+        string? source,
+        string? externalId,
         CancellationToken cancellationToken)
     {
         if (!TryGetProfileId(out var profileId))
             return RedirectToAction("Login", "Account");
 
-        if (productId.HasValue && catalogId.HasValue)
+        if (productId.HasValue || (catalogId.HasValue && (!string.IsNullOrWhiteSpace(source) || !string.IsNullOrWhiteSpace(externalId))))
+            return BadRequest();
+
+        if (!catalogId.HasValue && string.IsNullOrWhiteSpace(source) != string.IsNullOrWhiteSpace(externalId))
             return BadRequest();
 
         var model = new InventoryAddItemViewModel
         {
             ExistingProductId = productId,
             CatalogId = catalogId,
+            ExternalSource = NormalizeNullableText(source, 50),
+            ExternalId = NormalizeNullableText(externalId, 160),
             ExpiryDate = DateOnly.FromDateTime(DateTime.UtcNow).AddYears(2)
         };
 
@@ -129,31 +158,52 @@ public sealed class InventoryController : Controller
             model.ProductName = product.ProductName;
             model.Mrp = product.LatestMrp.GetValueOrDefault();
         }
-        else if (catalogId.HasValue)
+        else if (catalogId.HasValue || (!string.IsNullOrWhiteSpace(model.ExternalSource) && !string.IsNullOrWhiteSpace(model.ExternalId)))
         {
-            var catalogProduct = await _dbContext.ProductCatalog
-                .AsNoTracking()
-                .SingleOrDefaultAsync(
-                    item => item.CatalogId == catalogId.Value,
-                    cancellationToken);
+            var globalProduct = await _globalProductCatalogService.GetAsync(
+                model.ExternalSource ?? string.Empty,
+                model.ExternalId ?? string.Empty,
+                model.CatalogId,
+                cancellationToken);
 
-            if (catalogProduct is null)
+            if (globalProduct is null)
                 return NotFound();
 
-            var alreadyInInventory = await _dbContext.Products
-                .AsNoTracking()
-                .AnyAsync(
-                    p => p.ProfileId == profileId &&
-                         p.CatalogId == catalogProduct.CatalogId,
-                    cancellationToken);
-
-            if (alreadyInInventory)
+            if (globalProduct.CatalogId.HasValue)
             {
-                TempData["InventoryMessage"] = "This product is already linked to your inventory.";
-                return RedirectToAction(nameof(Index));
+                var alreadyInInventory = await _dbContext.Products
+                    .AsNoTracking()
+                    .AnyAsync(
+                        p => p.ProfileId == profileId &&
+                             p.CatalogId == globalProduct.CatalogId,
+                        cancellationToken);
+
+                if (alreadyInInventory)
+                {
+                    TempData["InventoryMessage"] = "This product is already linked to your inventory.";
+                    return RedirectToAction(nameof(Index));
+                }
+            }
+            else if (!string.IsNullOrWhiteSpace(globalProduct.Barcode))
+            {
+                var alreadyInInventory = await _dbContext.Products
+                    .AsNoTracking()
+                    .AnyAsync(
+                        p => p.ProfileId == profileId &&
+                             p.Barcode == globalProduct.Barcode,
+                        cancellationToken);
+
+                if (alreadyInInventory)
+                {
+                    TempData["InventoryMessage"] = "This barcode is already present in your inventory.";
+                    return RedirectToAction(nameof(Index));
+                }
             }
 
-            model.ProductName = catalogProduct.ProductName;
+            model.CatalogId = globalProduct.CatalogId;
+            model.ExternalSource = globalProduct.Source;
+            model.ExternalId = globalProduct.ExternalId;
+            model.ProductName = globalProduct.ProductName;
         }
 
         ViewData["Title"] = "Add Item";
@@ -169,23 +219,36 @@ public sealed class InventoryController : Controller
         if (!TryGetProfileId(out var profileId))
             return Unauthorized();
 
-        ProductCatalog? catalogProduct = null;
-
-        if (model.ExistingProductId.HasValue && model.CatalogId.HasValue)
+        if (model.ExistingProductId.HasValue && (model.CatalogId.HasValue || !string.IsNullOrWhiteSpace(model.ExternalSource) || !string.IsNullOrWhiteSpace(model.ExternalId)))
             return BadRequest();
 
-        if (model.CatalogId.HasValue)
-        {
-            catalogProduct = await _dbContext.ProductCatalog
-                .AsNoTracking()
-                .SingleOrDefaultAsync(
-                    item => item.CatalogId == model.CatalogId.Value,
-                    cancellationToken);
+        var hasGlobalSelection =
+            model.CatalogId.HasValue ||
+            !string.IsNullOrWhiteSpace(model.ExternalSource) ||
+            !string.IsNullOrWhiteSpace(model.ExternalId);
 
-            if (catalogProduct is null)
+        if (hasGlobalSelection &&
+            (!string.IsNullOrWhiteSpace(model.ExternalSource) != !string.IsNullOrWhiteSpace(model.ExternalId)))
+            return BadRequest();
+
+        GlobalProductSearchResult? globalProduct = null;
+
+        if (hasGlobalSelection)
+        {
+            if (string.IsNullOrWhiteSpace(model.ExternalSource) ||
+                string.IsNullOrWhiteSpace(model.ExternalId))
+                return BadRequest();
+
+            globalProduct = await _globalProductCatalogService.GetAsync(
+                model.ExternalSource,
+                model.ExternalId,
+                model.CatalogId,
+                cancellationToken);
+
+            if (globalProduct is null)
                 return NotFound();
 
-            model.ProductName = catalogProduct.ProductName;
+            model.ProductName = globalProduct.ProductName;
         }
         else
         {
@@ -227,31 +290,50 @@ public sealed class InventoryController : Controller
             product.IsActive = true;
             product.UpdatedAt = DateTime.UtcNow;
         }
-        else if (catalogProduct is not null)
+        else if (globalProduct is not null)
         {
-            product = await _dbContext.Products
-                .FirstOrDefaultAsync(
-                    p => p.ProfileId == profileId &&
-                         p.CatalogId == catalogProduct.CatalogId,
-                    cancellationToken);
+            if (globalProduct.CatalogId.HasValue)
+            {
+                product = await _dbContext.Products
+                    .FirstOrDefaultAsync(
+                        p => p.ProfileId == profileId &&
+                             p.CatalogId == globalProduct.CatalogId,
+                        cancellationToken);
+            }
+            else if (!string.IsNullOrWhiteSpace(globalProduct.Barcode))
+            {
+                product = await _dbContext.Products
+                    .FirstOrDefaultAsync(
+                        p => p.ProfileId == profileId &&
+                             p.Barcode == globalProduct.Barcode,
+                        cancellationToken);
+            }
+            else
+            {
+                product = await _dbContext.Products
+                    .FirstOrDefaultAsync(
+                        p => p.ProfileId == profileId &&
+                             p.ProductName.ToLower() == globalProduct.ProductName.ToLower(),
+                        cancellationToken);
+            }
 
             if (product is null)
             {
                 product = new Product
                 {
                     ProfileId = profileId,
-                    CatalogId = catalogProduct.CatalogId,
-                    ProductName = catalogProduct.ProductName,
-                    GenericName = catalogProduct.GenericName,
-                    BrandName = catalogProduct.BrandName,
-                    DosageForm = catalogProduct.DosageForm,
-                    Strength = catalogProduct.Strength,
-                    PackSize = catalogProduct.PackSize,
-                    Barcode = catalogProduct.Barcode,
-                    Manufacturer = catalogProduct.Manufacturer,
-                    HsnCode = catalogProduct.HsnCode,
-                    GstRate = catalogProduct.GstRate,
-                    IsPrescriptionRequired = catalogProduct.IsPrescriptionRequired,
+                    CatalogId = globalProduct.CatalogId,
+                    ProductName = globalProduct.ProductName,
+                    GenericName = globalProduct.GenericName,
+                    BrandName = globalProduct.BrandName,
+                    DosageForm = globalProduct.DosageForm,
+                    Strength = globalProduct.Strength,
+                    PackSize = globalProduct.PackSize,
+                    Barcode = globalProduct.Barcode,
+                    Manufacturer = globalProduct.Manufacturer,
+                    HsnCode = globalProduct.HsnCode,
+                    GstRate = globalProduct.GstRate,
+                    IsPrescriptionRequired = globalProduct.IsPrescriptionRequired,
                     IsActive = true,
                     ReorderLevel = 0,
                     CreatedAt = DateTime.UtcNow,
