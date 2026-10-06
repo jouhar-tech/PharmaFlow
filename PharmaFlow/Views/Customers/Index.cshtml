@@ -143,6 +143,10 @@
 
                         <div class="customer-list-meta">
                             <span>@customer.BillCount bill@(customer.BillCount == 1 ? "" : "s")</span>
+                            @if (customer.PendingReminderCount > 0)
+                            {
+                                <span class="customer-list-reminder-count">@customer.PendingReminderCount pending reminder@(customer.PendingReminderCount == 1 ? "" : "s")</span>
+                            }
                             <span>Updated @customer.LastActivityAt.ToLocalTime().ToString("dd MMM yyyy")</span>
                         </div>
 
