@@ -259,6 +259,16 @@ public sealed class CustomersController : Controller
         if (model.OpeningBalance > 1_000_000_000m)
             ModelState.AddModelError(nameof(model.OpeningBalance), "Opening balance is too large.");
 
+        var roundedOpeningBalance = decimal.Round(
+            model.OpeningBalance,
+            2,
+            MidpointRounding.AwayFromZero);
+
+        if (model.OpeningBalance > 0m && roundedOpeningBalance <= 0m)
+            ModelState.AddModelError(
+                nameof(model.OpeningBalance),
+                "Opening balance must be at least ₹0.01.");
+
         if (!ModelState.IsValid)
             return View(model);
 
@@ -300,11 +310,11 @@ public sealed class CustomersController : Controller
             _dbContext.Customers.Add(customer);
             await _dbContext.SaveChangesAsync(cancellationToken);
 
-            if (model.OpeningBalance > 0)
+            if (roundedOpeningBalance > 0m)
             {
                 var balanceChange = balanceType == "OwedByYou"
-                    ? -decimal.Round(model.OpeningBalance, 2, MidpointRounding.AwayFromZero)
-                    : decimal.Round(model.OpeningBalance, 2, MidpointRounding.AwayFromZero);
+                    ? -roundedOpeningBalance
+                    : roundedOpeningBalance;
 
                 _dbContext.CustomerLedgerEntries.Add(new CustomerLedgerEntry
                 {
@@ -324,7 +334,7 @@ public sealed class CustomersController : Controller
             await transaction.CommitAsync(cancellationToken);
 
             TempData["CustomerSuccess"] =
-                model.OpeningBalance > 0
+                roundedOpeningBalance > 0m
                     ? "Customer and opening balance saved successfully."
                     : "Customer saved successfully.";
 
@@ -492,9 +502,9 @@ public sealed class CustomersController : Controller
             .ToArray();
 
         var productNames = results
-            .Select(item => item.ProductName.Trim())
+            .Select(item => item.ProductName.Trim().ToLower())
             .Where(name => !string.IsNullOrWhiteSpace(name))
-            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Distinct()
             .ToArray();
 
         var localProducts = await _dbContext.Products
@@ -504,7 +514,7 @@ public sealed class CustomersController : Controller
                 (
                     (product.CatalogId.HasValue && catalogIds.Contains(product.CatalogId.Value)) ||
                     (product.Barcode != null && barcodes.Contains(product.Barcode)) ||
-                    productNames.Contains(product.ProductName)
+                    productNames.Contains(product.ProductName.ToLower())
                 ))
             .Select(product => new
             {
@@ -779,6 +789,16 @@ public sealed class CustomersController : Controller
         if (model.Amount <= 0)
             ModelState.AddModelError(nameof(model.Amount), "Enter a payment amount greater than ₹0.");
 
+        var roundedAmount = decimal.Round(
+            model.Amount,
+            2,
+            MidpointRounding.AwayFromZero);
+
+        if (model.Amount > 0m && roundedAmount <= 0m)
+            ModelState.AddModelError(
+                nameof(model.Amount),
+                "Payment amount must be at least ₹0.01.");
+
         var paymentType = model.PaymentType?.Trim();
 
         await using var transaction = await _dbContext.Database.BeginTransactionAsync(
@@ -833,7 +853,6 @@ public sealed class CustomersController : Controller
                 });
             }
 
-            var roundedAmount = decimal.Round(model.Amount, 2, MidpointRounding.AwayFromZero);
             var balanceChange = paymentType == "CustomerPayment"
                 ? -roundedAmount
                 : roundedAmount;
