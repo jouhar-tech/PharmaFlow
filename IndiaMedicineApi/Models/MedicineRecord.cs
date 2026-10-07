@@ -10,6 +10,15 @@ public sealed class MedicineRecord
     [JsonPropertyName("product_name")]
     public string ProductName { get; init; } = string.Empty;
 
+    [JsonIgnore]
+    internal string NormalizedProductName { get; init; } = string.Empty;
+
+    [JsonIgnore]
+    internal string NormalizedSaltComposition { get; init; } = string.Empty;
+
+    [JsonIgnore]
+    internal string NormalizedManufacturerName { get; init; } = string.Empty;
+
     [JsonPropertyName("price")]
     public string? Price { get; init; }
 
