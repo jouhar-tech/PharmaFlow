@@ -164,6 +164,7 @@ public sealed class GlobalProductCatalogService : IGlobalProductCatalogService
         var existingByExternalId = existingRows.ToDictionary(
             item => item.ExternalId,
             StringComparer.OrdinalIgnoreCase);
+        var addedRows = new List<ProductCatalog>(results.Count);
 
         foreach (var result in results)
         {
@@ -171,7 +172,7 @@ public sealed class GlobalProductCatalogService : IGlobalProductCatalogService
 
             if (existing is null)
             {
-                _dbContext.ProductCatalog.Add(new ProductCatalog
+                var added = new ProductCatalog
                 {
                     Source = IndiaSource,
                     ExternalId = result.ExternalId,
@@ -192,7 +193,10 @@ public sealed class GlobalProductCatalogService : IGlobalProductCatalogService
                     LastSyncedAt = now,
                     CacheExpiresAt = now.AddDays(cacheDays),
                     UpdatedAt = now
-                });
+                };
+
+                _dbContext.ProductCatalog.Add(added);
+                addedRows.Add(added);
 
                 continue;
             }
@@ -202,12 +206,14 @@ public sealed class GlobalProductCatalogService : IGlobalProductCatalogService
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 
+        foreach (var added in addedRows)
+            existingByExternalId[added.ExternalId] = added;
+
         // Cache cleanup is intentionally kept out of the interactive search path.
         // The search request should only do the writes required to make selected results addable.
 
         return results
-            .Where(item => catalogIdByExternalId.ContainsKey(item.ExternalId))
-            .Select(item => new GlobalProductSearchResult
+                        .Select(item => new GlobalProductSearchResult
             {
                 CatalogId = existingByExternalId.TryGetValue(item.ExternalId, out var cached)
                     ? cached.CatalogId
