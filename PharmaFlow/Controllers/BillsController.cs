@@ -39,13 +39,15 @@ public sealed class BillsController : Controller
             range = ResolveRange(period, null, null);
         }
 
+        var searchTerm = NormalizeSearch(search);
+
         var bills = await LoadBillsAsync(
             profileId,
             range.StartUtc,
             range.EndUtc,
+            searchTerm,
             cancellationToken);
 
-        var searchTerm = NormalizeSearch(search);
         var productTerms = await LoadProductTermsAsync(
             bills.Select(b => b.BillId).ToList(),
             cancellationToken);
@@ -151,13 +153,15 @@ public sealed class BillsController : Controller
         if (period == "Custom" && (!range.StartUtc.HasValue || !range.EndUtc.HasValue))
             return BadRequest();
 
+        var searchTerm = NormalizeSearch(q);
+
         var bills = await LoadBillsAsync(
             profileId,
             range.StartUtc,
             range.EndUtc,
+            searchTerm,
             cancellationToken);
 
-        var searchTerm = NormalizeSearch(q);
         var productTerms = await LoadProductTermsAsync(
             bills.Select(b => b.BillId).ToList(),
             cancellationToken);
@@ -177,6 +181,7 @@ public sealed class BillsController : Controller
         long profileId,
         DateTime? startUtc,
         DateTime? endUtc,
+        string search,
         CancellationToken cancellationToken)
     {
         var query = _dbContext.SalesBills
@@ -188,6 +193,18 @@ public sealed class BillsController : Controller
 
         if (endUtc.HasValue)
             query = query.Where(b => b.CreatedAt < endUtc.Value);
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var pattern = $"%{search.Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_")}%";
+
+            query = query.Where(b =>
+                (b.CustomerName != null && EF.Functions.ILike(b.CustomerName, pattern, "\\"))
+                || (b.CustomerPhone != null && EF.Functions.ILike(b.CustomerPhone, pattern, "\\"))
+                || _dbContext.SalesBillItems.Any(item =>
+                    item.BillId == b.BillId &&
+                    EF.Functions.ILike(item.ProductName, pattern, "\\")));
+        }
 
         return await query
             .OrderByDescending(b => b.CreatedAt)
