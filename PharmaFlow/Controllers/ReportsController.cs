@@ -107,6 +107,7 @@ public sealed class ReportsController : Controller
                     BillNumber = bill.BillNumber,
                     DateTime = new DateTimeOffset(bill.CreatedAt, TimeSpan.Zero).ToOffset(IndiaOffset),
                     ProductName = item.ProductName,
+                    BatchNumber = item.BatchNumber,
                     Quantity = item.Quantity,
                     PaymentMode = bill.PaymentMethod,
                     TotalAmount = item.LineTotal,
