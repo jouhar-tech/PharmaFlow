@@ -137,14 +137,14 @@
             foreach (var row in Model.SalesRows)
             {
                 <tr>
-                    <td>@row.BillNumber</td>
-                    <td>@row.DateTime.ToOffset(TimeSpan.FromHours(5.5)).ToString("dd MMM, h:mm tt")</td>
-                    <td>@row.ProductName</td>
-                    <td>@row.BatchNumber</td>
-                    <td>@row.Quantity.ToString("0.##")</td>
-                    <td>@row.PaymentMode</td>
-                    <td>₹@row.TotalAmount.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</td>
-                    <td>₹@row.NetProfit.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</td>
+                    <td class="reports-print-bill-cell">@row.BillNumber</td>
+                    <td class="reports-print-date-cell">@row.DateTime.ToOffset(TimeSpan.FromHours(5.5)).ToString("dd MMM, h:mm tt")</td>
+                    <td class="reports-print-product-cell">@row.ProductName</td>
+                    <td class="reports-print-batch-cell">@row.BatchNumber</td>
+                    <td class="reports-print-qty-cell">@row.Quantity.ToString("0.##")</td>
+                    <td class="reports-print-payment-cell">@row.PaymentMode</td>
+                    <td class="reports-print-amount-cell">₹@row.TotalAmount.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</td>
+                    <td class="reports-print-profit-cell">₹@row.NetProfit.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</td>
                 </tr>
             }
         }
@@ -159,7 +159,6 @@
 
     <footer class="reports-print-footer">
         <span>@(Context.Session.GetString("BusinessName") ?? "PharmaFlow") | Authorized Report</span>
-        <span>Page 1 of 1</span>
     </footer>
 </section>
 
