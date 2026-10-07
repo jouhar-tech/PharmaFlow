@@ -131,6 +131,35 @@ public class AccountController : Controller
             return Unauthorized();
         }
 
+        var now = DateTime.UtcNow;
+
+        if (string.Equals(role, "Staff", StringComparison.OrdinalIgnoreCase))
+        {
+            if (!long.TryParse(HttpContext.Session.GetString("StaffId"), out var staffId))
+            {
+                HttpContext.Session.Clear();
+                return Unauthorized();
+            }
+
+            var staff = await _dbContext.Staff
+                .AsNoTracking()
+                .Where(s =>
+                    s.StaffId == staffId &&
+                    s.ProfileId == profileId &&
+                    s.IsActive &&
+                    s.AuthUserId.ToString() == userIdText)
+                .Select(s => new { s.StaffId, s.LastLoginAt })
+                .SingleOrDefaultAsync(cancellationToken);
+
+            if (staff is null)
+            {
+                HttpContext.Session.Clear();
+                return Unauthorized();
+            }
+
+            return NoContent();
+        }
+
         // Keep this endpoint cheap: one indexed profile lookup/update only when
         // the client decides a new app-open/resume event needs to be recorded.
         var profile = await _dbContext.Profiles
@@ -145,7 +174,6 @@ public class AccountController : Controller
             return Unauthorized();
         }
 
-        var now = DateTime.UtcNow;
         var cutoff = now.AddDays(-60);
 
         if (profile.LastLoginAt.HasValue && profile.LastLoginAt.Value <= cutoff)
@@ -160,13 +188,10 @@ public class AccountController : Controller
             return Unauthorized();
         }
 
-        if (string.Equals(role, "Owner", StringComparison.OrdinalIgnoreCase))
-        {
-            await _dbContext.Profiles
-                .Where(p => p.Id == profileId && p.ActiveStatus == 1)
-                .ExecuteUpdateAsync(setters => setters
-                    .SetProperty(p => p.LastLoginAt, now), cancellationToken);
-        }
+        await _dbContext.Profiles
+            .Where(p => p.Id == profileId && p.ActiveStatus == 1)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(p => p.LastLoginAt, now), cancellationToken);
 
         return NoContent();
     }
