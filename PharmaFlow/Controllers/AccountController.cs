@@ -125,7 +125,7 @@ public class AccountController : Controller
 
         if (string.IsNullOrWhiteSpace(accessToken) ||
             string.IsNullOrWhiteSpace(userIdText) ||
-            !Guid.TryParse(userIdText, out _) ||
+            !Guid.TryParse(userIdText, out var authenticatedSessionUserId) ||
             !long.TryParse(profileIdText, out var profileId))
         {
             return Unauthorized();
@@ -147,7 +147,7 @@ public class AccountController : Controller
                     s.StaffId == staffId &&
                     s.ProfileId == profileId &&
                     s.IsActive &&
-                    s.AuthUserId.ToString() == userIdText)
+                    s.AuthUserId == authenticatedSessionUserId)
                 .Select(s => new { s.StaffId, s.LastLoginAt })
                 .SingleOrDefaultAsync(cancellationToken);
 
