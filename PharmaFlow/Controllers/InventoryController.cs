@@ -114,6 +114,12 @@ public sealed class InventoryController : Controller
     }
 
     [HttpGet]
+    public IActionResult BarcodeScanner()
+    {
+        return View();
+    }
+
+    [HttpGet]
     public async Task<IActionResult> AddItem(
         long? productId,
         long? catalogId,
@@ -145,7 +151,7 @@ public sealed class InventoryController : Controller
             CatalogId = catalogId,
             ExternalSource = NormalizeNullableText(source, 50),
             ExternalId = NormalizeNullableText(externalId, 160),
-            ExpiryDate = DateOnly.FromDateTime(DateTime.UtcNow).AddYears(2)
+            ExpiryDate = GetIndiaToday().AddYears(2)
         };
 
         if (productId.HasValue)
@@ -268,9 +274,9 @@ public sealed class InventoryController : Controller
         }
 
         if (model.ExpiryDate == default)
-            model.ExpiryDate = DateOnly.FromDateTime(DateTime.UtcNow).AddYears(2);
+            model.ExpiryDate = GetIndiaToday().AddYears(2);
 
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = GetIndiaToday();
 
         if (model.ExpiryDate < today)
             ModelState.AddModelError(nameof(model.ExpiryDate), "Expiry cannot be earlier than today.");
@@ -571,7 +577,7 @@ public sealed class InventoryController : Controller
         if (gstRate is < 0m or > 100m)
             ModelState.AddModelError(nameof(gstRate), "GST rate must be between 0 and 100.");
 
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = GetIndiaToday();
 
         if (expiryDate < today)
             ModelState.AddModelError(nameof(expiryDate), "Expiry date cannot be earlier than today.");
@@ -718,7 +724,7 @@ public sealed class InventoryController : Controller
         if (normalizedBatch is null)
             return BadRequest(new { message = "Batch number is required." });
 
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = GetIndiaToday();
         if (expiryDate < today)
             return BadRequest(new { message = "Expiry date cannot be earlier than today." });
 
@@ -813,6 +819,10 @@ public sealed class InventoryController : Controller
             : normalized[..maxLength].Trim();
     }
 
+    private static DateOnly GetIndiaToday() =>
+        DateOnly.FromDateTime(
+            DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(5.5)).DateTime);
+
     private bool TryGetProfileId(out long profileId) =>
         long.TryParse(HttpContext.Session.GetString("ProfileId"), out profileId);
 
@@ -822,7 +832,7 @@ public sealed class InventoryController : Controller
         if (!long.TryParse(HttpContext.Session.GetString("ProfileId"), out var profileId))
             return RedirectToAction("Login", "Account");
 
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = GetIndiaToday();
         var ninetyDaysFromToday = today.AddDays(90);
 
         var rows = await _dbContext.ProductBatches
