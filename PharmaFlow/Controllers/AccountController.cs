@@ -83,10 +83,12 @@ public class AccountController : Controller
             return RedirectToAction("Index", "Home");
         }
 
+        var normalizedUsername = identifier.ToLowerInvariant();
+
         var ownerProfile = await _dbContext.Profiles
             .AsNoTracking()
             .SingleOrDefaultAsync(p =>
-                p.Username == identifier ||
+                p.Username.ToLower() == normalizedUsername ||
                 (!string.IsNullOrWhiteSpace(p.Email) && p.Email == identifier.ToLowerInvariant()) ||
                 (!string.IsNullOrWhiteSpace(p.PhoneNumber) && normalizedPhone != null && p.PhoneNumber == normalizedPhone),
                 cancellationToken);
@@ -98,7 +100,10 @@ public class AccountController : Controller
         }
 
         var result = await _authService.LoginAsync(ownerProfile.Email, model.Password, cancellationToken);
-        if (!result.Success || string.IsNullOrWhiteSpace(result.UserId) || !Guid.TryParse(result.UserId, out _))
+        if (!result.Success ||
+            string.IsNullOrWhiteSpace(result.UserId) ||
+            !Guid.TryParse(result.UserId, out var authenticatedUserId) ||
+            authenticatedUserId != ownerProfile.UserId)
         {
             ModelState.AddModelError(string.Empty, "Invalid username, email, phone or password.");
             return View(model);
@@ -200,9 +205,12 @@ public class AccountController : Controller
         if (!ModelState.IsValid) return View(model);
 
         var username = model.Username.Trim();
+        var normalizedUsername = username.ToLowerInvariant();
         var usernameExists = await _dbContext.Profiles
             .AsNoTracking()
-            .AnyAsync(p => p.Username == username, cancellationToken);
+            .AnyAsync(
+                p => p.Username.ToLower() == normalizedUsername,
+                cancellationToken);
 
         if (usernameExists)
         {
@@ -405,7 +413,9 @@ public class AccountController : Controller
 
         var username = baseUsername;
         var suffix = 1;
-        while (await _dbContext.Profiles.AnyAsync(p => p.Username == username, cancellationToken))
+        while (await _dbContext.Profiles.AnyAsync(
+                   p => p.Username.ToLower() == username.ToLower(),
+                   cancellationToken))
             username = $"{baseUsername}{suffix++}";
 
         return username;
