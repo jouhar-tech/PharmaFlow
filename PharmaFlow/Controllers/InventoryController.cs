@@ -13,13 +13,16 @@ public sealed class InventoryController : Controller
 {
     private readonly ApplicationDbContext _dbContext;
     private readonly IGlobalProductCatalogService _globalProductCatalogService;
+    private readonly ILogger<InventoryController> _logger;
 
     public InventoryController(
         ApplicationDbContext dbContext,
-        IGlobalProductCatalogService globalProductCatalogService)
+        IGlobalProductCatalogService globalProductCatalogService,
+        ILogger<InventoryController> logger)
     {
         _dbContext = dbContext;
         _globalProductCatalogService = globalProductCatalogService;
+        _logger = logger;
     }
 
     [HttpGet]
@@ -292,7 +295,9 @@ public sealed class InventoryController : Controller
 
         await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
-        Product? product;
+        try
+        {
+            Product? product;
 
         if (model.ExistingProductId.HasValue)
         {
@@ -420,6 +425,16 @@ public sealed class InventoryController : Controller
 
         TempData["InventoryMessage"] = "Item added to inventory successfully.";
         return RedirectToAction(nameof(Index));
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync(CancellationToken.None);
+            _logger.LogError(ex, "Failed to add inventory item for profile {ProfileId}.", profileId);
+            ModelState.AddModelError(
+                string.Empty,
+                "The item could not be added. No inventory changes were saved.");
+            return View(model);
+        }
     }
 
     [HttpGet]
