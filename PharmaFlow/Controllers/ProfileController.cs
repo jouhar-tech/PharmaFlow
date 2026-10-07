@@ -11,10 +11,14 @@ namespace PharmaFlow.Controllers;
 public sealed class ProfileController : Controller
 {
     private readonly ApplicationDbContext _dbContext;
+    private readonly ILogger<ProfileController> _logger;
 
-    public ProfileController(ApplicationDbContext dbContext)
+    public ProfileController(
+        ApplicationDbContext dbContext,
+        ILogger<ProfileController> logger)
     {
         _dbContext = dbContext;
+        _logger = logger;
     }
 
     [HttpGet]
@@ -67,7 +71,18 @@ public sealed class ProfileController : Controller
             ? null
             : model.PhoneNumber.Trim();
 
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to update profile {ProfileId}.", profile.Id);
+            ModelState.AddModelError(
+                string.Empty,
+                "Your profile could not be saved. No changes were applied.");
+            return View(model);
+        }
 
         HttpContext.Session.SetString("BusinessName", profile.BusinessName);
         HttpContext.Session.SetString("Username", profile.Username);
@@ -116,7 +131,18 @@ public sealed class ProfileController : Controller
         };
 
         _dbContext.Set<Feedback>().Add(feedback);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to save feedback for profile {ProfileId}.", profile.Id);
+            ModelState.AddModelError(
+                string.Empty,
+                "Your feedback could not be submitted. Please try again.");
+            return View(model);
+        }
 
         TempData["FeedbackMessage"] = "Thank you. Your feedback has been submitted.";
         return RedirectToAction(nameof(Feedback));
