@@ -132,13 +132,18 @@ public sealed class PurchaseController : Controller
         if (string.IsNullOrWhiteSpace(name))
             return NotFound();
 
+        var safeName = name
+            .Replace("\\", "\\\\")
+            .Replace("%", "\\%")
+            .Replace("_", "\\_");
+
         var invoices = await _dbContext.InvoiceImports
             .AsNoTracking()
             .Where(invoice =>
                 invoice.ProfileId == profileId &&
                 invoice.Status == "saved" &&
                 invoice.DistributorName != null &&
-                EF.Functions.ILike(invoice.DistributorName, name, "\\"))
+                EF.Functions.ILike(invoice.DistributorName, safeName, "\\"))
             .OrderByDescending(invoice => invoice.InvoiceDate)
             .ThenByDescending(invoice => invoice.CreatedAt)
             .Select(invoice => new PurchaseInvoiceViewModel
