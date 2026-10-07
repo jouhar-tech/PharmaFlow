@@ -149,6 +149,7 @@
 
     let timer = null;
     let requestId = 0;
+    let activeController = null;
 
     const money = value => "₹" + Number(value || 0).toLocaleString("en-IN", {
         minimumFractionDigits: 2,
@@ -202,6 +203,8 @@
 
     const runSearch = async value => {
         const id = ++requestId;
+        activeController?.abort();
+        activeController = new AbortController();
         loading.hidden = false;
 
         try {
@@ -217,13 +220,17 @@
                 </text>
             }
 
-            const response = await fetch(url, { credentials: "same-origin" });
+            const response = await fetch(url, {
+                credentials: "same-origin",
+                signal: activeController.signal
+            });
             if (!response.ok) throw new Error("Search failed.");
 
             const data = await response.json();
 
             if (id === requestId) render(data);
-        } catch {
+        } catch (error) {
+            if (error?.name === "AbortError") return;
             if (id === requestId) {
                 grid.innerHTML = "";
                 empty.hidden = false;
@@ -235,7 +242,7 @@
 
     search?.addEventListener("input", () => {
         clearTimeout(timer);
-        timer = setTimeout(() => runSearch(search.value), 140);
+        timer = setTimeout(() => runSearch(search.value), 250);
     });
 
     calendar?.addEventListener("click", () => {
