@@ -345,7 +345,7 @@ public sealed class CustomersController : Controller
             await transaction.RollbackAsync(CancellationToken.None);
             _logger.LogError(
                 ex,
-                "Failed to create customer for profile {ProfileId}.";
+                "Failed to create customer for profile {ProfileId}.",
                 profileId);
 
             ModelState.AddModelError(
