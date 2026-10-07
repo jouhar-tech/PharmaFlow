@@ -30,6 +30,7 @@ public sealed class SalesReportRowViewModel
     public string BillNumber { get; set; } = string.Empty;
     public DateTimeOffset DateTime { get; set; }
     public string ProductName { get; set; } = string.Empty;
+    public string BatchNumber { get; set; } = string.Empty;
     public decimal Quantity { get; set; }
     public string PaymentMode { get; set; } = string.Empty;
     public decimal TotalAmount { get; set; }
