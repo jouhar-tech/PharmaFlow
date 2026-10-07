@@ -12,14 +12,17 @@ namespace PharmaFlow.Controllers;
 public sealed class NotificationsController : Controller
 {
     private readonly ApplicationDbContext _db;
+    private readonly ILogger<NotificationsController> _logger;
     private readonly IPharmaFlowPushNotificationService _notifications;
 
     public NotificationsController(
         ApplicationDbContext db,
-        IPharmaFlowPushNotificationService notifications)
+        IPharmaFlowPushNotificationService notifications,
+        ILogger<NotificationsController> logger)
     {
         _db = db;
         _notifications = notifications;
+        _logger = logger;
     }
 
     [HttpGet]
@@ -95,7 +98,17 @@ public sealed class NotificationsController : Controller
             existing.UpdatedAt = now;
         }
 
-        await _db.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to save push subscription for profile {ProfileId}.", profileId);
+            return StatusCode(StatusCodes.Status503ServiceUnavailable,
+                new { message = "Notification subscription could not be saved. Please try again." });
+        }
+
         return NoContent();
     }
 
@@ -114,12 +127,21 @@ public sealed class NotificationsController : Controller
         if (!long.TryParse(HttpContext.Session.GetString("ProfileId"), out var profileId))
             return Unauthorized();
 
-        await _db.PushDeviceSubscriptions
-            .Where(s => s.ProfileId == profileId && s.Endpoint == request.Endpoint)
-            .ExecuteUpdateAsync(setters => setters
-                .SetProperty(s => s.IsActive, false)
-                .SetProperty(s => s.UpdatedAt, DateTime.UtcNow),
-                cancellationToken);
+        try
+        {
+            await _db.PushDeviceSubscriptions
+                .Where(s => s.ProfileId == profileId && s.Endpoint == request.Endpoint)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(s => s.IsActive, false)
+                    .SetProperty(s => s.UpdatedAt, DateTime.UtcNow),
+                    cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to unsubscribe push device for profile {ProfileId}.", profileId);
+            return StatusCode(StatusCodes.Status503ServiceUnavailable,
+                new { message = "Notification subscription could not be removed. Please try again." });
+        }
 
         return NoContent();
     }
