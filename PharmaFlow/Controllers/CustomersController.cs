@@ -622,7 +622,8 @@ public sealed class CustomersController : Controller
             }
         }
 
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = DateOnly.FromDateTime(
+            DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(5.5)).DateTime);
         if (model.ReminderDate.HasValue && model.ReminderDate.Value < today)
             ModelState.AddModelError(nameof(model.ReminderDate), "Reminder date cannot be earlier than today.");
 
