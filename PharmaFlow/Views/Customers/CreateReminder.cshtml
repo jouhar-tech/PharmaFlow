@@ -1,7 +1,8 @@
 @model PharmaFlow.Models.ViewModels.CustomerReminderCreateViewModel
 @{
     ViewData["Title"] = "Add Reminder";
-    var today = DateOnly.FromDateTime(DateTime.UtcNow).ToString("yyyy-MM-dd");
+    var today = DateOnly.FromDateTime(
+        DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(5.5)).DateTime).ToString("yyyy-MM-dd");
 }
 
 <div class="customer-form-page customer-reminder-page">
