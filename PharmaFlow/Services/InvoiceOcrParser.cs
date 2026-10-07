@@ -117,7 +117,7 @@ public static class InvoiceOcrParser
             if (IsNoiseLine(line.Text) || IsTableStopRow(line.Text))
                 continue;
 
-            var hsnMatch = Regex.Match(line.Text, @"(?<!\\d)\\d{7,8}(?!\\d)");
+            var hsnMatch = Regex.Match(line.Text, @"(?<!\d)\d{7,8}(?!\d)");
             if (!hsnMatch.Success)
                 continue;
 
@@ -219,7 +219,7 @@ public static class InvoiceOcrParser
         var product = CleanLine(value);
         product = LeadingRowNumberRegex.Replace(product, string.Empty);
         product = Regex.Replace(product, @"^[^A-Za-z0-9]+|[^A-Za-z0-9)%+/-]+$", string.Empty);
-        product = Regex.Replace(product, @"\\s{2,}", " ");
+        product = Regex.Replace(product, @"\s{2,}", " ");
         product = product.Trim();
 
         if (product.Length is < 2 or > 200 || IsNoiseLine(product))
@@ -859,16 +859,21 @@ public static class InvoiceOcrParser
 
         year = NormalizeYear(year);
 
-        var month = DateTime.ParseExact(
-            monthValue[..3],
-            "MMM",
-            CultureInfo.InvariantCulture,
-            DateTimeStyles.AllowWhiteSpaces).Month;
+        if (!DateTime.TryParseExact(
+                monthValue[..3],
+                "MMM",
+                CultureInfo.InvariantCulture,
+                DateTimeStyles.AllowWhiteSpaces,
+                out var monthDate))
+            return false;
 
-        var day = string.IsNullOrWhiteSpace(dayValue) ? 1 : int.Parse(dayValue);
+        var day = 1;
+        if (!string.IsNullOrWhiteSpace(dayValue) &&
+            !int.TryParse(dayValue, out day))
+            return false;
 
         return DateOnly.TryParse(
-            $"{year:0000}-{month:00}-{day:00}",
+            $"{year:0000}-{monthDate.Month:00}-{day:00}",
             CultureInfo.InvariantCulture,
             DateTimeStyles.None,
             out date);
