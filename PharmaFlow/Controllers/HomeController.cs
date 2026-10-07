@@ -37,10 +37,10 @@ namespace PharmaFlow.Controllers
                 var today = DateOnly.FromDateTime(indiaNow);
                 var ninetyDaysFromToday = today.AddDays(90);
                 var indiaStartUtc = TimeZoneInfo.ConvertTimeToUtc(
-                    indiaDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified),
+                    today.ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified),
                     indiaTimeZone);
                 var indiaEndUtc = TimeZoneInfo.ConvertTimeToUtc(
-                    indiaDate.AddDays(1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified),
+                    today.AddDays(1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified),
                     indiaTimeZone);
 
                 expiringSoonCount = await _dbContext.ProductBatches
