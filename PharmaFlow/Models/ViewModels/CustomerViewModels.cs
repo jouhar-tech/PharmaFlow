@@ -77,7 +77,8 @@ public sealed class CustomerReminderViewModel
     public bool IsDue =>
         Status is "Pending" or "Ordered" &&
         ReminderDate.HasValue &&
-        ReminderDate.Value <= DateOnly.FromDateTime(\n            DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(5.5)).DateTime);
+        ReminderDate.Value <= DateOnly.FromDateTime(
+            DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(5.5)).DateTime);
 }
 
 public sealed class CustomerReminderCreateViewModel
