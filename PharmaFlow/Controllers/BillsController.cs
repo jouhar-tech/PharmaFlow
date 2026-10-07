@@ -52,8 +52,7 @@ public sealed class BillsController : Controller
             bills.Select(b => b.BillId).ToList(),
             cancellationToken);
 
-        var filteredBills = FilterBills(bills, searchTerm, productTerms);
-        var cards = BuildCards(filteredBills, productTerms);
+        var cards = BuildCards(bills, productTerms);
 
         return View(new BillsViewModel
         {
@@ -61,8 +60,8 @@ public sealed class BillsController : Controller
             SearchTerm = searchTerm,
             StartDate = period == "Custom" ? startDate?.Date : null,
             EndDate = period == "Custom" ? endDate?.Date : null,
-            TotalSalesAmount = filteredBills.Sum(b => b.TotalAmount),
-            BillCount = filteredBills.Count,
+            TotalSalesAmount = bills.Sum(b => b.TotalAmount),
+            BillCount = bills.Count,
             Bills = cards
         });
     }
@@ -166,8 +165,7 @@ public sealed class BillsController : Controller
             bills.Select(b => b.BillId).ToList(),
             cancellationToken);
 
-        var filteredBills = FilterBills(bills, searchTerm, productTerms);
-        var cards = BuildCards(filteredBills, productTerms);
+        var cards = BuildCards(bills, productTerms);
 
         return Ok(new
         {
@@ -230,29 +228,6 @@ public sealed class BillsController : Controller
             .ToDictionary(
                 g => g.Key,
                 g => string.Join(", ", g.Select(x => x.ProductName).Distinct(StringComparer.OrdinalIgnoreCase)));
-    }
-
-    private static List<SalesBill> FilterBills(
-        IReadOnlyList<SalesBill> bills,
-        string search,
-        IReadOnlyDictionary<long, string> productTerms)
-    {
-        if (string.IsNullOrWhiteSpace(search))
-            return bills.ToList();
-
-        return bills
-            .Where(b =>
-            {
-                productTerms.TryGetValue(b.BillId, out var products);
-
-                return new[]
-                {
-                    b.CustomerName ?? string.Empty,
-                    b.CustomerPhone ?? string.Empty,
-                    products ?? string.Empty
-                }.Any(value => value.Contains(search, StringComparison.OrdinalIgnoreCase));
-            })
-            .ToList();
     }
 
     private static IReadOnlyList<BillCardViewModel> BuildCards(
