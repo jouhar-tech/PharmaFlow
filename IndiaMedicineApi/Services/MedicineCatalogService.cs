@@ -14,14 +14,17 @@ public sealed class MedicineCatalogService
     private readonly SemaphoreSlim _loadLock = new(1, 1);
     private readonly IWebHostEnvironment _environment;
     private readonly ILogger<MedicineCatalogService> _logger;
+    private readonly IHttpClientFactory _httpClientFactory;
     private List<MedicineRecord>? _medicines;
 
     public MedicineCatalogService(
         IWebHostEnvironment environment,
-        ILogger<MedicineCatalogService> logger)
+        ILogger<MedicineCatalogService> logger,
+        IHttpClientFactory httpClientFactory)
     {
         _environment = environment;
         _logger = logger;
+        _httpClientFactory = httpClientFactory;
     }
 
     public async Task<IReadOnlyList<MedicineRecord>> SearchAsync(
@@ -75,7 +78,7 @@ public sealed class MedicineCatalogService
 
                 try
                 {
-                    using var client = new HttpClient { Timeout = TimeSpan.FromMinutes(5) };
+                    var client = _httpClientFactory.CreateClient("Dataset");
                     using var response = await client.GetAsync(
                         DatasetUrl,
                         HttpCompletionOption.ResponseHeadersRead,
