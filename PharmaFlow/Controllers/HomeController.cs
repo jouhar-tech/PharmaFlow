@@ -81,6 +81,15 @@ namespace PharmaFlow.Controllers
                 expiryAtRiskValue = stockMetrics?.ExpiryAtRiskValue ?? 0m;
                 slowMovingStockValue = stockMetrics?.SlowMovingStockValue ?? 0m;
 
+                todaySalesAmount = await _dbContext.SalesBills
+                    .AsNoTracking()
+                    .Where(bill =>
+                        bill.ProfileId == profileId &&
+                        bill.Status == "Completed" &&
+                        bill.CreatedAt >= indiaStartUtc &&
+                        bill.CreatedAt < indiaEndUtc)
+                    .SumAsync(bill => bill.TotalAmount, cancellationToken);
+
             }
 
             var dashboard = new DashboardViewModel
