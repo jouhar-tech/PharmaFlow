@@ -227,6 +227,7 @@
                 <thead>
                     <tr>
                         <th>ITEM</th>
+                        <th>BATCH NO.</th>
                         <th>QTY</th>
                         <th>AMOUNT</th>
                     </tr>
@@ -236,6 +237,7 @@
                     {
                         <tr>
                             <td>@item.ProductName</td>
+                            <td>@item.BatchNumber</td>
                             <td>@item.Quantity.ToString("0.##")</td>
                             <td>₹@item.LineTotal.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</td>
                         </tr>
