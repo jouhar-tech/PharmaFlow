@@ -799,21 +799,34 @@ public sealed class InventoryController : Controller
         if (product is null)
             return NotFound();
 
-        var batches = await _dbContext.ProductBatches
-            .Where(b => b.ProductId == productId)
-            .ToListAsync(cancellationToken);
+        var now = DateTime.UtcNow;
 
-        product.IsActive = false;
-        product.UpdatedAt = DateTime.UtcNow;
+        await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
-        foreach (var batch in batches)
+        try
         {
-            batch.IsActive = false;
-            batch.UpdatedAt = DateTime.UtcNow;
-        }
+            product.IsActive = false;
+            product.UpdatedAt = now;
 
-        await _dbContext.SaveChangesAsync(cancellationToken);
-        return RedirectToAction(nameof(Index));
+            await _dbContext.ProductBatches
+                .Where(b => b.ProductId == productId)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(b => b.IsActive, false)
+                    .SetProperty(b => b.UpdatedAt, now),
+                    cancellationToken);
+
+            await _dbContext.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+
+            return RedirectToAction(nameof(Index));
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync(CancellationToken.None);
+            _logger.LogError(ex, "Failed to deactivate product {ProductId} for profile {ProfileId}.", productId, profileId);
+            TempData["InventoryDetailsError"] = "The product could not be removed. No inventory changes were saved.";
+            return RedirectToAction(nameof(Details), new { productId });
+        }
     }
 
     private static string? NormalizeText(string? value, int maxLength) =>
