@@ -161,13 +161,13 @@ public sealed class GlobalProductCatalogService : IGlobalProductCatalogService
                 externalIds.Contains(item.ExternalId))
             .ToListAsync(cancellationToken);
 
+        var existingByExternalId = existingRows.ToDictionary(
+            item => item.ExternalId,
+            StringComparer.OrdinalIgnoreCase);
+
         foreach (var result in results)
         {
-            var existing = existingRows.FirstOrDefault(
-                item => string.Equals(
-                    item.ExternalId,
-                    result.ExternalId,
-                    StringComparison.OrdinalIgnoreCase));
+            existingByExternalId.TryGetValue(result.ExternalId, out var existing);
 
             if (existing is null)
             {
@@ -202,39 +202,16 @@ public sealed class GlobalProductCatalogService : IGlobalProductCatalogService
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        // Remove expired, unreferenced search-cache rows. Selected products remain
-        // because their products.catalog_id still references the catalog row.
-        var expiredRows = await _dbContext.ProductCatalog
-            .Where(item =>
-                item.Source == IndiaSource &&
-                item.CacheExpiresAt < now &&
-                !_dbContext.Products.Any(product => product.CatalogId == item.CatalogId))
-            .OrderBy(item => item.CacheExpiresAt)
-            .Take(200)
-            .ToListAsync(cancellationToken);
-
-        if (expiredRows.Count > 0)
-        {
-            _dbContext.ProductCatalog.RemoveRange(expiredRows);
-            await _dbContext.SaveChangesAsync(cancellationToken);
-        }
-
-        var cachedRows = await _dbContext.ProductCatalog
-            .AsNoTracking()
-            .Where(item =>
-                item.Source == IndiaSource &&
-                externalIds.Contains(item.ExternalId))
-            .Select(item => new { item.CatalogId, item.ExternalId })
-            .ToListAsync(cancellationToken);
-
-        var catalogIdByExternalId = cachedRows
-            .ToDictionary(item => item.ExternalId, item => item.CatalogId, StringComparer.OrdinalIgnoreCase);
+        // Cache cleanup is intentionally kept out of the interactive search path.
+        // The search request should only do the writes required to make selected results addable.
 
         return results
             .Where(item => catalogIdByExternalId.ContainsKey(item.ExternalId))
             .Select(item => new GlobalProductSearchResult
             {
-                CatalogId = catalogIdByExternalId[item.ExternalId],
+                CatalogId = existingByExternalId.TryGetValue(item.ExternalId, out var cached)
+                    ? cached.CatalogId
+                    : null,
                 Source = item.Source,
                 ExternalId = item.ExternalId,
                 ProductType = item.ProductType,
@@ -251,6 +228,7 @@ public sealed class GlobalProductCatalogService : IGlobalProductCatalogService
                 IsPrescriptionRequired = item.IsPrescriptionRequired,
                 SourceUrl = item.SourceUrl
             })
+            .Where(item => item.CatalogId.HasValue)
             .ToList();
     }
 
