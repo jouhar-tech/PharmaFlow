@@ -236,10 +236,10 @@
                     @foreach (var item in Model.Items)
                     {
                         <tr>
-                            <td>@item.ProductName</td>
-                            <td>@item.BatchNumber</td>
-                            <td>@item.Quantity.ToString("0.##")</td>
-                            <td>₹@item.LineTotal.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</td>
+                            <td class="billing-receipt-product-cell">@item.ProductName</td>
+                            <td class="billing-receipt-batch-cell">@item.BatchNumber</td>
+                            <td class="billing-receipt-qty-cell">@item.Quantity.ToString("0.##")</td>
+                            <td class="billing-receipt-amount-cell">₹@item.LineTotal.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</td>
                         </tr>
                     }
                 </tbody>
