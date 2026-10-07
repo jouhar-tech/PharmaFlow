@@ -200,7 +200,8 @@
         const state = {
             items: new Map(),
             searchTimer: null,
-            requestSequence: 0
+            requestSequence: 0,
+            activeController: null
         };
 
         const formatMoney = value =>
@@ -375,6 +376,8 @@
 
         const loadSearchResults = async query => {
             const sequence = ++state.requestSequence;
+            state.activeController?.abort();
+            state.activeController = new AbortController();
 
             if (!query.trim()) {
                 searchResults.hidden = true;
@@ -392,7 +395,10 @@
             try {
                 const response = await fetch(
                     '@Url.Action("Search", "Billing")?q=' + encodeURIComponent(query.trim()),
-                    { credentials: "same-origin" });
+                    {
+                        credentials: "same-origin",
+                        signal: state.activeController.signal
+                    });
 
                 if (sequence !== state.requestSequence) return;
 
@@ -402,7 +408,8 @@
 
                 const products = await response.json();
                 renderSearchResults(products);
-            } catch {
+            } catch (error) {
+                if (error?.name === "AbortError") return;
                 if (sequence !== state.requestSequence) return;
 
                 searchResults.innerHTML = `
@@ -418,7 +425,7 @@
             clearTimeout(state.searchTimer);
             const query = searchInput.value;
 
-            state.searchTimer = setTimeout(() => loadSearchResults(query), 180);
+            state.searchTimer = setTimeout(() => loadSearchResults(query), 220);
         });
 
         document.addEventListener("click", event => {
