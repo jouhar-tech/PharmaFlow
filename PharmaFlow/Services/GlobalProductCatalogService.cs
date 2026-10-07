@@ -1,6 +1,7 @@
 using System.Net.Http.Json;
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using PharmaFlow.Data;
 using PharmaFlow.Models;
 
@@ -46,21 +47,26 @@ public sealed class GlobalProductCatalogService : IGlobalProductCatalogService
     private const string OpenFdaSource = "openfda-ndc";
     private const string OpenFoodFactsSource = "openfoodfacts";
 
+    private static readonly TimeSpan SearchCacheDuration = TimeSpan.FromSeconds(20);
+
     private readonly ApplicationDbContext _dbContext;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IConfiguration _configuration;
     private readonly ILogger<GlobalProductCatalogService> _logger;
+    private readonly IMemoryCache _memoryCache;
 
     public GlobalProductCatalogService(
         ApplicationDbContext dbContext,
         IHttpClientFactory httpClientFactory,
         IConfiguration configuration,
-        ILogger<GlobalProductCatalogService> logger)
+        ILogger<GlobalProductCatalogService> logger,
+        IMemoryCache memoryCache)
     {
         _dbContext = dbContext;
         _httpClientFactory = httpClientFactory;
         _configuration = configuration;
         _logger = logger;
+        _memoryCache = memoryCache;
     }
 
     public async Task<IReadOnlyList<GlobalProductSearchResult>> SearchAsync(
@@ -70,6 +76,12 @@ public sealed class GlobalProductCatalogService : IGlobalProductCatalogService
         var normalizedQuery = NormalizeQuery(query);
         if (normalizedQuery.Length < 2)
             return [];
+
+        var cacheKey = $"pharmaflow:global-product-search:{normalizedQuery.ToLowerInvariant()}";
+        if (_memoryCache.TryGetValue(
+                cacheKey,
+                out IReadOnlyList<GlobalProductSearchResult>? cachedResults))
+            return cachedResults;
 
         var indiaTask = SearchIndiaMedicinesAsync(normalizedQuery, cancellationToken);
         var openFdaTask = SearchOpenFdaAsync(normalizedQuery, cancellationToken);
@@ -96,11 +108,21 @@ public sealed class GlobalProductCatalogService : IGlobalProductCatalogService
         foreach (var item in openFoodFactsResults)
             resultByKey[$"{item.Source}:{item.ExternalId}"] = item;
 
-        return resultByKey.Values
+        var finalResults = resultByKey.Values
             .OrderBy(item => ProductTypeSort(item.ProductType))
             .ThenBy(item => item.ProductName)
             .Take(100)
             .ToList();
+
+        _memoryCache.Set(
+            cacheKey,
+            (IReadOnlyList<GlobalProductSearchResult>)finalResults,
+            new MemoryCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = SearchCacheDuration
+            });
+
+        return finalResults;
     }
 
     public async Task<GlobalProductSearchResult?> GetAsync(
