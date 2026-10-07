@@ -5722,19 +5722,26 @@ body.theme-dark .billing-generated-item-copy span {
 
   .billing-receipt-table th:nth-child(1),
   .billing-receipt-table td:nth-child(1) {
-    width: 54%;
+    width: 42%;
     text-align: left;
   }
 
   .billing-receipt-table th:nth-child(2),
   .billing-receipt-table td:nth-child(2) {
-    width: 18%;
+    width: 22%;
     text-align: center;
+    overflow-wrap: anywhere;
   }
 
   .billing-receipt-table th:nth-child(3),
   .billing-receipt-table td:nth-child(3) {
-    width: 28%;
+    width: 14%;
+    text-align: center;
+  }
+
+  .billing-receipt-table th:nth-child(4),
+  .billing-receipt-table td:nth-child(4) {
+    width: 22%;
     text-align: right;
   }
 
