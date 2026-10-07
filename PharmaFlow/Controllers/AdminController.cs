@@ -322,9 +322,12 @@ public sealed class AdminController : Controller
         if (string.IsNullOrWhiteSpace(model.Username))
             ModelState.AddModelError(nameof(model.Username), "Username is required.");
 
+        var normalizedUsername = model.Username.ToLowerInvariant();
         var usernameExists = await _dbContext.Profiles
             .AsNoTracking()
-            .AnyAsync(p => p.Id != id && p.Username == model.Username, cancellationToken);
+            .AnyAsync(
+                p => p.Id != id && p.Username.ToLower() == normalizedUsername,
+                cancellationToken);
 
         if (usernameExists)
             ModelState.AddModelError(nameof(model.Username), "That username is already in use.");
