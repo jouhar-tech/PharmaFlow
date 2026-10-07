@@ -874,7 +874,7 @@ public sealed class InvoiceCaptureController : Controller
         }
         catch (Exception ex)
         {
-            await transaction.RollbackAsync(cancellationToken);
+            await transaction.RollbackAsync(CancellationToken.None);
             _logger.LogError(ex, "Failed to save invoice import {ImportId} for profile {ProfileId}.", import.ImportId, profileId);
 
             model.ErrorMessage = "The invoice could not be saved. No stock changes were committed. Please try again.";
