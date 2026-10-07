@@ -342,10 +342,10 @@ public sealed class CustomersController : Controller
         }
         catch (Exception ex)
         {
-            await transaction.RollbackAsync(cancellationToken);
+            await transaction.RollbackAsync(CancellationToken.None);
             _logger.LogError(
                 ex,
-                "Failed to create customer for profile {ProfileId}.",
+                "Failed to create customer for profile {ProfileId}.";
                 profileId);
 
             ModelState.AddModelError(
@@ -883,7 +883,7 @@ public sealed class CustomersController : Controller
         }
         catch (Exception ex)
         {
-            await transaction.RollbackAsync(cancellationToken);
+            await transaction.RollbackAsync(CancellationToken.None);
             _logger.LogError(
                 ex,
                 "Failed to record customer payment for profile {ProfileId}, customer {CustomerId}.",
