@@ -31,13 +31,11 @@ namespace PharmaFlow.Controllers
 
             if (long.TryParse(profileIdValue, out var profileId))
             {
-                var today = DateOnly.FromDateTime(DateTime.UtcNow);
-                var ninetyDaysFromToday = today.AddDays(90);
-
                 var indiaTimeZone = TimeZoneInfo.FindSystemTimeZoneById(
                     OperatingSystem.IsWindows() ? "India Standard Time" : "Asia/Kolkata");
                 var indiaNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, indiaTimeZone);
-                var indiaDate = DateOnly.FromDateTime(indiaNow);
+                var today = DateOnly.FromDateTime(indiaNow);
+                var ninetyDaysFromToday = today.AddDays(90);
                 var indiaStartUtc = TimeZoneInfo.ConvertTimeToUtc(
                     indiaDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified),
                     indiaTimeZone);
@@ -86,9 +84,9 @@ namespace PharmaFlow.Controllers
                 // than 90 days as slow-moving inventory. This keeps the dashboard value data-driven
                 // while billing history remains separate from stock-aging analysis.
                 var slowMovingCutoffDate = today.AddDays(-90);
-                var slowMovingCutoffUtc = DateTime.SpecifyKind(
-                    slowMovingCutoffDate.ToDateTime(TimeOnly.MinValue),
-                    DateTimeKind.Utc);
+                var slowMovingCutoffUtc = TimeZoneInfo.ConvertTimeToUtc(
+                    slowMovingCutoffDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified),
+                    indiaTimeZone);
 
                 slowMovingStockValue = await _dbContext.ProductBatches
                     .AsNoTracking()
