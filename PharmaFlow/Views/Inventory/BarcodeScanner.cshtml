@@ -70,18 +70,33 @@
 
         setStatus("Searching...", "Checking your product records for this barcode.");
 
-        const response = await fetch("/Inventory/FindByBarcode?barcode=" + encodeURIComponent(normalized), {
-            credentials: "same-origin"
-        });
+        try {
+            const response = await fetch("/Inventory/FindByBarcode?barcode=" + encodeURIComponent(normalized), {
+                credentials: "same-origin"
+            });
 
-        if (response.ok) {
-            const data = await response.json();
-            stop();
-            window.location.assign("/Inventory/AddItem?productId=" + encodeURIComponent(data.productId));
-            return;
+            if (response.ok) {
+                const data = await response.json();
+                const productId = Number(data?.productId);
+
+                if (!Number.isInteger(productId) || productId <= 0) {
+                    throw new Error("Invalid product response.");
+                }
+
+                stop();
+                window.location.assign("/Inventory/AddItem?productId=" + encodeURIComponent(productId));
+                return;
+            }
+
+            if (response.status === 404) {
+                setStatus("Product not found", "No matching product was found. You can search the product library instead.");
+                return;
+            }
+
+            setStatus("Could not search barcode", "Check your connection and try again.");
+        } catch {
+            setStatus("Could not search barcode", "Check your connection and try again.");
         }
-
-        setStatus("Product not found", "No matching product was found. You can search the product library instead.");
     };
 
     const scanLoop = async () => {
