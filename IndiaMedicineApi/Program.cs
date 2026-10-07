@@ -2,6 +2,11 @@ using IndiaMedicineApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddHttpClient("Dataset", client =>
+{
+    client.Timeout = TimeSpan.FromMinutes(5);
+    client.DefaultRequestHeaders.UserAgent.ParseAdd("PharmaFlow-IndiaMedicineApi/1.0");
+});
 builder.Services.AddSingleton<MedicineCatalogService>();
 
 var app = builder.Build();
