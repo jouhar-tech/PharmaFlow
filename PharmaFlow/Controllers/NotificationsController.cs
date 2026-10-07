@@ -36,9 +36,12 @@ public sealed class NotificationsController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Subscribe(
-        [FromBody] PushSubscriptionRequest request,
+        [FromBody] PushSubscriptionRequest? request,
         CancellationToken cancellationToken)
     {
+        if (request is null)
+            return BadRequest(new { message = "Push subscription data is required." });
+
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
@@ -99,9 +102,12 @@ public sealed class NotificationsController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Unsubscribe(
-        [FromBody] UnsubscribeRequest request,
+        [FromBody] UnsubscribeRequest? request,
         CancellationToken cancellationToken)
     {
+        if (request is null)
+            return BadRequest(new { message = "Push subscription data is required." });
+
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
