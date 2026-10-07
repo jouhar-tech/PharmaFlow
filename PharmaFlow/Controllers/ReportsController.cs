@@ -57,22 +57,34 @@ public sealed class ReportsController : Controller
 
         var billList = await bills
             .OrderByDescending(b => b.CreatedAt)
+            .Select(b => new
+            {
+                b.BillId,
+                b.BillNumber,
+                b.CreatedAt,
+                b.PaymentMethod,
+                b.TotalAmount
+            })
             .ToListAsync(cancellationToken);
 
         var billIds = billList.Select(b => b.BillId).ToList();
 
-        List<SalesBillItem> items;
-        if (billIds.Count == 0)
-        {
-            items = [];
-        }
-        else
-        {
-            items = await _dbContext.SalesBillItems
+        var items = billIds.Count == 0
+            ? []
+            : await _dbContext.SalesBillItems
                 .AsNoTracking()
                 .Where(i => billIds.Contains(i.BillId))
+                .Select(i => new
+                {
+                    i.BillId,
+                    i.ProductName,
+                    i.BatchNumber,
+                    i.Quantity,
+                    i.Mrp,
+                    i.PurchaseUnitPrice,
+                    i.LineTotal
+                })
                 .ToListAsync(cancellationToken);
-        }
 
         var billLookup = billList.ToDictionary(b => b.BillId);
 
