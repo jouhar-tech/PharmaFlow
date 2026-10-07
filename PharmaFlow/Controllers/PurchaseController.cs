@@ -134,12 +134,11 @@ public sealed class PurchaseController : Controller
 
         var invoices = await _dbContext.InvoiceImports
             .AsNoTracking()
-            .Include(invoice => invoice.Items)
             .Where(invoice =>
                 invoice.ProfileId == profileId &&
                 invoice.Status == "saved" &&
                 invoice.DistributorName != null &&
-                invoice.DistributorName.ToLower() == name.ToLower())
+                EF.Functions.ILike(invoice.DistributorName, name, "\\"))
             .OrderByDescending(invoice => invoice.InvoiceDate)
             .ThenByDescending(invoice => invoice.CreatedAt)
             .Select(invoice => new PurchaseInvoiceViewModel
