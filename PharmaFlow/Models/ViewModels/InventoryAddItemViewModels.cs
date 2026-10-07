@@ -24,7 +24,9 @@ public sealed class InventoryAddItemViewModel
 
     [DataType(DataType.Date)]
     [Display(Name = "Expiry")]
-    public DateOnly ExpiryDate { get; set; } = DateOnly.FromDateTime(DateTime.UtcNow).AddYears(2);
+    public DateOnly ExpiryDate { get; set; } =
+        DateOnly.FromDateTime(
+            DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(5.5)).DateTime).AddYears(2);
 }
 
 public sealed class InventoryProductSearchItemViewModel
