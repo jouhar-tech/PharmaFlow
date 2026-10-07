@@ -369,7 +369,18 @@ public sealed class AdminController : Controller
             profile.SubscriptionEndsAt = null;
         }
 
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to update admin user profile {ProfileId}.", id);
+            ModelState.AddModelError(
+                string.Empty,
+                "User details could not be saved. Please try again.");
+            return View(model);
+        }
 
         TempData["AdminMessage"] = "User details updated successfully.";
         return RedirectToAction(nameof(Edit), new { id });
@@ -397,7 +408,16 @@ public sealed class AdminController : Controller
         profile.SubscriptionStartsAt = null;
         profile.SubscriptionEndsAt = null;
 
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to remove unlimited plan for profile {ProfileId}.", id);
+            TempData["AdminMessage"] = "The Unlimited Plan could not be removed. Please try again.";
+            return RedirectToAction(nameof(Unlimited));
+        }
 
         TempData["AdminMessage"] = "Unlimited Plan removed. User moved to Free Plan.";
         return RedirectToAction(nameof(Unlimited));
