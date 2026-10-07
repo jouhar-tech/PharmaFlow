@@ -820,7 +820,6 @@ public sealed class CustomersController : Controller
 
             if (balance == 0m)
             {
-                await transaction.RollbackAsync(cancellationToken);
                 ModelState.AddModelError(string.Empty, "This customer is already settled.");
             }
             else if (balance > 0 && paymentType != "CustomerPayment")
