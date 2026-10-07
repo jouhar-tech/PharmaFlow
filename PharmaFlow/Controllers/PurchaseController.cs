@@ -47,7 +47,8 @@ public sealed class PurchaseController : Controller
             to = null;
         }
 
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = DateOnly.FromDateTime(
+        DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(5.5)).DateTime);
         var query = _dbContext.InvoiceImports
             .AsNoTracking()
             .Where(invoice =>
