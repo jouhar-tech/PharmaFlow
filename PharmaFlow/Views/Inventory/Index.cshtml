@@ -240,7 +240,10 @@
     const search = document.getElementById('inventorySearch');
     const clear = document.getElementById('inventorySearchClear');
     const buttons = Array.from(document.querySelectorAll('.inventory-filter-chip'));
-    const cards = Array.from(document.querySelectorAll('.inventory-product-card'));
+    const cards = Array.from(document.querySelectorAll('.inventory-product-card')).map(card => ({
+        element: card,
+        searchText: (card.dataset.searchText || '').toLocaleLowerCase()
+    }));
     const empty = document.getElementById('inventoryEmptySearch');
 
     if (!search || !cards.length) return;
@@ -251,8 +254,7 @@
         const term = search.value.trim().toLocaleLowerCase();
         let visible = 0;
 
-        cards.forEach(card => {
-            const text = (card.dataset.searchText || '').toLocaleLowerCase();
+        cards.forEach(({ element: card, searchText: text }) => {
             const searchMatch = !term || text.includes(term);
             const filterMatch =
                 activeFilter === 'all' ||
