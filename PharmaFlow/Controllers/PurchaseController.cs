@@ -84,34 +84,24 @@ public sealed class PurchaseController : Controller
                 invoice.InvoiceDate.Value <= toDate);
         }
 
-        var rows = await query
-            .Select(invoice => new
-            {
-                invoice.DistributorName,
-                Amount = invoice.TotalAmount ?? 0m
-            })
-            .ToListAsync(cancellationToken);
-
-        var distributors = rows
-            .GroupBy(
-                row => row.DistributorName!,
-                StringComparer.OrdinalIgnoreCase)
+        var distributors = await query
+            .GroupBy(invoice => invoice.DistributorName!)
             .Select(group => new PurchaseDistributorViewModel
             {
                 Name = group.Key,
                 InvoiceCount = group.Count(),
-                TotalAmount = group.Sum(row => row.Amount)
+                TotalAmount = group.Sum(invoice => invoice.TotalAmount ?? 0m)
             })
             .OrderBy(group => group.Name)
-            .ToList();
+            .ToListAsync(cancellationToken);
 
         var model = new PurchaseListViewModel
         {
             Period = normalizedPeriod,
             FromDate = from,
             ToDate = to,
-            TotalPurchasedAmount = rows.Sum(row => row.Amount),
-            InvoiceCount = rows.Count,
+            TotalPurchasedAmount = distributors.Sum(row => row.TotalAmount),
+            InvoiceCount = distributors.Sum(row => row.InvoiceCount),
             Distributors = distributors
         };
 
