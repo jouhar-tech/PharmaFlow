@@ -10,10 +10,14 @@ namespace PharmaFlow.Controllers;
 public sealed class BusinessController : Controller
 {
     private readonly ApplicationDbContext _dbContext;
+    private readonly ILogger<BusinessController> _logger;
 
-    public BusinessController(ApplicationDbContext dbContext)
+    public BusinessController(
+        ApplicationDbContext dbContext,
+        ILogger<BusinessController> logger)
     {
         _dbContext = dbContext;
+        _logger = logger;
     }
 
     [HttpGet]
@@ -64,7 +68,18 @@ public sealed class BusinessController : Controller
         if (googlePhoneRequired)
             profile.PhoneNumber = model.PhoneNumber!.Trim();
 
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to save business setup for profile {ProfileId}.", profile.Id);
+            ModelState.AddModelError(
+                string.Empty,
+                "Your business details could not be saved. Please try again.");
+            return View(model);
+        }
 
         HttpContext.Session.SetString("BusinessName", profile.BusinessName);
         HttpContext.Session.Remove("GoogleProfileSetupRequired");
