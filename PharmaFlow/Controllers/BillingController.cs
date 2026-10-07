@@ -178,6 +178,20 @@ public sealed class BillingController : Controller
 
         lines = lines.OrderBy(line => line.BatchId).ToList();
 
+        var profile = await _dbContext.Profiles
+            .AsNoTracking()
+            .Where(p => p.Id == profileId)
+            .Select(p => new
+            {
+                p.BusinessName,
+                p.PhoneNumber,
+                p.Email
+            })
+            .SingleOrDefaultAsync(cancellationToken);
+
+        if (profile is null)
+            return Unauthorized();
+
         await using var transaction = await _dbContext.Database.BeginTransactionAsync(
             IsolationLevel.Serializable,
             cancellationToken);
@@ -197,7 +211,8 @@ public sealed class BillingController : Controller
                 return await BillingErrorAsync(transaction, "One or more selected stock batches are no longer available.");
 
             var batchById = batches.ToDictionary(b => b.BatchId);
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var today = DateOnly.FromDateTime(
+                DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(5.5)).DateTime);
 
             foreach (var line in lines)
             {
@@ -409,17 +424,6 @@ public sealed class BillingController : Controller
 
             await transaction.CommitAsync(cancellationToken);
 
-            var profile = await _dbContext.Profiles
-                .AsNoTracking()
-                .Where(p => p.Id == profileId)
-                .Select(p => new
-                {
-                    p.BusinessName,
-                    p.PhoneNumber,
-                    p.Email
-                })
-                .SingleOrDefaultAsync(cancellationToken);
-
             var generated = new GeneratedBillViewModel
             {
                 BillId = bill.BillId,
@@ -457,7 +461,7 @@ public sealed class BillingController : Controller
         }
         catch (Exception ex)
         {
-            await transaction.RollbackAsync(cancellationToken);
+            await transaction.RollbackAsync(CancellationToken.None);
             _logger.LogError(
                 ex,
                 "Failed to generate bill for profile {ProfileId}.",
