@@ -102,7 +102,7 @@ public sealed class SupabaseAuthService : ISupabaseAuthService
 
     private async Task<SupabaseAuthResult> ReadResultAsync(HttpResponseMessage response, bool requireAccessToken, CancellationToken cancellationToken)
     {
-        using (response);
+        using var responseScope = response;
         var body = await response.Content.ReadAsStringAsync(cancellationToken);
 
         if (!response.IsSuccessStatusCode)
