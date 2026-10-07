@@ -72,7 +72,8 @@ public sealed class BillingController : Controller
                 b.IsActive &&
                 !b.IsQuarantined &&
                 b.QuantityOnHand > 0 &&
-                b.ExpiryDate >= DateOnly.FromDateTime(DateTime.UtcNow))
+                b.ExpiryDate >= DateOnly.FromDateTime(
+                    DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(5.5)).DateTime))
             .OrderBy(b => b.ExpiryDate)
             .ThenBy(b => b.BatchNumber)
             .ToListAsync(cancellationToken);
