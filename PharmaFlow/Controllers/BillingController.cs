@@ -161,16 +161,28 @@ public sealed class BillingController : Controller
             return RedirectToAction(nameof(Create));
         }
 
+        if (requestedLines.Any(line =>
+                line.BatchId <= 0 ||
+                line.Quantity <= 0m ||
+                line.Quantity > 999_999m))
+        {
+            TempData["BillingError"] = "One or more bill quantities are invalid.";
+            return RedirectToAction(nameof(Create));
+        }
+
         var lines = requestedLines
             .GroupBy(line => line.BatchId)
             .Select(group => new BillingLineInput
             {
                 BatchId = group.Key,
-                Quantity = group.Sum(line => line.Quantity)
+                Quantity = decimal.Round(
+                    group.Sum(line => line.Quantity),
+                    2,
+                    MidpointRounding.AwayFromZero)
             })
             .ToList();
 
-        if (lines.Any(line => line.BatchId <= 0 || line.Quantity <= 0 || line.Quantity > 999_999m))
+        if (lines.Any(line => line.BatchId <= 0 || line.Quantity <= 0m || line.Quantity > 999_999m))
         {
             TempData["BillingError"] = "One or more bill quantities are invalid.";
             return RedirectToAction(nameof(Create));
@@ -233,6 +245,17 @@ public sealed class BillingController : Controller
                     return await BillingErrorAsync(
                         transaction,
                         $"{batch.Product.ProductName} does not have a selling price configured.");
+
+                const decimal MaxBillAmount = 999_999_999_999.99m;
+                var maximumLineTotal = decimal.Round(
+                    batch.SellingUnitPrice * line.Quantity,
+                    2,
+                    MidpointRounding.AwayFromZero);
+
+                if (maximumLineTotal > MaxBillAmount)
+                    return await BillingErrorAsync(
+                        transaction,
+                        $"{batch.Product.ProductName} exceeds the maximum billable amount for a single line.");
             }
 
             var itemResults = new List<CreateBillItemViewModel>();
