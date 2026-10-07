@@ -12832,3 +12832,129 @@ body.theme-dark.customer-management-page-body .customer-reminder-picker-empty { 
   .customer-reminder-picker { max-height:88vh; border-radius:.95rem; }
   .customer-reminder-picker-list { max-height:calc(88vh - 145px); }
 }
+
+
+/* Print/PDF alignment hardening */
+@media print {
+  .billing-receipt-table,
+  .reports-print-table {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .billing-receipt-table th,
+  .billing-receipt-table td,
+  .reports-print-table th,
+  .reports-print-table td {
+    box-sizing: border-box !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    word-break: normal !important;
+    hyphens: auto;
+  }
+
+  .billing-receipt-table tbody tr,
+  .reports-print-table tbody tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .billing-receipt-table thead,
+  .reports-print-table thead {
+    display: table-header-group;
+  }
+
+  .billing-receipt-product-cell {
+    width: 40% !important;
+    text-align: left !important;
+    line-height: 1.22;
+  }
+
+  .billing-receipt-batch-cell {
+    width: 23% !important;
+    text-align: center !important;
+    line-height: 1.18;
+  }
+
+  .billing-receipt-qty-cell {
+    width: 11% !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+    overflow-wrap: normal !important;
+  }
+
+  .billing-receipt-amount-cell {
+    width: 26% !important;
+    text-align: right !important;
+    white-space: nowrap !important;
+    overflow-wrap: normal !important;
+  }
+
+  .billing-receipt-table th {
+    white-space: nowrap !important;
+    overflow-wrap: normal !important;
+    font-size: 9.5pt;
+  }
+
+  .billing-receipt-table td {
+    font-size: 9.4pt;
+    line-height: 1.2;
+  }
+
+  .reports-print-table {
+    font-size: 3.2mm !important;
+  }
+
+  .reports-print-table th,
+  .reports-print-table td {
+    line-height: 1.2;
+  }
+
+  .reports-print-table th:nth-child(1) { width: 8% !important; }
+  .reports-print-table th:nth-child(2) { width: 12% !important; }
+  .reports-print-table th:nth-child(3) { width: 25% !important; }
+  .reports-print-table th:nth-child(4) { width: 13% !important; }
+  .reports-print-table th:nth-child(5) { width: 7% !important; }
+  .reports-print-table th:nth-child(6) { width: 12% !important; }
+  .reports-print-table th:nth-child(7) { width: 11% !important; }
+  .reports-print-table th:nth-child(8) { width: 12% !important; }
+
+  .reports-print-table .reports-print-bill-cell,
+  .reports-print-table .reports-print-date-cell,
+  .reports-print-table .reports-print-batch-cell,
+  .reports-print-table .reports-print-qty-cell,
+  .reports-print-table .reports-print-payment-cell {
+    text-align: center !important;
+  }
+
+  .reports-print-table .reports-print-product-cell {
+    text-align: left !important;
+    font-weight: 600;
+  }
+
+  .reports-print-table .reports-print-amount-cell,
+  .reports-print-table .reports-print-profit-cell {
+    text-align: right !important;
+    white-space: nowrap !important;
+    overflow-wrap: normal !important;
+  }
+
+  .reports-print-table th {
+    white-space: normal !important;
+    overflow-wrap: normal !important;
+    word-break: keep-all !important;
+    text-align: center !important;
+    font-size: 3.15mm;
+  }
+
+  .reports-print-table td {
+    font-size: 3.15mm;
+  }
+
+  .reports-print-footer {
+    margin-top: 10mm;
+  }
+}
