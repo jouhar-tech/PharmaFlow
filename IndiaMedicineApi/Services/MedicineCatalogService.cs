@@ -12,7 +12,6 @@ public sealed class MedicineCatalogService
         "https://raw.githubusercontent.com/junioralive/Indian-Medicine-Dataset/main/DATA/indian_medicine_data.csv";
 
     private readonly SemaphoreSlim _loadLock = new(1, 1);
-    private readonly IHttpClientFactory? _httpClientFactory;
     private readonly IWebHostEnvironment _environment;
     private readonly ILogger<MedicineCatalogService> _logger;
     private List<MedicineRecord>? _medicines;
@@ -72,17 +71,37 @@ public sealed class MedicineCatalogService
             if (!File.Exists(csvPath))
             {
                 _logger.LogInformation("Downloading Indian medicine dataset...");
-                using var client = new HttpClient { Timeout = TimeSpan.FromMinutes(5) };
-                using var response = await client.GetAsync(
-                    DatasetUrl,
-                    HttpCompletionOption.ResponseHeadersRead,
-                    cancellationToken);
+                var tempPath = $"{csvPath}.{Guid.NewGuid():N}.tmp";
 
-                response.EnsureSuccessStatusCode();
+                try
+                {
+                    using var client = new HttpClient { Timeout = TimeSpan.FromMinutes(5) };
+                    using var response = await client.GetAsync(
+                        DatasetUrl,
+                        HttpCompletionOption.ResponseHeadersRead,
+                        cancellationToken);
 
-                await using var input = await response.Content.ReadAsStreamAsync(cancellationToken);
-                await using var output = File.Create(csvPath);
-                await input.CopyToAsync(output, cancellationToken);
+                    response.EnsureSuccessStatusCode();
+
+                    await using var input = await response.Content.ReadAsStreamAsync(cancellationToken);
+                    await using (var output = new FileStream(
+                        tempPath,
+                        FileMode.CreateNew,
+                        FileAccess.Write,
+                        FileShare.None,
+                        bufferSize: 1024 * 64,
+                        useAsync: true))
+                    {
+                        await input.CopyToAsync(output, cancellationToken);
+                    }
+
+                    File.Move(tempPath, csvPath);
+                }
+                finally
+                {
+                    if (File.Exists(tempPath))
+                        File.Delete(tempPath);
+                }
             }
 
             _logger.LogInformation("Loading Indian medicine dataset from {Path}.", csvPath);
