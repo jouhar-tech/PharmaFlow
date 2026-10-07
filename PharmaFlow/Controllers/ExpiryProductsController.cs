@@ -98,7 +98,8 @@ public sealed class ExpiryProductsController : Controller
         if (!long.TryParse(profileIdValue, out var profileId))
             return new ExpiryData();
 
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = DateOnly.FromDateTime(
+        DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(5.5)).DateTime);
         var ninetyDaysFromToday = today.AddDays(90);
 
         var rows = await _dbContext.ProductBatches
