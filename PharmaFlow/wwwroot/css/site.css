@@ -3361,20 +3361,22 @@ body.theme-dark .reports-export-button { background: #245b57; color: #d9fffa; }
     background: #d8eeee;
   }
 
-  .reports-print-table th:nth-child(1) { width: 9%; }
-  .reports-print-table th:nth-child(2) { width: 13%; }
-  .reports-print-table th:nth-child(3) { width: 29%; }
-  .reports-print-table th:nth-child(4) { width: 7%; }
-  .reports-print-table th:nth-child(5) { width: 13%; }
-  .reports-print-table th:nth-child(6) { width: 14%; }
-  .reports-print-table th:nth-child(7) { width: 15%; }
+  .reports-print-table th:nth-child(1) { width: 8%; }
+  .reports-print-table th:nth-child(2) { width: 12%; }
+  .reports-print-table th:nth-child(3) { width: 25%; }
+  .reports-print-table th:nth-child(4) { width: 14%; }
+  .reports-print-table th:nth-child(5) { width: 7%; }
+  .reports-print-table th:nth-child(6) { width: 12%; }
+  .reports-print-table th:nth-child(7) { width: 11%; }
+  .reports-print-table th:nth-child(8) { width: 11%; }
 
   .reports-print-table td:nth-child(1),
   .reports-print-table td:nth-child(2),
   .reports-print-table td:nth-child(4),
   .reports-print-table td:nth-child(5),
   .reports-print-table td:nth-child(6),
-  .reports-print-table td:nth-child(7) {
+  .reports-print-table td:nth-child(7),
+  .reports-print-table td:nth-child(8) {
     text-align: center;
   }
 
