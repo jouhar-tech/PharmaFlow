@@ -37,11 +37,11 @@ public sealed class MedicineCatalogService
 
         return _medicines
             .Where(item =>
-                Normalize(item.ProductName).Contains(normalized, StringComparison.OrdinalIgnoreCase) ||
-                Normalize(item.SaltComposition).Contains(normalized, StringComparison.OrdinalIgnoreCase) ||
-                Normalize(item.ManufacturerName).Contains(normalized, StringComparison.OrdinalIgnoreCase))
-            .OrderBy(item => Normalize(item.ProductName).StartsWith(normalized, StringComparison.OrdinalIgnoreCase) ? 0 : 1)
-            .ThenBy(item => item.ProductName)
+                item.NormalizedProductName.Contains(normalized, StringComparison.Ordinal) ||
+                item.NormalizedSaltComposition.Contains(normalized, StringComparison.Ordinal) ||
+                item.NormalizedManufacturerName.Contains(normalized, StringComparison.Ordinal))
+            .OrderBy(item => item.NormalizedProductName.StartsWith(normalized, StringComparison.Ordinal) ? 0 : 1)
+            .ThenBy(item => item.NormalizedProductName, StringComparer.Ordinal)
             .Take(limit)
             .ToList();
     }
@@ -135,18 +135,24 @@ public sealed class MedicineCatalogService
                     "TRUE",
                     StringComparison.OrdinalIgnoreCase);
 
+                var manufacturer = Get(values, "manufacturer_name");
+                var composition = CombineComposition(
+                    Get(values, "short_composition1"),
+                    Get(values, "short_composition2"));
+
                 records.Add(new MedicineRecord
                 {
                     Id = id,
                     ProductName = name,
                     Price = Get(values, "price(₹)"),
                     IsDiscontinued = discontinued,
-                    ManufacturerName = Get(values, "manufacturer_name"),
+                    ManufacturerName = manufacturer,
                     Type = Get(values, "type"),
                     PackSizeLabel = Get(values, "pack_size_label"),
-                    SaltComposition = CombineComposition(
-                        Get(values, "short_composition1"),
-                        Get(values, "short_composition2"))
+                    SaltComposition = composition,
+                    NormalizedProductName = Normalize(name),
+                    NormalizedSaltComposition = Normalize(composition),
+                    NormalizedManufacturerName = Normalize(manufacturer)
                 });
             }
 
