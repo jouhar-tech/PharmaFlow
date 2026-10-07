@@ -41,8 +41,10 @@ public sealed class NotificationSchedulerService : BackgroundService
             var runDate = DateOnly.FromDateTime(
                 TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, india));
 
-            await SendDailyNotificationsAsync(runDate, stoppingToken);
-            await SendDueSavingsNotificationsAsync(runDate, stoppingToken);
+            var profiles = await GetActiveNotificationProfilesAsync(stoppingToken);
+
+            await SendDailyNotificationsAsync(profiles, runDate, stoppingToken);
+            await SendDueSavingsNotificationsAsync(profiles, runDate, stoppingToken);
         }
     }
 
@@ -70,11 +72,10 @@ public sealed class NotificationSchedulerService : BackgroundService
     }
 
     private async Task SendDailyNotificationsAsync(
+        IReadOnlyList<(long ProfileId, DateTime CycleStartUtc)> profiles,
         DateOnly localDate,
         CancellationToken cancellationToken)
     {
-        var profiles = await GetActiveNotificationProfilesAsync(cancellationToken);
-
         await Parallel.ForEachAsync(
             profiles.Select(p => p.ProfileId),
             new ParallelOptions
@@ -106,11 +107,10 @@ public sealed class NotificationSchedulerService : BackgroundService
     }
 
     private async Task SendDueSavingsNotificationsAsync(
+        IReadOnlyList<(long ProfileId, DateTime CycleStartUtc)> profiles,
         DateOnly runDate,
         CancellationToken cancellationToken)
     {
-        var profiles = await GetActiveNotificationProfilesAsync(cancellationToken);
-
         await Parallel.ForEachAsync(
             profiles,
             new ParallelOptions
@@ -189,18 +189,23 @@ public sealed class NotificationSchedulerService : BackgroundService
         using var scope = _scopeFactory.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
+        var sentKeys = await db.NotificationDispatchLogs
+            .AsNoTracking()
+            .Where(n =>
+                n.ProfileId == profileId &&
+                n.NotificationType == "monthly-savings" &&
+                n.PeriodKey.StartsWith("30day-"))
+            .Select(n => n.PeriodKey)
+            .ToListAsync(cancellationToken);
+
+        var sentCycles = sentKeys
+            .Select(key => int.TryParse(key["30day-".Length..], out var cycle) ? cycle : 0)
+            .Where(cycle => cycle > 0)
+            .ToHashSet();
+
         for (var cycle = 1; cycle <= completedCycles; cycle++)
         {
-            var periodKey = $"30day-{cycle}";
-            var sent = await db.NotificationDispatchLogs
-                .AsNoTracking()
-                .AnyAsync(
-                    n => n.ProfileId == profileId &&
-                         n.NotificationType == "monthly-savings" &&
-                         n.PeriodKey == periodKey,
-                    cancellationToken);
-
-            if (!sent)
+            if (!sentCycles.Contains(cycle))
                 return cycle;
         }
 
