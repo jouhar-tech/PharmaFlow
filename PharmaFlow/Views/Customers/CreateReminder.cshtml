@@ -175,6 +175,7 @@
 
     let timer = null;
     let sequence = 0;
+    let activeController = null;
 
     const escapeHtml = value => String(value ?? "")
         .replaceAll("&", "&amp;")
@@ -254,6 +255,8 @@
 
     const search = async query => {
         const currentSequence = ++sequence;
+        activeController?.abort();
+        activeController = new AbortController();
         const trimmed = query.trim();
 
         if (trimmed.length < 2) {
@@ -272,13 +275,17 @@
         try {
             const response = await fetch(
                 '@Url.Action("SearchProducts", "Customers")?customerId=@Model.CustomerId&query=' + encodeURIComponent(trimmed),
-                { credentials: "same-origin" });
+                {
+                    credentials: "same-origin",
+                    signal: activeController.signal
+                });
 
             if (currentSequence !== sequence) return;
             if (!response.ok) throw new Error("Search failed");
 
             render(await response.json());
-        } catch {
+        } catch (error) {
+            if (error?.name === "AbortError") return;
             if (currentSequence !== sequence) return;
             searchResults.innerHTML =
                 '<div class="customer-reminder-search-empty">' +
@@ -291,7 +298,7 @@
 
     searchInput?.addEventListener("input", () => {
         clearTimeout(timer);
-        timer = setTimeout(() => search(searchInput.value), 220);
+        timer = setTimeout(() => search(searchInput.value), 250);
     });
 
     clearButton?.addEventListener("click", () => {
