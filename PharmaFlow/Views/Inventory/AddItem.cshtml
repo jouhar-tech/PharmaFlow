@@ -1,7 +1,8 @@
 @model PharmaFlow.Models.ViewModels.InventoryAddItemViewModel
 @{
     ViewData["Title"] = "Add Item";
-    var today = DateOnly.FromDateTime(DateTime.UtcNow);
+    var today = DateOnly.FromDateTime(
+        DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(5.5)).DateTime);
     var defaultExpiry = today.AddYears(2);
 }
 
