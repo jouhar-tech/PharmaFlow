@@ -724,7 +724,6 @@ public sealed class InventoryController : Controller
             return Unauthorized();
 
         var batch = await _dbContext.ProductBatches
-            .Include(b => b.Product)
             .FirstOrDefaultAsync(
                 b => b.BatchId == batchId &&
                      b.ProductId == productId &&
