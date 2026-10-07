@@ -16,6 +16,7 @@ public sealed class MedicineCatalogService
     private readonly ILogger<MedicineCatalogService> _logger;
     private readonly IHttpClientFactory _httpClientFactory;
     private List<MedicineRecord>? _medicines;
+    private Dictionary<long, MedicineRecord>? _medicinesById;
 
     public MedicineCatalogService(
         IWebHostEnvironment environment,
@@ -38,21 +39,46 @@ public sealed class MedicineCatalogService
         if (normalized.Length < 2 || _medicines is null)
             return [];
 
-        return _medicines
-            .Where(item =>
-                item.NormalizedProductName.Contains(normalized, StringComparison.Ordinal) ||
-                item.NormalizedSaltComposition.Contains(normalized, StringComparison.Ordinal) ||
-                item.NormalizedManufacturerName.Contains(normalized, StringComparison.Ordinal))
-            .OrderBy(item => item.NormalizedProductName.StartsWith(normalized, StringComparison.Ordinal) ? 0 : 1)
-            .ThenBy(item => item.NormalizedProductName, StringComparer.Ordinal)
-            .Take(limit)
-            .ToList();
+        var prefixMatches = new List<MedicineRecord>(limit);
+        var fallbackMatches = new List<MedicineRecord>(limit);
+
+        foreach (var item in _medicines)
+        {
+            var productNameMatch = item.NormalizedProductName.Contains(
+                normalized,
+                StringComparison.Ordinal);
+            var saltMatch = item.NormalizedSaltComposition.Contains(
+                normalized,
+                StringComparison.Ordinal);
+            var manufacturerMatch = item.NormalizedManufacturerName.Contains(
+                normalized,
+                StringComparison.Ordinal);
+
+            if (!productNameMatch && !saltMatch && !manufacturerMatch)
+                continue;
+
+            if (item.NormalizedProductName.StartsWith(normalized, StringComparison.Ordinal))
+            {
+                prefixMatches.Add(item);
+                if (prefixMatches.Count == limit)
+                    return prefixMatches;
+            }
+            else if (fallbackMatches.Count < limit)
+            {
+                fallbackMatches.Add(item);
+            }
+        }
+
+        prefixMatches.AddRange(fallbackMatches);
+        return prefixMatches.Take(limit).ToList();
     }
 
     public async Task<MedicineRecord?> GetAsync(long id, CancellationToken cancellationToken)
     {
         await EnsureLoadedAsync(cancellationToken);
-        return _medicines?.FirstOrDefault(item => item.Id == id);
+        return _medicinesById is not null && _medicinesById.TryGetValue(id, out var medicine)
+            ? medicine
+            : null;
     }
 
     private async Task EnsureLoadedAsync(CancellationToken cancellationToken)
@@ -159,7 +185,14 @@ public sealed class MedicineCatalogService
                 });
             }
 
+            records.Sort((left, right) =>
+                string.Compare(
+                    left.NormalizedProductName,
+                    right.NormalizedProductName,
+                    StringComparison.Ordinal));
+
             _medicines = records;
+            _medicinesById = records.ToDictionary(item => item.Id);
             _logger.LogInformation("Loaded {Count} Indian medicines.", records.Count);
         }
         finally
