@@ -124,6 +124,7 @@
                 <th>Bill No.</th>
                 <th>Date &amp; Time</th>
                 <th>Product Name</th>
+                <th>Batch No.</th>
                 <th>Qty</th>
                 <th>Payment Mode</th>
                 <th>Total Amount</th>
@@ -139,6 +140,7 @@
                     <td>@row.BillNumber</td>
                     <td>@row.DateTime.ToOffset(TimeSpan.FromHours(5.5)).ToString("dd MMM, h:mm tt")</td>
                     <td>@row.ProductName</td>
+                    <td>@row.BatchNumber</td>
                     <td>@row.Quantity.ToString("0.##")</td>
                     <td>@row.PaymentMode</td>
                     <td>₹@row.TotalAmount.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</td>
@@ -149,7 +151,7 @@
         else
         {
             <tr class="reports-print-empty-row">
-                <td colspan="7">Sales transaction details will appear here once billing data is connected.</td>
+                <td colspan="8">Sales transaction details will appear here once billing data is connected.</td>
             </tr>
         }
         </tbody>
