@@ -7,6 +7,9 @@
 CREATE INDEX IF NOT EXISTS ix_products_profile_active_name
     ON public.products(profile_id, is_active, product_name);
 
+CREATE INDEX IF NOT EXISTS ix_products_profile_lower_name
+    ON public.products(profile_id, lower(product_name));
+
 CREATE INDEX IF NOT EXISTS ix_products_profile_barcode
     ON public.products(profile_id, barcode)
     WHERE barcode IS NOT NULL;
@@ -16,6 +19,9 @@ CREATE INDEX IF NOT EXISTS ix_product_batches_product_active_expiry
 
 CREATE INDEX IF NOT EXISTS ix_product_batches_product_stock
     ON public.product_batches(product_id, is_active, is_quarantined, quantity_on_hand);
+
+CREATE INDEX IF NOT EXISTS ix_product_batches_product_lower_batch
+    ON public.product_batches(product_id, lower(batch_number));
 
 -- Billing and bill history.
 CREATE INDEX IF NOT EXISTS ix_sales_bills_profile_status_created
