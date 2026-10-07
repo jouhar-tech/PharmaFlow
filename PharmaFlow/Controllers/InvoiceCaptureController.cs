@@ -332,12 +332,16 @@ public sealed class InvoiceCaptureController : Controller
                     : string.Empty
             }.Where(value => !string.IsNullOrWhiteSpace(value)));
 
+    private static DateOnly GetIndiaToday() =>
+        DateOnly.FromDateTime(
+            DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(5.5)).DateTime);
+
     private static string? CleanMetadata(string? value, int maxLength)
     {
         if (string.IsNullOrWhiteSpace(value))
             return null;
 
-        var normalized = Regex.Replace(value.Trim(), @"s+", " ");
+        var normalized = Regex.Replace(value.Trim(), @"\s+", " ");
         return normalized.Length <= maxLength
             ? normalized
             : normalized[..maxLength].Trim();
@@ -1029,7 +1033,7 @@ public sealed class InvoiceCaptureController : Controller
         if (item.Quantity is not > 0)
             return (false, "Quantity was not detected.");
 
-        if (item.ExpiryDate.Value < DateOnly.FromDateTime(DateTime.UtcNow))
+        if (item.ExpiryDate.Value < GetIndiaToday())
             return (false, "Expiry date is already in the past.");
 
         if (item.ProductName.Length > 200 || item.BatchNumber.Length > 100)
@@ -1058,7 +1062,7 @@ public sealed class InvoiceCaptureController : Controller
         if (!item.ExpiryDate.HasValue)
             return "Expiry date is required.";
 
-        if (item.ExpiryDate.Value < DateOnly.FromDateTime(DateTime.UtcNow))
+        if (item.ExpiryDate.Value < GetIndiaToday())
             return "Expiry date cannot be earlier than today.";
 
         if (item.Quantity is not > 0)
