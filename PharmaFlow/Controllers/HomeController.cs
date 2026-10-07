@@ -42,71 +42,45 @@ namespace PharmaFlow.Controllers
                 var indiaEndUtc = TimeZoneInfo.ConvertTimeToUtc(
                     today.AddDays(1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified),
                     indiaTimeZone);
-
-                expiringSoonCount = await _dbContext.ProductBatches
-                    .AsNoTracking()
-                    .CountAsync(batch =>
-                        batch.Product.ProfileId == profileId &&
-                        batch.Product.IsActive &&
-                        batch.IsActive &&
-                        !batch.IsQuarantined &&
-                        batch.QuantityOnHand > 0 &&
-                        batch.ExpiryDate >= today &&
-                        batch.ExpiryDate <= ninetyDaysFromToday,
-                        cancellationToken);
-
-                // Keep the dashboard count identical to the Low Stock page:
-                // active, usable batches with quantity below 3.
-                lowStockCount = await _dbContext.ProductBatches
-                    .AsNoTracking()
-                    .CountAsync(batch =>
-                        batch.Product.ProfileId == profileId &&
-                        batch.Product.IsActive &&
-                        batch.IsActive &&
-                        !batch.IsQuarantined &&
-                        batch.QuantityOnHand > 0 &&
-                        batch.QuantityOnHand < 3m,
-                        cancellationToken);
-
-                expiryAtRiskValue = await _dbContext.ProductBatches
-                    .AsNoTracking()
-                    .Where(batch =>
-                        batch.Product.ProfileId == profileId &&
-                        batch.Product.IsActive &&
-                        batch.IsActive &&
-                        !batch.IsQuarantined &&
-                        batch.QuantityOnHand > 0 &&
-                        batch.ExpiryDate >= today &&
-                        batch.ExpiryDate <= ninetyDaysFromToday)
-                    .SumAsync(batch => batch.QuantityOnHand * batch.PurchaseUnitPrice, cancellationToken);
-
-                // Until detailed sales-velocity history is added, classify stock held for more
-                // than 90 days as slow-moving inventory. This keeps the dashboard value data-driven
-                // while billing history remains separate from stock-aging analysis.
                 var slowMovingCutoffDate = today.AddDays(-90);
                 var slowMovingCutoffUtc = TimeZoneInfo.ConvertTimeToUtc(
                     slowMovingCutoffDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified),
                     indiaTimeZone);
 
-                slowMovingStockValue = await _dbContext.ProductBatches
+                var stockMetrics = await _dbContext.ProductBatches
                     .AsNoTracking()
                     .Where(batch =>
                         batch.Product.ProfileId == profileId &&
                         batch.Product.IsActive &&
                         batch.IsActive &&
                         !batch.IsQuarantined &&
-                        batch.QuantityOnHand > 0 &&
-                        batch.CreatedAt <= slowMovingCutoffUtc)
-                    .SumAsync(batch => batch.QuantityOnHand * batch.PurchaseUnitPrice, cancellationToken);
+                        batch.QuantityOnHand > 0)
+                    .GroupBy(_ => 1)
+                    .Select(group => new
+                    {
+                        ExpiringSoonCount = group.Count(batch =>
+                            batch.ExpiryDate >= today &&
+                            batch.ExpiryDate <= ninetyDaysFromToday),
+                        LowStockCount = group.Count(batch =>
+                            batch.QuantityOnHand < 3m),
+                        ExpiryAtRiskValue = group
+                            .Where(batch =>
+                                batch.ExpiryDate >= today &&
+                                batch.ExpiryDate <= ninetyDaysFromToday)
+                            .Sum(batch => (decimal?)(
+                                batch.QuantityOnHand * batch.PurchaseUnitPrice)) ?? 0m,
+                        SlowMovingStockValue = group
+                            .Where(batch => batch.CreatedAt <= slowMovingCutoffUtc)
+                            .Sum(batch => (decimal?)(
+                                batch.QuantityOnHand * batch.PurchaseUnitPrice)) ?? 0m
+                    })
+                    .SingleOrDefaultAsync(cancellationToken);
 
-                todaySalesAmount = await _dbContext.SalesBills
-                    .AsNoTracking()
-                    .Where(bill =>
-                        bill.ProfileId == profileId &&
-                        bill.Status == "Completed" &&
-                        bill.CreatedAt >= indiaStartUtc &&
-                        bill.CreatedAt < indiaEndUtc)
-                    .SumAsync(bill => bill.TotalAmount, cancellationToken);
+                expiringSoonCount = stockMetrics?.ExpiringSoonCount ?? 0;
+                lowStockCount = stockMetrics?.LowStockCount ?? 0;
+                expiryAtRiskValue = stockMetrics?.ExpiryAtRiskValue ?? 0m;
+                slowMovingStockValue = stockMetrics?.SlowMovingStockValue ?? 0m;
+
             }
 
             var dashboard = new DashboardViewModel
