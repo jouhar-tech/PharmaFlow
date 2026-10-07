@@ -102,6 +102,7 @@ public sealed class SupabaseAuthService : ISupabaseAuthService
 
     private async Task<SupabaseAuthResult> ReadResultAsync(HttpResponseMessage response, bool requireAccessToken, CancellationToken cancellationToken)
     {
+        using (response);
         var body = await response.Content.ReadAsStringAsync(cancellationToken);
 
         if (!response.IsSuccessStatusCode)
@@ -124,20 +125,27 @@ public sealed class SupabaseAuthService : ISupabaseAuthService
         string? userId = null;
         string? email = null;
 
-        if (!string.IsNullOrWhiteSpace(body))
+        try
         {
-            using var document = JsonDocument.Parse(body);
-            var root = document.RootElement;
-
-            accessToken = root.TryGetProperty("access_token", out var tokenElement)
-                ? tokenElement.GetString()
-                : null;
-
-            if (root.TryGetProperty("user", out var userElement))
+            if (!string.IsNullOrWhiteSpace(body))
             {
-                userId = userElement.TryGetProperty("id", out var idElement) ? idElement.GetString() : null;
-                email = userElement.TryGetProperty("email", out var emailElement) ? emailElement.GetString() : null;
+                using var document = JsonDocument.Parse(body);
+                var root = document.RootElement;
+
+                accessToken = root.TryGetProperty("access_token", out var tokenElement)
+                    ? tokenElement.GetString()
+                    : null;
+
+                if (root.TryGetProperty("user", out var userElement))
+                {
+                    userId = userElement.TryGetProperty("id", out var idElement) ? idElement.GetString() : null;
+                    email = userElement.TryGetProperty("email", out var emailElement) ? emailElement.GetString() : null;
+                }
             }
+        }
+        catch (JsonException)
+        {
+            return new(false, Error: "Authentication service returned an invalid response.");
         }
 
         if (requireAccessToken && string.IsNullOrWhiteSpace(accessToken))
