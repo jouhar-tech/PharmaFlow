@@ -70,7 +70,12 @@ namespace PharmaFlow.Controllers
                             .Sum(batch => (decimal?)(
                                 batch.QuantityOnHand * batch.PurchaseUnitPrice)) ?? 0m,
                         SlowMovingStockValue = group
-                            .Where(batch => batch.CreatedAt <= slowMovingCutoffUtc)
+                            .Where(batch =>
+                                !_dbContext.SalesBillItems.Any(item =>
+                                    item.ProductId == batch.ProductId &&
+                                    item.Bill.ProfileId == profileId &&
+                                    item.Bill.Status == "Completed" &&
+                                    item.Bill.CreatedAt > slowMovingCutoffUtc))
                             .Sum(batch => (decimal?)(
                                 batch.QuantityOnHand * batch.PurchaseUnitPrice)) ?? 0m
                     })

@@ -80,7 +80,8 @@ public sealed class SlowMovingController : Controller
             .Where(row =>
                 row.LastSoldAt == null ||
                 row.LastSoldAt <= oneMonthCutoffUtc)
-            .OrderBy(row => row.LastSoldAt ?? DateTime.MinValue)
+            .OrderBy(row => row.LastSoldAt.HasValue)
+            .ThenBy(row => row.LastSoldAt)
             .ThenBy(row => row.ProductName)
             .ToListAsync(cancellationToken);
 
