@@ -482,15 +482,92 @@ public sealed class InventoryController : Controller
         if (productId <= 0)
             return NotFound();
 
-        var product = await _dbContext.Products
+        // Inventory and Low Stock already provide the exact batch that was clicked.
+        // Resolve from ProductBatches first so the edit screen follows the same
+        // data path as Expiring Products.
+        if (batchId.HasValue && batchId.Value > 0)
+        {
+            var clickedBatch = await _dbContext.ProductBatches
+                .AsNoTracking()
+                .Where(b =>
+                    b.BatchId == batchId.Value &&
+                    b.ProductId == productId &&
+                    b.Product.ProfileId == profileId)
+                .Select(b => new
+                {
+                    Product = b.Product,
+                    BatchId = b.BatchId
+                })
+                .SingleOrDefaultAsync(cancellationToken);
+
+            if (clickedBatch is null)
+                return NotFound();
+
+            var batches = await _dbContext.ProductBatches
+                .AsNoTracking()
+                .Where(b => b.ProductId == productId)
+                .OrderByDescending(b => b.IsActive)
+                .ThenBy(b => b.ExpiryDate)
+                .Select(b => new InventoryBatchDetailsViewModel
+                {
+                    BatchId = b.BatchId,
+                    BatchNumber = b.BatchNumber,
+                    ManufacturingDate = b.ManufacturingDate,
+                    ExpiryDate = b.ExpiryDate,
+                    QuantityOnHand = b.QuantityOnHand,
+                    PurchaseUnitPrice = b.PurchaseUnitPrice,
+                    SellingUnitPrice = b.SellingUnitPrice,
+                    SupplierId = b.SupplierId,
+                    Location = b.Location,
+                    IsQuarantined = b.IsQuarantined,
+                    IsActive = b.IsActive
+                })
+                .ToListAsync(cancellationToken);
+
+            var selectedBatch = batches.FirstOrDefault(b => b.BatchId == clickedBatch.BatchId);
+
+            if (selectedBatch is null)
+                return NotFound();
+
+            var product = clickedBatch.Product;
+
+            var model = new InventoryProductDetailsViewModel
+            {
+                ProductId = product.ProductId,
+                ProductName = product.ProductName,
+                GenericName = product.GenericName,
+                BrandName = product.BrandName,
+                DosageForm = product.DosageForm,
+                Strength = product.Strength,
+                PackSize = product.PackSize,
+                Barcode = product.Barcode,
+                Manufacturer = product.Manufacturer,
+                HsnCode = product.HsnCode,
+                GstRate = product.GstRate,
+                ReorderLevel = product.ReorderLevel,
+                IsPrescriptionRequired = product.IsPrescriptionRequired,
+                IsActive = product.IsActive,
+                IsBatchContext = true,
+                ReturnTo = NormalizeReturnTo(returnTo),
+                SelectedBatch = selectedBatch,
+                Batches = batches
+            };
+
+            ViewData["Title"] = "Product Details";
+            return View(model);
+        }
+
+        var productOnly = await _dbContext.Products
             .AsNoTracking()
-            .Where(p => p.ProductId == productId && p.ProfileId == profileId && p.IsActive)
+            .Where(p =>
+                p.ProductId == productId &&
+                p.ProfileId == profileId)
             .SingleOrDefaultAsync(cancellationToken);
 
-        if (product is null)
+        if (productOnly is null)
             return NotFound();
 
-        var batches = await _dbContext.ProductBatches
+        var productBatches = await _dbContext.ProductBatches
             .AsNoTracking()
             .Where(b => b.ProductId == productId)
             .OrderByDescending(b => b.IsActive)
@@ -511,38 +588,35 @@ public sealed class InventoryController : Controller
             })
             .ToListAsync(cancellationToken);
 
-        var selectedBatch = batchId.HasValue
-            ? batches.FirstOrDefault(b => b.BatchId == batchId.Value)
-            : batches.FirstOrDefault(b => b.IsActive && !b.IsQuarantined)
-                ?? batches.FirstOrDefault(b => b.IsActive)
-                ?? batches.FirstOrDefault();
+        var fallbackBatch = productBatches.FirstOrDefault(b => b.IsActive && !b.IsQuarantined)
+            ?? productBatches.FirstOrDefault(b => b.IsActive)
+            ?? productBatches.FirstOrDefault();
 
-        var model = new InventoryProductDetailsViewModel
+        var fallbackModel = new InventoryProductDetailsViewModel
         {
-            ProductId = product.ProductId,
-            ProductName = product.ProductName,
-            GenericName = product.GenericName,
-            BrandName = product.BrandName,
-            DosageForm = product.DosageForm,
-            Strength = product.Strength,
-            PackSize = product.PackSize,
-            Barcode = product.Barcode,
-            Manufacturer = product.Manufacturer,
-            HsnCode = product.HsnCode,
-            GstRate = product.GstRate,
-            ReorderLevel = product.ReorderLevel,
-            IsPrescriptionRequired = product.IsPrescriptionRequired,
-            IsActive = product.IsActive,
-            IsBatchContext = batchId.HasValue,
+            ProductId = productOnly.ProductId,
+            ProductName = productOnly.ProductName,
+            GenericName = productOnly.GenericName,
+            BrandName = productOnly.BrandName,
+            DosageForm = productOnly.DosageForm,
+            Strength = productOnly.Strength,
+            PackSize = productOnly.PackSize,
+            Barcode = productOnly.Barcode,
+            Manufacturer = productOnly.Manufacturer,
+            HsnCode = productOnly.HsnCode,
+            GstRate = productOnly.GstRate,
+            ReorderLevel = productOnly.ReorderLevel,
+            IsPrescriptionRequired = productOnly.IsPrescriptionRequired,
+            IsActive = productOnly.IsActive,
+            IsBatchContext = false,
             ReturnTo = NormalizeReturnTo(returnTo),
-            SelectedBatch = selectedBatch,
-            Batches = batches
+            SelectedBatch = fallbackBatch,
+            Batches = productBatches
         };
 
         ViewData["Title"] = "Product Details";
-        return View(model);
+        return View(fallbackModel);
     }
-
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> UpdateDetails(
