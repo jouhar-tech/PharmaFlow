@@ -7,12 +7,33 @@
 
 <div class="inventory-details-page">
     <header class="inventory-details-header">
-        <a asp-controller="Inventory" asp-action="Index" class="inventory-details-back" aria-label="Back to Inventory">
+        @if (Model.ReturnTo == "expiry")
+        {
+            <a asp-controller="ExpiryProducts" asp-action="Index" class="inventory-details-back" aria-label="Back to Expiring Products">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M19 12H5"></path>
+                    <path d="m11 18-6-6 6-6"></path>
+                </svg>
+            </a>
+        }
+        else if (Model.ReturnTo == "low-stock")
+        {
+            <a asp-controller="LowStock" asp-action="Index" class="inventory-details-back" aria-label="Back to Low Stock">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M19 12H5"></path>
+                    <path d="m11 18-6-6 6-6"></path>
+                </svg>
+            </a>
+        }
+        else
+        {
+            <a asp-controller="Inventory" asp-action="Index" class="inventory-details-back" aria-label="Back to Inventory">
             <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M19 12H5"></path>
                 <path d="m11 18-6-6 6-6"></path>
             </svg>
         </a>
+        }
 
         <div class="inventory-details-header-copy">
             <span>Inventory</span>
@@ -61,6 +82,7 @@
 
                     <input type="hidden" name="productId" value="@Model.ProductId" />
                     <input type="hidden" name="batchId" value="@batch.BatchId" />
+                    <input type="hidden" name="returnTo" value="@Model.ReturnTo" />
 
                     <div class="inventory-details-form-grid inventory-details-simple-grid">
                         <label>
@@ -184,6 +206,7 @@
         <form asp-controller="Inventory" asp-action="RemoveProduct" method="post">
             @Html.AntiForgeryToken()
             <input type="hidden" name="productId" value="@Model.ProductId" />
+            <input type="hidden" name="returnTo" value="@Model.ReturnTo" />
             @if (Model.IsBatchContext && batch is not null)
             {
                 <input type="hidden" name="batchId" value="@batch.BatchId" />
