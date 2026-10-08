@@ -38,6 +38,87 @@ public sealed class ProfileController : Controller
     }
 
     [HttpGet]
+    public async Task<IActionResult> BusinessSummary(CancellationToken cancellationToken)
+    {
+        if (string.Equals(HttpContext.Session.GetString("UserRole"), "Staff", StringComparison.OrdinalIgnoreCase))
+            return RedirectToAction(nameof(Index));
+
+        if (!long.TryParse(HttpContext.Session.GetString("ProfileId"), out var profileId))
+            return RedirectToAction("Login", "Account");
+
+        var indiaTimeZone = TimeZoneInfo.FindSystemTimeZoneById(
+            OperatingSystem.IsWindows() ? "India Standard Time" : "Asia/Kolkata");
+        var todayIndia = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, indiaTimeZone));
+        var monthStartUtc = TimeZoneInfo.ConvertTimeToUtc(
+            new DateTime(todayIndia.Year, todayIndia.Month, 1, 0, 0, 0, DateTimeKind.Unspecified),
+            indiaTimeZone);
+        var tomorrowUtc = TimeZoneInfo.ConvertTimeToUtc(
+            todayIndia.AddDays(1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified),
+            indiaTimeZone);
+
+        var monthBills = _dbContext.SalesBills
+            .AsNoTracking()
+            .Where(bill =>
+                bill.ProfileId == profileId &&
+                bill.Status == "Completed" &&
+                bill.CreatedAt >= monthStartUtc &&
+                bill.CreatedAt < tomorrowUtc);
+
+        var monthBillIds = await monthBills
+            .Select(bill => bill.BillId)
+            .ToListAsync(cancellationToken);
+
+        var monthItems = monthBillIds.Count == 0
+            ? []
+            : await _dbContext.SalesBillItems
+                .AsNoTracking()
+                .Where(item => monthBillIds.Contains(item.BillId))
+                .Select(item => new
+                {
+                    item.LineTotal,
+                    item.Quantity,
+                    item.PurchaseUnitPrice
+                })
+                .ToListAsync(cancellationToken);
+
+        var todaySales = await _dbContext.SalesBills
+            .AsNoTracking()
+            .Where(bill =>
+                bill.ProfileId == profileId &&
+                bill.Status == "Completed" &&
+                bill.CreatedAt >= tomorrowUtc.Subtract(TimeSpan.FromDays(1)) &&
+                bill.CreatedAt < tomorrowUtc)
+            .SumAsync(bill => bill.TotalAmount, cancellationToken);
+
+        var stockValue = await _dbContext.ProductBatches
+            .AsNoTracking()
+            .Where(batch =>
+                batch.Product.ProfileId == profileId &&
+                batch.Product.IsActive &&
+                batch.IsActive &&
+                !batch.IsQuarantined &&
+                batch.QuantityOnHand > 0)
+            .SumAsync(batch => batch.QuantityOnHand * batch.SellingUnitPrice, cancellationToken);
+
+        var customerBalances = await _dbContext.CustomerLedgerEntries
+            .AsNoTracking()
+            .Where(entry => entry.ProfileId == profileId)
+            .GroupBy(entry => entry.CustomerId)
+            .Select(group => group.Sum(entry => entry.BalanceChange))
+            .ToListAsync(cancellationToken);
+
+        return View(new BusinessSummaryViewModel
+        {
+            TodaySales = todaySales,
+            MonthSales = monthBills.Sum(bill => bill.TotalAmount),
+            MonthProfit = monthItems.Sum(item => item.LineTotal - item.PurchaseUnitPrice * item.Quantity),
+            StockValue = stockValue,
+            CustomerOutstanding = customerBalances.Where(balance => balance > 0m).Sum(),
+            CustomersWithOutstanding = customerBalances.Count(balance => balance > 0m)
+        });
+    }
+
+    [HttpGet]
     public IActionResult UnlimitedPlan() => View();
 
     [HttpPost]
