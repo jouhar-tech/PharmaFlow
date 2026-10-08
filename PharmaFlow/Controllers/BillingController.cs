@@ -83,9 +83,9 @@ public sealed class BillingController : Controller
         var todayIndia = DateOnly.FromDateTime(
             DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(5.5)).DateTime);
 
-        // Keep at most 8 saleable batches per matched product and project only
-        // the fields required by the search UI. EF translates this grouped Top-N
-        // pattern to a windowed query instead of loading every matching batch.
+        // EF Core cannot translate grouped Top-N consistently across providers.
+        // Fetch only the required saleable batch columns, then cap batches per
+        // matched product in memory. At most 12 products are searched.
         var batches = await searchExecutionStrategy.ExecuteAsync(
             () => _dbContext.ProductBatches
                 .AsNoTracking()
@@ -95,11 +95,9 @@ public sealed class BillingController : Controller
                     !b.IsQuarantined &&
                     b.QuantityOnHand > 0 &&
                     b.ExpiryDate >= todayIndia)
-                .GroupBy(b => b.ProductId)
-                .SelectMany(group => group
-                    .OrderBy(b => b.ExpiryDate)
-                    .ThenBy(b => b.BatchNumber)
-                    .Take(8))
+                .OrderBy(b => b.ProductId)
+                .ThenBy(b => b.ExpiryDate)
+                .ThenBy(b => b.BatchNumber)
                 .Select(b => new
                 {
                     b.ProductId,
@@ -113,7 +111,7 @@ public sealed class BillingController : Controller
 
         var batchesByProduct = batches
             .GroupBy(b => b.ProductId)
-            .ToDictionary(g => g.Key, g => g.ToList());
+            .ToDictionary(g => g.Key, g => g.Take(8).ToList());
 
         var results = products
             .Where(p => batchesByProduct.ContainsKey(p.ProductId))
