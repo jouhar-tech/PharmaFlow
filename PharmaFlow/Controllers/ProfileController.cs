@@ -64,22 +64,23 @@ public sealed class ProfileController : Controller
                 bill.CreatedAt >= monthStartUtc &&
                 bill.CreatedAt < tomorrowUtc);
 
+        var monthSales = await monthBills
+            .SumAsync(bill => bill.TotalAmount, cancellationToken);
+
         var monthBillIds = await monthBills
             .Select(bill => bill.BillId)
             .ToListAsync(cancellationToken);
 
-        var monthItems = monthBillIds.Count == 0
-            ? []
-            : await _dbContext.SalesBillItems
-                .AsNoTracking()
-                .Where(item => monthBillIds.Contains(item.BillId))
-                .Select(item => new
-                {
-                    item.LineTotal,
-                    item.Quantity,
-                    item.PurchaseUnitPrice
-                })
-                .ToListAsync(cancellationToken);
+        var monthItems = await _dbContext.SalesBillItems
+            .AsNoTracking()
+            .Where(item => monthBillIds.Contains(item.BillId))
+            .Select(item => new
+            {
+                item.LineTotal,
+                item.Quantity,
+                item.PurchaseUnitPrice
+            })
+            .ToListAsync(cancellationToken);
 
         var todaySales = await _dbContext.SalesBills
             .AsNoTracking()
@@ -110,7 +111,7 @@ public sealed class ProfileController : Controller
         return View(new BusinessSummaryViewModel
         {
             TodaySales = todaySales,
-            MonthSales = monthBills.Sum(bill => bill.TotalAmount),
+            MonthSales = monthSales,
             MonthProfit = monthItems.Sum(item => item.LineTotal - item.PurchaseUnitPrice * item.Quantity),
             StockValue = stockValue,
             CustomerOutstanding = customerBalances.Where(balance => balance > 0m).Sum(),
