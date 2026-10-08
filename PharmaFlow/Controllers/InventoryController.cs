@@ -58,10 +58,14 @@ public sealed class InventoryController : Controller
                 .Distinct()
                 .ToArray();
 
+            // Only active products count as already present in the current inventory.
+            // Inactive products were previously removed from stock and should remain
+            // discoverable so the owner can add stock again later.
             var existingProducts = await _dbContext.Products
                 .AsNoTracking()
                 .Where(p =>
                     p.ProfileId == profileId &&
+                    p.IsActive &&
                     (
                         (p.CatalogId.HasValue && candidateCatalogIds.Contains(p.CatalogId.Value))
                         || (p.Barcode != null && candidateBarcodes.Contains(p.Barcode))
