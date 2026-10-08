@@ -26,6 +26,7 @@ namespace PharmaFlow.Controllers
             var expiringSoonCount = 0;
             var lowStockCount = 0;
             decimal expiryAtRiskValue = 0m;
+            var slowMovingStockCount = 0;
             decimal slowMovingStockValue = 0m;
             decimal todaySalesAmount = 0m;
 
@@ -43,6 +44,7 @@ namespace PharmaFlow.Controllers
                     today.AddDays(1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified),
                     indiaTimeZone);
                 var slowMovingCutoffDate = today.AddMonths(-1);
+                var oneYearFromToday = today.AddYears(1);
                 var slowMovingCutoffUtc = TimeZoneInfo.ConvertTimeToUtc(
                     slowMovingCutoffDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified),
                     indiaTimeZone);
@@ -69,13 +71,19 @@ namespace PharmaFlow.Controllers
                                 batch.ExpiryDate <= ninetyDaysFromToday)
                             .Sum(batch => (decimal?)(
                                 batch.QuantityOnHand * batch.PurchaseUnitPrice)) ?? 0m,
+                        SlowMovingStockCount = group
+                            .Where(batch =>
+                                batch.Product.CreatedAt <= slowMovingCutoffUtc &&
+                                batch.ExpiryDate >= today &&
+                                batch.ExpiryDate <= oneYearFromToday)
+                            .Select(batch => batch.ProductId)
+                            .Distinct()
+                            .Count(),
                         SlowMovingStockValue = group
                             .Where(batch =>
-                                !_dbContext.SalesBillItems.Any(item =>
-                                    item.ProductId == batch.ProductId &&
-                                    item.Bill.ProfileId == profileId &&
-                                    item.Bill.Status == "Completed" &&
-                                    item.Bill.CreatedAt > slowMovingCutoffUtc))
+                                batch.Product.CreatedAt <= slowMovingCutoffUtc &&
+                                batch.ExpiryDate >= today &&
+                                batch.ExpiryDate <= oneYearFromToday)
                             .Sum(batch => (decimal?)(
                                 batch.QuantityOnHand * batch.PurchaseUnitPrice)) ?? 0m
                     })
@@ -84,6 +92,7 @@ namespace PharmaFlow.Controllers
                 expiringSoonCount = stockMetrics?.ExpiringSoonCount ?? 0;
                 lowStockCount = stockMetrics?.LowStockCount ?? 0;
                 expiryAtRiskValue = stockMetrics?.ExpiryAtRiskValue ?? 0m;
+                slowMovingStockCount = stockMetrics?.SlowMovingStockCount ?? 0;
                 slowMovingStockValue = stockMetrics?.SlowMovingStockValue ?? 0m;
 
                 todaySalesAmount = await _dbContext.SalesBills
@@ -102,6 +111,7 @@ namespace PharmaFlow.Controllers
                 ProductsExpiringSoonCount = expiringSoonCount,
                 LowStockCount = lowStockCount,
                 ExpiryAtRiskValue = expiryAtRiskValue,
+                SlowMovingStockCount = slowMovingStockCount,
                 SlowMovingStockValue = slowMovingStockValue,
                 TodaySalesAmount = todaySalesAmount
             };
