@@ -16,6 +16,7 @@ public sealed class InventoryProductDetailsViewModel
     public decimal ReorderLevel { get; init; }
     public bool IsPrescriptionRequired { get; init; }
     public bool IsActive { get; init; }
+    public bool IsBatchContext { get; init; }
     public InventoryBatchDetailsViewModel? SelectedBatch { get; init; }
     public IReadOnlyList<InventoryBatchDetailsViewModel> Batches { get; init; } = [];
 }
