@@ -470,12 +470,20 @@ public sealed class InventoryController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Details(
+    public Task<IActionResult> Details(
         long productId,
         long? batchId,
         string? returnTo,
         CancellationToken cancellationToken)
-    {
+        => Edit(productId, batchId, returnTo, cancellationToken);
+
+    [HttpGet]
+    public async Task<IActionResult> Edit(
+        long productId,
+        long? batchId,
+        string? returnTo,
+        CancellationToken cancellationToken)
+{
         if (!TryGetProfileId(out var profileId))
             return RedirectToAction("Login", "Account");
 
@@ -546,7 +554,7 @@ public sealed class InventoryController : Controller
         };
 
         ViewData["Title"] = "Product Details";
-        return View(model);
+        return View("Details", model);
     }
     [HttpPost]
     [ValidateAntiForgeryToken]
