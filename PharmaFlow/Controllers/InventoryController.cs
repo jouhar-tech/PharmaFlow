@@ -890,6 +890,7 @@ public sealed class InventoryController : Controller
         {
             "expiry" => "expiry",
             "low-stock" => "low-stock",
+            "inventory" => "inventory",
             _ => string.Empty
         };
 
@@ -898,6 +899,7 @@ public sealed class InventoryController : Controller
         {
             "expiry" => RedirectToAction("Index", "ExpiryProducts"),
             "low-stock" => RedirectToAction("Index", "LowStock"),
+            "inventory" => RedirectToAction("Index", "Inventory"),
             _ => RedirectToAction(nameof(Index))
         };
 
