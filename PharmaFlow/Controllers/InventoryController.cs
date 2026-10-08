@@ -482,90 +482,64 @@ public sealed class InventoryController : Controller
         if (productId <= 0)
             return NotFound();
 
-        var detailsExecutionStrategy = new NpgsqlRetryingExecutionStrategy(
-            _dbContext,
-            maxRetryCount: 3);
+        var product = await _dbContext.Products
+            .AsNoTracking()
+            .Where(p =>
+                p.ProductId == productId &&
+                p.ProfileId == profileId &&
+                p.IsActive)
+            .SingleOrDefaultAsync(cancellationToken);
 
-        var row = await detailsExecutionStrategy.ExecuteAsync(
-            () => _dbContext.ProductBatches
-                .AsNoTracking()
-                .Where(batch =>
-                    batch.ProductId == productId &&
-                    batch.Product.ProfileId == profileId &&
-                    batch.Product.IsActive &&
-                    batch.IsActive &&
-                    !batch.IsQuarantined &&
-                    batch.QuantityOnHand > 0 &&
-                    (!batchId.HasValue || batch.BatchId == batchId.Value))
-                .OrderBy(batch => batch.ExpiryDate)
-                .Select(batch => new
-                {
-                    ProductId = batch.Product.ProductId,
-                    ProductName = batch.Product.ProductName,
-                    GenericName = batch.Product.GenericName,
-                    BrandName = batch.Product.BrandName,
-                    DosageForm = batch.Product.DosageForm,
-                    Strength = batch.Product.Strength,
-                    PackSize = batch.Product.PackSize,
-                    Barcode = batch.Product.Barcode,
-                    Manufacturer = batch.Product.Manufacturer,
-                    HsnCode = batch.Product.HsnCode,
-                    GstRate = batch.Product.GstRate,
-                    ReorderLevel = batch.Product.ReorderLevel,
-                    IsPrescriptionRequired = batch.Product.IsPrescriptionRequired,
-                    IsActive = batch.Product.IsActive,
-                    BatchId = batch.BatchId,
-                    BatchNumber = batch.BatchNumber,
-                    ManufacturingDate = batch.ManufacturingDate,
-                    ExpiryDate = batch.ExpiryDate,
-                    QuantityOnHand = batch.QuantityOnHand,
-                    PurchaseUnitPrice = batch.PurchaseUnitPrice,
-                    SellingUnitPrice = batch.SellingUnitPrice,
-                    SupplierId = batch.SupplierId,
-                    Location = batch.Location,
-                    IsQuarantined = batch.IsQuarantined,
-                    BatchIsActive = batch.IsActive
-                })
-                .FirstOrDefaultAsync(cancellationToken));
-
-        if (row is null)
+        if (product is null)
             return NotFound();
 
-        var selectedBatch = new InventoryBatchDetailsViewModel
-        {
-            BatchId = row.BatchId,
-            BatchNumber = row.BatchNumber,
-            ManufacturingDate = row.ManufacturingDate,
-            ExpiryDate = row.ExpiryDate,
-            QuantityOnHand = row.QuantityOnHand,
-            PurchaseUnitPrice = row.PurchaseUnitPrice,
-            SellingUnitPrice = row.SellingUnitPrice,
-            SupplierId = row.SupplierId,
-            Location = row.Location,
-            IsQuarantined = row.IsQuarantined,
-            IsActive = row.BatchIsActive
-        };
+        var batches = await _dbContext.ProductBatches
+            .AsNoTracking()
+            .Where(b => b.ProductId == productId)
+            .OrderByDescending(b => b.IsActive)
+            .ThenBy(b => b.ExpiryDate)
+            .Select(b => new InventoryBatchDetailsViewModel
+            {
+                BatchId = b.BatchId,
+                BatchNumber = b.BatchNumber,
+                ManufacturingDate = b.ManufacturingDate,
+                ExpiryDate = b.ExpiryDate,
+                QuantityOnHand = b.QuantityOnHand,
+                PurchaseUnitPrice = b.PurchaseUnitPrice,
+                SellingUnitPrice = b.SellingUnitPrice,
+                SupplierId = b.SupplierId,
+                Location = b.Location,
+                IsQuarantined = b.IsQuarantined,
+                IsActive = b.IsActive
+            })
+            .ToListAsync(cancellationToken);
+
+        var selectedBatch = batchId.HasValue
+            ? batches.FirstOrDefault(b => b.BatchId == batchId.Value)
+            : batches.FirstOrDefault(b => b.IsActive && !b.IsQuarantined)
+                ?? batches.FirstOrDefault(b => b.IsActive)
+                ?? batches.FirstOrDefault();
 
         var model = new InventoryProductDetailsViewModel
         {
-            ProductId = row.ProductId,
-            ProductName = row.ProductName,
-            GenericName = row.GenericName,
-            BrandName = row.BrandName,
-            DosageForm = row.DosageForm,
-            Strength = row.Strength,
-            PackSize = row.PackSize,
-            Barcode = row.Barcode,
-            Manufacturer = row.Manufacturer,
-            HsnCode = row.HsnCode,
-            GstRate = row.GstRate,
-            ReorderLevel = row.ReorderLevel,
-            IsPrescriptionRequired = row.IsPrescriptionRequired,
-            IsActive = row.IsActive,
+            ProductId = product.ProductId,
+            ProductName = product.ProductName,
+            GenericName = product.GenericName,
+            BrandName = product.BrandName,
+            DosageForm = product.DosageForm,
+            Strength = product.Strength,
+            PackSize = product.PackSize,
+            Barcode = product.Barcode,
+            Manufacturer = product.Manufacturer,
+            HsnCode = product.HsnCode,
+            GstRate = product.GstRate,
+            ReorderLevel = product.ReorderLevel,
+            IsPrescriptionRequired = product.IsPrescriptionRequired,
+            IsActive = product.IsActive,
             IsBatchContext = batchId.HasValue,
             ReturnTo = NormalizeReturnTo(returnTo),
             SelectedBatch = selectedBatch,
-            Batches = [selectedBatch]
+            Batches = batches
         };
 
         ViewData["Title"] = "Product Details";
