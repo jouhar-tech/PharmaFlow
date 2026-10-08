@@ -488,78 +488,87 @@ public sealed class InventoryController : Controller
             _dbContext,
             maxRetryCount: 3);
 
-        var data = await detailsExecutionStrategy.ExecuteAsync(
-            () => _dbContext.Products
-                .AsNoTracking()
-                .Where(p =>
-                    p.ProductId == productId &&
-                    p.ProfileId == profileId &&
-                    p.IsActive)
-                .Select(p => new
+        var model = await detailsExecutionStrategy.ExecuteAsync(
+            async () =>
+            {
+                var product = await _dbContext.Products
+                    .AsNoTracking()
+                    .Where(p =>
+                        p.ProductId == productId &&
+                        p.ProfileId == profileId &&
+                        p.IsActive)
+                    .Select(p => new
+                    {
+                        p.ProductId,
+                        p.ProductName,
+                        p.GenericName,
+                        p.BrandName,
+                        p.DosageForm,
+                        p.Strength,
+                        p.PackSize,
+                        p.Barcode,
+                        p.Manufacturer,
+                        p.HsnCode,
+                        p.GstRate,
+                        p.ReorderLevel,
+                        p.IsPrescriptionRequired,
+                        p.IsActive
+                    })
+                    .SingleOrDefaultAsync(cancellationToken);
+
+                if (product is null)
+                    return null;
+
+                var selectedBatch = await _dbContext.ProductBatches
+                    .AsNoTracking()
+                    .Where(b =>
+                        b.ProductId == productId &&
+                        b.IsActive &&
+                        !b.IsQuarantined &&
+                        b.QuantityOnHand > 0 &&
+                        (!batchId.HasValue || b.BatchId == batchId.Value))
+                    .OrderBy(b => b.ExpiryDate)
+                    .Select(b => new InventoryBatchDetailsViewModel
+                    {
+                        BatchId = b.BatchId,
+                        BatchNumber = b.BatchNumber,
+                        ManufacturingDate = b.ManufacturingDate,
+                        ExpiryDate = b.ExpiryDate,
+                        QuantityOnHand = b.QuantityOnHand,
+                        PurchaseUnitPrice = b.PurchaseUnitPrice,
+                        SellingUnitPrice = b.SellingUnitPrice,
+                        SupplierId = b.SupplierId,
+                        Location = b.Location,
+                        IsQuarantined = b.IsQuarantined,
+                        IsActive = b.IsActive
+                    })
+                    .FirstOrDefaultAsync(cancellationToken);
+
+                return new InventoryProductDetailsViewModel
                 {
-                    p.ProductId,
-                    p.ProductName,
-                    p.GenericName,
-                    p.BrandName,
-                    p.DosageForm,
-                    p.Strength,
-                    p.PackSize,
-                    p.Barcode,
-                    p.Manufacturer,
-                    p.HsnCode,
-                    p.GstRate,
-                    p.ReorderLevel,
-                    p.IsPrescriptionRequired,
-                    p.IsActive,
-                    SelectedBatch = p.Batches
-                        .Where(b =>
-                            b.IsActive &&
-                            !b.IsQuarantined &&
-                            b.QuantityOnHand > 0 &&
-                            (!batchId.HasValue || b.BatchId == batchId.Value))
-                        .OrderBy(b => b.ExpiryDate)
-                        .Select(b => new InventoryBatchDetailsViewModel
-                        {
-                            BatchId = b.BatchId,
-                            BatchNumber = b.BatchNumber,
-                            ManufacturingDate = b.ManufacturingDate,
-                            ExpiryDate = b.ExpiryDate,
-                            QuantityOnHand = b.QuantityOnHand,
-                            PurchaseUnitPrice = b.PurchaseUnitPrice,
-                            SellingUnitPrice = b.SellingUnitPrice,
-                            SupplierId = b.SupplierId,
-                            Location = b.Location,
-                            IsQuarantined = b.IsQuarantined,
-                            IsActive = b.IsActive
-                        })
-                        .FirstOrDefault()
-                })
-                .SingleOrDefaultAsync(cancellationToken));
+                    ProductId = product.ProductId,
+                    ProductName = product.ProductName,
+                    GenericName = product.GenericName,
+                    BrandName = product.BrandName,
+                    DosageForm = product.DosageForm,
+                    Strength = product.Strength,
+                    PackSize = product.PackSize,
+                    Barcode = product.Barcode,
+                    Manufacturer = product.Manufacturer,
+                    HsnCode = product.HsnCode,
+                    GstRate = product.GstRate,
+                    ReorderLevel = product.ReorderLevel,
+                    IsPrescriptionRequired = product.IsPrescriptionRequired,
+                    IsActive = product.IsActive,
+                    IsBatchContext = batchId.HasValue,
+                    ReturnTo = NormalizeReturnTo(returnTo),
+                    SelectedBatch = selectedBatch,
+                    Batches = selectedBatch is null ? [] : [selectedBatch]
+                };
+            });
 
-        if (data is null)
+        if (model is null)
             return NotFound();
-
-        var model = new InventoryProductDetailsViewModel
-        {
-            ProductId = data.ProductId,
-            ProductName = data.ProductName,
-            GenericName = data.GenericName,
-            BrandName = data.BrandName,
-            DosageForm = data.DosageForm,
-            Strength = data.Strength,
-            PackSize = data.PackSize,
-            Barcode = data.Barcode,
-            Manufacturer = data.Manufacturer,
-            HsnCode = data.HsnCode,
-            GstRate = data.GstRate,
-            ReorderLevel = data.ReorderLevel,
-            IsPrescriptionRequired = data.IsPrescriptionRequired,
-            IsActive = data.IsActive,
-            IsBatchContext = batchId.HasValue,
-            ReturnTo = NormalizeReturnTo(returnTo),
-            SelectedBatch = data.SelectedBatch,
-            Batches = data.SelectedBatch is null ? [] : [data.SelectedBatch]
-        };
 
         ViewData["Title"] = "Product Details";
         return View(model);
@@ -949,7 +958,6 @@ public sealed class InventoryController : Controller
             return RedirectToAction("Login", "Account");
 
         var today = GetIndiaToday();
-        var ninetyDaysFromToday = today.AddDays(90);
 
         // Inventory listing is read-only; use a bounded PostgreSQL retry strategy
         // so transient connection failures do not render the page unusable.
@@ -958,32 +966,30 @@ public sealed class InventoryController : Controller
             maxRetryCount: 3);
 
         var rows = await inventoryExecutionStrategy.ExecuteAsync(
-            () => _dbContext.Products
+            () => _dbContext.ProductBatches
                 .AsNoTracking()
-                .Where(product =>
-                    product.ProfileId == profileId &&
-                    product.IsActive)
-                .SelectMany(
-                    product => product.Batches.Where(batch =>
-                        batch.IsActive &&
-                        !batch.IsQuarantined &&
-                        batch.QuantityOnHand > 0),
-                    (product, batch) => new
-                    {
-                        ProductId = product.ProductId,
-                        BatchId = batch.BatchId,
-                        ProductName = product.ProductName,
-                        GenericName = product.GenericName,
-                        BrandName = product.BrandName,
-                        Barcode = product.Barcode,
-                        BatchNumber = batch.BatchNumber,
-                        Quantity = batch.QuantityOnHand,
-                        ReorderLevel = product.ReorderLevel,
-                        ExpiryDate = batch.ExpiryDate,
-                        SellingUnitPrice = batch.SellingUnitPrice
-                    })
-                .OrderBy(row => row.ProductName)
-                .ThenBy(row => row.ExpiryDate)
+                .Where(batch =>
+                    batch.Product.ProfileId == profileId &&
+                    batch.Product.IsActive &&
+                    batch.IsActive &&
+                    !batch.IsQuarantined &&
+                    batch.QuantityOnHand > 0)
+                .OrderBy(batch => batch.Product.ProductName)
+                .ThenBy(batch => batch.ExpiryDate)
+                .Select(batch => new
+                {
+                    ProductId = batch.ProductId,
+                    BatchId = batch.BatchId,
+                    ProductName = batch.Product.ProductName,
+                    GenericName = batch.Product.GenericName,
+                    BrandName = batch.Product.BrandName,
+                    Barcode = batch.Product.Barcode,
+                    BatchNumber = batch.BatchNumber,
+                    Quantity = batch.QuantityOnHand,
+                    ReorderLevel = batch.Product.ReorderLevel,
+                    ExpiryDate = batch.ExpiryDate,
+                    SellingUnitPrice = batch.SellingUnitPrice
+                })
                 .ToListAsync(cancellationToken));
 
         var items = rows.Select(row =>
