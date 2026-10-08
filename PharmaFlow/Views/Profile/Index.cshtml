@@ -101,6 +101,12 @@
             <span class="more-mobile-chevron">›</span>
         </a>
 
+        <a asp-controller="Profile" asp-action="UnlimitedPlan" class="more-mobile-row">
+            <span class="more-mobile-row-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.5 8.5c-2.8 0-4.5 2.2-4.5 3.5s1.7 3.5 4.5 3.5c4.5 0 4.5-7 9-7 2.8 0 4.5 2.2 4.5 3.5s-1.7 3.5-4.5 3.5c-4.5 0-4.5-7-9-7Z"/></svg></span>
+            <span class="more-mobile-row-label">Unlimited Plan</span>
+            <span class="more-mobile-chevron">›</span>
+        </a>
+
         <button type="button"
                 class="more-mobile-row more-mobile-support-trigger"
                 id="moreMobileSupportTrigger"
@@ -110,6 +116,12 @@
             <span class="more-mobile-row-label" data-i18n="customerSupport">Customer Support</span>
             <span class="more-mobile-chevron">›</span>
         </button>
+
+        <a asp-controller="Profile" asp-action="Feedback" class="more-mobile-row">
+            <span class="more-mobile-row-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8a2.5 2.5 0 0 1-2.5 2.5H11l-4.5 4v-4H6.5A2.5 2.5 0 0 1 4 13.5v-8Z"/><path d="M8 8h8M8 11h5"/></svg></span>
+            <span class="more-mobile-row-label" data-i18n="feedbackForUs">Feedback for Us</span>
+            <span class="more-mobile-chevron">›</span>
+        </a>
 
         <form asp-area="" asp-controller="Account" asp-action="Logout" method="post" data-online-required="true" class="more-mobile-signout-form">
             @Html.AntiForgeryToken()
