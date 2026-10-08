@@ -5,6 +5,7 @@ public sealed class InventoryViewModel
     public int AllCount { get; init; }
     public int LowStockCount { get; init; }
     public int ExpiringCount { get; init; }
+    public decimal TotalInventoryValue { get; init; }
     public string ActiveFilter { get; init; } = "all";
     public string SearchTerm { get; init; } = string.Empty;
     public IReadOnlyList<InventoryItemViewModel> Items { get; init; } = Array.Empty<InventoryItemViewModel>();
