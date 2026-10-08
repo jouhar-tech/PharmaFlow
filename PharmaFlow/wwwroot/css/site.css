@@ -291,7 +291,27 @@ body.theme-dark .pharmaflow-connectivity-banner.is-online { background: #10251a;
 .expiry-product-card { padding: 1.15rem; background: #fff; border: 1px solid #e5eaf2; border-radius: 1rem; box-shadow: 0 4px 18px rgba(15,23,42,.035); }
 .expiry-product-card-top { display: flex; align-items: flex-start; gap: .75rem; padding-bottom: .9rem; border-bottom: 1px solid #eef2f7; }
 .expiry-product-icon { display: grid; place-items: center; width: 40px; height: 40px; flex: 0 0 40px; border-radius: .75rem; background: #f1f5f9; color: #334155; font-size: .78rem; font-weight: 900; }
-.expiry-product-heading { min-width: 0; }
+.expiry-product-heading { min-width: 0; flex: 1 1 auto; }
+.expiry-product-edit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .28rem;
+  flex: 0 0 auto;
+  min-height: 30px;
+  padding: .3rem .48rem;
+  border: 1px solid #d8e2ea;
+  border-radius: .55rem;
+  background: #f8fafc;
+  color: #256a65;
+  font-size: .6rem;
+  font-weight: 850;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.expiry-product-edit svg { width: 13px; height: 13px; }
+.expiry-product-edit:hover { background: #eef8f6; border-color: #a8d8d1; color: #185a55; }
 .expiry-product-heading h3 { margin: 0; color: #1e293b; font-size: .95rem; font-weight: 800; line-height: 1.35; }
 .expiry-product-heading span { display: block; margin-top: .25rem; color: #64748b; font-size: .72rem; }
 .expiry-product-details { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem .7rem; padding-top: .9rem; }
@@ -329,6 +349,8 @@ body.theme-dark .expiry-total-label,
 body.theme-dark .expiry-total-card > div:first-child > span:last-child { color: #cbd5e1; }
 body.theme-dark .expiry-total-card strong { color: #93c5fd; }
 body.theme-dark .expiry-total-icon { background: #1e3a8a; color: #bfdbfe; }
+body.theme-dark .expiry-product-edit { background:#17243a; border-color:#33455f; color:#8fd3cc; }
+body.theme-dark .expiry-product-edit:hover { background:#1d314b; border-color:#46716d; color:#b5ebe5; }
 
 @media (max-width: 991.98px) {
   .expiry-summary-grid,
@@ -351,6 +373,8 @@ body.theme-dark .expiry-total-icon { background: #1e3a8a; color: #bfdbfe; }
   .expiry-product-card-top { gap: .6rem; padding-bottom: .75rem; }
   .expiry-product-icon { width: 34px; height: 34px; flex-basis: 34px; font-size: .68rem; }
   .expiry-product-heading h3 { font-size: .8rem; }
+  .expiry-product-edit { min-height: 28px; padding: .28rem .4rem; font-size: .56rem; }
+  .expiry-product-edit svg { width: 12px; height: 12px; }
   .expiry-product-heading span { font-size: .64rem; }
   .expiry-product-details { gap: .65rem .55rem; padding-top: .75rem; }
   .expiry-detail-label { font-size: .58rem; }
@@ -2651,7 +2675,27 @@ body.theme-dark .inventory-total-value-copy small { color:#a9c2bf; }
   display:grid; place-items:center; width:36px; height:36px; flex:0 0 36px;
   border-radius:.72rem; background:#eef2f6; color:#475569; font-size:.72rem; font-weight:900;
 }
-.low-stock-product-heading { min-width:0; }
+.low-stock-product-heading { min-width:0; flex:1 1 auto; }
+.low-stock-product-edit {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:.28rem;
+  flex:0 0 auto;
+  min-height:30px;
+  padding:.3rem .48rem;
+  border:1px solid #d8e2ea;
+  border-radius:.55rem;
+  background:#f8fafc;
+  color:#256a65;
+  font-size:.6rem;
+  font-weight:850;
+  line-height:1;
+  text-decoration:none;
+  white-space:nowrap;
+}
+.low-stock-product-edit svg { width:13px; height:13px; }
+.low-stock-product-edit:hover { background:#eef8f6; border-color:#a8d8d1; color:#185a55; }
 .low-stock-product-heading h2 {
   margin:.02rem 0 .18rem; overflow:hidden; color:#111827; font-size:.78rem;
   font-weight:850; line-height:1.2; text-overflow:ellipsis; white-space:nowrap;
@@ -2661,6 +2705,19 @@ body.theme-dark .inventory-total-value-copy small { color:#a9c2bf; }
 .low-stock-product-details span { display:block; margin-bottom:.16rem; color:#111827; font-size:.52rem; font-weight:850; }
 .low-stock-product-details strong { display:block; color:#111827; font-size:.66rem; font-weight:650; line-height:1.15; }
 .low-stock-qty { color:#b77908 !important; font-size:.8rem !important; font-weight:900 !important; }
+.low-stock-product-actions {
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:.35rem;
+  margin-top:.55rem;
+}
+.low-stock-product-actions .low-stock-status-badge {
+  margin-top:0;
+}
+.low-stock-product-actions .low-stock-reorder-inline {
+  margin-left:0;
+}
 .low-stock-status-badge {
   display:inline-flex; margin-top:.55rem; padding:.22rem .42rem;
   border-radius:999px; background:#fef3c7; color:#a16207; font-size:.52rem; font-weight:850;
@@ -2704,6 +2761,8 @@ body.theme-dark .low-stock-product-details .low-stock-status-badge {
   background:#fef3c7;
   color:#a16207;
 }
+body.theme-dark .low-stock-product-edit { background:#17243a; border-color:#33455f; color:#8fd3cc; }
+body.theme-dark .low-stock-product-edit:hover { background:#1d314b; border-color:#46716d; color:#b5ebe5; }
 
 
 /* Lightweight global motion
