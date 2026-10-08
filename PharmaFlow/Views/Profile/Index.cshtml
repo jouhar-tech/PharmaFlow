@@ -26,18 +26,14 @@
     </section>
 
     <section class="more-mobile-menu-card">
-        <a asp-controller="Purchase" asp-action="Index" class="more-mobile-row">
-            <span class="more-mobile-row-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-2.5-1.6L13 21l-3-1.6L7.5 21 6 20V3Z"/><path d="M9 8h6M9 12h6M9 16h3"/></svg></span>
-            <span class="more-mobile-row-label" data-i18n="purchase">Purchase</span>
-            <span class="more-mobile-chevron">›</span>
-        </a>
-        <a asp-controller="Bills" asp-action="Index" class="more-mobile-row">
-            <span class="more-mobile-row-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4.5h14v15H5z"/><path d="M8 8h8M8 12h8M8 16h4"/></svg></span>
-            <span class="more-mobile-row-label" data-i18n="bills">Bills</span>
-            <span class="more-mobile-chevron">›</span>
-        </a>
         @if (!string.Equals(Context.Session.GetString("UserRole"), "Staff", StringComparison.OrdinalIgnoreCase))
         {
+            <div class="more-mobile-section-title" data-i18n="business">Business</div>
+            <a asp-controller="Profile" asp-action="BusinessSummary" class="more-mobile-row">
+                <span class="more-mobile-row-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h10M7 13h6M7 17h4"/></svg></span>
+                <span class="more-mobile-row-label" data-i18n="businessSummary">Business Summary</span>
+                <span class="more-mobile-chevron">›</span>
+            </a>
             <a asp-controller="Reports" asp-action="Index" class="more-mobile-row">
                 <span class="more-mobile-row-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span>
                 <span class="more-mobile-row-label" data-i18n="reports">Reports</span>
@@ -46,17 +42,39 @@
         }
     </section>
 
-    <section class="more-mobile-settings-card">
-        <h2>App Settings</h2>
+    <section class="more-mobile-menu-card">
+        <div class="more-mobile-section-title" data-i18n="inventory">Inventory</div>
+        <a asp-controller="Purchase" asp-action="Index" class="more-mobile-row">
+            <span class="more-mobile-row-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-2.5-1.6L13 21l-3-1.6L7.5 21 6 20V3Z"/><path d="M9 8h6M9 12h6M9 16h3"/></svg></span>
+            <span class="more-mobile-row-label" data-i18n="purchase">Purchase</span>
+            <span class="more-mobile-chevron">›</span>
+        </a>
+        <a asp-controller="Bills" asp-action="Index" class="more-mobile-row">
+            <span class="more-mobile-row-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4.5h14v15H5z"/><path d="M8 8h8M8 12h8M8 16h4"/></svg></span>
+            <span class="more-mobile-row-label" data-i18n="bills">Bills</span>
+            <span class="more-mobile-chevron">›</span>
+        </a>
+    </section>
 
+    <section class="more-mobile-menu-card">
+        <div class="more-mobile-section-title" data-i18n="people">People</div>
+        <a asp-controller="Customers" asp-action="Index" class="more-mobile-row">
+            <span class="more-mobile-row-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 20v-1.2a4.5 4.5 0 0 0-4.5-4.5H7.5A4.5 4.5 0 0 0 3 18.8V20"/><circle cx="9.5" cy="7.5" r="3.2"/><path d="M16 4.8a3.2 3.2 0 0 1 0 5.4M21 20v-1.2a4.5 4.5 0 0 0-3.1-4.3"/></svg></span>
+            <span class="more-mobile-row-label" data-i18n="customers">Customers</span>
+            <span class="more-mobile-chevron">›</span>
+        </a>
         @if (!string.Equals(Context.Session.GetString("UserRole"), "Staff", StringComparison.OrdinalIgnoreCase))
         {
             <a asp-controller="Staff" asp-action="Add" class="more-mobile-row">
                 <span class="more-mobile-row-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0M19 8v6M16 11h6"/></svg></span>
-                <span class="more-mobile-row-label" data-i18n="addStaff">Add Staff</span>
+                <span class="more-mobile-row-label" data-i18n="staff">Staff</span>
                 <span class="more-mobile-chevron">›</span>
             </a>
         }
+    </section>
+
+    <section class="more-mobile-settings-card">
+        <div class="more-mobile-section-title" data-i18n="settings">Settings</div>
 
         <div class="more-mobile-row more-mobile-language-row">
             <span class="more-mobile-row-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h9M8.5 3v2M6 8c1.2 3.2 3.4 5.5 7 7M11 8c-1.2 2.8-3.2 5-6 6M14 17l3-7 3 7M15 14h4"/></svg></span>
@@ -69,17 +87,17 @@
         </div>
 
         <div class="more-mobile-row more-mobile-theme-row">
-            <span class="more-mobile-row-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v2M12 19v2M5.6 5.6 7 7M17 17l1.4 1.4M3 12h2M19 12h2M5.6 18.4 7 17"/><circle cx="12" cy="12" r="3.5"/><path d="M18.5 5.5a6.8 6.8 0 0 1-9 9 6.8 6.8 0 0 0 9-9Z"/></svg></span>
+            <span class="more-mobile-row-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v2M12 19v2M5.6 5.6 7 7M17 17l1.4 1.4M3 12h2M19 12h2M5.6 18.4 7 17"/><circle cx="12" cy="12" r="3.5"/><path d="M18.5 5.5a6.8 6.8 0 0 1-9 9 6.8 6.8 0 0 0 9-9Z"/></svg></span>
             <span class="more-mobile-row-label" data-i18n="theme">Theme</span>
             <div class="more-mobile-theme-switch" role="group" aria-label="Theme">
-                <button type="button" data-theme-choice="light">Light</button>
-                <button type="button" data-theme-choice="dark">Dark</button>
+                <button type="button" data-theme-choice="light" data-i18n="light">Light</button>
+                <button type="button" data-theme-choice="dark" data-i18n="dark">Dark</button>
             </div>
         </div>
 
-        <a asp-controller="Profile" asp-action="UnlimitedPlan" class="more-mobile-row">
-            <span class="more-mobile-row-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.5 8.5c-2.8 0-4.5 2.2-4.5 3.5s1.7 3.5 4.5 3.5c4.5 0 4.5-7 9-7 2.8 0 4.5 2.2 4.5 3.5s-1.7 3.5-4.5 3.5c-4.5 0-4.5-7-9-7Z"/></svg></span>
-            <span class="more-mobile-row-label">Unlimited Plan</span>
+        <a href="#" class="more-mobile-row">
+            <span class="more-mobile-row-icon">⚙</span>
+            <span class="more-mobile-row-label" data-i18n="settings">Settings</span>
             <span class="more-mobile-chevron">›</span>
         </a>
 
@@ -88,16 +106,10 @@
                 id="moreMobileSupportTrigger"
                 aria-haspopup="dialog"
                 aria-controls="moreMobileSupportModal">
-            <span class="more-mobile-row-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 13v-1a8 8 0 0 1 16 0v1"/><path d="M4 13h3v6H5a1 1 0 0 1-1-1v-5ZM20 13h-3v6h2a1 1 0 0 0 1-1v-5Z"/><path d="M9 20h3a2 2 0 0 0 2-2"/></svg></span>
+            <span class="more-mobile-row-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 13v-1a8 8 0 0 1 16 0v1"/><path d="M4 13h3v6H5a1 1 0 0 1-1-1v-5ZM20 13h-3v6h2a1 1 0 0 1 1-1v-5Z"/><path d="M9 20h3a2 2 0 0 0 2-2"/></svg></span>
             <span class="more-mobile-row-label" data-i18n="customerSupport">Customer Support</span>
             <span class="more-mobile-chevron">›</span>
         </button>
-
-        <a asp-controller="Profile" asp-action="Feedback" class="more-mobile-row">
-            <span class="more-mobile-row-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8a2.5 2.5 0 0 1-2.5 2.5H11l-4.5 4v-4H6.5A2.5 2.5 0 0 1 4 13.5v-8Z"/><path d="M8 8h8M8 11h5"/></svg></span>
-            <span class="more-mobile-row-label" data-i18n="feedbackForUs">Feedback for Us</span>
-            <span class="more-mobile-chevron">›</span>
-        </a>
 
         <form asp-area="" asp-controller="Account" asp-action="Logout" method="post" data-online-required="true" class="more-mobile-signout-form">
             @Html.AntiForgeryToken()
