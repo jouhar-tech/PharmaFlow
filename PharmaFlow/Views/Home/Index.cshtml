@@ -54,73 +54,101 @@
                     <span class="home-mobile-eyebrow">Today&rsquo;s Sales</span>
                     <strong class="home-mobile-sales-total">₹@Model.TodaySalesAmount.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</strong>
                     @if (Model.TodaySalesAmount <= 0)
-            {
-                <span class="home-mobile-sales-empty-message"><span data-i18n="noSalesToday">No sales recorded today yet.</span></span>
-            }
+                    {
+                        <span class="home-mobile-sales-empty-message"><span data-i18n="noSalesToday">No sales recorded today yet.</span></span>
+                    }
                 </div>
                 <span class="home-mobile-sales-pill">Today</span>
             </div>
-
         </section>
 
-        <button type="button" class="home-mobile-scan-card" id="dashboardScanUploadTrigger"
-                onclick="document.getElementById('invoiceCaptureSourceModal')?.removeAttribute('hidden'); document.body.classList.add('invoice-capture-source-open');">
-            <span class="home-mobile-action-icon home-mobile-scan-icon" aria-hidden="true">
-                <svg viewBox="0 0 64 64"><rect x="9" y="18" width="38" height="31" rx="5"/><path d="M18 18l5-7h12l5 7M47 25h4a4 4 0 0 1 4 4v18a4 4 0 0 1-4 4H47"/><circle cx="28" cy="33" r="8"/><path d="M42 38h12M42 44h10"/></svg>
-            </span>
-            <span class="home-mobile-scan-copy">
-                <strong>Scan / Upload Invoice</strong>
-                <small>Capture an invoice and add stock faster</small>
-            </span>
-            <span class="home-mobile-card-chevron" aria-hidden="true">›</span>
-        </button>
+        @if (Model.ProductsExpiringSoonCount > 0 || Model.LowStockCount > 0 || Model.CustomerOutstandingAmount > 0m || Model.SlowMovingStockCount > 0 || Model.RemindersDueCount > 0)
+        {
+            <section class="home-mobile-attention-section" aria-labelledby="homeAttentionHeading">
+                <h2 id="homeAttentionHeading" data-i18n="whatNeedsAttention">What needs your attention</h2>
 
+                @if (Model.ProductsExpiringSoonCount > 0)
+                {
+                    <a asp-controller="ExpiryProducts" asp-action="Index" class="home-mobile-attention-row home-mobile-attention-expiry">
+                        <span class="home-mobile-attention-icon" aria-hidden="true">!</span>
+                        <span class="home-mobile-attention-copy">
+                            <strong>@Model.ProductsExpiringSoonCount <span data-i18n="expiring">Expiring</span></strong>
+                            <small>₹@Model.ExpiryAtRiskValue.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("en-IN")) <span data-i18n="atRisk">at risk</span></small>
+                        </span>
+                        <span class="home-mobile-attention-view" data-i18n="view">View</span>
+                        <span class="home-mobile-card-chevron" aria-hidden="true">›</span>
+                    </a>
+                }
 
-        <div class="home-mobile-action-grid">
-            <label class="home-mobile-action-card" for="dashboardUploadInput">
-                <span class="home-mobile-action-icon">
-                    <svg viewBox="0 0 64 64"><rect x="12" y="11" width="33" height="39" rx="4"/><rect x="20" y="19" width="33" height="39" rx="4"/><path d="M28 28h16M28 35h13M37 48v-9M33 43l4-4 4 4"/></svg>
-                </span>
-                <strong>Add Stock</strong>
-            </label>
+                @if (Model.LowStockCount > 0)
+                {
+                    <a asp-controller="LowStock" asp-action="Index" class="home-mobile-attention-row home-mobile-attention-low-stock">
+                        <span class="home-mobile-attention-icon" aria-hidden="true">!</span>
+                        <span class="home-mobile-attention-copy">
+                            <strong>@Model.LowStockCount <span data-i18n="lowStock">Low Stock</span></strong>
+                        </span>
+                        <span class="home-mobile-attention-view" data-i18n="view">View</span>
+                        <span class="home-mobile-card-chevron" aria-hidden="true">›</span>
+                    </a>
+                }
 
-            <a class="home-mobile-action-card" asp-controller="Billing" asp-action="Create">
-                <span class="home-mobile-action-icon">
-                    <svg viewBox="0 0 64 64"><path d="M17 9h28v46H17z"/><path d="M22 18h18M22 26h18M22 34h12"/><path d="M45 16v31l9-8V9z"/><path d="M49 39v10M45 45h8"/></svg>
-                </span>
-                <strong>Create Bill</strong>
-            </a>
+                @if (Model.CustomerOutstandingAmount > 0m)
+                {
+                    <a asp-controller="Customers" asp-action="Index" class="home-mobile-attention-row home-mobile-attention-money">
+                        <span class="home-mobile-attention-icon" aria-hidden="true">₹</span>
+                        <span class="home-mobile-attention-copy">
+                            <strong>₹@Model.CustomerOutstandingAmount.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("en-IN")) <span data-i18n="udhaar">Udhaar</span></strong>
+                            <small>@Model.CustomersWithOutstanding <span data-i18n="customers">customers</span></small>
+                        </span>
+                        <span class="home-mobile-attention-view" data-i18n="view">View</span>
+                        <span class="home-mobile-card-chevron" aria-hidden="true">›</span>
+                    </a>
+                }
 
-            <a class="home-mobile-action-card home-mobile-count-card" asp-controller="ExpiryProducts" asp-action="Index">
-                <span class="home-mobile-count-badge home-mobile-expiry-count-badge" aria-label="@Model.ProductsExpiringSoonCount products expiring soon">@Model.ProductsExpiringSoonCount</span>
-                <span class="home-mobile-action-icon">
-                    <svg viewBox="0 0 64 64"><rect x="11" y="15" width="42" height="39" rx="5"/><path d="M21 10v10M43 10v10M11 26h42"/><path d="M24 36h4M36 36h4M24 45h4"/><circle cx="45" cy="47" r="8"/><path d="M45 43v5M45 51h.01"/></svg>
-                </span>
-                <strong>Expiry Details</strong>
-                <span class="home-mobile-expiry-risk-value">At-risk ₹ @Model.ExpiryAtRiskValue.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</span>
-            </a>
+                @if (Model.SlowMovingStockCount > 0)
+                {
+                    <a asp-controller="SlowMoving" asp-action="Index" class="home-mobile-attention-row home-mobile-attention-slow">
+                        <span class="home-mobile-attention-icon" aria-hidden="true">↘</span>
+                        <span class="home-mobile-attention-copy">
+                            <strong>₹@Model.SlowMovingStockValue.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("en-IN")) <span data-i18n="slowMoving">Slow Moving</span></strong>
+                        </span>
+                        <span class="home-mobile-attention-view" data-i18n="view">View</span>
+                        <span class="home-mobile-card-chevron" aria-hidden="true">›</span>
+                    </a>
+                }
 
-            <a class="home-mobile-action-card home-mobile-count-card" asp-controller="LowStock" asp-action="Index">
-                <span class="home-mobile-count-badge home-mobile-low-stock-count-badge" aria-label="@Model.LowStockCount low stock products">@Model.LowStockCount</span>
-                <span class="home-mobile-action-icon">
-                    <svg viewBox="0 0 64 64"><path d="M10 48V22h17M10 48h44M18 40l9-10 8 6 15-18"/><path d="M42 14h10v10"/><path d="M44 43h10M44 49h7"/></svg>
-                </span>
-                <strong>Low Stock Details</strong>
-            </a>
-        </div>
+                @if (Model.RemindersDueCount > 0)
+                {
+                    <a asp-controller="Customers" asp-action="Index" class="home-mobile-attention-row home-mobile-attention-reminder">
+                        <span class="home-mobile-attention-icon" aria-hidden="true">✓</span>
+                        <span class="home-mobile-attention-copy">
+                            <strong>@Model.RemindersDueCount <span data-i18n="remindersDue">Reminders Due</span></strong>
+                        </span>
+                        <span class="home-mobile-attention-view" data-i18n="view">View</span>
+                        <span class="home-mobile-card-chevron" aria-hidden="true">›</span>
+                    </a>
+                }
+            </section>
+        }
 
-        <a class="home-mobile-slow-moving-card" asp-controller="SlowMoving" asp-action="Index">
-            <span class="home-mobile-count-badge home-mobile-slow-moving-count-badge" aria-label="@Model.SlowMovingStockCount slow moving products">@Model.SlowMovingStockCount</span>
-            <span class="home-mobile-slow-moving-icon" aria-hidden="true">
-                <svg viewBox="0 0 64 64"><path d="M12 18h40v34H12z"/><path d="M12 27h40M21 18v-7M43 18v-7"/><path d="M22 37h20M22 44h13"/></svg>
-            </span>
-            <span class="home-mobile-slow-moving-copy">
-                <strong data-i18n="slowMovingStock">Slow Moving Stock</strong>
-                <small data-i18n="slowMovingPageSubtitleShort">Usable stock not sold for 1+ month</small>
-            </span>
-            <strong class="home-mobile-slow-moving-value">₹ @Model.SlowMovingStockValue.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</strong>
-            <span class="home-mobile-card-chevron" aria-hidden="true">›</span>
-        </a>
+        <section class="home-mobile-quick-actions" aria-labelledby="homeQuickActionsHeading">
+            <h2 id="homeQuickActionsHeading" data-i18n="quickActions">Quick Actions</h2>
+            <div class="home-mobile-quick-actions-grid">
+                <label class="home-mobile-quick-action" for="dashboardUploadInput">
+                    <span class="home-mobile-action-icon">
+                        <svg viewBox="0 0 64 64"><rect x="12" y="11" width="33" height="39" rx="4"/><rect x="20" y="19" width="33" height="39" rx="4"/><path d="M28 28h16M28 35h13M37 48v-9M33 43l4-4 4 4"/></svg>
+                    </span>
+                    <strong data-i18n="addStock">Add Stock</strong>
+                </label>
+
+                <a class="home-mobile-quick-action" asp-controller="Billing" asp-action="Create">
+                    <span class="home-mobile-action-icon">
+                        <svg viewBox="0 0 64 64"><path d="M17 9h28v46H17z"/><path d="M22 18h18M22 26h18M22 34h12"/><path d="M45 16v31l9-8V9z"/><path d="M49 39v10M45 45h8"/></svg>
+                    </span>
+                    <strong data-i18n="createBill">Create Bill</strong>
+                </a>
+            </div>
+        </section>
 
         @if (Model.HasPharmaFlowValue)
         {
