@@ -7,6 +7,9 @@
 CREATE INDEX IF NOT EXISTS ix_products_profile_active_name
     ON public.products(profile_id, is_active, product_name);
 
+CREATE INDEX IF NOT EXISTS ix_products_profile_active_created
+    ON public.products(profile_id, is_active, created_at);
+
 CREATE INDEX IF NOT EXISTS ix_products_profile_lower_name
     ON public.products(profile_id, lower(product_name));
 
