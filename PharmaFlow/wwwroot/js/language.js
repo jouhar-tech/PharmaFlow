@@ -228,7 +228,7 @@
             slowMovingCustomTo: "Last sold to",
             slowMovingCustomHint: "Filter the slow-moving products by their last sale date.",
             slowMovingApply: "Apply",
-            slowMovingClear: "Clear"
+            slowMovingClear: "Clear",
             activity: "Activity",
             recentSalesPayments: "Recent sales and payments",
             activityHeader: "Activity",
@@ -495,7 +495,7 @@
             slowMovingCustomTo: "ಕೊನೆಯ ಮಾರಾಟ ಅಂತ್ಯ",
             slowMovingCustomHint: "ಕೊನೆಯ ಮಾರಾಟದ ದಿನಾಂಕದ ಆಧಾರದ ಮೇಲೆ ನಿಧಾನವಾಗಿ ಮಾರಾಟವಾಗುವ ಉತ್ಪನ್ನಗಳನ್ನು ಫಿಲ್ಟರ್ ಮಾಡಿ.",
             slowMovingApply: "ಅನ್ವಯಿಸಿ",
-            slowMovingClear: "ತೆರವುಗೊಳಿಸಿ"
+            slowMovingClear: "ತೆರವುಗೊಳಿಸಿ",
             activity: "ಚಟುವಟಿಕೆ",
             recentSalesPayments: "ಇತ್ತೀಚಿನ ಮಾರಾಟ ಮತ್ತು ಪಾವತಿಗಳು",
             activityHeader: "ಚಟುವಟಿಕೆ",
@@ -763,7 +763,7 @@
             slowMovingCustomTo: "अंतिम बिक्री तक",
             slowMovingCustomHint: "अंतिम बिक्री की तारीख के आधार पर धीमे बिकने वाले उत्पाद फ़िल्टर करें।",
             slowMovingApply: "लागू करें",
-            slowMovingClear: "साफ़ करें"
+            slowMovingClear: "साफ़ करें",
             activity: "गतिविधि",
             recentSalesPayments: "हाल की बिक्री और भुगतान",
             activityHeader: "गतिविधि",
