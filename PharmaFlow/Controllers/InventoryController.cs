@@ -786,6 +786,7 @@ public sealed class InventoryController : Controller
     public async Task<IActionResult> RemoveProduct(
         long productId,
         long? batchId,
+        string? returnTo,
         CancellationToken cancellationToken)
     {
         if (!TryGetProfileId(out var profileId))
