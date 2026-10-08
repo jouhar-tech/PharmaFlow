@@ -72,7 +72,6 @@ namespace PharmaFlow.Controllers
                                 batch.QuantityOnHand * batch.PurchaseUnitPrice)) ?? 0m,
                         SlowMovingStockCount = group
                             .Where(batch =>
-                                batch.Product.CreatedAt <= slowMovingCutoffUtc &&
                                 !_dbContext.SalesBillItems.Any(item =>
                                     item.ProductId == batch.ProductId &&
                                     item.Bill.ProfileId == profileId &&
@@ -83,7 +82,6 @@ namespace PharmaFlow.Controllers
                             .Count(),
                         SlowMovingStockValue = group
                             .Where(batch =>
-                                batch.Product.CreatedAt <= slowMovingCutoffUtc &&
                                 !_dbContext.SalesBillItems.Any(item =>
                                     item.ProductId == batch.ProductId &&
                                     item.Bill.ProfileId == profileId &&
