@@ -23,6 +23,13 @@ CREATE INDEX IF NOT EXISTS ix_product_batches_product_active_expiry
 CREATE INDEX IF NOT EXISTS ix_product_batches_product_stock
     ON public.product_batches(product_id, is_active, is_quarantined, quantity_on_hand);
 
+-- Billing search: only saleable stock, ordered by expiry/batch.
+-- The covering columns avoid heap reads for the billing autocomplete query.
+CREATE INDEX IF NOT EXISTS ix_product_batches_billing_search
+    ON public.product_batches(product_id, expiry_date, batch_number)
+    INCLUDE (batch_id, quantity_on_hand, selling_unit_price)
+    WHERE is_active AND NOT is_quarantined AND quantity_on_hand > 0;
+
 CREATE INDEX IF NOT EXISTS ix_product_batches_product_lower_batch
     ON public.product_batches(product_id, lower(batch_number));
 
