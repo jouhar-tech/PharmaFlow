@@ -930,6 +930,7 @@
             "Low Stock": "lowStock",
             "Expiring Products": "productsExpiringSoonPage",
             "Reports": "reportsTitle",
+            "Business Summary": "businessSummary",
             "Slow Moving Stock": "slowMovingStock",
             "Add Staff": "addStaff",
             "More": "more",
