@@ -7,7 +7,6 @@ public sealed class SlowMovingViewModel
     public DateOnly ThreeMonthCutoffDate { get; init; }
     public DateOnly SixMonthCutoffDate { get; init; }
     public DateOnly OneYearCutoffDate { get; init; }
-    public DateOnly OneYearExpiryLimitDate { get; init; }
 
     public int AllCount { get; init; }
     public int ThreeMonthCount { get; init; }
@@ -31,5 +30,7 @@ public sealed class SlowMovingProductItemViewModel
     public decimal StockValue { get; init; }
     public DateOnly AddedToInventoryDate { get; init; }
     public int DaysInInventory { get; init; }
-    public DateOnly EarliestExpiryDate { get; init; }
+    public DateOnly? LastSoldDate { get; init; }
+    public int? DaysSinceSale { get; init; }
+    public bool NeverSold { get; init; }
 }
