@@ -17,6 +17,7 @@ public sealed class InventoryProductDetailsViewModel
     public bool IsPrescriptionRequired { get; init; }
     public bool IsActive { get; init; }
     public bool IsBatchContext { get; init; }
+    public string ReturnTo { get; init; } = string.Empty;
     public InventoryBatchDetailsViewModel? SelectedBatch { get; init; }
     public IReadOnlyList<InventoryBatchDetailsViewModel> Batches { get; init; } = [];
 }
