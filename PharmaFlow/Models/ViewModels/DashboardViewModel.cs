@@ -14,6 +14,12 @@ namespace PharmaFlow.Models.ViewModels
 
         public decimal TodaySalesAmount { get; init; }
 
+        public decimal CustomerOutstandingAmount { get; init; }
+
+        public int CustomersWithOutstanding { get; init; }
+
+        public int RemindersDueCount { get; init; }
+
         public decimal EstimatedMoneySaved { get; init; }
 
         public decimal ExpiryLossPrevented { get; init; }
