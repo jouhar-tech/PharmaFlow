@@ -527,6 +527,7 @@ public sealed class InventoryController : Controller
             ReorderLevel = product.ReorderLevel,
             IsPrescriptionRequired = product.IsPrescriptionRequired,
             IsActive = product.IsActive,
+            IsBatchContext = batchId.HasValue,
             SelectedBatch = selectedBatch,
             Batches = batches
         };
@@ -591,11 +592,6 @@ public sealed class InventoryController : Controller
 
         if (gstRate is < 0m or > 100m)
             ModelState.AddModelError(nameof(gstRate), "GST rate must be between 0 and 100.");
-
-        var today = GetIndiaToday();
-
-        if (expiryDate < today)
-            ModelState.AddModelError(nameof(expiryDate), "Expiry date cannot be earlier than today.");
 
         if (quantityOnHand < 0m || quantityOnHand > 999_999_999m)
             ModelState.AddModelError(nameof(quantityOnHand), "Quantity is invalid.");
@@ -738,10 +734,6 @@ public sealed class InventoryController : Controller
         if (normalizedBatch is null)
             return BadRequest(new { message = "Batch number is required." });
 
-        var today = GetIndiaToday();
-        if (expiryDate < today)
-            return BadRequest(new { message = "Expiry date cannot be earlier than today." });
-
         if (manufacturingDate.HasValue && manufacturingDate.Value > expiryDate)
             return BadRequest(new { message = "Manufacturing date cannot be later than expiry date." });
 
@@ -784,6 +776,7 @@ public sealed class InventoryController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> RemoveProduct(
         long productId,
+        long? batchId,
         CancellationToken cancellationToken)
     {
         if (!TryGetProfileId(out var profileId))
@@ -805,6 +798,51 @@ public sealed class InventoryController : Controller
 
         try
         {
+            if (batchId.HasValue)
+            {
+                var batch = await _dbContext.ProductBatches
+                    .FirstOrDefaultAsync(
+                        b => b.BatchId == batchId.Value &&
+                             b.ProductId == productId &&
+                             b.Product.ProfileId == profileId &&
+                             b.IsActive,
+                        cancellationToken);
+
+                if (batch is null)
+                    return NotFound();
+
+                // Removing stock from an inventory/expiry/low-stock card is batch-specific.
+                // Clear the quantity as well as IsActive so the returned stock cannot
+                // accidentally reappear if the batch is reactivated later.
+                batch.QuantityOnHand = 0m;
+                batch.IsActive = false;
+                batch.UpdatedAt = now;
+
+                await _dbContext.SaveChangesAsync(cancellationToken);
+
+                var hasUsableStock = await _dbContext.ProductBatches
+                    .AsNoTracking()
+                    .AnyAsync(
+                        b => b.ProductId == productId &&
+                             b.IsActive &&
+                             !b.IsQuarantined &&
+                             b.QuantityOnHand > 0,
+                        cancellationToken);
+
+                if (!hasUsableStock)
+                {
+                    product.IsActive = false;
+                    product.UpdatedAt = now;
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+                }
+
+                await transaction.CommitAsync(cancellationToken);
+
+                TempData["InventoryMessage"] = "Batch removed from stock successfully.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // No batch was supplied: keep the existing product-level removal behaviour.
             product.IsActive = false;
             product.UpdatedAt = now;
 
@@ -812,20 +850,22 @@ public sealed class InventoryController : Controller
                 .Where(b => b.ProductId == productId)
                 .ExecuteUpdateAsync(setters => setters
                     .SetProperty(b => b.IsActive, false)
+                    .SetProperty(b => b.QuantityOnHand, 0m)
                     .SetProperty(b => b.UpdatedAt, now),
                     cancellationToken);
 
             await _dbContext.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
 
+            TempData["InventoryMessage"] = "Product removed from stock successfully.";
             return RedirectToAction(nameof(Index));
         }
         catch (Exception ex)
         {
             await transaction.RollbackAsync(CancellationToken.None);
-            _logger.LogError(ex, "Failed to deactivate product {ProductId} for profile {ProfileId}.", productId, profileId);
-            TempData["InventoryDetailsError"] = "The product could not be removed. No inventory changes were saved.";
-            return RedirectToAction(nameof(Details), new { productId });
+            _logger.LogError(ex, "Failed to remove stock for product {ProductId}, batch {BatchId}, profile {ProfileId}.", productId, batchId, profileId);
+            TempData["InventoryDetailsError"] = "The stock could not be removed. No inventory changes were saved.";
+            return RedirectToAction(nameof(Details), new { productId, batchId });
         }
     }
 
