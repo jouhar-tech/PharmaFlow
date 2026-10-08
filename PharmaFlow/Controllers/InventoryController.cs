@@ -470,33 +470,21 @@ public sealed class InventoryController : Controller
     }
 
     [HttpGet]
-    public Task<IActionResult> Details(
+    public async Task<IActionResult> Details(
         long productId,
         long? batchId,
         string? returnTo,
         CancellationToken cancellationToken)
-        => Edit(productId, batchId, returnTo, cancellationToken);
-
-    [HttpGet]
-    public async Task<IActionResult> Edit(
-        long productId,
-        long? batchId,
-        string? returnTo,
-        CancellationToken cancellationToken)
-{
+    {
         if (!TryGetProfileId(out var profileId))
             return RedirectToAction("Login", "Account");
 
         if (productId <= 0)
             return NotFound();
 
-        // Details must remain accessible from Inventory, Low Stock and Expiring
-        // even when stock state changed between list render and click.
         var product = await _dbContext.Products
             .AsNoTracking()
-            .Where(p =>
-                p.ProductId == productId &&
-                p.ProfileId == profileId)
+            .Where(p => p.ProductId == productId && p.ProfileId == profileId && p.IsActive)
             .SingleOrDefaultAsync(cancellationToken);
 
         if (product is null)
@@ -525,11 +513,9 @@ public sealed class InventoryController : Controller
 
         var selectedBatch = batchId.HasValue
             ? batches.FirstOrDefault(b => b.BatchId == batchId.Value)
-            : null;
-
-        selectedBatch ??= batches.FirstOrDefault(b => b.IsActive && !b.IsQuarantined)
-            ?? batches.FirstOrDefault(b => b.IsActive)
-            ?? batches.FirstOrDefault();
+            : batches.FirstOrDefault(b => b.IsActive && !b.IsQuarantined)
+                ?? batches.FirstOrDefault(b => b.IsActive)
+                ?? batches.FirstOrDefault();
 
         var model = new InventoryProductDetailsViewModel
         {
@@ -547,15 +533,16 @@ public sealed class InventoryController : Controller
             ReorderLevel = product.ReorderLevel,
             IsPrescriptionRequired = product.IsPrescriptionRequired,
             IsActive = product.IsActive,
-            IsBatchContext = batchId.HasValue && selectedBatch is not null,
+            IsBatchContext = batchId.HasValue,
             ReturnTo = NormalizeReturnTo(returnTo),
             SelectedBatch = selectedBatch,
             Batches = batches
         };
 
         ViewData["Title"] = "Product Details";
-        return View("Details", model);
+        return View(model);
     }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> UpdateDetails(
