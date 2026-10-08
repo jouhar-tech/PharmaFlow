@@ -80,6 +80,7 @@
                        asp-action="Details"
                        asp-route-productId="@item.ProductId"
                        asp-route-batchId="@item.BatchId"
+                       asp-route-returnTo="inventory"
                        data-filter-low="@(item.IsLowStock ? "true" : "false")"
                              data-filter-expiring="@(item.IsExpiring ? "true" : "false")"
                              data-search-text="@($"{item.ProductName} {item.GenericName} {item.BrandName} {item.BatchNumber} {item.Barcode}")">
