@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Npgsql.EntityFrameworkCore.PostgreSQL;
 using PharmaFlow.Data;
 using PharmaFlow.Filters;
 using PharmaFlow.Models;
@@ -47,18 +48,25 @@ public sealed class BillingController : Controller
 
         var pattern = $"%{searchTerm.Replace("%", "\\%").Replace("_", "\\_")}%";
 
-        var products = await _dbContext.Products
-            .AsNoTracking()
-            .Where(p =>
-                p.ProfileId == profileId &&
-                p.IsActive &&
-                (EF.Functions.ILike(p.ProductName, pattern, "\\") ||
-                 (p.GenericName != null && EF.Functions.ILike(p.GenericName, pattern, "\\")) ||
-                 (p.BrandName != null && EF.Functions.ILike(p.BrandName, pattern, "\\")) ||
-                 (p.Barcode != null && EF.Functions.ILike(p.Barcode, pattern, "\\"))))
-            .OrderBy(p => p.ProductName)
-            .Take(12)
-            .ToListAsync(cancellationToken);
+        // Product search is read-only, so use a bounded PostgreSQL retry strategy
+        // without changing the explicit transaction behavior used by billing generation.
+        var searchExecutionStrategy = new NpgsqlRetryingExecutionStrategy(
+            _dbContext,
+            maxRetryCount: 3);
+
+        var products = await searchExecutionStrategy.ExecuteAsync(
+            () => _dbContext.Products
+                .AsNoTracking()
+                .Where(p =>
+                    p.ProfileId == profileId &&
+                    p.IsActive &&
+                    (EF.Functions.ILike(p.ProductName, pattern, "\\") ||
+                     (p.GenericName != null && EF.Functions.ILike(p.GenericName, pattern, "\\")) ||
+                     (p.BrandName != null && EF.Functions.ILike(p.BrandName, pattern, "\\")) ||
+                     (p.Barcode != null && EF.Functions.ILike(p.Barcode, pattern, "\\"))))
+                .OrderBy(p => p.ProductName)
+                .Take(12)
+                .ToListAsync(cancellationToken));
 
         if (products.Count == 0)
             return Ok(Array.Empty<BillingSearchResultViewModel>());
@@ -67,17 +75,18 @@ public sealed class BillingController : Controller
         var todayIndia = DateOnly.FromDateTime(
             DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(5.5)).DateTime);
 
-        var batches = await _dbContext.ProductBatches
-            .AsNoTracking()
-            .Where(b =>
-                productIds.Contains(b.ProductId) &&
-                b.IsActive &&
-                !b.IsQuarantined &&
-                b.QuantityOnHand > 0 &&
-                b.ExpiryDate >= todayIndia)
-            .OrderBy(b => b.ExpiryDate)
-            .ThenBy(b => b.BatchNumber)
-            .ToListAsync(cancellationToken);
+        var batches = await searchExecutionStrategy.ExecuteAsync(
+            () => _dbContext.ProductBatches
+                .AsNoTracking()
+                .Where(b =>
+                    productIds.Contains(b.ProductId) &&
+                    b.IsActive &&
+                    !b.IsQuarantined &&
+                    b.QuantityOnHand > 0 &&
+                    b.ExpiryDate >= todayIndia)
+                .OrderBy(b => b.ExpiryDate)
+                .ThenBy(b => b.BatchNumber)
+                .ToListAsync(cancellationToken));
 
         var batchesByProduct = batches
             .GroupBy(b => b.ProductId)
