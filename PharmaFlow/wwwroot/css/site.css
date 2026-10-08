@@ -2012,6 +2012,60 @@ body.theme-dark .expiry-modern-filters a.is-active span { color: #d9fffa; }
   font-weight: 800;
   box-shadow: 0 4px 12px rgba(47,158,155,.2);
 }
+.inventory-total-value-card {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  margin: .65rem .75rem .8rem;
+  padding: .85rem .9rem;
+  border: 1px solid #cfe9e3;
+  border-radius: 1rem;
+  background: linear-gradient(135deg,#effaf7 0%,#dcf3ed 100%);
+  box-shadow: 0 7px 20px rgba(15,23,42,.06);
+}
+.inventory-total-value-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  border-radius: .8rem;
+  background: rgba(255,255,255,.78);
+  color: #187c73;
+}
+.inventory-total-value-icon svg {
+  width: 22px;
+  height: 22px;
+}
+.inventory-total-value-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: .1rem;
+}
+.inventory-total-value-copy > span {
+  color: #285b56;
+  font-size: .62rem;
+  font-weight: 850;
+  line-height: 1.2;
+  letter-spacing: .025em;
+  text-transform: uppercase;
+}
+.inventory-total-value-copy strong {
+  min-width: 0;
+  color: #102d2a;
+  font-size: 1.45rem;
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: -.025em;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.inventory-total-value-copy small {
+  color: #5b7773;
+  font-size: .58rem;
+  line-height: 1.25;
+}
 .inventory-modern-search {
   position: relative;
   display: flex;
@@ -2197,6 +2251,8 @@ body.theme-dark .expiry-modern-filters a.is-active span { color: #d9fffa; }
   .inventory-page-modern { padding: 1rem 0 3rem; }
   .inventory-modern-header { background:transparent; min-height:auto; padding:.2rem 0 1rem; }
   .inventory-modern-header h1 { font-size:1.8rem; }
+  .inventory-total-value-card { margin:.2rem 0 .9rem; padding:1rem 1.1rem; }
+  .inventory-total-value-copy strong { font-size:1.6rem; }
   .inventory-products-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
   .inventory-modern-search { margin-left:0; margin-right:0; }
   .inventory-modern-filters { padding-left:0; }
@@ -2210,6 +2266,11 @@ body.theme-dark .inventory-modern-search input,
 body.theme-dark .inventory-filter-chip,
 body.theme-dark .inventory-product-card,
 body.theme-dark .inventory-modern-empty { background:#111c2e; border-color:#263449; color:#e2e8f0; }
+body.theme-dark .inventory-total-value-card { background:linear-gradient(135deg,#12302d 0%,#173b36 100%); border-color:#28524d; }
+body.theme-dark .inventory-total-value-icon { background:#1d4641; color:#72d1c5; }
+body.theme-dark .inventory-total-value-copy > span { color:#9fd4ce; }
+body.theme-dark .inventory-total-value-copy strong { color:#f8fafc; }
+body.theme-dark .inventory-total-value-copy small { color:#a9c2bf; }
 
 
 @media (max-width: 767.98px) {
