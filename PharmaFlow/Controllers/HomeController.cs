@@ -44,7 +44,6 @@ namespace PharmaFlow.Controllers
                     today.AddDays(1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified),
                     indiaTimeZone);
                 var slowMovingCutoffDate = today.AddMonths(-1);
-                var oneYearFromToday = today.AddYears(1);
                 var slowMovingCutoffUtc = TimeZoneInfo.ConvertTimeToUtc(
                     slowMovingCutoffDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified),
                     indiaTimeZone);
@@ -74,16 +73,22 @@ namespace PharmaFlow.Controllers
                         SlowMovingStockCount = group
                             .Where(batch =>
                                 batch.Product.CreatedAt <= slowMovingCutoffUtc &&
-                                batch.ExpiryDate >= today &&
-                                batch.ExpiryDate <= oneYearFromToday)
+                                !_dbContext.SalesBillItems.Any(item =>
+                                    item.ProductId == batch.ProductId &&
+                                    item.Bill.ProfileId == profileId &&
+                                    item.Bill.Status == "Completed" &&
+                                    item.Bill.CreatedAt > slowMovingCutoffUtc))
                             .Select(batch => batch.ProductId)
                             .Distinct()
                             .Count(),
                         SlowMovingStockValue = group
                             .Where(batch =>
                                 batch.Product.CreatedAt <= slowMovingCutoffUtc &&
-                                batch.ExpiryDate >= today &&
-                                batch.ExpiryDate <= oneYearFromToday)
+                                !_dbContext.SalesBillItems.Any(item =>
+                                    item.ProductId == batch.ProductId &&
+                                    item.Bill.ProfileId == profileId &&
+                                    item.Bill.Status == "Completed" &&
+                                    item.Bill.CreatedAt > slowMovingCutoffUtc))
                             .Sum(batch => (decimal?)(
                                 batch.QuantityOnHand * batch.PurchaseUnitPrice)) ?? 0m
                     })
