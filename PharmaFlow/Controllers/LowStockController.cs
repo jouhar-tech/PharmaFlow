@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Npgsql.EntityFrameworkCore.PostgreSQL;
 using PharmaFlow.Data;
 using PharmaFlow.Filters;
 using PharmaFlow.Models.ViewModels;
@@ -22,32 +23,39 @@ public sealed class LowStockController : Controller
         if (!long.TryParse(HttpContext.Session.GetString("ProfileId"), out var profileId))
             return RedirectToAction("Login", "Account");
 
-        var rows = await _dbContext.ProductBatches
-            .AsNoTracking()
-            .Where(batch =>
-                batch.Product.ProfileId == profileId &&
-                batch.Product.IsActive &&
-                batch.IsActive &&
-                !batch.IsQuarantined &&
-                batch.QuantityOnHand > 0 &&
-                batch.QuantityOnHand < 3)
-            .OrderBy(batch => batch.Product.ProductName)
-            .ThenBy(batch => batch.QuantityOnHand)
-            .ThenBy(batch => batch.ExpiryDate)
-            .Select(batch => new
-            {
-                ProductId = batch.ProductId,
-                BatchId = batch.BatchId,
-                ProductName = batch.Product.ProductName,
-                GenericName = batch.Product.GenericName,
-                BrandName = batch.Product.BrandName,
-                Barcode = batch.Product.Barcode,
-                BatchNumber = batch.BatchNumber,
-                Quantity = batch.QuantityOnHand,
-                ExpiryDate = batch.ExpiryDate,
-                SellingUnitPrice = batch.SellingUnitPrice
-            })
-            .ToListAsync(cancellationToken);
+        // Low-stock listing is read-only; use a bounded PostgreSQL retry strategy
+        // so transient connection failures do not render the page unusable.
+        var lowStockExecutionStrategy = new NpgsqlRetryingExecutionStrategy(
+            _dbContext,
+            maxRetryCount: 3);
+
+        var rows = await lowStockExecutionStrategy.ExecuteAsync(
+            () => _dbContext.ProductBatches
+                .AsNoTracking()
+                .Where(batch =>
+                    batch.Product.ProfileId == profileId &&
+                    batch.Product.IsActive &&
+                    batch.IsActive &&
+                    !batch.IsQuarantined &&
+                    batch.QuantityOnHand > 0 &&
+                    batch.QuantityOnHand < 3)
+                .OrderBy(batch => batch.Product.ProductName)
+                .ThenBy(batch => batch.QuantityOnHand)
+                .ThenBy(batch => batch.ExpiryDate)
+                .Select(batch => new
+                {
+                    ProductId = batch.ProductId,
+                    BatchId = batch.BatchId,
+                    ProductName = batch.Product.ProductName,
+                    GenericName = batch.Product.GenericName,
+                    BrandName = batch.Product.BrandName,
+                    Barcode = batch.Product.Barcode,
+                    BatchNumber = batch.BatchNumber,
+                    Quantity = batch.QuantityOnHand,
+                    ExpiryDate = batch.ExpiryDate,
+                    SellingUnitPrice = batch.SellingUnitPrice
+                })
+                .ToListAsync(cancellationToken));
 
         var items = rows.Select(row => new LowStockItemViewModel
         {
