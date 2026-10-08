@@ -52,6 +52,17 @@
                                 <h2>@item.ProductName</h2>
                                 <span>Batch : @item.BatchNumber</span>
                             </div>
+                            <a asp-controller="Inventory"
+                               asp-action="Details"
+                               asp-route-productId="@item.ProductId"
+                               asp-route-batchId="@item.BatchId"
+                               class="low-stock-product-edit"
+                               data-i18n="edit"
+                               aria-label="Edit product"
+                               title="Edit product">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"></path></svg>
+                                <span>Edit</span>
+                            </a>
                         </div>
 
                         <div class="low-stock-product-details">
@@ -71,10 +82,13 @@
                                 <span>STOCK VALUE</span>
                                 <strong>₹ @item.StockValue.ToString("N2")</strong>
                             </div>
+                        </div>
 
-                        <span class="low-stock-status-badge">Low stock</span>
-                        <a asp-controller="LowStock" asp-action="Index" class="low-stock-reorder-inline">Reorder <span aria-hidden="true">→</span></a>
-                                       </article>
+                        <div class="low-stock-product-actions">
+                            <span class="low-stock-status-badge">Low stock</span>
+                            <a asp-controller="LowStock" asp-action="Index" class="low-stock-reorder-inline">Reorder <span aria-hidden="true">→</span></a>
+                        </div>
+                    </article>
                 }
             </div>
 
