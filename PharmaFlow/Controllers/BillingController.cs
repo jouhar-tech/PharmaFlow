@@ -64,6 +64,8 @@ public sealed class BillingController : Controller
             return Ok(Array.Empty<BillingSearchResultViewModel>());
 
         var productIds = products.Select(p => p.ProductId).ToList();
+        var todayIndia = DateOnly.FromDateTime(
+            DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(5.5)).DateTime);
 
         var batches = await _dbContext.ProductBatches
             .AsNoTracking()
@@ -72,8 +74,7 @@ public sealed class BillingController : Controller
                 b.IsActive &&
                 !b.IsQuarantined &&
                 b.QuantityOnHand > 0 &&
-                b.ExpiryDate >= DateOnly.FromDateTime(
-                    DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(5.5)).DateTime))
+                b.ExpiryDate >= todayIndia)
             .OrderBy(b => b.ExpiryDate)
             .ThenBy(b => b.BatchNumber)
             .ToListAsync(cancellationToken);
