@@ -172,11 +172,22 @@
              aria-modal="true"
              aria-labelledby="inventoryRemoveTitle">
         <h2 id="inventoryRemoveTitle">Remove from stock?</h2>
-        <p>This will remove the product and all of its batches from active stock. Existing sales history remains preserved.</p>
+        @if (Model.IsBatchContext && batch is not null)
+        {
+            <p>This will remove only batch <strong>@batch.BatchNumber</strong> from active stock. Existing sales history remains preserved.</p>
+        }
+        else
+        {
+            <p>This will remove the product and all of its batches from active stock. Existing sales history remains preserved.</p>
+        }
 
         <form asp-controller="Inventory" asp-action="RemoveProduct" method="post">
             @Html.AntiForgeryToken()
             <input type="hidden" name="productId" value="@Model.ProductId" />
+            @if (Model.IsBatchContext && batch is not null)
+            {
+                <input type="hidden" name="batchId" value="@batch.BatchId" />
+            }
 
             <div class="inventory-remove-actions">
                 <button type="button"
