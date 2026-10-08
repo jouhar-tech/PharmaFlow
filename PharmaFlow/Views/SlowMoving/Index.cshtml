@@ -16,7 +16,7 @@
         <div class="slow-moving-modern-heading">
             <span class="section-kicker" data-i18n="inventoryTrends">Inventory trends</span>
             <h1 data-i18n="slowMovingStock">Slow Moving Stock</h1>
-            <p data-i18n="slowMovingPageSubtitle">Products added to inventory more than 1 month ago with current stock expiring within the next year.</p>
+            <p data-i18n="slowMovingPageSubtitle">Products with usable stock that have been in inventory for at least 1 month and have not been sold for at least 1 month.</p>
         </div>
     </header>
 
@@ -57,15 +57,15 @@
         <section class="slow-moving-custom-panel" id="slowMovingCustomPanel" hidden>
             <div class="slow-moving-custom-heading">
                 <strong data-i18n="slowMovingCustom">Custom</strong>
-                <span data-i18n="slowMovingCustomHint">Filter products by the date they were added to inventory.</span>
+                <span data-i18n="slowMovingCustomHint">Filter slow-moving products by their last sale date.</span>
             </div>
             <div class="slow-moving-custom-fields">
                 <label>
-                    <span data-i18n="slowMovingCustomFrom">Added from</span>
+                    <span data-i18n="slowMovingCustomFrom">Last sold from</span>
                     <input id="slowMovingCustomFrom" type="date" max="@Model.Today.ToString("yyyy-MM-dd")">
                 </label>
                 <label>
-                    <span data-i18n="slowMovingCustomTo">Added to</span>
+                    <span data-i18n="slowMovingCustomTo">Last sold to</span>
                     <input id="slowMovingCustomTo" type="date" max="@Model.Today.ToString("yyyy-MM-dd")">
                 </label>
                 <div class="slow-moving-custom-actions">
@@ -106,7 +106,7 @@
                        asp-controller="Inventory"
                        asp-action="Details"
                        asp-route-productId="@item.ProductId"
-                       data-added-date="@item.AddedToInventoryDate.ToString("yyyy-MM-dd")"
+                       data-last-sold="@(item.LastSoldDate.HasValue ? item.LastSoldDate.Value.ToString("yyyy-MM-dd") : "")"
                        data-stock-value="@item.StockValue.ToString(System.Globalization.CultureInfo.InvariantCulture)"
                        data-search-text="@($"{item.ProductName} {item.GenericName} {item.BrandName} {item.Barcode}")">
                         <div class="slow-moving-product-card-top">
@@ -128,12 +128,19 @@
                                 <strong>@item.Quantity.ToString("0.##")</strong>
                             </div>
                             <div>
-                                <span data-i18n="slowMovingStockValue">Stock value</span>
+                                <span data-i18n="slowMovingStockValue">Amount stuck</span>
                                 <strong>₹ @item.StockValue.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</strong>
                             </div>
                             <div>
-                                <span data-i18n="slowMovingAddedDate">Added to inventory</span>
-                                <strong>@item.AddedToInventoryDate.ToString("dd MMM yyyy")</strong>
+                                <span data-i18n="slowMovingLastSold">Last sold</span>
+                                @if (item.NeverSold)
+                                {
+                                    <strong class="slow-moving-never-sold" data-i18n="slowMovingNeverSold">Never sold</strong>
+                                }
+                                else
+                                {
+                                    <strong>@item.LastSoldDate!.Value.ToString("dd MMM yyyy")</strong>
+                                }
                             </div>
                         </div>
 
@@ -142,10 +149,17 @@
                                 <span data-i18n="slowMovingDaysInInventory">Days in inventory</span>
                                 <strong>@item.DaysInInventory</strong>
                             </span>
-                            <span>
-                                <span data-i18n="slowMovingExpiry">Nearest expiry</span>
-                                <strong>@item.EarliestExpiryDate.ToString("dd MMM yyyy")</strong>
-                            </span>
+                            @if (item.DaysSinceSale.HasValue)
+                            {
+                                <span>
+                                    <span data-i18n="slowMovingDaysSinceSale">Days since sale</span>
+                                    <strong>@item.DaysSinceSale.Value</strong>
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="slow-moving-never-sold" data-i18n="slowMovingNeverSold">Never sold</span>
+                            }
                             <span>
                                 <span data-i18n="slowMovingBatchCount">Batches</span>
                                 <strong>@item.BatchCount</strong>
@@ -200,17 +214,27 @@
     let activeFilter = 'all';
 
     function matchesFilter(card) {
-        const addedDate = card.dataset.addedDate || '';
+        const lastSold = card.dataset.lastSold || '';
 
         if (activeFilter === 'all') return true;
-        if (activeFilter === 'three') return addedDate > cutoffs.three && addedDate <= cutoffs.one;
-        if (activeFilter === 'six') return addedDate > cutoffs.six && addedDate <= cutoffs.three;
-        if (activeFilter === 'year') return addedDate > cutoffs.year && addedDate <= cutoffs.six;
+        if (!lastSold) return false;
+
+        if (activeFilter === 'three') {
+            return lastSold > cutoffs.three && lastSold <= cutoffs.one;
+        }
+
+        if (activeFilter === 'six') {
+            return lastSold > cutoffs.six && lastSold <= cutoffs.three;
+        }
+
+        if (activeFilter === 'year') {
+            return lastSold > cutoffs.year && lastSold <= cutoffs.six;
+        }
 
         if (activeFilter === 'custom') {
             const from = customFrom?.value || '';
             const to = customTo?.value || '';
-            return (!from || addedDate >= from) && (!to || addedDate <= to);
+            return (!from || lastSold >= from) && (!to || lastSold <= to);
         }
 
         return true;
