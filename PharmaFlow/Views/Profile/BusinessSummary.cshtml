@@ -1,0 +1,65 @@
+@model PharmaFlow.Models.ViewModels.BusinessSummaryViewModel
+
+@{
+    ViewData["Title"] = "Business Summary";
+    var currency = System.Globalization.CultureInfo.GetCultureInfo("en-IN");
+}
+
+<div class="business-summary-mobile-page">
+    <header class="business-summary-header">
+        <a asp-controller="Profile" asp-action="Index" class="business-summary-back" aria-label="Back to More">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5"></path><path d="m11 18-6-6 6-6"></path></svg>
+        </a>
+        <div>
+            <span data-i18n="business">Business</span>
+            <h1 data-i18n="businessSummary">Business Summary</h1>
+        </div>
+    </header>
+
+    <main class="business-summary-content">
+        <section class="business-summary-section">
+            <span class="business-summary-kicker" data-i18n="today">Today</span>
+            <div class="business-summary-card business-summary-today">
+                <span data-i18n="todaysSales">Today's Sales</span>
+                <strong>₹@Model.TodaySales.ToString("N0", currency)</strong>
+            </div>
+        </section>
+
+        <section class="business-summary-section">
+            <span class="business-summary-kicker" data-i18n="thisMonth">This Month</span>
+            <div class="business-summary-grid">
+                <article class="business-summary-card">
+                    <span data-i18n="sales">Sales</span>
+                    <strong>₹@Model.MonthSales.ToString("N0", currency)</strong>
+                </article>
+                <article class="business-summary-card">
+                    <span data-i18n="profit">Profit</span>
+                    <strong>₹@Model.MonthProfit.ToString("N0", currency)</strong>
+                </article>
+                <article class="business-summary-card">
+                    <span data-i18n="stock">Stock</span>
+                    <strong>₹@Model.StockValue.ToString("N0", currency)</strong>
+                </article>
+                <article class="business-summary-card">
+                    <span data-i18n="customerUdhaar">Customer Udhaar</span>
+                    <strong>₹@Model.CustomerOutstanding.ToString("N0", currency)</strong>
+                    <small>@Model.CustomersWithOutstanding <span data-i18n="customers">customers</span></small>
+                </article>
+            </div>
+        </section>
+
+        <section class="business-summary-section">
+            <span class="business-summary-kicker" data-i18n="reports">Reports</span>
+            <a asp-controller="Reports" asp-action="Index" class="business-summary-report-link">
+                <span class="business-summary-report-icon">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+                </span>
+                <span>
+                    <strong data-i18n="salesReport">Sales Report</strong>
+                    <small data-i18n="openSalesReport">View existing sales report</small>
+                </span>
+                <span class="business-summary-chevron">›</span>
+            </a>
+        </section>
+    </main>
+</div>
