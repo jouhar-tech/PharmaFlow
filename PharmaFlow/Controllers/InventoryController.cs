@@ -482,12 +482,13 @@ public sealed class InventoryController : Controller
         if (productId <= 0)
             return NotFound();
 
+        // Details must remain accessible from Inventory, Low Stock and Expiring
+        // even when stock state changed between list render and click.
         var product = await _dbContext.Products
             .AsNoTracking()
             .Where(p =>
                 p.ProductId == productId &&
-                p.ProfileId == profileId &&
-                p.IsActive)
+                p.ProfileId == profileId)
             .SingleOrDefaultAsync(cancellationToken);
 
         if (product is null)
@@ -516,9 +517,11 @@ public sealed class InventoryController : Controller
 
         var selectedBatch = batchId.HasValue
             ? batches.FirstOrDefault(b => b.BatchId == batchId.Value)
-            : batches.FirstOrDefault(b => b.IsActive && !b.IsQuarantined)
-                ?? batches.FirstOrDefault(b => b.IsActive)
-                ?? batches.FirstOrDefault();
+            : null;
+
+        selectedBatch ??= batches.FirstOrDefault(b => b.IsActive && !b.IsQuarantined)
+            ?? batches.FirstOrDefault(b => b.IsActive)
+            ?? batches.FirstOrDefault();
 
         var model = new InventoryProductDetailsViewModel
         {
@@ -536,7 +539,7 @@ public sealed class InventoryController : Controller
             ReorderLevel = product.ReorderLevel,
             IsPrescriptionRequired = product.IsPrescriptionRequired,
             IsActive = product.IsActive,
-            IsBatchContext = batchId.HasValue,
+            IsBatchContext = batchId.HasValue && selectedBatch is not null,
             ReturnTo = NormalizeReturnTo(returnTo),
             SelectedBatch = selectedBatch,
             Batches = batches
