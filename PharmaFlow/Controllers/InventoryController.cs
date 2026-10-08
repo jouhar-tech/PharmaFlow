@@ -517,8 +517,7 @@ public sealed class InventoryController : Controller
                             !b.IsQuarantined &&
                             b.QuantityOnHand > 0 &&
                             (!batchId.HasValue || b.BatchId == batchId.Value))
-                        .OrderBy(b => batchId.HasValue && b.BatchId == batchId.Value ? 0 : 1)
-                        .ThenBy(b => b.ExpiryDate)
+                        .OrderBy(b => b.ExpiryDate)
                         .Select(b => new InventoryBatchDetailsViewModel
                         {
                             BatchId = b.BatchId,
