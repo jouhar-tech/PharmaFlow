@@ -472,6 +472,7 @@ public sealed class InventoryController : Controller
     public async Task<IActionResult> Details(
         long productId,
         long? batchId,
+        string? returnTo,
         CancellationToken cancellationToken)
     {
         if (!TryGetProfileId(out var profileId))
@@ -532,6 +533,7 @@ public sealed class InventoryController : Controller
             IsPrescriptionRequired = product.IsPrescriptionRequired,
             IsActive = product.IsActive,
             IsBatchContext = batchId.HasValue,
+            ReturnTo = NormalizeReturnTo(returnTo),
             SelectedBatch = selectedBatch,
             Batches = batches
         };
@@ -554,6 +556,7 @@ public sealed class InventoryController : Controller
         string? manufacturer,
         decimal? gstRate,
         string? barcode,
+        string? returnTo,
         CancellationToken cancellationToken)
     {
         if (!TryGetProfileId(out var profileId))
@@ -607,7 +610,7 @@ public sealed class InventoryController : Controller
         if (!ModelState.IsValid)
         {
             TempData["InventoryDetailsError"] = "Please correct the highlighted details.";
-            return RedirectToAction(nameof(Details), new { productId, batchId });
+            return RedirectToAction(nameof(Details), new { productId, batchId, returnTo = NormalizeReturnTo(returnTo) });
         }
 
         var duplicateBatch = await _dbContext.ProductBatches
@@ -621,7 +624,7 @@ public sealed class InventoryController : Controller
         if (duplicateBatch)
         {
             TempData["InventoryDetailsError"] = "Another batch with this batch number already exists for this product.";
-            return RedirectToAction(nameof(Details), new { productId, batchId });
+            return RedirectToAction(nameof(Details), new { productId, batchId, returnTo = NormalizeReturnTo(returnTo) });
         }
 
         product.ProductName = normalizedName!;
@@ -843,7 +846,7 @@ public sealed class InventoryController : Controller
                 await transaction.CommitAsync(cancellationToken);
 
                 TempData["InventoryMessage"] = "Batch removed from stock successfully.";
-                return RedirectToAction(nameof(Index));
+                return RedirectToInventorySource(returnTo);
             }
 
             // No batch was supplied: keep the existing product-level removal behaviour.
@@ -862,16 +865,32 @@ public sealed class InventoryController : Controller
             await transaction.CommitAsync(cancellationToken);
 
             TempData["InventoryMessage"] = "Product removed from stock successfully.";
-            return RedirectToAction(nameof(Index));
+            return RedirectToInventorySource(returnTo);
         }
         catch (Exception ex)
         {
             await transaction.RollbackAsync(CancellationToken.None);
             _logger.LogError(ex, "Failed to remove stock for product {ProductId}, batch {BatchId}, profile {ProfileId}.", productId, batchId, profileId);
             TempData["InventoryDetailsError"] = "The stock could not be removed. No inventory changes were saved.";
-            return RedirectToAction(nameof(Details), new { productId, batchId });
+            return RedirectToAction(nameof(Details), new { productId, batchId, returnTo = NormalizeReturnTo(returnTo) });
         }
     }
+
+    private static string NormalizeReturnTo(string? returnTo) =>
+        returnTo?.Trim().ToLowerInvariant() switch
+        {
+            "expiry" => "expiry",
+            "low-stock" => "low-stock",
+            _ => string.Empty
+        };
+
+    private IActionResult RedirectToInventorySource(string? returnTo) =>
+        NormalizeReturnTo(returnTo) switch
+        {
+            "expiry" => RedirectToAction("Index", "ExpiryProducts"),
+            "low-stock" => RedirectToAction("Index", "LowStock"),
+            _ => RedirectToAction(nameof(Index))
+        };
 
     private static string? NormalizeText(string? value, int maxLength) =>
         NormalizeNullableText(value, maxLength);
