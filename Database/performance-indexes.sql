@@ -30,6 +30,9 @@ CREATE INDEX IF NOT EXISTS ix_sales_bills_profile_status_created
 CREATE INDEX IF NOT EXISTS ix_sales_bill_items_bill_product_name
     ON public.sales_bill_items(bill_id, product_name);
 
+CREATE INDEX IF NOT EXISTS ix_sales_bill_items_product_bill
+    ON public.sales_bill_items(product_id, bill_id);
+
 -- Customer ledger/reminders.
 CREATE INDEX IF NOT EXISTS ix_customer_ledger_profile_customer_created
     ON public.customer_ledger_entries(profile_id, customer_id, created_at DESC);

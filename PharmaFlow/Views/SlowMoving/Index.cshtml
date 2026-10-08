@@ -1,0 +1,303 @@
+@model PharmaFlow.Models.ViewModels.SlowMovingViewModel
+
+@{
+    ViewData["Title"] = "Slow Moving Stock";
+}
+
+<div class="slow-moving-page-modern"
+     data-one-month-cutoff="@Model.OneMonthCutoffDate.ToString("yyyy-MM-dd")"
+     data-three-month-cutoff="@Model.ThreeMonthCutoffDate.ToString("yyyy-MM-dd")"
+     data-six-month-cutoff="@Model.SixMonthCutoffDate.ToString("yyyy-MM-dd")"
+     data-one-year-cutoff="@Model.OneYearCutoffDate.ToString("yyyy-MM-dd")">
+    <header class="slow-moving-modern-header">
+        <a asp-controller="Home" asp-action="Index" class="slow-moving-modern-back" aria-label="Back to dashboard">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5"></path><path d="m11 18-6-6"></path></svg>
+        </a>
+        <div class="slow-moving-modern-heading">
+            <span class="section-kicker" data-i18n="inventoryTrends">Inventory trends</span>
+            <h1 data-i18n="slowMovingStock">Slow Moving Stock</h1>
+            <p data-i18n="slowMovingPageSubtitle">Products with current stock that have not been sold for more than 1 month.</p>
+        </div>
+    </header>
+
+    <div class="slow-moving-modern-toolbar">
+        <div class="slow-moving-modern-search">
+            <svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.3"></circle><path d="m16 16 4.5 4.5"></path></svg>
+            <input id="slowMovingSearch"
+                   type="search"
+                   autocomplete="off"
+                   data-i18n-placeholder="searchProduct"
+                   placeholder="Search product..."
+                   aria-label="Search slow-moving products" />
+            <button id="slowMovingSearchClear" type="button" aria-label="Clear search" hidden>×</button>
+        </div>
+
+        <nav class="slow-moving-modern-filters" aria-label="Slow moving stock filters">
+            <button type="button" class="slow-moving-filter-chip is-active" data-filter="all">
+                <span data-i18n="slowMovingAll">All</span>
+                <span class="slow-moving-filter-count all">@Model.AllCount</span>
+            </button>
+            <button type="button" class="slow-moving-filter-chip" data-filter="three">
+                <span data-i18n="slowMoving3Months">3 Months</span>
+                <span class="slow-moving-filter-count three">@Model.ThreeMonthCount</span>
+            </button>
+            <button type="button" class="slow-moving-filter-chip" data-filter="six">
+                <span data-i18n="slowMoving6Months">6 Months</span>
+                <span class="slow-moving-filter-count six">@Model.SixMonthCount</span>
+            </button>
+            <button type="button" class="slow-moving-filter-chip" data-filter="year">
+                <span data-i18n="slowMoving1Year">1 Year</span>
+                <span class="slow-moving-filter-count year">@Model.OneYearCount</span>
+            </button>
+            <button type="button" class="slow-moving-filter-chip" data-filter="custom" aria-expanded="false">
+                <span data-i18n="slowMovingCustom">Custom</span>
+            </button>
+        </nav>
+
+        <section class="slow-moving-custom-panel" id="slowMovingCustomPanel" hidden>
+            <div class="slow-moving-custom-heading">
+                <strong data-i18n="slowMovingCustom">Custom</strong>
+                <span data-i18n="slowMovingCustomHint">Filter the slow-moving products by their last sale date.</span>
+            </div>
+            <div class="slow-moving-custom-fields">
+                <label>
+                    <span data-i18n="slowMovingCustomFrom">Last sold from</span>
+                    <input id="slowMovingCustomFrom" type="date" max="@Model.Today.ToString("yyyy-MM-dd")">
+                </label>
+                <label>
+                    <span data-i18n="slowMovingCustomTo">Last sold to</span>
+                    <input id="slowMovingCustomTo" type="date" max="@Model.Today.ToString("yyyy-MM-dd")">
+                </label>
+                <div class="slow-moving-custom-actions">
+                    <button type="button" class="slow-moving-apply-button" id="slowMovingCustomApply" data-i18n="slowMovingApply">Apply</button>
+                    <button type="button" class="slow-moving-clear-button" id="slowMovingCustomClear" data-i18n="slowMovingClear">Clear</button>
+                </div>
+            </div>
+            <p class="slow-moving-custom-error" id="slowMovingCustomError" role="alert" hidden></p>
+        </section>
+    </div>
+
+    <div class="slow-moving-summary-line">
+        <span id="slowMovingVisibleCount">@Model.AllCount</span>
+        <span data-i18n="slowMovingProductsFound">products found</span>
+    </div>
+
+    <main class="slow-moving-modern-products" aria-live="polite">
+        @if (Model.Items.Count == 0)
+        {
+            <div class="slow-moving-modern-empty">
+                <div>↘</div>
+                <h2 data-i18n="slowMovingNoProducts">No slow-moving products found</h2>
+                <p data-i18n="slowMovingNoProductsDescription">Try another filter, search term or custom date range.</p>
+            </div>
+        }
+        else
+        {
+            <div id="slowMovingProductsGrid" class="slow-moving-products-grid">
+                @foreach (var item in Model.Items)
+                {
+                    <a class="slow-moving-product-card"
+                       asp-controller="Inventory"
+                       asp-action="Details"
+                       asp-route-productId="@item.ProductId"
+                       data-last-sold="@(item.LastSoldDate.HasValue ? item.LastSoldDate.Value.ToString("yyyy-MM-dd") : "")"
+                       data-search-text="@($"{item.ProductName} {item.GenericName} {item.BrandName} {item.Barcode}")">
+                        <div class="slow-moving-product-card-top">
+                            <span class="slow-moving-product-icon" aria-hidden="true">
+                                <svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 21a5 5 0 0 1 0-10h3a5 5 0 0 1 0 10H7Z"/><path d="m8 11 7-7a4.95 4.95 0 1 1 7 7l-7 7"/></svg>
+                            </span>
+                            <span class="slow-moving-product-heading">
+                                <strong>@item.ProductName</strong>
+                                @if (!string.IsNullOrWhiteSpace(item.GenericName))
+                                {
+                                    <small>@item.GenericName</small>
+                                }
+                            </span>
+                        </div>
+
+                        <div class="slow-moving-product-meta">
+                            <div>
+                                <span data-i18n="slowMovingStockQty">Stock quantity</span>
+                                <strong>@item.Quantity.ToString("0.##")</strong>
+                            </div>
+                            <div>
+                                <span data-i18n="slowMovingStockValue">Stock value</span>
+                                <strong>₹ @item.StockValue.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</strong>
+                            </div>
+                            <div>
+                                <span data-i18n="slowMovingLastSold">Last sold</span>
+                                @if (item.NeverSold)
+                                {
+                                    <strong class="slow-moving-never-sold" data-i18n="slowMovingNeverSold">Never sold</strong>
+                                }
+                                else
+                                {
+                                    <strong>@item.LastSoldDate!.Value.ToString("dd MMM yyyy")</strong>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="slow-moving-product-footer">
+                            <span>
+                                <span data-i18n="slowMovingBatchCount">Batches</span>
+                                <strong>@item.BatchCount</strong>
+                            </span>
+                            @if (item.DaysSinceSale.HasValue)
+                            {
+                                <span>
+                                    <span data-i18n="slowMovingDaysSinceSale">Days since sale</span>
+                                    <strong>@item.DaysSinceSale.Value</strong>
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="slow-moving-never-sold" data-i18n="slowMovingNeverSold">Never sold</span>
+                            }
+                            <span class="slow-moving-product-arrow" aria-hidden="true">›</span>
+                        </div>
+                    </a>
+                }
+            </div>
+
+            <div id="slowMovingEmptySearch" class="slow-moving-modern-empty" hidden>
+                <div><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.8" cy="10.8" r="6.3"/><path d="m16 16 4.5 4.5"/></svg></div>
+                <h2 data-i18n="slowMovingNoProducts">No slow-moving products found</h2>
+                <p data-i18n="slowMovingNoProductsDescription">Try another filter, search term or custom date range.</p>
+            </div>
+        }
+    </main>
+</div>
+
+@section Scripts {
+<script>
+(() => {
+    const root = document.querySelector('.slow-moving-page-modern');
+    const search = document.getElementById('slowMovingSearch');
+    const clear = document.getElementById('slowMovingSearchClear');
+    const buttons = Array.from(document.querySelectorAll('.slow-moving-filter-chip'));
+    const cards = Array.from(document.querySelectorAll('.slow-moving-product-card'));
+    const empty = document.getElementById('slowMovingEmptySearch');
+    const visibleCount = document.getElementById('slowMovingVisibleCount');
+    const customPanel = document.getElementById('slowMovingCustomPanel');
+    const customFrom = document.getElementById('slowMovingCustomFrom');
+    const customTo = document.getElementById('slowMovingCustomTo');
+    const customApply = document.getElementById('slowMovingCustomApply');
+    const customClear = document.getElementById('slowMovingCustomClear');
+    const customError = document.getElementById('slowMovingCustomError');
+
+    if (!root) return;
+
+    const cutoffs = {
+        one: root.dataset.oneMonthCutoff,
+        three: root.dataset.threeMonthCutoff,
+        six: root.dataset.sixMonthCutoff,
+        year: root.dataset.oneYearCutoff
+    };
+
+    let activeFilter = 'all';
+
+    function matchesFilter(card) {
+        const lastSold = card.dataset.lastSold || '';
+
+        if (activeFilter === 'all') return true;
+        if (!lastSold) return activeFilter === 'all';
+
+        if (activeFilter === 'three') {
+            return lastSold > cutoffs.three && lastSold <= cutoffs.one;
+        }
+
+        if (activeFilter === 'six') {
+            return lastSold > cutoffs.six && lastSold <= cutoffs.three;
+        }
+
+        if (activeFilter === 'year') {
+            return lastSold > cutoffs.year && lastSold <= cutoffs.six;
+        }
+
+        if (activeFilter === 'custom') {
+            const from = customFrom?.value || '';
+            const to = customTo?.value || '';
+            return (!from || lastSold >= from) && (!to || lastSold <= to);
+        }
+
+        return true;
+    }
+
+    function updateResults() {
+        const term = (search?.value || '').trim().toLocaleLowerCase();
+        let visible = 0;
+
+        cards.forEach(card => {
+            const haystack = (card.dataset.searchText || '').toLocaleLowerCase();
+            const searchMatch = !term || haystack.includes(term);
+            const show = searchMatch && matchesFilter(card);
+            card.hidden = !show;
+            if (show) visible++;
+        });
+
+        if (clear) clear.hidden = !term;
+        if (visibleCount) visibleCount.textContent = visible.toLocaleString('en-IN');
+        if (empty) empty.hidden = visible !== 0;
+    }
+
+    function setFilter(filter) {
+        activeFilter = filter;
+        buttons.forEach(button => {
+            const isActive = (button.dataset.filter || 'all') === filter;
+            button.classList.toggle('is-active', isActive);
+            if (button.dataset.filter === 'custom') {
+                button.setAttribute('aria-expanded', String(isActive));
+            }
+        });
+        if (filter !== 'custom') customPanel?.setAttribute('hidden', '');
+        else customPanel?.removeAttribute('hidden');
+        updateResults();
+    }
+
+    search?.addEventListener('input', updateResults);
+
+    clear?.addEventListener('click', () => {
+        if (search) search.value = '';
+        search?.focus();
+        updateResults();
+    });
+
+    buttons.forEach(button => {
+        button.addEventListener('click', () => setFilter(button.dataset.filter || 'all'));
+    });
+
+    customApply?.addEventListener('click', () => {
+        const from = customFrom?.value || '';
+        const to = customTo?.value || '';
+
+        if (!from || !to) {
+            if (customError) {
+                customError.textContent = 'Select both start and end dates.';
+                customError.hidden = false;
+            }
+            return;
+        }
+
+        if (from > to) {
+            if (customError) {
+                customError.textContent = 'The start date must be before or equal to the end date.';
+                customError.hidden = false;
+            }
+            return;
+        }
+
+        if (customError) customError.hidden = true;
+        setFilter('custom');
+    });
+
+    customClear?.addEventListener('click', () => {
+        if (customFrom) customFrom.value = '';
+        if (customTo) customTo.value = '';
+        if (customError) customError.hidden = true;
+        setFilter('all');
+    });
+
+    setFilter('all');
+})();
+</script>
+}

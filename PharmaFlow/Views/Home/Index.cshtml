@@ -109,13 +109,13 @@
             </a>
         </div>
 
-        <a class="home-mobile-slow-moving-card" asp-controller="Inventory" asp-action="Index">
+        <a class="home-mobile-slow-moving-card" asp-controller="SlowMoving" asp-action="Index">
             <span class="home-mobile-slow-moving-icon" aria-hidden="true">
                 <svg viewBox="0 0 64 64"><path d="M12 18h40v34H12z"/><path d="M12 27h40M21 18v-7M43 18v-7"/><path d="M22 37h20M22 44h13"/></svg>
             </span>
             <span class="home-mobile-slow-moving-copy">
-                <strong>Slow Moving Stock</strong>
-                <small>Inventory held for more than 90 days</small>
+                <strong data-i18n="slowMovingStock">Slow Moving Stock</strong>
+                <small data-i18n="slowMovingPageSubtitleShort">Inventory not sold for more than 1 month</small>
             </span>
             <strong class="home-mobile-slow-moving-value">₹ @Model.SlowMovingStockValue.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</strong>
             <span class="home-mobile-card-chevron" aria-hidden="true">›</span>
@@ -234,10 +234,10 @@
                 <div class="card-heading"><div><span class="section-kicker" data-i18n="inventoryTrends">Inventory trends</span><h2 data-i18n="fastMovingProducts">Fast-moving products</h2></div><span class="heading-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 15 5-5 4 4 7-8"/><path d="M15 6h5v5"/></svg></span></div>
                 <div class="empty-state"><span><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 15 5-5 4 4 7-8"/><path d="M15 6h5v5"/></svg></span><p data-i18n="fastMovingInsights">Fast-moving product insights will appear here.</p></div>
             </article>
-            <article class="dashboard-card detail-card">
+            <a asp-controller="SlowMoving" asp-action="Index" class="dashboard-card detail-card dashboard-detail-card-link">
                 <div class="card-heading"><div><span class="section-kicker" data-i18n="inventoryTrends">Inventory trends</span><h2 data-i18n="slowMovingProducts">Slow-moving products</h2></div><span class="heading-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 9 5 5 4-4 7 8"/><path d="M15 18h5v-5"/></svg></span></div>
                 <div class="empty-state"><span>↘</span><p data-i18n="slowMovingInsights">Slow-moving product insights will appear here.</p></div>
-            </article>
+            </a>
         </section>
     </div>
 </div>

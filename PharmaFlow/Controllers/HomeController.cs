@@ -42,7 +42,7 @@ namespace PharmaFlow.Controllers
                 var indiaEndUtc = TimeZoneInfo.ConvertTimeToUtc(
                     today.AddDays(1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified),
                     indiaTimeZone);
-                var slowMovingCutoffDate = today.AddDays(-90);
+                var slowMovingCutoffDate = today.AddMonths(-1);
                 var slowMovingCutoffUtc = TimeZoneInfo.ConvertTimeToUtc(
                     slowMovingCutoffDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified),
                     indiaTimeZone);
