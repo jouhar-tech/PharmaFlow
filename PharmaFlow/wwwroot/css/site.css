@@ -14336,3 +14336,95 @@ body.theme-dark .slow-moving-total-card {
     color: #94a3b8;
   }
 }
+
+@media (max-width: 767.98px) {
+  /* Slow-moving is a standalone mobile screen, like Expiring Products and Low Stock. */
+  body.slow-moving-page-body .app-topbar {
+    display: none !important;
+  }
+
+  body.slow-moving-page-body .app-content {
+    padding-top: 0 !important;
+  }
+
+  body.slow-moving-page-body .slow-moving-page-modern {
+    min-height: 100vh;
+    padding-top: 0;
+    background: #eef3f6;
+  }
+
+  body.slow-moving-page-body .slow-moving-modern-header {
+    display: grid;
+    grid-template-columns: 42px minmax(0,1fr) 42px;
+    align-items: center;
+    min-height: 72px;
+    gap: .25rem;
+    margin: 0;
+    padding: .25rem .8rem;
+    background: linear-gradient(180deg,#a9e3d8 0%,#98dacc 100%);
+  }
+
+  body.slow-moving-page-body .slow-moving-modern-back {
+    width: 40px;
+    height: 40px;
+    margin-top: 0;
+    border-radius: 50%;
+    background: rgba(255,255,255,.9);
+    color: #102827;
+    box-shadow: 0 4px 12px rgba(15,23,42,.08);
+  }
+
+  body.slow-moving-page-body .slow-moving-modern-heading {
+    text-align: center;
+  }
+
+  body.slow-moving-page-body .slow-moving-modern-heading .section-kicker {
+    display: block;
+    margin: 0 0 .1rem;
+    color: #496a65;
+    font-size: .55rem;
+    font-weight: 850;
+    letter-spacing: .08em;
+  }
+
+  body.slow-moving-page-body .slow-moving-modern-heading h1 {
+    margin: 0;
+    color: #111827;
+    font-size: 1.4rem;
+    font-weight: 850;
+    letter-spacing: -.035em;
+  }
+
+  body.slow-moving-page-body .slow-moving-modern-heading p {
+    margin-top: .15rem;
+    color: #4f6c68;
+    font-size: .55rem;
+    line-height: 1.25;
+  }
+
+  body.slow-moving-page-body .slow-moving-modern-toolbar {
+    padding: .45rem .75rem .55rem;
+  }
+
+  body.slow-moving-page-body .slow-moving-modern-search {
+    min-height: 46px;
+  }
+
+  body.theme-dark.slow-moving-page-body .slow-moving-modern-header {
+    background: linear-gradient(180deg,#245a55 0%,#1f514d 100%);
+  }
+
+  body.theme-dark.slow-moving-page-body .slow-moving-modern-back {
+    background: rgba(17,28,46,.92);
+    color: #e2e8f0;
+  }
+
+  body.theme-dark.slow-moving-page-body .slow-moving-modern-heading .section-kicker,
+  body.theme-dark.slow-moving-page-body .slow-moving-modern-heading p {
+    color: #a9cbc7;
+  }
+
+  body.theme-dark.slow-moving-page-body .slow-moving-modern-heading h1 {
+    color: #f8fafc;
+  }
+}
