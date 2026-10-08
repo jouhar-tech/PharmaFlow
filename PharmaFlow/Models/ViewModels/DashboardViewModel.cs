@@ -8,6 +8,8 @@ namespace PharmaFlow.Models.ViewModels
 
         public decimal ExpiryAtRiskValue { get; init; }
 
+        public int SlowMovingStockCount { get; init; }
+
         public decimal SlowMovingStockValue { get; init; }
 
         public decimal TodaySalesAmount { get; init; }
