@@ -23,6 +23,22 @@
         </button>
     </header>
 
+    <section class="inventory-total-value-card" aria-label="Total inventory value">
+        <div class="inventory-total-value-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3.5" y="5.5" width="17" height="13" rx="2.5"></rect>
+                <path d="M16 5.5v-1a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v1"></path>
+                <path d="M14 12h6.5"></path>
+                <circle cx="14" cy="12" r=".8"></circle>
+            </svg>
+        </div>
+        <div class="inventory-total-value-copy">
+            <span data-i18n="totalInventoryValue">Total Inventory Value</span>
+            <strong>₹ @Model.TotalInventoryValue.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</strong>
+            <small data-i18n="totalInventoryValueSubtext">Current selling value of all available stock</small>
+        </div>
+    </section>
+
     <div class="inventory-modern-search">
         <span class="inventory-modern-search-icon" aria-hidden="true"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.3"/><path d="m16 16 4.5 4.5"/></svg></span>
         <input id="inventorySearch"
