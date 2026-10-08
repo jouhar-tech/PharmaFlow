@@ -30,33 +30,31 @@ public sealed class LowStockController : Controller
             maxRetryCount: 3);
 
         var rows = await lowStockExecutionStrategy.ExecuteAsync(
-            () => _dbContext.Products
+            () => _dbContext.ProductBatches
                 .AsNoTracking()
-                .Where(product =>
-                    product.ProfileId == profileId &&
-                    product.IsActive)
-                .SelectMany(
-                    product => product.Batches.Where(batch =>
-                        batch.IsActive &&
-                        !batch.IsQuarantined &&
-                        batch.QuantityOnHand > 0 &&
-                        batch.QuantityOnHand < 3),
-                    (product, batch) => new
-                    {
-                        ProductId = product.ProductId,
-                        BatchId = batch.BatchId,
-                        ProductName = product.ProductName,
-                        GenericName = product.GenericName,
-                        BrandName = product.BrandName,
-                        Barcode = product.Barcode,
-                        BatchNumber = batch.BatchNumber,
-                        Quantity = batch.QuantityOnHand,
-                        ExpiryDate = batch.ExpiryDate,
-                        SellingUnitPrice = batch.SellingUnitPrice
-                    })
-                .OrderBy(row => row.ProductName)
-                .ThenBy(row => row.Quantity)
-                .ThenBy(row => row.ExpiryDate)
+                .Where(batch =>
+                    batch.Product.ProfileId == profileId &&
+                    batch.Product.IsActive &&
+                    batch.IsActive &&
+                    !batch.IsQuarantined &&
+                    batch.QuantityOnHand > 0 &&
+                    batch.QuantityOnHand < 3)
+                .OrderBy(batch => batch.Product.ProductName)
+                .ThenBy(batch => batch.QuantityOnHand)
+                .ThenBy(batch => batch.ExpiryDate)
+                .Select(batch => new
+                {
+                    ProductId = batch.ProductId,
+                    BatchId = batch.BatchId,
+                    ProductName = batch.Product.ProductName,
+                    GenericName = batch.Product.GenericName,
+                    BrandName = batch.Product.BrandName,
+                    Barcode = batch.Product.Barcode,
+                    BatchNumber = batch.BatchNumber,
+                    Quantity = batch.QuantityOnHand,
+                    ExpiryDate = batch.ExpiryDate,
+                    SellingUnitPrice = batch.SellingUnitPrice
+                })
                 .ToListAsync(cancellationToken));
 
         var items = rows.Select(row => new LowStockItemViewModel
