@@ -425,7 +425,7 @@
             clearTimeout(state.searchTimer);
             const query = searchInput.value;
 
-            state.searchTimer = setTimeout(() => loadSearchResults(query), 220);
+            state.searchTimer = setTimeout(() => loadSearchResults(query), 350);
         });
 
         document.addEventListener("click", event => {
