@@ -36,15 +36,13 @@ public sealed class SlowMovingController : Controller
         var oneMonthCutoffUtc = ToIndiaStartUtc(oneMonthCutoffDate, indiaTimeZone);
 
         // Slow-moving stock requires only:
-        // 1. The product has been in inventory for at least one month.
-        // 2. Its last completed sale was at least one month ago (or it has never sold).
-        // 3. It currently has usable stock.
+        // 1. Its last completed sale was at least one month ago (or it has never sold).
+        // 2. It currently has usable stock.
         var rows = await _dbContext.Products
             .AsNoTracking()
             .Where(product =>
                 product.ProfileId == profileId &&
                 product.IsActive &&
-                product.CreatedAt <= oneMonthCutoffUtc &&
                 product.Batches.Any(batch =>
                     batch.IsActive &&
                     !batch.IsQuarantined &&
