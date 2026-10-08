@@ -29,6 +29,9 @@ namespace PharmaFlow.Controllers
             var slowMovingStockCount = 0;
             decimal slowMovingStockValue = 0m;
             decimal todaySalesAmount = 0m;
+            decimal customerOutstandingAmount = 0m;
+            var customersWithOutstanding = 0;
+            var remindersDueCount = 0;
 
             if (long.TryParse(profileIdValue, out var profileId))
             {
@@ -107,6 +110,25 @@ namespace PharmaFlow.Controllers
                         bill.CreatedAt < indiaEndUtc)
                     .SumAsync(bill => bill.TotalAmount, cancellationToken);
 
+                var customerBalances = await _dbContext.CustomerLedgerEntries
+                    .AsNoTracking()
+                    .Where(entry => entry.ProfileId == profileId)
+                    .GroupBy(entry => entry.CustomerId)
+                    .Select(group => group.Sum(entry => entry.BalanceChange))
+                    .ToListAsync(cancellationToken);
+
+                customerOutstandingAmount = customerBalances.Where(balance => balance > 0m).Sum();
+                customersWithOutstanding = customerBalances.Count(balance => balance > 0m);
+
+                remindersDueCount = await _dbContext.CustomerReminders
+                    .AsNoTracking()
+                    .CountAsync(reminder =>
+                        reminder.ProfileId == profileId &&
+                        (reminder.Status == "Pending" || reminder.Status == "Ordered") &&
+                        reminder.ReminderDate.HasValue &&
+                        reminder.ReminderDate.Value <= today,
+                        cancellationToken);
+
             }
 
             var dashboard = new DashboardViewModel
@@ -116,7 +138,10 @@ namespace PharmaFlow.Controllers
                 ExpiryAtRiskValue = expiryAtRiskValue,
                 SlowMovingStockCount = slowMovingStockCount,
                 SlowMovingStockValue = slowMovingStockValue,
-                TodaySalesAmount = todaySalesAmount
+                TodaySalesAmount = todaySalesAmount,
+                CustomerOutstandingAmount = customerOutstandingAmount,
+                CustomersWithOutstanding = customersWithOutstanding,
+                RemindersDueCount = remindersDueCount
             };
 
             return View(dashboard);
