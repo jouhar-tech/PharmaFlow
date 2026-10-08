@@ -10,7 +10,6 @@
 
 <div class="billing-generated-page">
     <header class="billing-generated-mobile-header">
-        <button class="billing-generated-mobile-menu sidebar-toggle d-lg-none" type="button" id="sidebarToggle" aria-label="Open navigation">☰</button>
         <div class="billing-generated-mobile-title">
             <span class="billing-generated-success-icon" aria-hidden="true">
                 <svg viewBox="0 0 64 64">
@@ -19,9 +18,6 @@
             </span>
             <h1>Invoice Generated</h1>
         </div>
-        <a asp-controller="Profile" asp-action="Index" class="billing-generated-mobile-avatar" aria-label="Open profile">
-            @((Context.Session.GetString("Username") ?? Model.BusinessName).FirstOrDefault().ToString().ToUpperInvariant())
-        </a>
     </header>
 
     <header class="billing-generated-header" aria-hidden="true"></header>
