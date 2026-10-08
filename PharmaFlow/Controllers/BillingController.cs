@@ -54,6 +54,7 @@ public sealed class BillingController : Controller
             _dbContext,
             maxRetryCount: 3);
 
+        // Return only the fields required by the billing search UI.
         var products = await searchExecutionStrategy.ExecuteAsync(
             () => _dbContext.Products
                 .AsNoTracking()
@@ -66,6 +67,13 @@ public sealed class BillingController : Controller
                      (p.Barcode != null && EF.Functions.ILike(p.Barcode, pattern, "\\"))))
                 .OrderBy(p => p.ProductName)
                 .Take(12)
+                .Select(p => new
+                {
+                    p.ProductId,
+                    p.ProductName,
+                    p.HsnCode,
+                    p.GstRate
+                })
                 .ToListAsync(cancellationToken));
 
         if (products.Count == 0)
@@ -75,6 +83,9 @@ public sealed class BillingController : Controller
         var todayIndia = DateOnly.FromDateTime(
             DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(5.5)).DateTime);
 
+        // Keep at most 8 saleable batches per matched product and project only
+        // the fields required by the search UI. EF translates this grouped Top-N
+        // pattern to a windowed query instead of loading every matching batch.
         var batches = await searchExecutionStrategy.ExecuteAsync(
             () => _dbContext.ProductBatches
                 .AsNoTracking()
@@ -84,13 +95,25 @@ public sealed class BillingController : Controller
                     !b.IsQuarantined &&
                     b.QuantityOnHand > 0 &&
                     b.ExpiryDate >= todayIndia)
-                .OrderBy(b => b.ExpiryDate)
-                .ThenBy(b => b.BatchNumber)
+                .GroupBy(b => b.ProductId)
+                .SelectMany(group => group
+                    .OrderBy(b => b.ExpiryDate)
+                    .ThenBy(b => b.BatchNumber)
+                    .Take(8))
+                .Select(b => new
+                {
+                    b.ProductId,
+                    b.BatchId,
+                    b.BatchNumber,
+                    b.ExpiryDate,
+                    b.QuantityOnHand,
+                    b.SellingUnitPrice
+                })
                 .ToListAsync(cancellationToken));
 
         var batchesByProduct = batches
             .GroupBy(b => b.ProductId)
-            .ToDictionary(g => g.Key, g => g.Take(8).ToList());
+            .ToDictionary(g => g.Key, g => g.ToList());
 
         var results = products
             .Where(p => batchesByProduct.ContainsKey(p.ProductId))
