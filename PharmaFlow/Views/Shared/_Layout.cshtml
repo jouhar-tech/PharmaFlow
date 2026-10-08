@@ -25,7 +25,9 @@
     var isBillingCreatePage = ViewContext.RouteData.Values["controller"]?.ToString() == "Billing"
         && ViewContext.RouteData.Values["action"]?.ToString() == "Create";
     var isBillingGeneratedPage = ViewContext.RouteData.Values["controller"]?.ToString() == "Billing"
-        && ViewContext.RouteData.Values["action"]?.ToString() == "Generated";
+        && new[] { "Generated", "Generate" }.Contains(
+            ViewContext.RouteData.Values["action"]?.ToString() ?? string.Empty,
+            StringComparer.OrdinalIgnoreCase);
     var isBillsPage = ViewContext.RouteData.Values["controller"]?.ToString() == "Bills"
         && ViewContext.RouteData.Values["action"]?.ToString() == "Index";
     var isBillDetailsPage = ViewContext.RouteData.Values["controller"]?.ToString() == "Bills"
