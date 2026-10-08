@@ -643,7 +643,9 @@ public sealed class InventoryController : Controller
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         TempData["InventoryDetailsSuccess"] = "Product details updated successfully.";
-        return RedirectToAction(nameof(Details), new { productId, batchId });
+        return RedirectToAction(
+            nameof(Details),
+            new { productId, batchId, returnTo = NormalizeReturnTo(returnTo) });
     }
 
     [HttpPost]
