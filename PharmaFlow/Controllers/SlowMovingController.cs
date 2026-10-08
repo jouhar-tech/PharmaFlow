@@ -32,13 +32,13 @@ public sealed class SlowMovingController : Controller
         var threeMonthCutoffDate = today.AddMonths(-3);
         var sixMonthCutoffDate = today.AddMonths(-6);
         var oneYearCutoffDate = today.AddYears(-1);
-        var oneYearExpiryLimitDate = today.AddYears(1);
 
         var oneMonthCutoffUtc = ToIndiaStartUtc(oneMonthCutoffDate, indiaTimeZone);
 
-        // A product is slow-moving when it has remained in inventory for at least
-        // one month, still has usable stock, and that stock expires within one year.
-        // The stuck amount is calculated only from the qualifying current batches.
+        // Slow-moving stock requires only:
+        // 1. The product has been in inventory for at least one month.
+        // 2. Its last completed sale was at least one month ago (or it has never sold).
+        // 3. It currently has usable stock.
         var rows = await _dbContext.Products
             .AsNoTracking()
             .Where(product =>
@@ -48,9 +48,7 @@ public sealed class SlowMovingController : Controller
                 product.Batches.Any(batch =>
                     batch.IsActive &&
                     !batch.IsQuarantined &&
-                    batch.QuantityOnHand > 0 &&
-                    batch.ExpiryDate >= today &&
-                    batch.ExpiryDate <= oneYearExpiryLimitDate))
+                    batch.QuantityOnHand > 0))
             .Select(product => new
             {
                 product.ProductId,
@@ -63,35 +61,31 @@ public sealed class SlowMovingController : Controller
                     .Where(batch =>
                         batch.IsActive &&
                         !batch.IsQuarantined &&
-                        batch.QuantityOnHand > 0 &&
-                        batch.ExpiryDate >= today &&
-                        batch.ExpiryDate <= oneYearExpiryLimitDate)
+                        batch.QuantityOnHand > 0)
                     .Sum(batch => (decimal?)batch.QuantityOnHand) ?? 0m,
                 BatchCount = product.Batches.Count(batch =>
                     batch.IsActive &&
                     !batch.IsQuarantined &&
-                    batch.QuantityOnHand > 0 &&
-                    batch.ExpiryDate >= today &&
-                    batch.ExpiryDate <= oneYearExpiryLimitDate),
+                    batch.QuantityOnHand > 0),
                 StockValue = product.Batches
                     .Where(batch =>
                         batch.IsActive &&
                         !batch.IsQuarantined &&
-                        batch.QuantityOnHand > 0 &&
-                        batch.ExpiryDate >= today &&
-                        batch.ExpiryDate <= oneYearExpiryLimitDate)
+                        batch.QuantityOnHand > 0)
                     .Sum(batch => (decimal?)(batch.QuantityOnHand * batch.PurchaseUnitPrice)) ?? 0m,
-                EarliestExpiryDate = product.Batches
-                    .Where(batch =>
-                        batch.IsActive &&
-                        !batch.IsQuarantined &&
-                        batch.QuantityOnHand > 0 &&
-                        batch.ExpiryDate >= today &&
-                        batch.ExpiryDate <= oneYearExpiryLimitDate)
-                    .Min(batch => (DateOnly?)batch.ExpiryDate)
+                LastSoldAt = _dbContext.SalesBillItems
+                    .Where(item =>
+                        item.ProductId == product.ProductId &&
+                        item.Bill.ProfileId == profileId &&
+                        item.Bill.Status == "Completed")
+                    .Select(item => (DateTime?)item.Bill.CreatedAt)
+                    .Max()
             })
-            .OrderBy(row => row.AddedToInventoryAt)
-            .ThenBy(row => row.EarliestExpiryDate)
+            .Where(row =>
+                row.LastSoldAt == null ||
+                row.LastSoldAt <= oneMonthCutoffUtc)
+            .OrderBy(row => row.LastSoldAt.HasValue)
+            .ThenBy(row => row.LastSoldAt)
             .ThenBy(row => row.ProductName)
             .ToListAsync(cancellationToken);
 
@@ -101,6 +95,17 @@ public sealed class SlowMovingController : Controller
                 TimeZoneInfo.ConvertTimeFromUtc(
                     DateTime.SpecifyKind(row.AddedToInventoryAt, DateTimeKind.Utc),
                     indiaTimeZone));
+
+            DateOnly? lastSoldDate = null;
+            int? daysSinceSale = null;
+
+            if (row.LastSoldAt.HasValue)
+            {
+                var lastSoldUtc = DateTime.SpecifyKind(row.LastSoldAt.Value, DateTimeKind.Utc);
+                var lastSoldIndia = TimeZoneInfo.ConvertTimeFromUtc(lastSoldUtc, indiaTimeZone);
+                lastSoldDate = DateOnly.FromDateTime(lastSoldIndia);
+                daysSinceSale = Math.Max(0, today.DayNumber - lastSoldDate.Value.DayNumber);
+            }
 
             return new SlowMovingProductItemViewModel
             {
@@ -114,7 +119,9 @@ public sealed class SlowMovingController : Controller
                 StockValue = row.StockValue,
                 AddedToInventoryDate = addedDate,
                 DaysInInventory = Math.Max(0, today.DayNumber - addedDate.DayNumber),
-                EarliestExpiryDate = row.EarliestExpiryDate!.Value
+                LastSoldDate = lastSoldDate,
+                DaysSinceSale = daysSinceSale,
+                NeverSold = !lastSoldDate.HasValue
             };
         }).ToList();
 
@@ -125,17 +132,19 @@ public sealed class SlowMovingController : Controller
             ThreeMonthCutoffDate = threeMonthCutoffDate,
             SixMonthCutoffDate = sixMonthCutoffDate,
             OneYearCutoffDate = oneYearCutoffDate,
-            OneYearExpiryLimitDate = oneYearExpiryLimitDate,
             AllCount = items.Count,
             ThreeMonthCount = items.Count(item =>
-                item.AddedToInventoryDate > threeMonthCutoffDate &&
-                item.AddedToInventoryDate <= oneMonthCutoffDate),
+                item.LastSoldDate.HasValue &&
+                item.LastSoldDate.Value > threeMonthCutoffDate &&
+                item.LastSoldDate.Value <= oneMonthCutoffDate),
             SixMonthCount = items.Count(item =>
-                item.AddedToInventoryDate > sixMonthCutoffDate &&
-                item.AddedToInventoryDate <= threeMonthCutoffDate),
+                item.LastSoldDate.HasValue &&
+                item.LastSoldDate.Value > sixMonthCutoffDate &&
+                item.LastSoldDate.Value <= threeMonthCutoffDate),
             OneYearCount = items.Count(item =>
-                item.AddedToInventoryDate > oneYearCutoffDate &&
-                item.AddedToInventoryDate <= sixMonthCutoffDate),
+                item.LastSoldDate.HasValue &&
+                item.LastSoldDate.Value > oneYearCutoffDate &&
+                item.LastSoldDate.Value <= sixMonthCutoffDate),
             TotalStuckAmount = items.Sum(item => item.StockValue),
             Items = items
         });
