@@ -6915,8 +6915,9 @@ body.theme-dark .bills-empty-state strong {
 @media (max-width: 767.98px) {
   .billing-generated-mobile-header {
     display: grid;
-    grid-template-columns: 42px minmax(0, 1fr) 42px;
+    grid-template-columns: minmax(0, 1fr);
     align-items: center;
+    justify-items: center;
     min-height: 72px;
     padding: 0 .75rem;
     background: linear-gradient(180deg, #a9e3d8 0%, #98dacc 100%);
@@ -6941,6 +6942,7 @@ body.theme-dark .bills-empty-state strong {
     justify-content: center;
     gap: .4rem;
     min-width: 0;
+    width: 100%;
   }
 
   .billing-generated-mobile-title h1 {
@@ -6957,6 +6959,7 @@ body.theme-dark .bills-empty-state strong {
     place-items: center;
     width: 24px;
     height: 24px;
+    flex: 0 0 24px;
     margin: 0;
   }
 
