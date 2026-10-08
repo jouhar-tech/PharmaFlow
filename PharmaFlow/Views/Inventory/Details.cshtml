@@ -171,8 +171,8 @@
              role="dialog"
              aria-modal="true"
              aria-labelledby="inventoryRemoveTitle">
-        <h2 id="inventoryRemoveTitle">Remove product?</h2>
-        <p>This will hide the product and all of its batches from active inventory. Existing sales history remains preserved.</p>
+        <h2 id="inventoryRemoveTitle">Remove from stock?</h2>
+        <p>This will remove the product and all of its batches from active stock. Existing sales history remains preserved.</p>
 
         <form asp-controller="Inventory" asp-action="RemoveProduct" method="post">
             @Html.AntiForgeryToken()
