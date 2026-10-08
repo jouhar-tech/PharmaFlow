@@ -4980,8 +4980,10 @@ body.theme-dark .billing-section-icon {
 }
 
 @media (max-width: 767.98px) {
+  /* The mobile billing screen has its own page header. Do not render the
+     duplicate global desktop/mobile app topbar above it. */
   body.billing-generated-page-body .app-topbar {
-    display: none;
+    display: none !important;
   }
 
   body.billing-generated-page-body .app-content {
@@ -4991,25 +4993,97 @@ body.theme-dark .billing-section-icon {
   body.billing-generated-page-body .app-main {
     min-height: 100vh;
   }
+
+  /* Keep the dedicated invoice mobile header visible and compact. */
+  body.billing-generated-page-body .billing-generated-mobile-header {
+    position: relative;
+    z-index: 4;
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr) 40px;
+    align-items: center;
+    min-height: 68px;
+    padding: .55rem .75rem;
+    background: linear-gradient(180deg, #a9e3d8 0%, #98dacc 100%);
+    color: #17202b;
+  }
+
+  body.billing-generated-page-body .billing-generated-mobile-menu {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #17312f;
+    font-size: 1.25rem;
+    line-height: 1;
+  }
+
+  body.billing-generated-page-body .billing-generated-mobile-title {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+  }
+
+  body.billing-generated-page-body .billing-generated-mobile-title .billing-generated-success-icon {
+    width: 25px;
+    height: 25px;
+    margin: 0;
+    color: #3d9a85;
+  }
+
+  body.billing-generated-page-body .billing-generated-mobile-title .billing-generated-success-icon svg {
+    width: 24px;
+    height: 24px;
+    stroke-width: 4;
+  }
+
+  body.billing-generated-page-body .billing-generated-mobile-title h1 {
+    margin: 0;
+    color: #17202b;
+    font-size: 1rem;
+    font-weight: 850;
+    letter-spacing: -.025em;
+  }
+
+  body.billing-generated-page-body .billing-generated-mobile-avatar {
+    display: grid;
+    place-items: center;
+    justify-self: end;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #2563eb;
+    color: #fff;
+    font-size: .75rem;
+    font-weight: 850;
+    text-decoration: none;
+  }
+
+  /* This header is intentionally only the green backdrop behind the summary.
+     Keep it compact so Invoice Summary starts much higher on mobile. */
+  body.billing-generated-page-body .billing-generated-header {
+    min-height: 145px;
+    padding: 0;
+    border-radius: 0 0 1rem 1rem;
+  }
+
+  body.billing-generated-page-body .billing-generated-header h1 {
+    display: none;
+  }
+
+  body.billing-generated-page-body .billing-generated-content {
+    margin-top: -1.2rem;
+  }
 }
 
 @media (max-width: 420px) {
-  .billing-generated-header {
-    min-height: 225px;
-  }
-
-  .billing-generated-success-icon {
-    width: 65px;
-    height: 65px;
-  }
-
-  .billing-generated-success-icon svg {
-    width: 58px;
-    height: 58px;
-  }
-
-  .billing-generated-header h1 {
-    font-size: 1.48rem;
+  body.billing-generated-page-body .billing-generated-header {
+    min-height: 135px;
   }
 
   .billing-generated-total-row strong {
