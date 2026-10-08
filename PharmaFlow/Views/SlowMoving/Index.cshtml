@@ -16,7 +16,7 @@
         <div class="slow-moving-modern-heading">
             <span class="section-kicker" data-i18n="inventoryTrends">Inventory trends</span>
             <h1 data-i18n="slowMovingStock">Slow Moving Stock</h1>
-            <p data-i18n="slowMovingPageSubtitle">Products with current stock that have not been sold for more than 1 month.</p>
+            <p data-i18n="slowMovingPageSubtitle">Products added to inventory more than 1 month ago with current stock expiring within the next year.</p>
         </div>
     </header>
 
@@ -57,15 +57,15 @@
         <section class="slow-moving-custom-panel" id="slowMovingCustomPanel" hidden>
             <div class="slow-moving-custom-heading">
                 <strong data-i18n="slowMovingCustom">Custom</strong>
-                <span data-i18n="slowMovingCustomHint">Filter the slow-moving products by their last sale date.</span>
+                <span data-i18n="slowMovingCustomHint">Filter products by the date they were added to inventory.</span>
             </div>
             <div class="slow-moving-custom-fields">
                 <label>
-                    <span data-i18n="slowMovingCustomFrom">Last sold from</span>
+                    <span data-i18n="slowMovingCustomFrom">Added from</span>
                     <input id="slowMovingCustomFrom" type="date" max="@Model.Today.ToString("yyyy-MM-dd")">
                 </label>
                 <label>
-                    <span data-i18n="slowMovingCustomTo">Last sold to</span>
+                    <span data-i18n="slowMovingCustomTo">Added to</span>
                     <input id="slowMovingCustomTo" type="date" max="@Model.Today.ToString("yyyy-MM-dd")">
                 </label>
                 <div class="slow-moving-custom-actions">
@@ -77,10 +77,16 @@
         </section>
     </div>
 
-    <div class="slow-moving-summary-line">
-        <span id="slowMovingVisibleCount">@Model.AllCount</span>
-        <span data-i18n="slowMovingProductsFound">products found</span>
-    </div>
+    <section class="slow-moving-total-card" aria-label="Total amount stuck because of slow-moving stock">
+        <div>
+            <span data-i18n="slowMovingDashboardAmount">Total Amount Stuck</span>
+            <strong id="slowMovingTotalAmount">₹ @Model.TotalStuckAmount.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</strong>
+        </div>
+        <div>
+            <span data-i18n="slowMovingProductsFound">products</span>
+            <strong id="slowMovingVisibleCount">@Model.AllCount</strong>
+        </div>
+    </section>
 
     <main class="slow-moving-modern-products" aria-live="polite">
         @if (Model.Items.Count == 0)
@@ -100,11 +106,12 @@
                        asp-controller="Inventory"
                        asp-action="Details"
                        asp-route-productId="@item.ProductId"
-                       data-last-sold="@(item.LastSoldDate.HasValue ? item.LastSoldDate.Value.ToString("yyyy-MM-dd") : "")"
+                       data-added-date="@item.AddedToInventoryDate.ToString("yyyy-MM-dd")"
+                       data-stock-value="@item.StockValue.ToString(System.Globalization.CultureInfo.InvariantCulture)"
                        data-search-text="@($"{item.ProductName} {item.GenericName} {item.BrandName} {item.Barcode}")">
                         <div class="slow-moving-product-card-top">
                             <span class="slow-moving-product-icon" aria-hidden="true">
-                                <svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 21a5 5 0 0 1 0-10h3a5 5 0 0 1 0 10H7Z"/><path d="m8 11 7-7a4.95 4.95 0 1 1 7 7l-7 7"/></svg>
+                                <svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 21a5 5 0 0 1 0-10h3a5 5 0 0 1 0 10H7Z"/><path d="m8 11 7-7a4.95 4.95 0 1 1 7 7l-7 7"/></svg>
                             </span>
                             <span class="slow-moving-product-heading">
                                 <strong>@item.ProductName</strong>
@@ -125,34 +132,24 @@
                                 <strong>₹ @item.StockValue.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</strong>
                             </div>
                             <div>
-                                <span data-i18n="slowMovingLastSold">Last sold</span>
-                                @if (item.NeverSold)
-                                {
-                                    <strong class="slow-moving-never-sold" data-i18n="slowMovingNeverSold">Never sold</strong>
-                                }
-                                else
-                                {
-                                    <strong>@item.LastSoldDate!.Value.ToString("dd MMM yyyy")</strong>
-                                }
+                                <span data-i18n="slowMovingAddedDate">Added to inventory</span>
+                                <strong>@item.AddedToInventoryDate.ToString("dd MMM yyyy")</strong>
                             </div>
                         </div>
 
                         <div class="slow-moving-product-footer">
                             <span>
+                                <span data-i18n="slowMovingDaysInInventory">Days in inventory</span>
+                                <strong>@item.DaysInInventory</strong>
+                            </span>
+                            <span>
+                                <span data-i18n="slowMovingExpiry">Nearest expiry</span>
+                                <strong>@item.EarliestExpiryDate.ToString("dd MMM yyyy")</strong>
+                            </span>
+                            <span>
                                 <span data-i18n="slowMovingBatchCount">Batches</span>
                                 <strong>@item.BatchCount</strong>
                             </span>
-                            @if (item.DaysSinceSale.HasValue)
-                            {
-                                <span>
-                                    <span data-i18n="slowMovingDaysSinceSale">Days since sale</span>
-                                    <strong>@item.DaysSinceSale.Value</strong>
-                                </span>
-                            }
-                            else
-                            {
-                                <span class="slow-moving-never-sold" data-i18n="slowMovingNeverSold">Never sold</span>
-                            }
                             <span class="slow-moving-product-arrow" aria-hidden="true">›</span>
                         </div>
                     </a>
@@ -160,7 +157,7 @@
             </div>
 
             <div id="slowMovingEmptySearch" class="slow-moving-modern-empty" hidden>
-                <div><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.8" cy="10.8" r="6.3"/><path d="m16 16 4.5 4.5"/></svg></div>
+                <div><svg class="pharma-feature-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.3"></circle><path d="m16 16 4.5 4.5"></path></svg></div>
                 <h2 data-i18n="slowMovingNoProducts">No slow-moving products found</h2>
                 <p data-i18n="slowMovingNoProductsDescription">Try another filter, search term or custom date range.</p>
             </div>
@@ -178,6 +175,7 @@
     const cards = Array.from(document.querySelectorAll('.slow-moving-product-card'));
     const empty = document.getElementById('slowMovingEmptySearch');
     const visibleCount = document.getElementById('slowMovingVisibleCount');
+    const totalAmount = document.getElementById('slowMovingTotalAmount');
     const customPanel = document.getElementById('slowMovingCustomPanel');
     const customFrom = document.getElementById('slowMovingCustomFrom');
     const customTo = document.getElementById('slowMovingCustomTo');
@@ -194,30 +192,25 @@
         year: root.dataset.oneYearCutoff
     };
 
+    const currencyFormatter = new Intl.NumberFormat('en-IN', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+
     let activeFilter = 'all';
 
     function matchesFilter(card) {
-        const lastSold = card.dataset.lastSold || '';
+        const addedDate = card.dataset.addedDate || '';
 
         if (activeFilter === 'all') return true;
-        if (!lastSold) return activeFilter === 'all';
-
-        if (activeFilter === 'three') {
-            return lastSold > cutoffs.three && lastSold <= cutoffs.one;
-        }
-
-        if (activeFilter === 'six') {
-            return lastSold > cutoffs.six && lastSold <= cutoffs.three;
-        }
-
-        if (activeFilter === 'year') {
-            return lastSold > cutoffs.year && lastSold <= cutoffs.six;
-        }
+        if (activeFilter === 'three') return addedDate > cutoffs.three && addedDate <= cutoffs.one;
+        if (activeFilter === 'six') return addedDate > cutoffs.six && addedDate <= cutoffs.three;
+        if (activeFilter === 'year') return addedDate > cutoffs.year && addedDate <= cutoffs.six;
 
         if (activeFilter === 'custom') {
             const from = customFrom?.value || '';
             const to = customTo?.value || '';
-            return (!from || lastSold >= from) && (!to || lastSold <= to);
+            return (!from || addedDate >= from) && (!to || addedDate <= to);
         }
 
         return true;
@@ -226,31 +219,38 @@
     function updateResults() {
         const term = (search?.value || '').trim().toLocaleLowerCase();
         let visible = 0;
+        let amount = 0;
 
         cards.forEach(card => {
             const haystack = (card.dataset.searchText || '').toLocaleLowerCase();
-            const searchMatch = !term || haystack.includes(term);
-            const show = searchMatch && matchesFilter(card);
+            const show = (!term || haystack.includes(term)) && matchesFilter(card);
             card.hidden = !show;
-            if (show) visible++;
+
+            if (show) {
+                visible++;
+                amount += Number(card.dataset.stockValue || 0);
+            }
         });
 
         if (clear) clear.hidden = !term;
         if (visibleCount) visibleCount.textContent = visible.toLocaleString('en-IN');
+        if (totalAmount) totalAmount.textContent = '₹ ' + currencyFormatter.format(amount);
         if (empty) empty.hidden = visible !== 0;
     }
 
     function setFilter(filter) {
         activeFilter = filter;
         buttons.forEach(button => {
-            const isActive = (button.dataset.filter || 'all') === filter;
-            button.classList.toggle('is-active', isActive);
+            const active = (button.dataset.filter || 'all') === filter;
+            button.classList.toggle('is-active', active);
             if (button.dataset.filter === 'custom') {
-                button.setAttribute('aria-expanded', String(isActive));
+                button.setAttribute('aria-expanded', String(active));
             }
         });
-        if (filter !== 'custom') customPanel?.setAttribute('hidden', '');
-        else customPanel?.removeAttribute('hidden');
+
+        if (filter === 'custom') customPanel?.removeAttribute('hidden');
+        else customPanel?.setAttribute('hidden', '');
+
         updateResults();
     }
 
