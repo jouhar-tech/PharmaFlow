@@ -919,6 +919,7 @@ public sealed class InventoryController : Controller
             AllCount = items.Count,
             LowStockCount = items.Count(item => item.IsLowStock),
             ExpiringCount = items.Count(item => item.IsExpiring),
+            TotalInventoryValue = items.Sum(item => item.StockValue),
             Items = items
         });
     }
