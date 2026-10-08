@@ -482,61 +482,84 @@ public sealed class InventoryController : Controller
         if (productId <= 0)
             return NotFound();
 
-        var product = await _dbContext.Products
-            .AsNoTracking()
-            .Where(p => p.ProductId == productId && p.ProfileId == profileId && p.IsActive)
-            .SingleOrDefaultAsync(cancellationToken);
+        // Product details are read-only. Load only the requested active batch
+        // (or the first usable batch) instead of materializing every historical batch.
+        var detailsExecutionStrategy = new NpgsqlRetryingExecutionStrategy(
+            _dbContext,
+            maxRetryCount: 3);
 
-        if (product is null)
+        var data = await detailsExecutionStrategy.ExecuteAsync(
+            () => _dbContext.Products
+                .AsNoTracking()
+                .Where(p =>
+                    p.ProductId == productId &&
+                    p.ProfileId == profileId &&
+                    p.IsActive)
+                .Select(p => new
+                {
+                    p.ProductId,
+                    p.ProductName,
+                    p.GenericName,
+                    p.BrandName,
+                    p.DosageForm,
+                    p.Strength,
+                    p.PackSize,
+                    p.Barcode,
+                    p.Manufacturer,
+                    p.HsnCode,
+                    p.GstRate,
+                    p.ReorderLevel,
+                    p.IsPrescriptionRequired,
+                    p.IsActive,
+                    SelectedBatch = p.Batches
+                        .Where(b =>
+                            b.IsActive &&
+                            !b.IsQuarantined &&
+                            b.QuantityOnHand > 0 &&
+                            (!batchId.HasValue || b.BatchId == batchId.Value))
+                        .OrderBy(b => batchId.HasValue && b.BatchId == batchId.Value ? 0 : 1)
+                        .ThenBy(b => b.ExpiryDate)
+                        .Select(b => new InventoryBatchDetailsViewModel
+                        {
+                            BatchId = b.BatchId,
+                            BatchNumber = b.BatchNumber,
+                            ManufacturingDate = b.ManufacturingDate,
+                            ExpiryDate = b.ExpiryDate,
+                            QuantityOnHand = b.QuantityOnHand,
+                            PurchaseUnitPrice = b.PurchaseUnitPrice,
+                            SellingUnitPrice = b.SellingUnitPrice,
+                            SupplierId = b.SupplierId,
+                            Location = b.Location,
+                            IsQuarantined = b.IsQuarantined,
+                            IsActive = b.IsActive
+                        })
+                        .FirstOrDefault()
+                })
+                .SingleOrDefaultAsync(cancellationToken));
+
+        if (data is null)
             return NotFound();
-
-        var batches = await _dbContext.ProductBatches
-            .AsNoTracking()
-            .Where(b => b.ProductId == productId)
-            .OrderByDescending(b => b.IsActive)
-            .ThenBy(b => b.ExpiryDate)
-            .Select(b => new InventoryBatchDetailsViewModel
-            {
-                BatchId = b.BatchId,
-                BatchNumber = b.BatchNumber,
-                ManufacturingDate = b.ManufacturingDate,
-                ExpiryDate = b.ExpiryDate,
-                QuantityOnHand = b.QuantityOnHand,
-                PurchaseUnitPrice = b.PurchaseUnitPrice,
-                SellingUnitPrice = b.SellingUnitPrice,
-                SupplierId = b.SupplierId,
-                Location = b.Location,
-                IsQuarantined = b.IsQuarantined,
-                IsActive = b.IsActive
-            })
-            .ToListAsync(cancellationToken);
-
-        var selectedBatch = batchId.HasValue
-            ? batches.FirstOrDefault(b => b.BatchId == batchId.Value)
-            : batches.FirstOrDefault(b => b.IsActive && !b.IsQuarantined)
-                ?? batches.FirstOrDefault(b => b.IsActive)
-                ?? batches.FirstOrDefault();
 
         var model = new InventoryProductDetailsViewModel
         {
-            ProductId = product.ProductId,
-            ProductName = product.ProductName,
-            GenericName = product.GenericName,
-            BrandName = product.BrandName,
-            DosageForm = product.DosageForm,
-            Strength = product.Strength,
-            PackSize = product.PackSize,
-            Barcode = product.Barcode,
-            Manufacturer = product.Manufacturer,
-            HsnCode = product.HsnCode,
-            GstRate = product.GstRate,
-            ReorderLevel = product.ReorderLevel,
-            IsPrescriptionRequired = product.IsPrescriptionRequired,
-            IsActive = product.IsActive,
+            ProductId = data.ProductId,
+            ProductName = data.ProductName,
+            GenericName = data.GenericName,
+            BrandName = data.BrandName,
+            DosageForm = data.DosageForm,
+            Strength = data.Strength,
+            PackSize = data.PackSize,
+            Barcode = data.Barcode,
+            Manufacturer = data.Manufacturer,
+            HsnCode = data.HsnCode,
+            GstRate = data.GstRate,
+            ReorderLevel = data.ReorderLevel,
+            IsPrescriptionRequired = data.IsPrescriptionRequired,
+            IsActive = data.IsActive,
             IsBatchContext = batchId.HasValue,
             ReturnTo = NormalizeReturnTo(returnTo),
-            SelectedBatch = selectedBatch,
-            Batches = batches
+            SelectedBatch = data.SelectedBatch,
+            Batches = data.SelectedBatch is null ? [] : [data.SelectedBatch]
         };
 
         ViewData["Title"] = "Product Details";
@@ -936,30 +959,32 @@ public sealed class InventoryController : Controller
             maxRetryCount: 3);
 
         var rows = await inventoryExecutionStrategy.ExecuteAsync(
-            () => _dbContext.ProductBatches
+            () => _dbContext.Products
                 .AsNoTracking()
-                .Where(batch =>
-                    batch.Product.ProfileId == profileId &&
-                    batch.Product.IsActive &&
-                    batch.IsActive &&
-                    !batch.IsQuarantined &&
-                    batch.QuantityOnHand > 0)
-                .OrderBy(batch => batch.Product.ProductName)
-                .ThenBy(batch => batch.ExpiryDate)
-                .Select(batch => new
-                {
-                    ProductId = batch.ProductId,
-                    BatchId = batch.BatchId,
-                    ProductName = batch.Product.ProductName,
-                    GenericName = batch.Product.GenericName,
-                    BrandName = batch.Product.BrandName,
-                    Barcode = batch.Product.Barcode,
-                    BatchNumber = batch.BatchNumber,
-                    Quantity = batch.QuantityOnHand,
-                    ReorderLevel = batch.Product.ReorderLevel,
-                    ExpiryDate = batch.ExpiryDate,
-                    SellingUnitPrice = batch.SellingUnitPrice
-                })
+                .Where(product =>
+                    product.ProfileId == profileId &&
+                    product.IsActive)
+                .SelectMany(
+                    product => product.Batches.Where(batch =>
+                        batch.IsActive &&
+                        !batch.IsQuarantined &&
+                        batch.QuantityOnHand > 0),
+                    (product, batch) => new
+                    {
+                        ProductId = product.ProductId,
+                        BatchId = batch.BatchId,
+                        ProductName = product.ProductName,
+                        GenericName = product.GenericName,
+                        BrandName = product.BrandName,
+                        Barcode = product.Barcode,
+                        BatchNumber = batch.BatchNumber,
+                        Quantity = batch.QuantityOnHand,
+                        ReorderLevel = product.ReorderLevel,
+                        ExpiryDate = batch.ExpiryDate,
+                        SellingUnitPrice = batch.SellingUnitPrice
+                    })
+                .OrderBy(row => row.ProductName)
+                .ThenBy(row => row.ExpiryDate)
                 .ToListAsync(cancellationToken));
 
         var items = rows.Select(row =>
