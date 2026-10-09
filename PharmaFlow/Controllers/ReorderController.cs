@@ -117,6 +117,16 @@ public sealed class ReorderController : Controller
         if (product is null)
             return NotFound();
 
+        var existing = await _dbContext.ReorderListItems
+            .AsNoTracking()
+            .AnyAsync(item => item.ProfileId == profileId && item.ProductId == productId, cancellationToken);
+
+        if (existing)
+        {
+            TempData["ReorderListError"] = "Product already added to Reorder List";
+            return RedirectToAction(nameof(Index));
+        }
+
         var currentQuantity = await _dbContext.ProductBatches
             .AsNoTracking()
             .Where(batch =>
@@ -126,20 +136,24 @@ public sealed class ReorderController : Controller
                 batch.QuantityOnHand > 0)
             .SumAsync(batch => (decimal?)batch.QuantityOnHand, cancellationToken) ?? 0m;
 
-        var existing = await _dbContext.ReorderListItems
-            .FirstOrDefaultAsync(item => item.ProfileId == profileId && item.ProductId == productId, cancellationToken);
-
-        if (existing is null)
+        _dbContext.ReorderListItems.Add(new ReorderListItem
         {
-            _dbContext.ReorderListItems.Add(new ReorderListItem
-            {
-                ProfileId = profileId,
-                ProductId = productId,
-                QuantityWhenAdded = currentQuantity,
-                CreatedAt = DateTime.UtcNow
-            });
+            ProfileId = profileId,
+            ProductId = productId,
+            QuantityWhenAdded = currentQuantity,
+            CreatedAt = DateTime.UtcNow
+        });
 
+        try
+        {
             await _dbContext.SaveChangesAsync(cancellationToken);
+            TempData["ReorderListSuccess"] = "Product added to Reorder List";
+        }
+        catch (DbUpdateException)
+        {
+            // The unique profile/product index also protects against two quick
+            // duplicate submissions arriving at nearly the same time.
+            TempData["ReorderListError"] = "Product already added to Reorder List";
         }
 
         return RedirectToAction(nameof(Index));
