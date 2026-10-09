@@ -31,6 +31,11 @@ ALTER TABLE public.reorder_list_items
     ADD COLUMN IF NOT EXISTS brand_name VARCHAR(160) NULL,
     ADD COLUMN IF NOT EXISTS barcode VARCHAR(100) NULL;
 
+-- The filtered index below now enforces uniqueness for inventory-backed rows
+-- without indexing the multiple NULL product_id values used by catalog-only rows.
+ALTER TABLE public.reorder_list_items
+    DROP CONSTRAINT IF EXISTS uq_reorder_list_items_profile_product;
+
 -- One inventory-backed reorder record per product for each profile.
 CREATE UNIQUE INDEX IF NOT EXISTS ux_reorder_list_items_profile_product
     ON public.reorder_list_items(profile_id, product_id)
