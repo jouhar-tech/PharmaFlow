@@ -151,8 +151,15 @@ public sealed class ReorderController : Controller
         }
         catch (DbUpdateException)
         {
-            // The unique profile/product index also protects against two quick
-            // duplicate submissions arriving at nearly the same time.
+            // The unique profile/product index also protects against duplicate
+            // submissions arriving at nearly the same time.
+            var duplicateNowExists = await _dbContext.ReorderListItems
+                .AsNoTracking()
+                .AnyAsync(item => item.ProfileId == profileId && item.ProductId == productId, cancellationToken);
+
+            if (!duplicateNowExists)
+                throw;
+
             TempData["ReorderListError"] = "Product already added to Reorder List";
         }
 
