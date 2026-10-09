@@ -1,0 +1,116 @@
+@model PharmaFlow.Models.ViewModels.ReorderListViewModel
+
+@{
+    ViewData["Title"] = "Reorder List";
+}
+
+<div class="low-stock-page-modern reorder-list-page">
+    <header class="low-stock-modern-header">
+        <a asp-controller="LowStock" asp-action="Index" class="low-stock-modern-back" aria-label="Back to low stock">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5"></path><path d="m11 18-6-6 6-6"></path></svg>
+        </a>
+        <h1>Reorder List</h1>
+    </header>
+
+    <section class="low-stock-modern-summary reorder-list-summary">
+        <div class="low-stock-summary-icon" aria-hidden="true">↻</div>
+        <div>
+            <span>Products to reorder</span>
+            <strong>@Model.Count</strong>
+            <small>Items stay here until stock increases or you remove them.</small>
+        </div>
+    </section>
+
+    <form class="low-stock-modern-search" role="search" onsubmit="return false;">
+        <span class="low-stock-modern-search-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.8" cy="10.8" r="6.3"/><path d="m16 16 4.5 4.5"/></svg>
+        </span>
+        <input id="reorderSearch" type="search" value="@Model.SearchTerm" placeholder="Search product, brand or barcode..." autocomplete="off" aria-label="Search reorder list" />
+        <button id="reorderSearchClear" type="button" aria-label="Clear search" hidden>×</button>
+    </form>
+
+    <section class="low-stock-modern-products" aria-label="Products to reorder">
+        @if (Model.Items.Count == 0)
+        {
+            <div class="low-stock-modern-empty">
+                <div aria-hidden="true">✓</div>
+                <h2>Reorder list is clear</h2>
+                <p>Use the Reorder arrow on a Low Stock product to add it here.</p>
+            </div>
+        }
+        else
+        {
+            <div class="low-stock-products-grid" id="reorderProducts">
+                @foreach (var item in Model.Items)
+                {
+                    <article class="low-stock-product-card reorder-product-card"
+                             data-search-text="@($"{item.ProductName} {item.GenericName} {item.BrandName} {item.Barcode}")">
+                        <div class="low-stock-product-card-top">
+                            <div class="low-stock-product-icon" aria-hidden="true">Rx</div>
+                            <div class="low-stock-product-heading">
+                                <h2>@item.ProductName</h2>
+                                <span>@(string.IsNullOrWhiteSpace(item.BrandName) ? item.GenericName : item.BrandName)</span>
+                            </div>
+                            <span class="reorder-current-qty">@item.CurrentQuantity.ToString("0.##") in stock</span>
+                        </div>
+
+                        <div class="reorder-product-meta">
+                            <span>Added @item.AddedAt.ToLocalTime().ToString("dd MMM yyyy")</span>
+                            <span>Qty when added: @item.QuantityWhenAdded.ToString("0.##")</span>
+                        </div>
+
+                        <div class="low-stock-product-actions reorder-product-actions">
+                            <span class="low-stock-status-badge">Reorder needed</span>
+                            <form asp-controller="Reorder" asp-action="Remove" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="productId" value="@item.ProductId" />
+                                <button type="submit" class="reorder-remove-button">
+                                    <span aria-hidden="true">×</span> Remove
+                                </button>
+                            </form>
+                        </div>
+                    </article>
+                }
+            </div>
+
+            <div id="reorderEmptySearch" class="low-stock-modern-empty" hidden>
+                <div aria-hidden="true">⌕</div>
+                <h2>No products found</h2>
+                <p>Try another product name, brand or barcode.</p>
+            </div>
+        }
+    </section>
+</div>
+
+@section Scripts {
+<script>
+(function () {
+    const search = document.getElementById('reorderSearch');
+    const clear = document.getElementById('reorderSearchClear');
+    const cards = Array.from(document.querySelectorAll('.reorder-product-card'));
+    const empty = document.getElementById('reorderEmptySearch');
+    if (!search) return;
+
+    function update() {
+        const term = search.value.trim().toLocaleLowerCase();
+        let visible = 0;
+        cards.forEach(card => {
+            const text = (card.dataset.searchText || '').toLocaleLowerCase();
+            const show = !term || text.includes(term);
+            card.hidden = !show;
+            if (show) visible++;
+        });
+        clear.hidden = !term;
+        if (empty) empty.hidden = visible !== 0;
+    }
+
+    search.addEventListener('input', update);
+    clear?.addEventListener('click', function () {
+        search.value = '';
+        search.focus();
+        update();
+    });
+    update();
+})();
+</script>
+}
