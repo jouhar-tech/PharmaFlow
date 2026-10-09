@@ -14890,12 +14890,12 @@ body.theme-dark .reorder-catalog-card {
   border-color: #263449;
 }
 
-body.theme-dark .reorder-catalog-card .inventory-product-search-card h2 {
+body.theme-dark .reorder-catalog-card h2 {
   color: #f8fafc;
 }
 
-body.theme-dark .reorder-catalog-card .inventory-product-search-card p,
-body.theme-dark .reorder-catalog-card .inventory-product-search-card small {
+body.theme-dark .reorder-catalog-card p,
+body.theme-dark .reorder-catalog-card small {
   color: #94a3b8;
 }
 
