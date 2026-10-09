@@ -14668,3 +14668,234 @@ body.theme-dark .reorder-list-feedback-success > span:first-child {
   background: #14532d;
   color: #bbf7d0;
 }
+
+
+/* Reorder List: replace local filter with one Global Product Catalog search. */
+.reorder-catalog-section {
+  margin: .9rem .75rem 0;
+}
+
+.reorder-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .7rem;
+  margin: 0 0 .45rem;
+}
+
+.reorder-section-heading > div {
+  min-width: 0;
+}
+
+.reorder-section-heading h2 {
+  margin: 0;
+  color: #17202b;
+  font-size: .95rem;
+  font-weight: 850;
+}
+
+.reorder-section-heading p {
+  margin: .2rem 0 0;
+  color: #64748b;
+  font-size: .66rem;
+  line-height: 1.4;
+}
+
+.reorder-catalog-search {
+  margin: .65rem 0 .45rem;
+}
+
+.reorder-catalog-search input {
+  padding-right: 3rem;
+}
+
+.reorder-catalog-search button {
+  display: grid;
+  place-items: center;
+  width: 31px;
+  height: 31px;
+  padding: 0;
+  border-radius: .5rem;
+  background: #e7f6f2;
+  color: #0f766e;
+}
+
+.reorder-catalog-search button svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.reorder-catalog-note,
+.reorder-catalog-prompt {
+  margin: .25rem 0 .65rem;
+  color: #64748b;
+  font-size: .63rem;
+  line-height: 1.45;
+}
+
+.reorder-catalog-prompt {
+  padding: .7rem .8rem;
+  border: 1px dashed #d8e3e8;
+  border-radius: .7rem;
+  background: #f8fbfc;
+}
+
+.reorder-catalog-results {
+  display: grid;
+  gap: .55rem;
+  margin-top: .55rem;
+}
+
+.reorder-catalog-card {
+  min-width: 0;
+}
+
+.reorder-catalog-card .inventory-product-search-card-main {
+  align-items: flex-start;
+}
+
+.reorder-catalog-card .inventory-product-search-card-copy {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.reorder-catalog-add {
+  justify-items: stretch;
+}
+
+.reorder-catalog-add form {
+  width: 100%;
+  margin: 0;
+}
+
+.reorder-catalog-add .inventory-product-add-link {
+  width: 100%;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+  font-size: .68rem;
+}
+
+.reorder-catalog-empty {
+  padding: 1.5rem .8rem;
+}
+
+.reorder-saved-section {
+  margin-top: 1.1rem;
+}
+
+.reorder-saved-heading {
+  margin: 0 0 .6rem;
+}
+
+.reorder-saved-count {
+  display: grid;
+  place-items: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 .4rem;
+  border-radius: 999px;
+  background: #e6f5f1;
+  color: #0f766e;
+  font-size: .7rem;
+  font-weight: 850;
+}
+
+.reorder-catalog-only-badge {
+  max-width: 94px;
+  white-space: normal;
+  text-align: center;
+  background: #e5efff;
+  color: #2559a4;
+}
+
+@media (min-width: 768px) {
+  .reorder-catalog-section {
+    margin: 1rem 0 0;
+  }
+
+  .reorder-catalog-results {
+    grid-template-columns: 1fr;
+  }
+
+  .reorder-catalog-card {
+    grid-template-columns: minmax(0, 1fr) 190px;
+  }
+
+  .reorder-catalog-add .inventory-product-add-link {
+    min-height: 40px;
+  }
+
+  .reorder-saved-section {
+    padding: 0;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .reorder-catalog-card {
+    grid-template-columns: minmax(0, 1fr);
+    gap: .7rem;
+  }
+
+  .reorder-catalog-add .inventory-product-add-link {
+    min-height: 42px;
+  }
+
+  .reorder-products-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .reorder-product-card .low-stock-product-heading h2 {
+    white-space: normal;
+  }
+}
+
+body.theme-dark .reorder-section-heading h2 {
+  color: #f8fafc;
+}
+
+body.theme-dark .reorder-section-heading p,
+body.theme-dark .reorder-catalog-note {
+  color: #94a3b8;
+}
+
+body.theme-dark .reorder-catalog-prompt {
+  background: #111c2e;
+  border-color: #334155;
+  color: #94a3b8;
+}
+
+body.theme-dark .reorder-catalog-search button {
+  background: #143c38;
+  color: #7dd3ca;
+}
+
+body.theme-dark .reorder-saved-count {
+  background: #163a36;
+  color: #7dd3ca;
+}
+
+body.theme-dark .reorder-catalog-only-badge {
+  background: #1c3152;
+  color: #bfdbfe;
+}
+
+body.theme-dark .reorder-catalog-card {
+  background: #111c2e;
+  border-color: #263449;
+}
+
+body.theme-dark .reorder-catalog-card .inventory-product-search-card h2 {
+  color: #f8fafc;
+}
+
+body.theme-dark .reorder-catalog-card .inventory-product-search-card p,
+body.theme-dark .reorder-catalog-card .inventory-product-search-card small {
+  color: #94a3b8;
+}
+
