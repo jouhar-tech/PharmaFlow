@@ -366,12 +366,15 @@ public class ApplicationDbContext : DbContext
                 .HasForeignKey(item => item.ProductId)
                 .OnDelete(DeleteBehavior.Cascade);
             entity.HasIndex(item => new { item.ProfileId, item.ProductId })
+                .HasDatabaseName("ux_reorder_list_items_profile_product")
                 .IsUnique()
                 .HasFilter("product_id IS NOT NULL");
             entity.HasIndex(item => new { item.ProfileId, item.Source, item.ExternalId })
+                .HasDatabaseName("ux_reorder_list_items_profile_catalog")
                 .IsUnique()
                 .HasFilter("product_id IS NULL AND source IS NOT NULL AND external_id IS NOT NULL");
-            entity.HasIndex(item => new { item.ProfileId, item.CreatedAt });
+            entity.HasIndex(item => new { item.ProfileId, item.CreatedAt })
+                .HasDatabaseName("ix_reorder_list_items_profile_created");
         });
 
         modelBuilder.Entity<CustomerReminder>(entity =>
