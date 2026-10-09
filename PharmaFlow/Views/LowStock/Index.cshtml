@@ -87,7 +87,11 @@
 
                         <div class="low-stock-product-actions">
                             <span class="low-stock-status-badge">Low stock</span>
-                            <a asp-controller="LowStock" asp-action="Index" class="low-stock-reorder-inline">Reorder <span aria-hidden="true">→</span></a>
+                            <form asp-controller="Reorder" asp-action="Add" method="post" class="low-stock-reorder-form">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="productId" value="@item.ProductId" />
+                                <button type="submit" class="low-stock-reorder-inline">Reorder <span aria-hidden="true">→</span></button>
+                            </form>
                         </div>
                     </article>
                 }
