@@ -352,13 +352,26 @@ public class ApplicationDbContext : DbContext
             entity.Property(item => item.ReorderListItemId).HasColumnName("reorder_list_item_id");
             entity.Property(item => item.ProfileId).HasColumnName("profile_id");
             entity.Property(item => item.ProductId).HasColumnName("product_id");
+            entity.Property(item => item.CatalogId).HasColumnName("catalog_id");
+            entity.Property(item => item.Source).HasColumnName("source").HasMaxLength(50);
+            entity.Property(item => item.ExternalId).HasColumnName("external_id").HasMaxLength(160);
+            entity.Property(item => item.ProductName).HasColumnName("product_name").HasMaxLength(200);
+            entity.Property(item => item.GenericName).HasColumnName("generic_name").HasMaxLength(500);
+            entity.Property(item => item.BrandName).HasColumnName("brand_name").HasMaxLength(160);
+            entity.Property(item => item.Barcode).HasColumnName("barcode").HasMaxLength(100);
             entity.Property(item => item.QuantityWhenAdded).HasColumnName("quantity_when_added").HasPrecision(14, 2);
             entity.Property(item => item.CreatedAt).HasColumnName("created_at");
             entity.HasOne(item => item.Product)
                 .WithMany()
                 .HasForeignKey(item => item.ProductId)
                 .OnDelete(DeleteBehavior.Cascade);
-            entity.HasIndex(item => new { item.ProfileId, item.ProductId }).IsUnique();
+            entity.HasIndex(item => new { item.ProfileId, item.ProductId })
+                .IsUnique()
+                .HasFilter("product_id IS NOT NULL");
+            entity.HasIndex(item => new { item.ProfileId, item.Source, item.ExternalId })
+                .IsUnique()
+                .HasFilter("product_id IS NULL AND source IS NOT NULL AND external_id IS NOT NULL");
+            entity.HasIndex(item => new { item.ProfileId, item.CreatedAt });
         });
 
         modelBuilder.Entity<CustomerReminder>(entity =>
