@@ -32,53 +32,188 @@
         <div>
             <span>Products to reorder</span>
             <strong>@Model.Count</strong>
-            <small>Items stay here until stock increases or you remove them.</small>
+            <small>Restocked products are removed automatically.</small>
         </div>
     </section>
 
-    <form class="low-stock-modern-search" role="search" onsubmit="return false;">
-        <span class="low-stock-modern-search-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.8" cy="10.8" r="6.3"/><path d="m16 16 4.5 4.5"/></svg>
-        </span>
-        <input id="reorderSearch" type="search" value="@Model.SearchTerm" placeholder="Search product, brand or barcode..." autocomplete="off" aria-label="Search reorder list" />
-        <button id="reorderSearchClear" type="button" aria-label="Clear search" hidden>×</button>
-    </form>
+    <section class="reorder-catalog-section" aria-labelledby="reorderCatalogTitle">
+        <div class="reorder-section-heading">
+            <div>
+                <h2 id="reorderCatalogTitle">Global Product Catalog</h2>
+                <p>Find products not currently in your inventory and add them to your reorder list.</p>
+            </div>
+        </div>
 
-    <section class="low-stock-modern-products" aria-label="Products to reorder">
+        <form method="get" asp-controller="Reorder" asp-action="Index" class="low-stock-modern-search reorder-catalog-search" role="search">
+            <span class="low-stock-modern-search-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.8" cy="10.8" r="6.3"></circle><path d="m16 16 4.5 4.5"></path></svg>
+            </span>
+            <input id="reorderCatalogSearch"
+                   type="search"
+                   name="search"
+                   value="@Model.SearchTerm"
+                   minlength="2"
+                   maxlength="100"
+                   placeholder="Search medicines, brands or products..."
+                   autocomplete="off"
+                   aria-label="Search Global Product Catalog" />
+            <button type="submit" aria-label="Search Global Product Catalog">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.3"></circle><path d="m16 16 4.5 4.5"></path></svg>
+            </button>
+        </form>
+
+        <p class="reorder-catalog-note">Catalog results are not inventory stock. Adding a result here does not create a product or batch in Inventory.</p>
+
+        @if (Model.SearchTerm.Length >= 2)
+        {
+            <div class="reorder-catalog-results" aria-live="polite">
+                @if (Model.CatalogProducts.Count == 0)
+                {
+                    <div class="low-stock-modern-empty reorder-catalog-empty">
+                        <div aria-hidden="true">⌕</div>
+                        <h2>No new catalog products found</h2>
+                        <p>Try another name, brand, generic name or barcode. Products already in Inventory or Reorder List are excluded.</p>
+                    </div>
+                }
+                else
+                {
+                    @foreach (var product in Model.CatalogProducts)
+                    {
+                        <article class="inventory-product-search-card reorder-catalog-card">
+                            <div class="inventory-product-search-card-main">
+                                <div class="inventory-product-search-icon-badge" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                        @if (product.ProductType == "medicine")
+                                        {
+                                            <path d="M7 21a5 5 0 0 1 0-10h3a5 5 0 0 1 0 10H7Z"></path>
+                                            <path d="m8 11 7-7a4.95 4.95 0 1 1 7 7l-7 7"></path>
+                                        }
+                                        else
+                                        {
+                                            <rect x="5" y="3.5" width="14" height="17" rx="2"></rect>
+                                            <path d="M8 8h8M8 12h8M8 16h5"></path>
+                                        }
+                                    </svg>
+                                </div>
+
+                                <div class="inventory-product-search-card-copy">
+                                    <div class="inventory-product-search-tags">
+                                        <span>@product.TypeLabel</span>
+                                        <span>@product.SourceLabel</span>
+                                    </div>
+                                    <h2>@product.ProductName</h2>
+
+                                    @if (!string.IsNullOrWhiteSpace(product.GenericName))
+                                    {
+                                        <p>@product.GenericName</p>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(product.BrandName))
+                                    {
+                                        <small>Brand: @product.BrandName</small>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(product.Manufacturer))
+                                    {
+                                        <small>Manufacturer: @product.Manufacturer</small>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(product.DosageForm) ||
+                                         !string.IsNullOrWhiteSpace(product.Strength) ||
+                                         !string.IsNullOrWhiteSpace(product.PackSize))
+                                    {
+                                        <small>
+                                            @string.Join(" · ", new[]
+                                            {
+                                                product.DosageForm,
+                                                product.Strength,
+                                                product.PackSize
+                                            }.Where(value => !string.IsNullOrWhiteSpace(value)))
+                                        </small>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(product.Barcode))
+                                    {
+                                        <small>Barcode: @product.Barcode</small>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="inventory-product-search-side reorder-catalog-add">
+                                <form asp-controller="Reorder" asp-action="AddCatalog" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="source" value="@product.Source" />
+                                    <input type="hidden" name="externalId" value="@product.ExternalId" />
+                                    <input type="hidden" name="catalogId" value="@product.CatalogId" />
+                                    <input type="hidden" name="search" value="@Model.SearchTerm" />
+                                    <button type="submit" class="inventory-product-add-link">Add to Reorder List</button>
+                                </form>
+                            </div>
+                        </article>
+                    }
+                }
+            </div>
+        }
+        else
+        {
+            <div class="reorder-catalog-prompt">
+                Enter at least 2 characters to search the Global Product Catalog.
+            </div>
+        }
+    </section>
+
+    <section class="low-stock-modern-products reorder-saved-section" aria-labelledby="reorderSavedTitle">
+        <div class="reorder-section-heading reorder-saved-heading">
+            <div>
+                <h2 id="reorderSavedTitle">Your Reorder List</h2>
+                <p>Items saved from Low Stock and the Global Product Catalog.</p>
+            </div>
+            <span class="reorder-saved-count">@Model.Items.Count</span>
+        </div>
+
         @if (Model.Items.Count == 0)
         {
             <div class="low-stock-modern-empty">
                 <div aria-hidden="true">✓</div>
                 <h2>Reorder list is clear</h2>
-                <p>Use the Reorder arrow on a Low Stock product to add it here.</p>
+                <p>Use Reorder on a Low Stock product or add a product from the Global Product Catalog.</p>
             </div>
         }
         else
         {
-            <div class="low-stock-products-grid" id="reorderProducts">
+            <div class="low-stock-products-grid reorder-products-grid">
                 @foreach (var item in Model.Items)
                 {
-                    <article class="low-stock-product-card reorder-product-card"
-                             data-search-text="@($"{item.ProductName} {item.GenericName} {item.BrandName} {item.Barcode}")">
+                    <article class="low-stock-product-card reorder-product-card">
                         <div class="low-stock-product-card-top">
                             <div class="low-stock-product-icon" aria-hidden="true">Rx</div>
                             <div class="low-stock-product-heading">
                                 <h2>@item.ProductName</h2>
                                 <span>@(string.IsNullOrWhiteSpace(item.BrandName) ? item.GenericName : item.BrandName)</span>
                             </div>
-                            <span class="reorder-current-qty">@item.CurrentQuantity.ToString("0.##") in stock</span>
+                            @if (item.IsCatalogOnly)
+                            {
+                                <span class="reorder-current-qty reorder-catalog-only-badge">Catalog only</span>
+                            }
+                            else
+                            {
+                                <span class="reorder-current-qty">@item.CurrentQuantity.ToString("0.##") in stock</span>
+                            }
                         </div>
 
                         <div class="reorder-product-meta">
                             <span>Added @item.AddedAt.ToLocalTime().ToString("dd MMM yyyy")</span>
-                            <span>Qty when added: @item.QuantityWhenAdded.ToString("0.##")</span>
+                            @if (!item.IsCatalogOnly)
+                            {
+                                <span>Qty when added: @item.QuantityWhenAdded.ToString("0.##")</span>
+                            }
+                            else
+                            {
+                                <span>Not yet in Inventory</span>
+                            }
                         </div>
 
                         <div class="low-stock-product-actions reorder-product-actions">
                             <span class="low-stock-status-badge">Reorder needed</span>
                             <form asp-controller="Reorder" asp-action="Remove" method="post">
                                 @Html.AntiForgeryToken()
-                                <input type="hidden" name="productId" value="@item.ProductId" />
+                                <input type="hidden" name="reorderListItemId" value="@item.ReorderListItemId" />
                                 <button type="submit" class="reorder-remove-button">
                                     <span aria-hidden="true">×</span> Remove
                                 </button>
@@ -87,45 +222,6 @@
                     </article>
                 }
             </div>
-
-            <div id="reorderEmptySearch" class="low-stock-modern-empty" hidden>
-                <div aria-hidden="true">⌕</div>
-                <h2>No products found</h2>
-                <p>Try another product name, brand or barcode.</p>
-            </div>
         }
     </section>
 </div>
-
-@section Scripts {
-<script>
-(function () {
-    const search = document.getElementById('reorderSearch');
-    const clear = document.getElementById('reorderSearchClear');
-    const cards = Array.from(document.querySelectorAll('.reorder-product-card'));
-    const empty = document.getElementById('reorderEmptySearch');
-    if (!search) return;
-
-    function update() {
-        const term = search.value.trim().toLocaleLowerCase();
-        let visible = 0;
-        cards.forEach(card => {
-            const text = (card.dataset.searchText || '').toLocaleLowerCase();
-            const show = !term || text.includes(term);
-            card.hidden = !show;
-            if (show) visible++;
-        });
-        clear.hidden = !term;
-        if (empty) empty.hidden = visible !== 0;
-    }
-
-    search.addEventListener('input', update);
-    clear?.addEventListener('click', function () {
-        search.value = '';
-        search.focus();
-        update();
-    });
-    update();
-})();
-</script>
-}
