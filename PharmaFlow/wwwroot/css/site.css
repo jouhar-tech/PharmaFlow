@@ -14505,3 +14505,98 @@ body.theme-dark .slow-moving-total-card {
     color: #f8fafc;
   }
 }
+
+
+/* Reorder List page */
+@media (max-width: 767.98px) {
+  body.reorder-list-page-body .app-topbar {
+    display: none !important;
+  }
+
+  body.reorder-list-page-body .app-content {
+    padding-top: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  body.reorder-list-page-body .app-main {
+    min-height: 100vh;
+  }
+}
+
+.reorder-list-page .reorder-list-summary .low-stock-summary-icon {
+  background: #e2f7ef;
+  color: #16836f;
+}
+
+.reorder-product-card[hidden] {
+  display: none !important;
+}
+
+.reorder-current-qty {
+  flex: 0 0 auto;
+  padding: .3rem .45rem;
+  border-radius: 999px;
+  background: #fff4d6;
+  color: #8a5a00;
+  font-size: .62rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.reorder-product-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: .35rem .75rem;
+  margin-top: .65rem;
+  color: #64748b;
+  font-size: .65rem;
+}
+
+.reorder-product-actions {
+  gap: .5rem;
+}
+
+.reorder-product-actions form,
+.low-stock-reorder-form {
+  margin: 0;
+}
+
+.reorder-remove-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .25rem;
+  min-height: 34px;
+  padding: .35rem .65rem;
+  border: 1px solid #fecaca;
+  border-radius: .65rem;
+  background: #fff5f5;
+  color: #b91c1c;
+  font: inherit;
+  font-size: .7rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.low-stock-reorder-form .low-stock-reorder-inline {
+  appearance: none;
+  cursor: pointer;
+  font: inherit;
+}
+
+body.theme-dark .reorder-current-qty {
+  background: #42351b;
+  color: #fcd34d;
+}
+
+body.theme-dark .reorder-product-meta {
+  color: #94a3b8;
+}
+
+body.theme-dark .reorder-remove-button {
+  border-color: #7f1d1d;
+  background: #32191c;
+  color: #fca5a5;
+}
