@@ -24,6 +24,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Customer> Customers => Set<Customer>();
     public DbSet<CustomerLedgerEntry> CustomerLedgerEntries => Set<CustomerLedgerEntry>();
     public DbSet<CustomerReminder> CustomerReminders => Set<CustomerReminder>();
+    public DbSet<ReorderListItem> ReorderListItems => Set<ReorderListItem>();
     public DbSet<SalesBill> SalesBills => Set<SalesBill>();
     public DbSet<SalesBillItem> SalesBillItems => Set<SalesBillItem>();
 
@@ -342,6 +343,22 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(e => new { e.ProfileId, e.CustomerId, e.CreatedAt });
             entity.HasIndex(e => new { e.ProfileId, e.CreatedAt });
             entity.HasIndex(e => e.BillId);
+        });
+
+        modelBuilder.Entity<ReorderListItem>(entity =>
+        {
+            entity.ToTable("reorder_list_items", "public");
+            entity.HasKey(item => item.ReorderListItemId);
+            entity.Property(item => item.ReorderListItemId).HasColumnName("reorder_list_item_id");
+            entity.Property(item => item.ProfileId).HasColumnName("profile_id");
+            entity.Property(item => item.ProductId).HasColumnName("product_id");
+            entity.Property(item => item.QuantityWhenAdded).HasColumnName("quantity_when_added").HasPrecision(14, 2);
+            entity.Property(item => item.CreatedAt).HasColumnName("created_at");
+            entity.HasOne(item => item.Product)
+                .WithMany()
+                .HasForeignKey(item => item.ProductId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(item => new { item.ProfileId, item.ProductId }).IsUnique();
         });
 
         modelBuilder.Entity<CustomerReminder>(entity =>
