@@ -12,6 +12,21 @@
         <h1>Reorder List</h1>
     </header>
 
+    @if (TempData["ReorderListError"] is string reorderError)
+    {
+        <div class="reorder-list-feedback reorder-list-feedback-error" role="alert">
+            <span aria-hidden="true">!</span>
+            <span>@reorderError</span>
+        </div>
+    }
+    @if (TempData["ReorderListSuccess"] is string reorderSuccess)
+    {
+        <div class="reorder-list-feedback reorder-list-feedback-success" role="status">
+            <span aria-hidden="true">✓</span>
+            <span>@reorderSuccess</span>
+        </div>
+    }
+
     <section class="low-stock-modern-summary reorder-list-summary">
         <div class="low-stock-summary-icon" aria-hidden="true">↻</div>
         <div>
