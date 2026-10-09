@@ -466,7 +466,7 @@ public sealed class ReorderController : Controller
                     product.Barcode != null &&
                     candidateBarcodes.Contains(product.Barcode.ToLower())) ||
                  (candidateNames.Length > 0 &&
-                    candidateNames.Contains(product.ProductName.ToLower())))
+                    candidateNames.Contains(product.ProductName.ToLower()))))
             .Select(product => new InventoryProductIdentity
             {
                 ProductId = product.ProductId,
