@@ -44,9 +44,19 @@
 
     <section class="more-mobile-menu-card">
         <div class="more-mobile-section-title" data-i18n="inventory">Inventory</div>
+        <a asp-controller="Inventory" asp-action="Index" class="more-mobile-row">
+            <span class="more-mobile-row-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 7 8-4 8 4-8 4-8-4Z"/><path d="M4 7v10l8 4 8-4V7M12 11v10"/></svg></span>
+            <span class="more-mobile-row-label" data-i18n="inventory">Inventory</span>
+            <span class="more-mobile-chevron">›</span>
+        </a>
         <a asp-controller="Purchase" asp-action="Index" class="more-mobile-row">
             <span class="more-mobile-row-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-2.5-1.6L13 21l-3-1.6L7.5 21 6 20V3Z"/><path d="M9 8h6M9 12h6M9 16h3"/></svg></span>
             <span class="more-mobile-row-label" data-i18n="purchase">Purchase</span>
+            <span class="more-mobile-chevron">›</span>
+        </a>
+        <a asp-controller="Reorder" asp-action="Index" class="more-mobile-row">
+            <span class="more-mobile-row-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 7v5h-5"/><path d="M4 17v-5h5"/><path d="M5.6 9A7 7 0 0 1 18.2 6L20 12M4 12l1.8 6A7 7 0 0 0 18.4 15"/></svg></span>
+            <span class="more-mobile-row-label">Reorder List</span>
             <span class="more-mobile-chevron">›</span>
         </a>
         <a asp-controller="Bills" asp-action="Index" class="more-mobile-row">
