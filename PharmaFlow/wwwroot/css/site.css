@@ -15145,7 +15145,7 @@ body.theme-dark .low-stock-product-actions .low-stock-reorder-form .low-stock-re
 button.inventory-add-item-option {
   width: 100%;
   appearance: none;
-  font-family: inherit;
+  font: inherit;
   text-align: left;
   cursor: pointer;
 }
