@@ -15540,3 +15540,76 @@ button.inventory-add-item-option:focus-visible {
   .reorder-list-page .reorder-catalog-card,
   .reorder-list-page .reorder-product-card { padding: .75rem; }
 }
+
+
+/* Keep invoice analysis progress and recovery visible after direct camera/upload selection. */
+.invoice-scanner-modal.is-processing .invoice-scanner-panel {
+  width: min(560px, 100%);
+  height: auto;
+  max-height: calc(100vh - 2rem);
+}
+.invoice-scanner-modal.is-processing .invoice-scanner-stage,
+.invoice-scanner-modal.is-processing .invoice-scanner-controls,
+.invoice-scanner-modal.is-processing .invoice-scanner-hint {
+  display: none !important;
+}
+.invoice-scanner-modal.is-processing .invoice-ocr-status {
+  display: block;
+  margin: 1rem;
+}
+.invoice-scanner-modal.is-processing .invoice-scanner-footer {
+  display: none;
+}
+.invoice-scanner-modal.is-processing.has-processing-error .invoice-scanner-footer {
+  display: flex;
+}
+.invoice-scanner-modal.is-processing.has-processing-error .invoice-ocr-status {
+  border-color: #fecaca;
+  background: #fff1f2;
+  color: #991b1b;
+}
+.invoice-scanner-modal.is-processing.has-processing-error .invoice-ocr-progress {
+  background: #fee2e2;
+}
+.invoice-scanner-modal.is-processing.has-processing-error .invoice-ocr-progress > span {
+  background: #dc2626;
+}
+.invoice-scanner-close:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+body.theme-dark .invoice-scanner-modal.is-processing.has-processing-error .invoice-ocr-status {
+  border-color: #7f1d1d;
+  background: #32191c;
+  color: #fecaca;
+}
+body.theme-dark .invoice-scanner-modal.is-processing.has-processing-error .invoice-ocr-progress {
+  background: #4c1d24;
+}
+@media (max-width: 575.98px) {
+  .invoice-scanner-modal.is-processing {
+    padding: 1rem;
+    place-items: center;
+  }
+  .invoice-scanner-modal.is-processing .invoice-scanner-panel {
+    width: 100%;
+    height: auto;
+    max-height: calc(100vh - 2rem - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    border: 1px solid #dbe6f4;
+    border-radius: 1rem;
+  }
+  .invoice-scanner-modal.is-processing .invoice-scanner-header {
+    padding: .9rem;
+  }
+  .invoice-scanner-modal.is-processing .invoice-ocr-status {
+    margin: .9rem;
+  }
+  .invoice-scanner-modal.is-processing .invoice-scanner-footer {
+    padding: .75rem .9rem .9rem;
+    flex-wrap: wrap;
+  }
+  .invoice-scanner-modal.is-processing .invoice-scanner-footer .btn {
+    flex: 1 1 120px;
+    min-height: 44px;
+  }
+}
