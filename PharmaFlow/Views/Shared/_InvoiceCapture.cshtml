@@ -1,0 +1,136 @@
+<div class="home-invoice-inputs" aria-hidden="true">
+    <input id="dashboardCameraInput"
+           class="dashboard-file-input"
+           type="file"
+           accept="image/*"
+           capture="environment"
+           multiple
+           tabindex="-1" />
+    <input id="dashboardUploadInput"
+           class="dashboard-file-input"
+           type="file"
+           accept="image/*,application/pdf,.pdf"
+           multiple
+           tabindex="-1" />
+    <div id="invoiceCaptureAntiForgeryToken" hidden>
+        @Html.AntiForgeryToken()
+    </div>
+</div>
+
+<div class="invoice-capture-source-modal" id="invoiceCaptureSourceModal" hidden>
+    <div class="invoice-capture-source-backdrop" id="invoiceCaptureSourceBackdrop"></div>
+    <section class="invoice-capture-source-panel" role="dialog" aria-modal="true" aria-labelledby="invoiceCaptureSourceTitle">
+        <header class="invoice-capture-source-header">
+            <div>
+                <span class="section-kicker">Add stock</span>
+                <h2 id="invoiceCaptureSourceTitle">Choose invoice source</h2>
+                <p>Scan with your camera or select an invoice from your device.</p>
+            </div>
+            <button type="button" class="invoice-capture-source-close" id="invoiceCaptureSourceClose" aria-label="Close">×</button>
+        </header>
+        <div class="invoice-capture-source-options">
+            <button type="button" class="invoice-capture-source-option invoice-capture-source-camera"
+                    id="invoiceCaptureSourceCamera">
+                <span class="invoice-capture-source-icon" aria-hidden="true">⌕</span>
+                <span><strong>Scan Invoice</strong><small>Use camera</small></span>
+            </button>
+            <button type="button" class="invoice-capture-source-option invoice-capture-source-upload"
+                    id="invoiceCaptureSourceUpload">
+                <span class="invoice-capture-source-icon" aria-hidden="true">↑</span>
+                <span><strong>Upload Invoice</strong><small>From device</small></span>
+            </button>
+        </div>
+    </section>
+</div>
+
+<div class="pharma-camera-modal" id="pharmaCameraModal" hidden>
+    <section class="pharma-camera-panel" role="dialog" aria-modal="true" aria-labelledby="pharmaCameraTitle">
+        <h2 id="pharmaCameraTitle" class="visually-hidden">Scan invoices</h2>
+
+        <header class="pharma-camera-topbar">
+            <button type="button" class="pharma-camera-close" id="pharmaCameraClose" aria-label="Close camera">×</button>
+            <span class="pharma-camera-title">Scan Invoice</span>
+            <span class="pharma-camera-top-spacer" aria-hidden="true"></span>
+        </header>
+
+        <div class="pharma-camera-view">
+            <video id="pharmaCameraVideo" autoplay muted playsinline></video>
+        </div>
+
+        <div class="pharma-camera-bottom">
+            <div class="pharma-camera-page" id="pharmaCameraPage">Page 1</div>
+
+            <div class="pharma-camera-controls">
+                <button type="button" class="pharma-camera-gallery" id="pharmaCameraGallery" aria-label="Choose invoice images from gallery">
+                    <span class="pharma-camera-gallery-thumb">▧</span>
+                    <span>Gallery</span>
+                </button>
+
+                <button type="button" class="pharma-camera-shutter" id="pharmaCameraShutter" aria-label="Take invoice photo">
+                    <span></span>
+                </button>
+
+                <button type="button" class="pharma-camera-done" id="pharmaCameraDone" hidden aria-label="Continue with captured invoices">
+                    <span>Page 2</span>
+                </button>
+            </div>
+        </div>
+
+        <canvas id="pharmaCameraCanvas" hidden></canvas>
+    </section>
+</div>
+
+<div class="invoice-scanner-modal" id="invoiceScannerModal" hidden>
+    <div class="invoice-scanner-backdrop" id="invoiceScannerBackdrop"></div>
+    <section class="invoice-scanner-panel" role="dialog" aria-modal="true" aria-labelledby="invoiceScannerTitle">
+        <header class="invoice-scanner-header">
+            <div>
+                <span class="section-kicker" data-i18n="stockCaptureHeading">Capture an invoice in seconds</span>
+                <h2 id="invoiceScannerTitle" data-i18n="scanInvoicePreview">Review invoice scan</h2>
+            </div>
+            <button type="button" class="invoice-scanner-close" id="invoiceScannerClose" data-i18n-attr="aria-label:closeScanner">×</button>
+        </header>
+
+        <div class="invoice-scanner-stage">
+            <div class="invoice-scanner-preview" id="invoiceScannerPreview">
+                <img id="invoiceScannerImage" alt="Invoice preview" hidden />
+                <div class="invoice-scanner-pdf" id="invoiceScannerPdf" hidden>
+                    <span class="invoice-scanner-pdf-icon">PDF</span>
+                    <strong id="invoiceScannerPdfName"></strong>
+                    <span data-i18n="pdfReadyForProcessing">PDF selected and ready for processing.</span>
+                </div>
+                <span class="invoice-scanner-corner invoice-scanner-corner-tl"></span>
+                <span class="invoice-scanner-corner invoice-scanner-corner-tr"></span>
+                <span class="invoice-scanner-corner invoice-scanner-corner-bl"></span>
+                <span class="invoice-scanner-corner invoice-scanner-corner-br"></span>
+            </div>
+        </div>
+
+        <div class="invoice-scanner-controls">
+            <button type="button" class="invoice-scanner-control" id="invoiceRotate" data-image-only>
+                <span>↻</span>
+                <small data-i18n="rotateInvoice">Rotate</small>
+            </button>
+            <button type="button" class="invoice-scanner-control" id="invoiceEnhance" data-image-only aria-pressed="false">
+                <span>✦</span>
+                <small data-i18n="enhanceForOcr">Enhance text</small>
+            </button>
+        </div>
+
+        <p class="invoice-scanner-hint" data-i18n="scannerPreviewHint">Make sure the full invoice is visible and the text is sharp before continuing.</p>
+
+        <div class="invoice-ocr-status" id="invoiceOcrStatus" hidden role="status" aria-live="polite">
+            <div class="invoice-ocr-status-head">
+                <strong id="invoiceOcrStatusTitle" data-i18n="ocrPreparing">Preparing invoice analysis...</strong>
+                <span id="invoiceOcrProgress">0%</span>
+            </div>
+            <div class="invoice-ocr-progress"><span id="invoiceOcrProgressBar"></span></div>
+            <small id="invoiceOcrStatusMessage" data-i18n="ocrStarting">Preparing AI invoice analysis.</small>
+        </div>
+
+        <footer class="invoice-scanner-footer">
+            <button type="button" class="btn btn-outline-secondary" id="invoiceScannerRetake" data-i18n="retakeInvoice">Retake / Choose another</button>
+            <button type="button" class="btn btn-primary" id="invoiceScannerUse" data-i18n="useThisScan">Use this scan</button>
+        </footer>
+    </section>
+</div>
