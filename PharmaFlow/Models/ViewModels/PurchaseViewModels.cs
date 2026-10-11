@@ -39,6 +39,7 @@ public sealed class PurchaseInvoiceItemViewModel
     public string ProductName { get; init; } = string.Empty;
     public string BatchNumber { get; init; } = string.Empty;
     public decimal Quantity { get; init; }
+    public decimal? PurchaseUnitPrice { get; init; }
     public decimal? Mrp { get; init; }
     public DateOnly? ExpiryDate { get; init; }
 }
