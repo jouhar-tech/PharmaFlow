@@ -730,6 +730,7 @@
             pendingFile = file;
             pendingSourceType = sourceType;
             if (scannerTitle) scannerTitle.textContent = "Review invoice scan";
+            pendingImportIds = [];
             processingFailed = false;
             retryFiles = [];
             scanner?.classList.remove("is-processing", "has-processing-error");
