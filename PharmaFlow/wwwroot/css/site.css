@@ -14946,3 +14946,177 @@ body.theme-dark .low-stock-product-actions .low-stock-reorder-form .low-stock-re
   color: #7dd3ca;
 }
 
+/* Low Stock Reorder List shortcut card, shown when at least one item is queued. */
+.low-stock-reorder-list-card {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 18px;
+  align-items: center;
+  gap: .65rem;
+  min-height: 76px;
+  margin: .5rem .75rem .75rem;
+  padding: .65rem .75rem;
+  border: 1px solid #e5e0d4;
+  border-radius: 1rem;
+  background: #fff;
+  color: #123c35;
+  text-decoration: none;
+  box-shadow: 0 5px 16px rgba(15, 35, 56, .06);
+}
+
+.low-stock-reorder-list-card:hover,
+.low-stock-reorder-list-card:focus {
+  color: #123c35;
+  text-decoration: none;
+  border-color: #b5dcd4;
+  box-shadow: 0 7px 20px rgba(15, 35, 56, .09);
+}
+
+.low-stock-reorder-list-card.is-hidden {
+  display: none !important;
+}
+
+.low-stock-reorder-list-count {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: .8rem;
+  background: #0f6b5c;
+  color: #fff;
+  font-size: 1.15rem;
+  font-weight: 850;
+  line-height: 1;
+}
+
+.low-stock-reorder-list-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: .18rem;
+}
+
+.low-stock-reorder-list-copy strong {
+  color: #122b26;
+  font-size: .84rem;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.low-stock-reorder-list-copy small {
+  color: #657269;
+  font-size: .61rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.low-stock-reorder-list-chevron {
+  justify-self: end;
+  color: #0f6b5c;
+  font-size: 2rem;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.low-stock-reorder-feedback {
+  margin: -.2rem .85rem .7rem;
+  padding: .55rem .7rem;
+  border: 1px solid transparent;
+  border-radius: .65rem;
+  font-size: .64rem;
+  font-weight: 750;
+  line-height: 1.4;
+}
+
+.low-stock-reorder-feedback[hidden] {
+  display: none !important;
+}
+
+.low-stock-reorder-feedback.is-success {
+  border-color: #a7f3d0;
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.low-stock-reorder-feedback.is-error {
+  border-color: #fecaca;
+  background: #fff1f2;
+  color: #b91c1c;
+}
+
+.low-stock-reorder-form button[disabled] {
+  cursor: wait;
+  opacity: .65;
+}
+
+@media (min-width: 768px) {
+  .low-stock-reorder-list-card {
+    margin: .7rem 0 .9rem;
+    grid-template-columns: 56px minmax(0, 1fr) 24px;
+    min-height: 92px;
+    padding: .85rem 1rem;
+    gap: .9rem;
+  }
+
+  .low-stock-reorder-list-count {
+    width: 56px;
+    height: 56px;
+    border-radius: 1rem;
+    font-size: 1.4rem;
+  }
+
+  .low-stock-reorder-list-copy strong {
+    font-size: 1rem;
+  }
+
+  .low-stock-reorder-list-copy small {
+    font-size: .72rem;
+  }
+
+  .low-stock-reorder-feedback {
+    margin-left: 0;
+    margin-right: 0;
+  }
+}
+
+body.theme-dark .low-stock-reorder-list-card {
+  border-color: #29413f;
+  background: #111c2e;
+  color: #e2e8f0;
+  box-shadow: none;
+}
+
+body.theme-dark .low-stock-reorder-list-card:hover,
+body.theme-dark .low-stock-reorder-list-card:focus {
+  border-color: #3c7770;
+  color: #e2e8f0;
+}
+
+body.theme-dark .low-stock-reorder-list-count {
+  background: #0f6b5c;
+  color: #fff;
+}
+
+body.theme-dark .low-stock-reorder-list-copy strong {
+  color: #f8fafc;
+}
+
+body.theme-dark .low-stock-reorder-list-copy small {
+  color: #a1b3ae;
+}
+
+body.theme-dark .low-stock-reorder-list-chevron {
+  color: #7dd3ca;
+}
+
+body.theme-dark .low-stock-reorder-feedback.is-success {
+  border-color: #166534;
+  background: #10251a;
+  color: #bbf7d0;
+}
+
+body.theme-dark .low-stock-reorder-feedback.is-error {
+  border-color: #7f1d1d;
+  background: #32191c;
+  color: #fecaca;
+}
+
