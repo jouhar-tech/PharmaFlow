@@ -177,3 +177,24 @@ WHERE batch.batch_id = latest_saved_mrp.saved_batch_id
 -- Historical purchase prices cannot be reconstructed from prior imports because
 -- earlier versions did not extract/store them and invoice images are not retained.
 -- New invoice captures will populate purchase_unit_price going forward.
+
+-- Backfill stored purchase rates too, if an invoice row already has one.
+-- Older rows have NULL here because previous versions did not extract the rate.
+WITH latest_saved_purchase_price AS
+(
+    SELECT DISTINCT ON (saved_batch_id)
+        saved_batch_id,
+        purchase_unit_price
+    FROM public.invoice_import_items
+    WHERE saved_batch_id IS NOT NULL
+      AND validation_status = 'saved'
+      AND purchase_unit_price IS NOT NULL
+      AND purchase_unit_price > 0
+    ORDER BY saved_batch_id, updated_at DESC, import_item_id DESC
+)
+UPDATE public.product_batches AS batch
+SET purchase_unit_price = latest_saved_purchase_price.purchase_unit_price,
+    updated_at = NOW()
+FROM latest_saved_purchase_price
+WHERE batch.batch_id = latest_saved_purchase_price.saved_batch_id
+  AND COALESCE(batch.purchase_unit_price, 0) = 0;
