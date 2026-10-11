@@ -109,7 +109,20 @@
                                   class="low-stock-reorder-form">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="productId" value="@item.ProductId" />
-                                <button type="submit" class="low-stock-reorder-inline">Reorder <span aria-hidden="true">→</span></button>
+                                <button type="submit"
+                                        class="low-stock-reorder-inline @(item.IsInReorderList ? "is-added" : "")"
+                                        data-added="@(item.IsInReorderList ? "true" : "false")"
+                                        data-reorder-list-item-id="@(item.ReorderListItemId?.ToString() ?? string.Empty)"
+                                        aria-label="@(item.IsInReorderList ? "Remove product from Reorder List" : "Add product to Reorder List")">
+                                    @if (item.IsInReorderList)
+                                    {
+                                        <text>Remove</text>
+                                    }
+                                    else
+                                    {
+                                        <text>Reorder <span aria-hidden="true">→</span></text>
+                                    }
+                                </button>
                             </form>
                         </div>
                     </article>
