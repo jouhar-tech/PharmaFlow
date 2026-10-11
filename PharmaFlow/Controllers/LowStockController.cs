@@ -79,7 +79,7 @@ public sealed class LowStockController : Controller
                         ((saved.Barcode != null &&
                           string.Equals(saved.Barcode.Trim(), row.Barcode.Trim(), StringComparison.OrdinalIgnoreCase)) ||
                          (saved.Product?.Barcode != null &&
-                          string.Equals(saved.Product.Barcode.Trim(), row.Barcode.Trim(), StringComparison.OrdinalIgnoreCase))) ||
+                          string.Equals(saved.Product.Barcode.Trim(), row.Barcode.Trim(), StringComparison.OrdinalIgnoreCase)))) ||
                      string.Equals(
                          (saved.Product?.ProductName ?? saved.ProductName ?? string.Empty).Trim(),
                          row.ProductName.Trim(),
