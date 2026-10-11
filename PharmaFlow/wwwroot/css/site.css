@@ -14786,7 +14786,7 @@ body.theme-dark .reorder-list-feedback-success > span:first-child {
 }
 
 .reorder-saved-section {
-  margin-top: 1.1rem;
+  margin-top: .85rem;
 }
 
 .reorder-saved-heading {
@@ -15423,7 +15423,7 @@ button.inventory-add-item-option:focus-visible {
   }
   .reorder-list-page .reorder-saved-section {
     min-width: 0;
-    margin-top: 1.25rem;
+    margin-top: .75rem;
   }
   .reorder-list-page .reorder-section-heading {
     align-items: flex-start;
@@ -15442,7 +15442,7 @@ button.inventory-add-item-option:focus-visible {
   }
   .reorder-list-page .reorder-catalog-search {
     width: 100%;
-    margin: 0 0 .65rem;
+    margin: 0 0 .3rem;
     gap: .35rem;
   }
   .reorder-list-page .reorder-catalog-search input {
