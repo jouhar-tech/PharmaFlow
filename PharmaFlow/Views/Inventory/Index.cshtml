@@ -174,29 +174,31 @@
                 <span class="inventory-add-item-option-arrow" aria-hidden="true">›</span>
             </a>
 
-            <a href="@Url.Action("Index", "Home")?openInvoice=scan"
-               class="inventory-add-item-option inventory-option-invoice">
+            <button type="button"
+                    id="inventoryScanInvoiceTrigger"
+                    class="inventory-add-item-option inventory-option-invoice">
                 <span class="inventory-add-item-option-icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" fill="none"><path d="M7 3.5h10v17H7z"/><path d="M9.5 7.5h5M9.5 10.5h5M9.5 13.5h3"/></svg>
                 </span>
                 <span>
                     <strong data-i18n="scanInvoice">Scan Invoice</strong>
-                    <small data-i18n="scanInvoiceOptionHint">Scan a supplier invoice with your camera and extract stock details.</small>
+                    <small data-i18n="scanInvoiceOptionHint">Scan multiple supplier invoice pages with your camera and extract stock details.</small>
                 </span>
                 <span class="inventory-add-item-option-arrow" aria-hidden="true">›</span>
-            </a>
+            </button>
 
-            <a href="@Url.Action("Index", "Home")?openInvoice=upload"
-               class="inventory-add-item-option inventory-option-upload">
+            <button type="button"
+                    id="inventoryUploadInvoiceTrigger"
+                    class="inventory-add-item-option inventory-option-upload">
                 <span class="inventory-add-item-option-icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" fill="none"><path d="M7 3.5h10v17H7z"/><path d="M12 16V8M9.2 10.8 12 8l2.8 2.8"/></svg>
                 </span>
                 <span>
                     <strong data-i18n="uploadInvoice">Upload Invoice</strong>
-                    <small data-i18n="uploadInvoiceOptionHint">Upload an invoice image or PDF and extract product details.</small>
+                    <small data-i18n="uploadInvoiceOptionHint">Upload multiple invoice images or PDFs and extract product details.</small>
                 </span>
                 <span class="inventory-add-item-option-arrow" aria-hidden="true">›</span>
-            </a>
+            </button>
 
             <a asp-action="BarcodeScanner" class="inventory-add-item-option inventory-option-barcode">
                 <span class="inventory-add-item-option-icon" aria-hidden="true">
@@ -217,6 +219,8 @@
     </section>
 </div>
 
+@await Html.PartialAsync("_InvoiceCapture")
+
 @section Scripts {
 <script>
 (() => {
@@ -225,6 +229,8 @@
     const close = document.getElementById("inventoryAddItemClose");
     const backdrop = document.getElementById("inventoryAddItemBackdrop");
     const cancel = document.getElementById("inventoryAddItemCancel");
+    const scanInvoice = document.getElementById("inventoryScanInvoiceTrigger");
+    const uploadInvoice = document.getElementById("inventoryUploadInvoiceTrigger");
 
     if (!modal || !trigger) return;
 
@@ -245,6 +251,8 @@
     close?.addEventListener("click", () => setOpen(false));
     backdrop?.addEventListener("click", () => setOpen(false));
     cancel?.addEventListener("click", () => setOpen(false));
+    scanInvoice?.addEventListener("click", () => setOpen(false));
+    uploadInvoice?.addEventListener("click", () => setOpen(false));
 
     document.addEventListener("keydown", event => {
         if (event.key === "Escape" && !modal.hidden) setOpen(false);
@@ -305,4 +313,5 @@
     update();
 })();
 </script>
+<script src="~/js/invoice-capture.js" asp-append-version="true"></script>
 }
