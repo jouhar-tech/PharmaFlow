@@ -146,3 +146,34 @@ CREATE INDEX IF NOT EXISTS ix_invoice_imports_profile_distributor
 
 CREATE INDEX IF NOT EXISTS ix_invoice_imports_profile_invoice_date
     ON public.invoice_imports(profile_id, invoice_date);
+
+
+-- Invoice purchase unit price used by inventory batches.
+ALTER TABLE public.invoice_import_items
+    ADD COLUMN IF NOT EXISTS purchase_unit_price NUMERIC(14,2) NULL;
+
+-- Backfill MRP for previously saved invoice batches. Older app versions stored
+-- the extracted MRP on invoice_import_items but created product_batches with
+-- selling_unit_price = 0. Only repair batches whose MRP is still zero.
+WITH latest_saved_mrp AS
+(
+    SELECT DISTINCT ON (saved_batch_id)
+        saved_batch_id,
+        mrp
+    FROM public.invoice_import_items
+    WHERE saved_batch_id IS NOT NULL
+      AND validation_status = 'saved'
+      AND mrp IS NOT NULL
+      AND mrp > 0
+    ORDER BY saved_batch_id, updated_at DESC, import_item_id DESC
+)
+UPDATE public.product_batches AS batch
+SET selling_unit_price = latest_saved_mrp.mrp,
+    updated_at = NOW()
+FROM latest_saved_mrp
+WHERE batch.batch_id = latest_saved_mrp.saved_batch_id
+  AND COALESCE(batch.selling_unit_price, 0) = 0;
+
+-- Historical purchase prices cannot be reconstructed from prior imports because
+-- earlier versions did not extract/store them and invoice images are not retained.
+-- New invoice captures will populate purchase_unit_price going forward.
