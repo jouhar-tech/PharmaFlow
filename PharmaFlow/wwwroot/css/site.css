@@ -15120,3 +15120,24 @@ body.theme-dark .low-stock-reorder-feedback.is-error {
   color: #fecaca;
 }
 
+/* Low Stock Reorder button visual state when the item is already queued. */
+.low-stock-product-actions .low-stock-reorder-form .low-stock-reorder-inline.is-added {
+  background: #fff1f2;
+  color: #b91c1c;
+}
+
+.low-stock-product-actions .low-stock-reorder-form .low-stock-reorder-inline.is-added:hover {
+  background: #ffe4e6;
+  color: #991b1b;
+}
+
+body.theme-dark .low-stock-product-actions .low-stock-reorder-form .low-stock-reorder-inline.is-added {
+  background: #421e25;
+  color: #fda4af;
+}
+
+body.theme-dark .low-stock-product-actions .low-stock-reorder-form .low-stock-reorder-inline.is-added:hover {
+  background: #54232d;
+  color: #fecdd3;
+}
+
