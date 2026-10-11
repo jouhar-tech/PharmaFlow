@@ -4,6 +4,7 @@ public sealed class LowStockViewModel
 {
     public string SearchTerm { get; init; } = string.Empty;
     public int Count { get; init; }
+    public int ReorderListCount { get; init; }
     public IReadOnlyList<LowStockItemViewModel> Items { get; init; } = Array.Empty<LowStockItemViewModel>();
 }
 
