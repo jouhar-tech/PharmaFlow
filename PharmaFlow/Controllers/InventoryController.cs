@@ -412,13 +412,14 @@ public sealed class InventoryController : Controller
             }
         }
 
-        if (!string.IsNullOrWhiteSpace(model.BatchNumber))
+        var suppliedBatchNumber = model.BatchNumber;
+        if (!string.IsNullOrWhiteSpace(suppliedBatchNumber))
         {
             var duplicateBatchNumber = await _dbContext.ProductBatches
                 .AsNoTracking()
                 .AnyAsync(
                     batch => batch.ProductId == product.ProductId &&
-                             batch.BatchNumber.ToLower() == model.BatchNumber.ToLower(),
+                             batch.BatchNumber.ToLower() == suppliedBatchNumber.ToLower(),
                     cancellationToken);
 
             if (duplicateBatchNumber)
@@ -431,7 +432,7 @@ public sealed class InventoryController : Controller
             }
         }
 
-        var batchNumber = model.BatchNumber
+        var batchNumber = suppliedBatchNumber
             ?? $"MANUAL-{DateTime.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid():N}"[..26];
 
         var batch = new ProductBatch
