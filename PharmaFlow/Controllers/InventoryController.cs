@@ -295,6 +295,10 @@ public sealed class InventoryController : Controller
         if (model.Mrp <= 0 || model.Mrp > 999_999_999m)
             ModelState.AddModelError(nameof(model.Mrp), "Enter a valid MRP.");
 
+        // Batch number is optional. Normalize provided values while preserving the
+        // model validation error if the submitted value exceeds the supported length.
+        model.BatchNumber = NormalizeNullableText(model.BatchNumber, 100);
+
         if (!ModelState.IsValid)
             return View(model);
 
@@ -408,7 +412,27 @@ public sealed class InventoryController : Controller
             }
         }
 
-        var batchNumber = $"MANUAL-{DateTime.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid():N}"[..26];
+        if (!string.IsNullOrWhiteSpace(model.BatchNumber))
+        {
+            var duplicateBatchNumber = await _dbContext.ProductBatches
+                .AsNoTracking()
+                .AnyAsync(
+                    batch => batch.ProductId == product.ProductId &&
+                             batch.BatchNumber.ToLower() == model.BatchNumber.ToLower(),
+                    cancellationToken);
+
+            if (duplicateBatchNumber)
+            {
+                await transaction.RollbackAsync(CancellationToken.None);
+                ModelState.AddModelError(
+                    nameof(model.BatchNumber),
+                    "This batch number already exists for this product.");
+                return View(model);
+            }
+        }
+
+        var batchNumber = model.BatchNumber
+            ?? $"MANUAL-{DateTime.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid():N}"[..26];
 
         var batch = new ProductBatch
         {
