@@ -167,16 +167,32 @@ public sealed class ReorderController : Controller
         });
     }
 
-    // Existing low-stock Reorder button: save an item already in this pharmacy's inventory.
+    // Add an inventory product to the Reorder List. Low Stock uses AJAX so the
+    // pharmacy owner stays on the page while the Reorder List count updates.
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Add(long productId, CancellationToken cancellationToken)
     {
+        var isAjaxRequest = string.Equals(
+            Request.Headers["X-Requested-With"],
+            "XMLHttpRequest",
+            StringComparison.OrdinalIgnoreCase);
+
         if (!TryGetProfileId(out var profileId))
+        {
+            if (isAjaxRequest)
+                return Unauthorized(new { success = false, message = "Your session has expired. Please sign in again.", count = 0 });
+
             return RedirectToAction("Login", "Account");
+        }
 
         if (productId <= 0)
+        {
+            if (isAjaxRequest)
+                return BadRequest(new { success = false, message = "Select a valid product.", count = 0 });
+
             return NotFound();
+        }
 
         var product = await _dbContext.Products
             .AsNoTracking()
@@ -195,7 +211,12 @@ public sealed class ReorderController : Controller
             .SingleOrDefaultAsync(cancellationToken);
 
         if (product is null)
+        {
+            if (isAjaxRequest)
+                return NotFound(new { success = false, message = "This product is no longer available.", count = 0 });
+
             return NotFound();
+        }
 
         var alreadySaved = await _dbContext.ReorderListItems
             .AsNoTracking()
@@ -214,7 +235,15 @@ public sealed class ReorderController : Controller
 
         if (alreadySaved)
         {
-            TempData["ReorderListError"] = "Product already added to Reorder List";
+            const string duplicateMessage = "Product already added to Reorder List";
+            var currentCount = await _dbContext.ReorderListItems
+                .AsNoTracking()
+                .CountAsync(item => item.ProfileId == profileId, cancellationToken);
+
+            if (isAjaxRequest)
+                return Json(new { success = false, message = duplicateMessage, count = currentCount });
+
+            TempData["ReorderListError"] = duplicateMessage;
             return RedirectToAction(nameof(Index));
         }
 
@@ -227,7 +256,7 @@ public sealed class ReorderController : Controller
                 batch.QuantityOnHand > 0)
             .SumAsync(batch => (decimal?)batch.QuantityOnHand, cancellationToken) ?? 0m;
 
-        _dbContext.ReorderListItems.Add(new ReorderListItem
+        var reorderItem = new ReorderListItem
         {
             ProfileId = profileId,
             ProductId = productId,
@@ -238,18 +267,25 @@ public sealed class ReorderController : Controller
             Barcode = product.Barcode,
             QuantityWhenAdded = currentQuantity,
             CreatedAt = DateTime.UtcNow
-        });
+        };
+
+        _dbContext.ReorderListItems.Add(reorderItem);
 
         try
         {
             await _dbContext.SaveChangesAsync(cancellationToken);
+            var currentCount = await _dbContext.ReorderListItems
+                .AsNoTracking()
+                .CountAsync(item => item.ProfileId == profileId, cancellationToken);
+
+            if (isAjaxRequest)
+                return Json(new { success = true, message = "Product added to Reorder List", count = currentCount });
+
             TempData["ReorderListSuccess"] = "Product added to Reorder List";
         }
         catch (DbUpdateException)
         {
-            _dbContext.Entry(_dbContext.ChangeTracker.Entries<ReorderListItem>()
-                .Select(entry => entry.Entity)
-                .First(item => item.ProductId == productId)).State = EntityState.Detached;
+            _dbContext.Entry(reorderItem).State = EntityState.Detached;
 
             var duplicateNowExists = await _dbContext.ReorderListItems
                 .AsNoTracking()
@@ -257,6 +293,13 @@ public sealed class ReorderController : Controller
 
             if (!duplicateNowExists)
                 throw;
+
+            var currentCount = await _dbContext.ReorderListItems
+                .AsNoTracking()
+                .CountAsync(item => item.ProfileId == profileId, cancellationToken);
+
+            if (isAjaxRequest)
+                return Json(new { success = false, message = "Product already added to Reorder List", count = currentCount });
 
             TempData["ReorderListError"] = "Product already added to Reorder List";
         }
