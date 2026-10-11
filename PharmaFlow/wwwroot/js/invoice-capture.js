@@ -50,9 +50,12 @@
         const MAX_CAMERA_FILES = 20;
         let cameraStream = null;
         let cameraFiles = [];
+        let isProcessingInvoices = false;
+        let processingFailed = false;
+        let retryFiles = [];
 
         const setBusy = (busy) => {
-            [useButton, retakeButton, rotateButton, enhanceButton].forEach(button => {
+            [useButton, retakeButton, rotateButton, enhanceButton, closeButton].forEach(button => {
                 if (button) button.disabled = busy;
             });
         };
@@ -186,7 +189,7 @@
 
             const files = [...cameraFiles];
             closeCamera(false);
-            await processInvoiceFiles(files, "camera");
+            handleInputFiles(files, "camera");
             clearCameraFiles();
         };
 
@@ -210,7 +213,12 @@
         };
 
         const closeScanner = () => {
+            // Do not let the user accidentally dismiss the only visible progress
+            // indicator while invoice analysis is still running.
+            if (isProcessingInvoices) return;
+
             scanner?.setAttribute("hidden", "");
+            scanner?.classList.remove("is-processing", "has-processing-error");
             document.body.classList.remove("invoice-scanner-open");
             revokePreview();
         };
@@ -241,13 +249,20 @@
         };
 
         const resetSelection = () => {
+            if (isProcessingInvoices) return;
+
             if (cameraInput) cameraInput.value = "";
             if (uploadInput) uploadInput.value = "";
             selected?.setAttribute("hidden", "");
             pendingFile = null;
             pendingSourceType = "upload";
+            retryFiles = [];
+            processingFailed = false;
             window.pharmaFlowInvoiceCapture = null;
             resetOcrUi();
+            setBusy(false);
+            if (useButton) useButton.textContent = "Use this scan";
+            if (retakeButton) retakeButton.textContent = "Retake / Choose another";
             closeScanner();
 
             document.querySelectorAll(".stock-capture-button").forEach(button => {
@@ -428,6 +443,103 @@
             }, "image/jpeg", 0.92);
         });
 
+        const showProcessingStatus = () => {
+            scanner?.classList.add("is-processing");
+            scanner?.classList.remove("has-processing-error");
+            scanner?.removeAttribute("hidden");
+            document.body.classList.add("invoice-scanner-open");
+            if (useButton) useButton.textContent = "Use this scan";
+            if (retakeButton) retakeButton.textContent = "Choose another invoice";
+            setBusy(true);
+        };
+
+        const showProcessingError = (message) => {
+            isProcessingInvoices = false;
+            processingFailed = retryFiles.length > 0;
+            scanner?.classList.add("is-processing", "has-processing-error");
+            scanner?.removeAttribute("hidden");
+            document.body.classList.add("invoice-scanner-open");
+            setBusy(false);
+            if (useButton) useButton.textContent = "Retry analysis";
+            if (retakeButton) retakeButton.textContent = "Choose another invoice";
+            updateOcrStatus("Invoice analysis failed", message, 0);
+        };
+
+        const prepareImageForAnalysis = async (file) => {
+            const angle = ((rotation % 360) + 360) % 360;
+            if (!file?.type?.startsWith("image/") || (angle === 0 && !enhanceText)) {
+                return file;
+            }
+
+            const objectUrl = URL.createObjectURL(file);
+            try {
+                const image = new Image();
+                image.src = objectUrl;
+
+                if (typeof image.decode === "function") {
+                    await image.decode();
+                } else {
+                    await new Promise((resolve, reject) => {
+                        image.onload = resolve;
+                        image.onerror = () => reject(new Error("The invoice image could not be opened."));
+                    });
+                }
+
+                const rotated = angle === 90 || angle === 270;
+                const canvas = document.createElement("canvas");
+                canvas.width = rotated ? image.naturalHeight : image.naturalWidth;
+                canvas.height = rotated ? image.naturalWidth : image.naturalHeight;
+
+                const context = canvas.getContext("2d", { alpha: false });
+                if (!context) throw new Error("Image preparation is not supported by this browser.");
+
+                context.fillStyle = "#ffffff";
+                context.fillRect(0, 0, canvas.width, canvas.height);
+                context.translate(canvas.width / 2, canvas.height / 2);
+                context.rotate(angle * Math.PI / 180);
+                if (enhanceText) context.filter = "grayscale(1) contrast(1.2) brightness(1.06)";
+                context.drawImage(image, -image.naturalWidth / 2, -image.naturalHeight / 2);
+
+                const blob = await new Promise((resolve, reject) => {
+                    canvas.toBlob(result => {
+                        if (result) resolve(result);
+                        else reject(new Error("The prepared invoice image could not be created."));
+                    }, "image/jpeg", 0.94);
+                });
+
+                const baseName = (file.name || "invoice").replace(/\\.[^.]+$/, "") || "invoice";
+                return new File([blob], baseName + "-scan.jpg", {
+                    type: "image/jpeg",
+                    lastModified: Date.now()
+                });
+            } finally {
+                URL.revokeObjectURL(objectUrl);
+            }
+        };
+
+        const useScan = async () => {
+            if (isProcessingInvoices) return;
+
+            if (processingFailed && retryFiles.length > 0) {
+                await processInvoiceFiles([...retryFiles], pendingSourceType);
+                return;
+            }
+
+            if (!pendingFile) {
+                showProcessingError("Choose an invoice image or PDF, then try again.");
+                return;
+            }
+
+            try {
+                const file = await prepareImageForAnalysis(pendingFile);
+                await processInvoiceFiles([file], pendingSourceType);
+            } catch (error) {
+                console.error("Could not prepare invoice image.", error);
+                retryFiles = [pendingFile];
+                showProcessingError(error?.message || "The invoice image could not be prepared. Please try again.");
+            }
+        };
+
         const postVisionForParsing = async (file, progressText = null) => {
             const token = document.querySelector(
                 '#invoiceCaptureAntiForgeryToken input[name="__RequestVerificationToken"]'
@@ -479,7 +591,7 @@
         const processInvoiceFiles = async (files, sourceType) => {
             const selectedFiles = Array.from(files || []).filter(Boolean);
 
-            if (selectedFiles.length === 0) return;
+            if (selectedFiles.length === 0 || isProcessingInvoices) return;
 
             if (selectedFiles.length > 20) {
                 alert("You can scan or upload up to 20 invoices at a time.");
@@ -511,7 +623,11 @@
             }
 
             pendingSourceType = sourceType;
+            retryFiles = [...validFiles];
+            processingFailed = false;
+            isProcessingInvoices = true;
             resetOcrUi();
+            showProcessingStatus();
             updateOcrStatus(
                 selectedFiles.length === 1
                     ? "Preparing invoice..."
@@ -553,6 +669,9 @@
                         : validFiles.length + " invoices are ready for review.",
                     100
                 );
+                isProcessingInvoices = false;
+                processingFailed = false;
+                setBusy(false);
 
                 if (importIds.length === 1) {
                     window.location.assign(
@@ -568,10 +687,8 @@
                 );
             } catch (error) {
                 console.error("Invoice AI processing failed.", error);
-                updateOcrStatus(
-                    "Invoice analysis failed",
-                    error?.message || "One or more invoices could not be analyzed.",
-                    0
+                showProcessingError(
+                    error?.message || "One or more invoices could not be analyzed."
                 );
             }
         };
@@ -592,6 +709,12 @@
         const openScanner = (file, sourceType) => {
             pendingFile = file;
             pendingSourceType = sourceType;
+            processingFailed = false;
+            retryFiles = [];
+            scanner?.classList.remove("is-processing", "has-processing-error");
+            setBusy(false);
+            if (useButton) useButton.textContent = "Use this scan";
+            if (retakeButton) retakeButton.textContent = "Retake / Choose another";
             rotation = 0;
             enhanceText = false;
             resetOcrUi();
@@ -635,8 +758,17 @@
         };
 
         const handleInputFiles = (files, sourceType) => {
-            if (!files || files.length === 0) return;
-            processInvoiceFiles(files, sourceType);
+            const selectedFiles = Array.from(files || []).filter(Boolean);
+            if (selectedFiles.length === 0 || isProcessingInvoices) return;
+
+            // Keep the existing rotate/enhance preview for a single invoice. For
+            // multi-file batches, show a visible progress panel and process in order.
+            if (selectedFiles.length === 1) {
+                openScanner(selectedFiles[0], sourceType);
+                return;
+            }
+
+            processInvoiceFiles(selectedFiles, sourceType);
         };
 
         const handleInput = (input, sourceType) => {
@@ -697,9 +829,15 @@
         cameraDone?.addEventListener("click", finishCameraCapture);
 
         reset?.addEventListener("click", resetSelection);
-        retakeButton?.addEventListener("click", resetSelection);
+        retakeButton?.addEventListener("click", () => {
+            if (isProcessingInvoices) return;
+            resetSelection();
+            openSourceModal();
+        });
         closeButton?.addEventListener("click", closeScanner);
-        backdrop?.addEventListener("click", closeScanner);
+        backdrop?.addEventListener("click", () => {
+            if (!isProcessingInvoices) closeScanner();
+        });
         useButton?.addEventListener("click", useScan);
 
         rotateButton?.addEventListener("click", () => {
@@ -734,7 +872,7 @@
                 return;
             }
             if (event.key === "Escape" && !scanner?.hasAttribute("hidden")) {
-                closeScanner();
+                if (!isProcessingInvoices) closeScanner();
             }
         });
 
