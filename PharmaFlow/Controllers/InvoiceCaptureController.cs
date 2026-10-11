@@ -270,6 +270,9 @@ public sealed class InvoiceCaptureController : Controller
                     BatchNumber = item.BatchNumber,
                     ExpiryDate = hasExpiry ? expiry : null,
                     Quantity = hasQuantity ? item.Quantity : null,
+                    PurchaseUnitPrice = item.PurchaseUnitPrice > 0m
+                        ? Math.Round(Math.Min(item.PurchaseUnitPrice, 999_999_999m), 2)
+                        : null,
                     Mrp = item.Mrp > 0m ? Math.Round(Math.Min(item.Mrp, 999_999_999m), 2) : null,
                     Confidence = Math.Clamp(item.Confidence, 0m, 100m),
                     ValidationStatus = valid ? "ready" : "needs_review",
@@ -338,6 +341,9 @@ public sealed class InvoiceCaptureController : Controller
                 item.ExpiryDateText,
                 item.Quantity > 0m
                     ? item.Quantity.ToString(CultureInfo.InvariantCulture)
+                    : string.Empty,
+                item.PurchaseUnitPrice > 0m
+                    ? item.PurchaseUnitPrice.ToString(CultureInfo.InvariantCulture)
                     : string.Empty,
                 item.Mrp > 0m
                     ? item.Mrp.ToString(CultureInfo.InvariantCulture)
@@ -710,6 +716,12 @@ public sealed class InvoiceCaptureController : Controller
             }
 
             var quantity = rows.Sum(row => row.Quantity.GetValueOrDefault());
+            var purchaseUnitPrice = rows
+                .Select(row => row.PurchaseUnitPrice)
+                .FirstOrDefault(price => price is > 0m);
+            var mrp = rows
+                .Select(row => row.Mrp)
+                .FirstOrDefault(price => price is > 0m);
             var product = rowProducts[first];
             aggregateRows.Add(new AggregatedStockRow(
                 first,
@@ -717,6 +729,8 @@ public sealed class InvoiceCaptureController : Controller
                 first.BatchNumber.Trim(),
                 distinctExpiryDates[0]!.Value,
                 quantity,
+                purchaseUnitPrice,
+                mrp,
                 rows));
         }
 
@@ -783,6 +797,24 @@ public sealed class InvoiceCaptureController : Controller
                 if (batchLookup.TryGetValue(key, out var existingBatch))
                 {
                     existingBatch.QuantityOnHand += row.Quantity;
+
+                    // Only replace stored prices when a positive value is available.
+                    if (row.PurchaseUnitPrice is > 0m)
+                    {
+                        existingBatch.PurchaseUnitPrice = decimal.Round(
+                            row.PurchaseUnitPrice.Value,
+                            2,
+                            MidpointRounding.AwayFromZero);
+                    }
+
+                    if (row.Mrp is > 0m)
+                    {
+                        existingBatch.SellingUnitPrice = decimal.Round(
+                            row.Mrp.Value,
+                            2,
+                            MidpointRounding.AwayFromZero);
+                    }
+
                     existingBatch.UpdatedAt = DateTime.UtcNow;
                     newBatchLookup[key] = existingBatch;
                 }
@@ -794,8 +826,12 @@ public sealed class InvoiceCaptureController : Controller
                         BatchNumber = row.BatchNumber,
                         ExpiryDate = row.ExpiryDate,
                         QuantityOnHand = row.Quantity,
-                        PurchaseUnitPrice = 0m,
-                        SellingUnitPrice = 0m,
+                        PurchaseUnitPrice = row.PurchaseUnitPrice is > 0m
+                            ? decimal.Round(row.PurchaseUnitPrice.Value, 2, MidpointRounding.AwayFromZero)
+                            : 0m,
+                        SellingUnitPrice = row.Mrp is > 0m
+                            ? decimal.Round(row.Mrp.Value, 2, MidpointRounding.AwayFromZero)
+                            : 0m,
                         IsQuarantined = false,
                         IsActive = true,
                         CreatedAt = DateTime.UtcNow,
@@ -860,6 +896,9 @@ public sealed class InvoiceCaptureController : Controller
                 entity.BatchNumber = item.BatchNumber.Trim();
                 entity.ExpiryDate = item.ExpiryDate;
                 entity.Quantity = item.Quantity;
+                entity.PurchaseUnitPrice = item.PurchaseUnitPrice is > 0m
+                    ? decimal.Round(Math.Min(item.PurchaseUnitPrice.Value, 999_999_999m), 2, MidpointRounding.AwayFromZero)
+                    : null;
                 entity.Mrp = item.Mrp is > 0m
                     ? decimal.Round(Math.Min(item.Mrp.Value, 999_999_999m), 2, MidpointRounding.AwayFromZero)
                     : null;
@@ -972,6 +1011,7 @@ public sealed class InvoiceCaptureController : Controller
                     BatchNumber = item.BatchNumber,
                     ExpiryDate = item.ExpiryDate,
                     Quantity = item.Quantity,
+                    PurchaseUnitPrice = item.PurchaseUnitPrice,
                     Confidence = item.Confidence,
                     Mrp = item.Mrp,
                     ValidationStatus = validation.Status,
@@ -1101,6 +1141,12 @@ public sealed class InvoiceCaptureController : Controller
         if (item.Quantity.Value > 1_000_000m)
             return "Quantity is too large.";
 
+        if (item.PurchaseUnitPrice is < 0m or > 999_999_999m)
+            return "Purchase price must be between 0 and 999,999,999.";
+
+        if (item.Mrp is < 0m or > 999_999_999m)
+            return "MRP must be between 0 and 999,999,999.";
+
         return null;
     }
 
@@ -1136,5 +1182,7 @@ public sealed class InvoiceCaptureController : Controller
         string BatchNumber,
         DateOnly ExpiryDate,
         decimal Quantity,
+        decimal? PurchaseUnitPrice,
+        decimal? Mrp,
         IReadOnlyList<InvoiceReviewItemViewModel> SourceItems);
 }
