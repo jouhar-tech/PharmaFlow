@@ -101,7 +101,12 @@
 
                         <div class="low-stock-product-actions">
                             <span class="low-stock-status-badge">Low stock</span>
-                            <form asp-controller="Reorder" asp-action="Add" method="post" class="low-stock-reorder-form">
+                            <form asp-controller="Reorder"
+                                  asp-action="Add"
+                                  asp-route-productId="@item.ProductId"
+                                  data-remove-url="@Url.Action("Remove", "Reorder")"
+                                  method="post"
+                                  class="low-stock-reorder-form">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="productId" value="@item.ProductId" />
                                 <button type="submit" class="low-stock-reorder-inline">Reorder <span aria-hidden="true">→</span></button>
@@ -159,7 +164,38 @@
 
     update();
 
-    // Add stock to the Reorder List without navigating away from Low Stock.
+    function setReorderButtonState(button, isAdded, reorderListItemId) {
+        if (isAdded) {
+            button.textContent = 'Remove';
+            button.classList.add('is-added');
+            button.dataset.added = 'true';
+            if (reorderListItemId) {
+                button.dataset.reorderListItemId = String(reorderListItemId);
+            }
+            button.setAttribute('aria-label', 'Remove product from Reorder List');
+        } else {
+            button.innerHTML = 'Reorder <span aria-hidden="true">→</span>';
+            button.classList.remove('is-added');
+            delete button.dataset.added;
+            delete button.dataset.reorderListItemId;
+            button.setAttribute('aria-label', 'Add product to Reorder List');
+        }
+    }
+
+    function updateReorderListCard(count) {
+        if (!Number.isInteger(count) || count < 0) return;
+
+        reorderCount.textContent = count.toLocaleString();
+        if (count > 0) {
+            reorderCard.classList.remove('is-hidden');
+            reorderCard.setAttribute('aria-hidden', 'false');
+        } else {
+            reorderCard.classList.add('is-hidden');
+            reorderCard.setAttribute('aria-hidden', 'true');
+        }
+    }
+
+    // Toggle each row between Reorder and Remove without leaving Low Stock.
     reorderForms.forEach(form => {
         form.addEventListener('submit', async function (event) {
             event.preventDefault();
@@ -167,14 +203,32 @@
             const button = form.querySelector('button[type="submit"]');
             if (!button || button.disabled) return;
 
-            const originalLabel = button.innerHTML;
+            const isRemoving = button.dataset.added === 'true';
+            const payload = new FormData(form);
+            let requestUrl = form.action;
+
+            if (isRemoving) {
+                const reorderListItemId = button.dataset.reorderListItemId;
+                if (!reorderListItemId) {
+                    reorderFeedback.textContent = 'Could not identify this Reorder List item. Refresh the page and try again.';
+                    reorderFeedback.classList.remove('is-success');
+                    reorderFeedback.classList.add('is-error');
+                    reorderFeedback.hidden = false;
+                    return;
+                }
+
+                requestUrl = form.dataset.removeUrl;
+                payload.delete('productId');
+                payload.set('reorderListItemId', reorderListItemId);
+            }
+
             button.disabled = true;
             button.setAttribute('aria-busy', 'true');
 
             try {
-                const response = await fetch(form.action, {
+                const response = await fetch(requestUrl, {
                     method: 'POST',
-                    body: new FormData(form),
+                    body: payload,
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest',
                         'Accept': 'application/json'
@@ -184,39 +238,46 @@
 
                 const result = await response.json().catch(() => null);
                 if (!response.ok || !result) {
-                    throw new Error(result?.message || 'Could not add this product. Please try again.');
+                    throw new Error(result?.message || 'Could not update the Reorder List. Please try again.');
                 }
 
-                if (Number.isInteger(result.count) && result.count >= 0) {
-                    reorderCount.textContent = result.count.toLocaleString();
-                    if (result.count > 0) {
-                        reorderCard.classList.remove('is-hidden');
-                        reorderCard.setAttribute('aria-hidden', 'false');
-                    } else {
-                        reorderCard.classList.add('is-hidden');
-                        reorderCard.setAttribute('aria-hidden', 'true');
-                    }
+                updateReorderListCard(result.count);
+
+                if (!isRemoving && (result.success || result.alreadyAdded) && result.reorderListItemId) {
+                    setReorderButtonState(button, true, result.reorderListItemId);
+                } else if (isRemoving && result.success) {
+                    setReorderButtonState(button, false);
                 }
 
-                reorderFeedback.textContent = result.success
-                    ? (result.count === 1
+                if (isRemoving && result.success) {
+                    reorderFeedback.textContent = result.count === 0
+                        ? 'Item removed. Your Reorder List is now empty.'
+                        : 'Item removed from Reorder List.';
+                    reorderFeedback.classList.add('is-success');
+                    reorderFeedback.classList.remove('is-error');
+                } else if (result.success) {
+                    reorderFeedback.textContent = result.count === 1
                         ? '1 item added to Reorder List.'
-                        : result.count + ' items currently in Reorder List.')
-                    : (result.message || 'This product could not be added.');
-                reorderFeedback.classList.toggle('is-success', !!result.success);
-                reorderFeedback.classList.toggle('is-error', !result.success);
+                        : result.count + ' items currently in Reorder List.';
+                    reorderFeedback.classList.add('is-success');
+                    reorderFeedback.classList.remove('is-error');
+                } else {
+                    reorderFeedback.textContent = result.message || 'This product could not be updated.';
+                    reorderFeedback.classList.remove('is-success');
+                    reorderFeedback.classList.add('is-error');
+                }
+
                 reorderFeedback.hidden = false;
             } catch (error) {
                 reorderFeedback.textContent = error instanceof Error
                     ? error.message
-                    : 'Could not add this product. Please try again.';
+                    : 'Could not update the Reorder List. Please try again.';
                 reorderFeedback.classList.remove('is-success');
                 reorderFeedback.classList.add('is-error');
                 reorderFeedback.hidden = false;
             } finally {
                 button.disabled = false;
                 button.removeAttribute('aria-busy');
-                if (!button.innerHTML) button.innerHTML = originalLabel;
             }
         });
     });
