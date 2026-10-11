@@ -943,11 +943,25 @@ public sealed class InvoiceCaptureController : Controller
             .GroupBy(batch => BatchKey(batch.ProductId, batch.BatchNumber))
             .ToDictionary(group => group.Key, group => group.First(), StringComparer.OrdinalIgnoreCase);
 
+        var isSavedImport = string.Equals(
+            import.Status,
+            "saved",
+            StringComparison.OrdinalIgnoreCase);
+
         var items = import.Items
             .OrderBy(item => item.RowNumber)
             .Select(item =>
             {
-                var validation = GetReviewValidation(item, productMap, batchMap);
+                // A saved invoice is a historical record. Do not recalculate its
+                // original validation as if it were an unsaved draft; doing so made
+                // the "Rows saved" summary show zero and could bring removed rows back.
+                var validation = isSavedImport
+                    ? (
+                        Status: item.ValidationStatus,
+                        Message: item.ValidationMessage ?? "Saved to stock.",
+                        ProductId: item.MatchedProductId,
+                        BatchId: item.SavedBatchId)
+                    : GetReviewValidation(item, productMap, batchMap);
 
                 return new InvoiceReviewItemViewModel
                 {
@@ -963,7 +977,11 @@ public sealed class InvoiceCaptureController : Controller
                     ValidationStatus = validation.Status,
                     ValidationMessage = validation.Message,
                     MatchedProductId = validation.ProductId,
-                    SavedBatchId = validation.BatchId
+                    SavedBatchId = validation.BatchId,
+                    Removed = string.Equals(
+                        item.ValidationStatus,
+                        "removed",
+                        StringComparison.OrdinalIgnoreCase)
                 };
             })
             .ToList();
