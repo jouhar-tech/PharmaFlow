@@ -14899,3 +14899,50 @@ body.theme-dark .reorder-catalog-card small {
   color: #94a3b8;
 }
 
+/* Restore the compact teal Reorder pill inside the Low Stock card form.
+   The button is now wrapped in a form, so the older sibling selector no longer matches. */
+.low-stock-product-actions .low-stock-reorder-form {
+  display: inline-flex;
+  margin: 0;
+}
+
+.low-stock-product-actions .low-stock-reorder-form .low-stock-reorder-inline {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .22rem;
+  min-height: 0;
+  margin: 0;
+  padding: .22rem .42rem;
+  border: 0;
+  border-radius: 999px;
+  background: #e8f7f4;
+  color: #238b87;
+  font-family: inherit;
+  font-size: .52rem;
+  font-weight: 850;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 140ms ease, color 140ms ease, transform 140ms ease;
+}
+
+.low-stock-product-actions .low-stock-reorder-form .low-stock-reorder-inline:hover {
+  background: #d7f0ec;
+  color: #176d6a;
+}
+
+.low-stock-product-actions .low-stock-reorder-form .low-stock-reorder-inline:active {
+  transform: scale(.98);
+}
+
+.low-stock-product-actions .low-stock-reorder-form .low-stock-reorder-inline span {
+  font-size: .7rem;
+}
+
+body.theme-dark .low-stock-product-actions .low-stock-reorder-form .low-stock-reorder-inline {
+  background: #163b39;
+  color: #7dd3ca;
+}
+
