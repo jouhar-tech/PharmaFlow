@@ -62,9 +62,7 @@
             </button>
         </form>
 
-        <p class="reorder-catalog-note">Catalog results are not inventory stock. Adding a result here does not create a product or batch in Inventory.</p>
-
-        @if (Model.SearchTerm.Length >= 2)
+                @if (Model.SearchTerm.Length >= 2)
         {
             <div class="reorder-catalog-results" aria-live="polite">
                 @if (Model.CatalogProducts.Count == 0)
@@ -150,19 +148,12 @@
                 }
             </div>
         }
-        else
-        {
-            <div class="reorder-catalog-prompt">
-                Enter at least 2 characters to search the Global Product Catalog.
-            </div>
-        }
     </section>
 
     <section class="low-stock-modern-products reorder-saved-section" aria-labelledby="reorderSavedTitle">
         <div class="reorder-section-heading reorder-saved-heading">
             <div>
                 <h2 id="reorderSavedTitle">Your Reorder List</h2>
-                <p>Items saved from Low Stock and the Global Product Catalog.</p>
             </div>
             <span class="reorder-saved-count">@Model.Items.Count</span>
         </div>
