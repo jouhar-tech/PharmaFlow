@@ -11,6 +11,7 @@ public sealed class InventoryProductDetailsViewModel
     public string? PackSize { get; init; }
     public string? Barcode { get; init; }
     public string? Manufacturer { get; init; }
+    public string? DistributorName { get; init; }
     public string? HsnCode { get; init; }
     public decimal? GstRate { get; init; }
     public decimal ReorderLevel { get; init; }
