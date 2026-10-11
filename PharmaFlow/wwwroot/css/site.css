@@ -15246,3 +15246,163 @@ button.inventory-add-item-option:focus-visible {
   }
 }
 
+
+
+/* Reorder List responsive layout */
+.reorder-list-page {
+  width: 100%;
+  min-width: 0;
+  padding: 1.25rem 0 2rem;
+}
+.reorder-list-page .low-stock-modern-header,
+.reorder-list-page .reorder-section-heading,
+.reorder-list-page .reorder-product-card,
+.reorder-list-page .reorder-catalog-card {
+  min-width: 0;
+}
+.reorder-list-page .reorder-section-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: .75rem;
+  flex-wrap: wrap;
+}
+.reorder-list-page .reorder-section-heading > div { min-width: 0; flex: 1 1 220px; }
+.reorder-list-page .reorder-section-heading h2,
+.reorder-list-page .reorder-section-heading p,
+.reorder-list-page .reorder-product-card h2,
+.reorder-list-page .inventory-product-search-card-copy {
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+.reorder-list-page .reorder-catalog-search {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+.reorder-list-page .reorder-catalog-search input { min-width: 0; width: 100%; }
+.reorder-list-page .reorder-catalog-card {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.reorder-list-page .reorder-catalog-card .inventory-product-search-card-main {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.reorder-list-page .reorder-catalog-add {
+  flex: 0 0 auto;
+  max-width: 100%;
+}
+.reorder-list-page .reorder-catalog-add form { max-width: 100%; }
+.reorder-list-page .reorder-catalog-add button {
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.reorder-list-page .reorder-products-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+}
+.reorder-list-page .reorder-product-card { min-width: 0; }
+.reorder-list-page .reorder-product-card .low-stock-product-card-top {
+  min-width: 0;
+  flex-wrap: wrap;
+}
+.reorder-list-page .reorder-product-card .low-stock-product-heading {
+  flex: 1 1 120px;
+  min-width: 0;
+}
+.reorder-list-page .reorder-product-card .reorder-current-qty {
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.reorder-list-page .reorder-product-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .45rem .85rem;
+  overflow-wrap: anywhere;
+}
+.reorder-list-page .reorder-product-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: .75rem;
+}
+.reorder-list-page .reorder-product-actions form { margin-left: auto; }
+.reorder-list-page .reorder-remove-button { min-height: 40px; }
+
+@media (max-width: 767.98px) {
+  body.reorder-list-page-body .app-topbar { display: none; }
+  body.reorder-list-page-body .app-content { padding: 0 .85rem; }
+  body.reorder-list-page-body .app-footer { padding: .75rem .85rem; }
+  .reorder-list-page { padding: .75rem 0 calc(5.5rem + env(safe-area-inset-bottom)); }
+  .reorder-list-page .low-stock-modern-header {
+    gap: .65rem;
+    margin-bottom: 1rem;
+  }
+  .reorder-list-page .low-stock-modern-header h1 {
+    font-size: clamp(1.25rem, 5vw, 1.6rem);
+    line-height: 1.25;
+    min-width: 0;
+  }
+  .reorder-list-page .reorder-list-summary {
+    padding: 1rem;
+    gap: .75rem;
+  }
+  .reorder-list-page .reorder-list-summary small {
+    display: block;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+  }
+  .reorder-list-page .reorder-catalog-section,
+  .reorder-list-page .reorder-saved-section { margin-top: 1.25rem; }
+  .reorder-list-page .reorder-section-heading { gap: .5rem; }
+  .reorder-list-page .reorder-section-heading h2 { font-size: 1.1rem; line-height: 1.35; }
+  .reorder-list-page .reorder-section-heading p { font-size: .85rem; line-height: 1.45; }
+  .reorder-list-page .reorder-catalog-search { gap: .35rem; }
+  .reorder-list-page .reorder-catalog-search input { font-size: 16px; }
+  .reorder-list-page .reorder-catalog-note,
+  .reorder-list-page .reorder-catalog-prompt { line-height: 1.5; overflow-wrap: anywhere; }
+  .reorder-list-page .reorder-catalog-card {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: .85rem;
+    padding: .9rem;
+  }
+  .reorder-list-page .reorder-catalog-card .inventory-product-search-card-main {
+    gap: .65rem;
+    width: 100%;
+  }
+  .reorder-list-page .reorder-catalog-card .inventory-product-search-icon-badge {
+    flex: 0 0 38px;
+  }
+  .reorder-list-page .reorder-catalog-add,
+  .reorder-list-page .reorder-catalog-add form { width: 100%; }
+  .reorder-list-page .reorder-catalog-add button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    min-height: 44px;
+    padding: .7rem .85rem;
+  }
+  .reorder-list-page .reorder-products-grid { grid-template-columns: minmax(0, 1fr); gap: .75rem; }
+  .reorder-list-page .reorder-product-card { padding: .9rem; }
+  .reorder-list-page .reorder-product-card .low-stock-product-card-top { gap: .6rem; }
+  .reorder-list-page .reorder-product-card .low-stock-product-heading h2 { font-size: 1rem; line-height: 1.35; }
+  .reorder-list-page .reorder-product-meta { font-size: .8rem; line-height: 1.45; }
+  .reorder-list-page .reorder-product-actions { align-items: stretch; }
+  .reorder-list-page .reorder-product-actions .low-stock-status-badge { max-width: 100%; white-space: normal; }
+  .reorder-list-page .reorder-product-actions form { width: 100%; margin-left: 0; }
+  .reorder-list-page .reorder-remove-button { width: 100%; justify-content: center; }
+}
+@media (max-width: 360px) {
+  body.reorder-list-page-body .app-content { padding: 0 .65rem; }
+  .reorder-list-page .reorder-list-summary { padding: .8rem; }
+  .reorder-list-page .reorder-catalog-card,
+  .reorder-list-page .reorder-product-card { padding: .75rem; }
+}
