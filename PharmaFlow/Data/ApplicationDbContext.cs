@@ -142,6 +142,7 @@ public class ApplicationDbContext : DbContext
             entity.Property(item => item.BatchNumber).HasColumnName("batch_number");
             entity.Property(item => item.ExpiryDate).HasColumnName("expiry_date");
             entity.Property(item => item.Quantity).HasColumnName("quantity");
+            entity.Property(item => item.PurchaseUnitPrice).HasColumnName("purchase_unit_price").HasPrecision(14, 2);
             entity.Property(item => item.Mrp).HasColumnName("mrp").HasPrecision(14, 2);
             entity.Property(item => item.Confidence).HasColumnName("confidence");
             entity.Property(item => item.ValidationStatus).HasColumnName("validation_status");
