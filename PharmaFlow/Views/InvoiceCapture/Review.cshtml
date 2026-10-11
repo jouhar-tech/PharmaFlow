@@ -161,22 +161,24 @@
                                            name="Items[@i].PurchaseUnitPrice"
                                            value="@(item.PurchaseUnitPrice?.ToString(System.Globalization.CultureInfo.InvariantCulture))"
                                            type="number"
-                                           min="0"
+                                           min="0.01"
                                            max="999999999"
                                            step="0.01"
                                            inputmode="decimal"
-                                           aria-label="Purchase Price" />
+                                           aria-label="Purchase Price"
+                                           required />
                                 </td>
                                 <td>
                                     <input class="form-control invoice-review-input"
                                            name="Items[@i].Mrp"
                                            value="@(item.Mrp?.ToString(System.Globalization.CultureInfo.InvariantCulture))"
                                            type="number"
-                                           min="0"
+                                           min="0.01"
                                            max="999999999"
                                            step="0.01"
                                            inputmode="decimal"
-                                           aria-label="MRP" />
+                                           aria-label="MRP"
+                                           required />
                                 </td>
                                 <td>
                                     <span class="invoice-confidence-badge">@item.Confidence.ToString("N0")%</span>
@@ -313,8 +315,8 @@
                 <td><input class="form-control invoice-review-input is-missing" name="Items[${index}].BatchNumber" maxlength="100" required /></td>
                 <td><input class="form-control invoice-review-input is-missing" name="Items[${index}].ExpiryDate" type="date" required /></td>
                 <td><input class="form-control invoice-review-input is-missing" name="Items[${index}].Quantity" type="number" min="0.01" max="1000000" step="0.01" required /></td>
-                <td><input class="form-control invoice-review-input" name="Items[${index}].PurchaseUnitPrice" type="number" min="0" max="999999999" step="0.01" inputmode="decimal" aria-label="Purchase Price" /></td>
-                <td><input class="form-control invoice-review-input" name="Items[${index}].Mrp" type="number" min="0" max="999999999" step="0.01" inputmode="decimal" aria-label="MRP" /></td>
+                <td><input class="form-control invoice-review-input" name="Items[${index}].PurchaseUnitPrice" type="number" min="0.01" max="999999999" step="0.01" inputmode="decimal" aria-label="Purchase Price" required /></td>
+                <td><input class="form-control invoice-review-input" name="Items[${index}].Mrp" type="number" min="0.01" max="999999999" step="0.01" inputmode="decimal" aria-label="MRP" required /></td>
                 <td><span class="invoice-confidence-badge">—</span></td>
                 <td><span class="invoice-validation-badge is-review">New row needs review.</span></td>
                 <td><button type="button" class="invoice-row-remove" title="Remove row" aria-label="Remove row">×</button></td>`;
