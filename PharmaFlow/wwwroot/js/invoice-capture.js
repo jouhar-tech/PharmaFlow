@@ -23,6 +23,7 @@
         const reset = document.getElementById("stockCaptureReset");
 
         const scanner = document.getElementById("invoiceScannerModal");
+        const scannerTitle = document.getElementById("invoiceScannerTitle");
         const scannerPreview = document.getElementById("invoiceScannerPreview");
         const scannerImage = document.getElementById("invoiceScannerImage");
         const scannerPdf = document.getElementById("invoiceScannerPdf");
@@ -443,11 +444,12 @@
             }, "image/jpeg", 0.92);
         });
 
-        const showProcessingStatus = () => {
+        const showProcessingStatus = (title = "Analyzing invoice") => {
             scanner?.classList.add("is-processing");
             scanner?.classList.remove("has-processing-error");
             scanner?.removeAttribute("hidden");
             document.body.classList.add("invoice-scanner-open");
+            if (scannerTitle) scannerTitle.textContent = title;
             if (useButton) useButton.textContent = "Use this scan";
             if (retakeButton) retakeButton.textContent = "Choose another invoice";
             setBusy(true);
@@ -459,6 +461,7 @@
             scanner?.classList.add("is-processing", "has-processing-error");
             scanner?.removeAttribute("hidden");
             document.body.classList.add("invoice-scanner-open");
+            if (scannerTitle) scannerTitle.textContent = "Invoice analysis failed";
             setBusy(false);
             if (useButton) useButton.textContent = "Retry analysis";
             if (retakeButton) retakeButton.textContent = "Choose another invoice";
@@ -474,14 +477,14 @@
             const objectUrl = URL.createObjectURL(file);
             try {
                 const image = new Image();
-                image.src = objectUrl;
-
                 if (typeof image.decode === "function") {
+                    image.src = objectUrl;
                     await image.decode();
                 } else {
                     await new Promise((resolve, reject) => {
                         image.onload = resolve;
                         image.onerror = () => reject(new Error("The invoice image could not be opened."));
+                        image.src = objectUrl;
                     });
                 }
 
@@ -526,9 +529,17 @@
             }
 
             if (!pendingFile) {
-                showProcessingError("Choose an invoice image or PDF, then try again.");
+                closeScanner();
+                openSourceModal();
                 return;
             }
+
+            setBusy(true);
+            scanner?.classList.add("is-processing");
+            scanner?.removeAttribute("hidden");
+            document.body.classList.add("invoice-scanner-open");
+            if (scannerTitle) scannerTitle.textContent = "Preparing invoice";
+            updateOcrStatus("Preparing invoice image...", "Applying the selected rotation and text enhancement.", 10);
 
             try {
                 const file = await prepareImageForAnalysis(pendingFile);
@@ -627,7 +638,7 @@
             processingFailed = false;
             isProcessingInvoices = true;
             resetOcrUi();
-            showProcessingStatus();
+            showProcessingStatus(validFiles.length > 1 ? "Analyzing invoices" : "Analyzing invoice");
             updateOcrStatus(
                 selectedFiles.length === 1
                     ? "Preparing invoice..."
@@ -709,6 +720,7 @@
         const openScanner = (file, sourceType) => {
             pendingFile = file;
             pendingSourceType = sourceType;
+            if (scannerTitle) scannerTitle.textContent = "Review invoice scan";
             processingFailed = false;
             retryFiles = [];
             scanner?.classList.remove("is-processing", "has-processing-error");
