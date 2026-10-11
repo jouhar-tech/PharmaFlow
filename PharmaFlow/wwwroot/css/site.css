@@ -15248,11 +15248,18 @@ button.inventory-add-item-option:focus-visible {
 
 
 
-/* Reorder List responsive layout */
+/* Reorder List responsive layout
+   Match the compact mobile headers and content spacing used by Inventory,
+   while explicitly overriding inherited Low Stock hero/overlap styles. */
 .reorder-list-page {
   width: 100%;
   min-width: 0;
-  padding: 1.25rem 0 2rem;
+  padding: 1rem 0 2rem;
+}
+.reorder-list-page *,
+.reorder-list-page *::before,
+.reorder-list-page *::after {
+  box-sizing: border-box;
 }
 .reorder-list-page .low-stock-modern-header,
 .reorder-list-page .reorder-section-heading,
@@ -15276,11 +15283,18 @@ button.inventory-add-item-option:focus-visible {
   word-break: normal;
 }
 .reorder-list-page .reorder-catalog-search {
+  display: flex;
   width: 100%;
   max-width: 100%;
   min-width: 0;
+  margin: 0 0 .7rem;
 }
-.reorder-list-page .reorder-catalog-search input { min-width: 0; width: 100%; }
+.reorder-list-page .reorder-catalog-search input {
+  display: block;
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;
+}
 .reorder-list-page .reorder-catalog-card {
   display: flex;
   align-items: flex-start;
@@ -15293,9 +15307,10 @@ button.inventory-add-item-option:focus-visible {
 }
 .reorder-list-page .reorder-catalog-add {
   flex: 0 0 auto;
+  min-width: 0;
   max-width: 100%;
 }
-.reorder-list-page .reorder-catalog-add form { max-width: 100%; }
+.reorder-list-page .reorder-catalog-add form { width: 100%; max-width: 100%; }
 .reorder-list-page .reorder-catalog-add button {
   max-width: 100%;
   white-space: normal;
@@ -15321,6 +15336,7 @@ button.inventory-add-item-option:focus-visible {
 .reorder-list-page .reorder-product-meta {
   display: flex;
   flex-wrap: wrap;
+  justify-content: flex-start;
   gap: .45rem .85rem;
   overflow-wrap: anywhere;
 }
@@ -15331,54 +15347,138 @@ button.inventory-add-item-option:focus-visible {
   flex-wrap: wrap;
   gap: .75rem;
 }
-.reorder-list-page .reorder-product-actions form { margin-left: auto; }
+.reorder-list-page .reorder-product-actions form { margin: 0 0 0 auto; }
 .reorder-list-page .reorder-remove-button { min-height: 40px; }
 
 @media (max-width: 767.98px) {
-  body.reorder-list-page-body .app-topbar { display: none; }
-  body.reorder-list-page-body .app-content { padding: 0 .85rem; }
+  body.reorder-list-page-body .app-topbar { display: none !important; }
+  /* The page's mobile header is edge-to-edge; sections provide their own gutters. */
+  body.reorder-list-page-body .app-content {
+    max-width: none;
+    padding: 0 0 5.5rem !important;
+  }
+  body.reorder-list-page-body .app-main { min-height: 100vh; }
   body.reorder-list-page-body .app-footer { padding: .75rem .85rem; }
-  .reorder-list-page { padding: .75rem 0 calc(5.5rem + env(safe-area-inset-bottom)); }
+
+  .reorder-list-page {
+    margin: 0;
+    padding: 0 0 calc(5.75rem + env(safe-area-inset-bottom));
+    overflow-x: clip;
+    background: #f3f7fb;
+  }
+  /* Override Low Stock's tall hero header; follow Inventory's compact 64px header. */
   .reorder-list-page .low-stock-modern-header {
-    gap: .65rem;
-    margin-bottom: 1rem;
+    display: grid;
+    grid-template-columns: 38px minmax(0, 1fr);
+    align-items: center;
+    gap: .45rem;
+    min-height: 64px;
+    margin: 0;
+    padding: .2rem .8rem;
+    background: linear-gradient(180deg, #a9e3d8 0%, #98dacc 100%);
   }
   .reorder-list-page .low-stock-modern-header h1 {
-    font-size: clamp(1.25rem, 5vw, 1.6rem);
-    line-height: 1.25;
     min-width: 0;
+    margin: 0;
+    color: #111827;
+    font-size: clamp(1.25rem, 5vw, 1.45rem);
+    font-weight: 850;
+    line-height: 1.25;
+    letter-spacing: -.035em;
+    overflow-wrap: anywhere;
   }
+  .reorder-list-page .low-stock-modern-back {
+    width: 36px;
+    height: 36px;
+    flex: 0 0 36px;
+    color: #0f2826;
+  }
+  /* Remove the Low Stock page's -78px overlap from the Reorder summary. */
   .reorder-list-page .reorder-list-summary {
-    padding: 1rem;
+    display: flex;
+    position: static;
+    z-index: auto;
+    width: auto;
+    margin: .65rem .75rem .8rem;
+    padding: .85rem .9rem;
     gap: .75rem;
+    border-radius: 1rem;
   }
+  .reorder-list-page .reorder-list-summary > div:last-child { min-width: 0; }
+  .reorder-list-page .reorder-list-summary span {
+    font-size: .68rem;
+    line-height: 1.35;
+  }
+  .reorder-list-page .reorder-list-summary strong { font-size: 1.45rem; }
   .reorder-list-page .reorder-list-summary small {
     display: block;
+    font-size: .68rem;
     line-height: 1.45;
     overflow-wrap: anywhere;
   }
-  .reorder-list-page .reorder-catalog-section,
-  .reorder-list-page .reorder-saved-section { margin-top: 1.25rem; }
-  .reorder-list-page .reorder-section-heading { gap: .5rem; }
-  .reorder-list-page .reorder-section-heading h2 { font-size: 1.1rem; line-height: 1.35; }
-  .reorder-list-page .reorder-section-heading p { font-size: .85rem; line-height: 1.45; }
-  .reorder-list-page .reorder-catalog-search { gap: .35rem; }
-  .reorder-list-page .reorder-catalog-search input { font-size: 16px; }
+
+  .reorder-list-page .reorder-catalog-section {
+    min-width: 0;
+    margin: 1rem .75rem 0;
+  }
+  .reorder-list-page .reorder-saved-section {
+    min-width: 0;
+    margin-top: 1.25rem;
+  }
+  .reorder-list-page .reorder-section-heading {
+    align-items: flex-start;
+    gap: .5rem;
+    margin-bottom: .65rem;
+  }
+  .reorder-list-page .reorder-section-heading > div { flex: 1 1 0; }
+  .reorder-list-page .reorder-section-heading h2 {
+    font-size: 1.05rem;
+    line-height: 1.35;
+  }
+  .reorder-list-page .reorder-section-heading p {
+    font-size: .78rem;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+  }
+  .reorder-list-page .reorder-catalog-search {
+    width: 100%;
+    margin: 0 0 .65rem;
+    gap: .35rem;
+  }
+  .reorder-list-page .reorder-catalog-search input {
+    min-height: 46px;
+    padding-left: 2.5rem;
+    padding-right: 2.4rem;
+    font-size: 16px;
+  }
   .reorder-list-page .reorder-catalog-note,
-  .reorder-list-page .reorder-catalog-prompt { line-height: 1.5; overflow-wrap: anywhere; }
+  .reorder-list-page .reorder-catalog-prompt {
+    font-size: .75rem;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+  .reorder-list-page .reorder-catalog-results {
+    grid-template-columns: minmax(0, 1fr);
+    gap: .7rem;
+  }
   .reorder-list-page .reorder-catalog-card {
     display: flex;
     flex-direction: column;
     align-items: stretch;
     gap: .85rem;
+    width: 100%;
     padding: .9rem;
   }
   .reorder-list-page .reorder-catalog-card .inventory-product-search-card-main {
+    display: grid;
+    grid-template-columns: 38px minmax(0, 1fr);
+    align-items: flex-start;
     gap: .65rem;
     width: 100%;
   }
   .reorder-list-page .reorder-catalog-card .inventory-product-search-icon-badge {
-    flex: 0 0 38px;
+    width: 38px;
+    height: 38px;
   }
   .reorder-list-page .reorder-catalog-add,
   .reorder-list-page .reorder-catalog-add form { width: 100%; }
@@ -15389,20 +15489,54 @@ button.inventory-add-item-option:focus-visible {
     width: 100%;
     min-height: 44px;
     padding: .7rem .85rem;
+    text-align: center;
   }
-  .reorder-list-page .reorder-products-grid { grid-template-columns: minmax(0, 1fr); gap: .75rem; }
+
+  .reorder-list-page .reorder-saved-section .low-stock-modern-products,
+  .reorder-list-page .reorder-products-grid {
+    width: 100%;
+    min-width: 0;
+  }
+  .reorder-list-page .reorder-products-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: .75rem;
+  }
   .reorder-list-page .reorder-product-card { padding: .9rem; }
   .reorder-list-page .reorder-product-card .low-stock-product-card-top { gap: .6rem; }
-  .reorder-list-page .reorder-product-card .low-stock-product-heading h2 { font-size: 1rem; line-height: 1.35; }
-  .reorder-list-page .reorder-product-meta { font-size: .8rem; line-height: 1.45; }
-  .reorder-list-page .reorder-product-actions { align-items: stretch; }
-  .reorder-list-page .reorder-product-actions .low-stock-status-badge { max-width: 100%; white-space: normal; }
-  .reorder-list-page .reorder-product-actions form { width: 100%; margin-left: 0; }
-  .reorder-list-page .reorder-remove-button { width: 100%; justify-content: center; }
+  .reorder-list-page .reorder-product-card .low-stock-product-heading h2 {
+    font-size: 1rem;
+    line-height: 1.35;
+  }
+  .reorder-list-page .reorder-product-card .low-stock-product-heading span {
+    overflow-wrap: anywhere;
+  }
+  .reorder-list-page .reorder-product-meta {
+    justify-content: flex-start;
+    font-size: .78rem;
+    line-height: 1.45;
+  }
+  .reorder-list-page .reorder-product-actions {
+    align-items: stretch;
+    gap: .6rem;
+  }
+  .reorder-list-page .reorder-product-actions .low-stock-status-badge {
+    max-width: 100%;
+    white-space: normal;
+  }
+  .reorder-list-page .reorder-product-actions form {
+    width: 100%;
+    margin: 0;
+  }
+  .reorder-list-page .reorder-remove-button {
+    width: 100%;
+    min-height: 44px;
+    justify-content: center;
+  }
 }
 @media (max-width: 360px) {
-  body.reorder-list-page-body .app-content { padding: 0 .65rem; }
-  .reorder-list-page .reorder-list-summary { padding: .8rem; }
+  .reorder-list-page .low-stock-modern-header { padding-left: .65rem; padding-right: .65rem; }
+  .reorder-list-page .reorder-list-summary { margin-left: .65rem; margin-right: .65rem; padding: .8rem; }
+  .reorder-list-page .reorder-catalog-section { margin-left: .65rem; margin-right: .65rem; }
   .reorder-list-page .reorder-catalog-card,
   .reorder-list-page .reorder-product-card { padding: .75rem; }
 }
