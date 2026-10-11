@@ -25,6 +25,7 @@ public sealed class InvoiceReviewItemViewModel
     public string BatchNumber { get; set; } = string.Empty;
     public DateOnly? ExpiryDate { get; set; }
     public decimal? Quantity { get; set; }
+    public decimal? PurchaseUnitPrice { get; set; }
     public decimal? Mrp { get; set; }
     public decimal Confidence { get; set; }
     public string ValidationStatus { get; set; } = "needs_review";
