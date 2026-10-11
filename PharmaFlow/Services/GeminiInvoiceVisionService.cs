@@ -32,7 +32,8 @@ public sealed class GeminiInvoiceVisionService : IInvoiceVisionService
         _httpClient = httpClient;
         _configuration = configuration;
         _logger = logger;
-        _httpClient.Timeout = TimeSpan.FromMinutes(2);
+        // Apply the bounded timeout below to both response headers and body.
+        _httpClient.Timeout = System.Threading.Timeout.InfiniteTimeSpan;
     }
 
     public async Task<InvoiceVisionResult> ExtractAsync(
@@ -214,9 +215,11 @@ Rules:
             {
                 responseMimeType = "application/json",
                 responseSchema = schema,
+                // Invoice extraction is a focused visual data task. Lower thinking
+                // effort reduces latency without changing the required output schema.
                 thinkingConfig = new
                 {
-                    thinkingLevel = "medium"
+                    thinkingLevel = "low"
                 }
             }
         };
@@ -234,12 +237,44 @@ Rules:
             Encoding.UTF8,
             "application/json");
 
-        using var response = await _httpClient.SendAsync(
-            request,
-            HttpCompletionOption.ResponseHeadersRead,
-            cancellationToken);
+        const int timeoutSeconds = 180;
+        using var requestTimeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        requestTimeout.CancelAfter(TimeSpan.FromSeconds(timeoutSeconds));
 
-        var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
+        HttpResponseMessage response;
+        string responseBody;
+        try
+        {
+            response = await _httpClient.SendAsync(
+                request,
+                HttpCompletionOption.ResponseHeadersRead,
+                requestTimeout.Token);
+
+            try
+            {
+                responseBody = await response.Content.ReadAsStringAsync(requestTimeout.Token);
+            }
+            catch
+            {
+                response.Dispose();
+                throw;
+            }
+        }
+        catch (OperationCanceledException ex)
+            when (!cancellationToken.IsCancellationRequested && requestTimeout.IsCancellationRequested)
+        {
+            _logger.LogWarning(
+                ex,
+                "Gemini invoice request exceeded {TimeoutSeconds} seconds for model {Model}.",
+                timeoutSeconds,
+                model);
+
+            throw new TimeoutException(
+                "Gemini did not respond within 3 minutes. Please retry. If it happens again, try a smaller, clearer invoice image or PDF.",
+                ex);
+        }
+
+        using var responseToDispose = response;
 
         if (!response.IsSuccessStatusCode)
         {
