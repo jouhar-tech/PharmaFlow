@@ -83,6 +83,9 @@
                     <input type="hidden" name="productId" value="@Model.ProductId" />
                     <input type="hidden" name="batchId" value="@batch.BatchId" />
                     <input type="hidden" name="returnTo" value="@Model.ReturnTo" />
+                    @* Preserve the actual product manufacturer and barcode when saving other fields. *@
+                    <input type="hidden" name="manufacturer" value="@Model.Manufacturer" />
+                    <input type="hidden" name="barcode" value="@Model.Barcode" />
 
                     <div class="inventory-details-form-grid inventory-details-simple-grid">
                         <label>
@@ -150,9 +153,10 @@
                         <label>
                             <span>Manufacturer</span>
                             <input type="text"
-                                   name="manufacturer"
-                                   value="@Model.Manufacturer"
-                                   maxlength="200" />
+                                   value="@Model.DistributorName"
+                                   placeholder="Distributor not recorded for this batch"
+                                   readonly
+                                   aria-readonly="true" />
                         </label>
 
                         <label>
@@ -166,14 +170,6 @@
                                    inputmode="decimal" />
                         </label>
 
-                        <label class="inventory-details-field-full">
-                            <span>Barcode</span>
-                            <input type="text"
-                                   name="barcode"
-                                   value="@Model.Barcode"
-                                   maxlength="100"
-                                   inputmode="numeric" />
-                        </label>
                     </div>
 
                     <div class="inventory-details-form-actions">
