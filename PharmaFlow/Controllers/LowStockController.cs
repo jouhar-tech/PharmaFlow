@@ -72,9 +72,14 @@ public sealed class LowStockController : Controller
             StockValue = row.Quantity * row.SellingUnitPrice
         }).ToList();
 
+        var reorderListCount = await _dbContext.ReorderListItems
+            .AsNoTracking()
+            .CountAsync(item => item.ProfileId == profileId, cancellationToken);
+
         return View(new LowStockViewModel
         {
             Count = items.Count,
+            ReorderListCount = reorderListCount,
             Items = items
         });
     }
