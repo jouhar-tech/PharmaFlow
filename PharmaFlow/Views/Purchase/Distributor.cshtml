@@ -63,6 +63,7 @@
                                         <span>PRODUCT NAME</span>
                                         <span>BATCH NO</span>
                                         <span>QTY</span>
+                                        <span>PURCHASE</span>
                                         <span>MRP</span>
                                         <span>EXP</span>
                                     </div>
@@ -73,6 +74,7 @@
                                             <strong>@item.ProductName</strong>
                                             <span>@item.BatchNumber</span>
                                             <span>@item.Quantity.ToString("0.##")</span>
+                                            <span>@(item.PurchaseUnitPrice.HasValue ? "₹ " + item.PurchaseUnitPrice.Value.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN")) : "—")</span>
                                             <span>@(item.Mrp.HasValue ? "₹ " + item.Mrp.Value.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN")) : "—")</span>
                                             <span>@(item.ExpiryDate?.ToString("dd MMM yyyy") ?? "—")</span>
                                         </div>
