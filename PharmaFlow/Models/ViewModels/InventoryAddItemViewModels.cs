@@ -14,6 +14,10 @@ public sealed class InventoryAddItemViewModel
     [Display(Name = "Product Name")]
     public string ProductName { get; set; } = string.Empty;
 
+    [StringLength(100, ErrorMessage = "Batch number cannot exceed 100 characters.")]
+    [Display(Name = "Batch No")]
+    public string? BatchNumber { get; set; }
+
     [Range(0.01, 999999999, ErrorMessage = "Quantity must be greater than 0.")]
     [Display(Name = "Quantity")]
     public decimal Quantity { get; set; }
