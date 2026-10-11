@@ -54,6 +54,7 @@
         let isProcessingInvoices = false;
         let processingFailed = false;
         let retryFiles = [];
+        let pendingImportIds = [];
 
         const setBusy = (busy) => {
             [useButton, retakeButton, rotateButton, enhanceButton, closeButton].forEach(button => {
@@ -258,6 +259,7 @@
             pendingFile = null;
             pendingSourceType = "upload";
             retryFiles = [];
+            pendingImportIds = [];
             processingFailed = false;
             window.pharmaFlowInvoiceCapture = null;
             resetOcrUi();
@@ -463,7 +465,10 @@
             document.body.classList.add("invoice-scanner-open");
             if (scannerTitle) scannerTitle.textContent = "Invoice analysis failed";
             setBusy(false);
-            if (useButton) useButton.textContent = "Retry analysis";
+            if (useButton) {
+                useButton.textContent = retryFiles.length > 0 ? "Retry analysis" : "Retry unavailable";
+                useButton.disabled = retryFiles.length === 0;
+            }
             if (retakeButton) retakeButton.textContent = "Choose another invoice";
             updateOcrStatus("Invoice analysis failed", message, 0);
         };
@@ -524,7 +529,7 @@
             if (isProcessingInvoices) return;
 
             if (processingFailed && retryFiles.length > 0) {
-                await processInvoiceFiles([...retryFiles], pendingSourceType);
+                await processInvoiceFiles([...retryFiles], pendingSourceType, true);
                 return;
             }
 
@@ -599,7 +604,7 @@
             return payload.importId;
         };
 
-        const processInvoiceFiles = async (files, sourceType) => {
+        const processInvoiceFiles = async (files, sourceType, continueBatch = false) => {
             const selectedFiles = Array.from(files || []).filter(Boolean);
 
             if (selectedFiles.length === 0 || isProcessingInvoices) return;
@@ -634,6 +639,7 @@
             }
 
             pendingSourceType = sourceType;
+            if (!continueBatch) pendingImportIds = [];
             retryFiles = [...validFiles];
             processingFailed = false;
             isProcessingInvoices = true;
@@ -649,10 +655,10 @@
                 5
             );
 
+            let currentProcessingIndex = 0;
             try {
-                const importIds = [];
-
                 for (let index = 0; index < validFiles.length; index++) {
+                    currentProcessingIndex = index;
                     const current = index + 1;
 
                     updateOcrStatus(
@@ -670,7 +676,7 @@
                             : "Analyzing invoice " + current + " of " + validFiles.length + "..."
                     );
 
-                    importIds.push(importId);
+                    pendingImportIds.push(importId);
                 }
 
                 updateOcrStatus(
@@ -684,19 +690,22 @@
                 processingFailed = false;
                 setBusy(false);
 
-                if (importIds.length === 1) {
+                if (pendingImportIds.length === 1) {
                     window.location.assign(
                         "/InvoiceCapture/Review?id=" +
-                        encodeURIComponent(importIds[0])
+                        encodeURIComponent(pendingImportIds[0])
                     );
                     return;
                 }
 
                 window.location.assign(
                     "/InvoiceCapture/BatchReview?ids=" +
-                    encodeURIComponent(importIds.join(","))
+                    encodeURIComponent(pendingImportIds.join(","))
                 );
             } catch (error) {
+                // Keep imports that already succeeded, and retry from the file that
+                // failed rather than re-uploading completed invoices as duplicates.
+                retryFiles = validFiles.slice(currentProcessingIndex);
                 console.error("Invoice AI processing failed.", error);
                 showProcessingError(
                     error?.message || "One or more invoices could not be analyzed."
