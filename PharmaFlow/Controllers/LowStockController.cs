@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Npgsql.EntityFrameworkCore.PostgreSQL;
 using PharmaFlow.Data;
 using PharmaFlow.Filters;
+using PharmaFlow.Models;
 using PharmaFlow.Models.ViewModels;
 
 namespace PharmaFlow.Controllers;
@@ -46,6 +47,7 @@ public sealed class LowStockController : Controller
                 {
                     ProductId = batch.ProductId,
                     BatchId = batch.BatchId,
+                    CatalogId = batch.Product.CatalogId,
                     ProductName = batch.Product.ProductName,
                     GenericName = batch.Product.GenericName,
                     BrandName = batch.Product.BrandName,
@@ -57,24 +59,51 @@ public sealed class LowStockController : Controller
                 })
                 .ToListAsync(cancellationToken));
 
-        var items = rows.Select(row => new LowStockItemViewModel
+        // Load this pharmacy's saved reorder entries so the button state survives
+        // navigation away from Low Stock and back again.
+        var savedReorderItems = await _dbContext.ReorderListItems
+            .AsNoTracking()
+            .Include(item => item.Product)
+            .Where(item => item.ProfileId == profileId)
+            .ToListAsync(cancellationToken);
+
+        var items = rows.Select(row =>
         {
-            ProductId = row.ProductId,
-            BatchId = row.BatchId,
-            ProductName = row.ProductName,
-            GenericName = row.GenericName,
-            BrandName = row.BrandName,
-            Barcode = row.Barcode,
-            BatchNumber = row.BatchNumber,
-            Quantity = row.Quantity,
-            ExpiryDate = row.ExpiryDate,
-            SellingUnitPrice = row.SellingUnitPrice,
-            StockValue = row.Quantity * row.SellingUnitPrice
+            var savedReorderItem = savedReorderItems.FirstOrDefault(saved =>
+                saved.ProductId == row.ProductId ||
+                (!saved.ProductId.HasValue &&
+                    ((row.CatalogId.HasValue &&
+                        (saved.CatalogId == row.CatalogId ||
+                         saved.Product != null && saved.Product.CatalogId == row.CatalogId)) ||
+                     (!string.IsNullOrWhiteSpace(row.Barcode) &&
+                        ((saved.Barcode != null &&
+                          string.Equals(saved.Barcode.Trim(), row.Barcode.Trim(), StringComparison.OrdinalIgnoreCase)) ||
+                         (saved.Product?.Barcode != null &&
+                          string.Equals(saved.Product.Barcode.Trim(), row.Barcode.Trim(), StringComparison.OrdinalIgnoreCase))) ||
+                     string.Equals(
+                         (saved.Product?.ProductName ?? saved.ProductName ?? string.Empty).Trim(),
+                         row.ProductName.Trim(),
+                         StringComparison.OrdinalIgnoreCase))));
+
+            return new LowStockItemViewModel
+            {
+                ProductId = row.ProductId,
+                BatchId = row.BatchId,
+                CatalogId = row.CatalogId,
+                ReorderListItemId = savedReorderItem?.ReorderListItemId,
+                ProductName = row.ProductName,
+                GenericName = row.GenericName,
+                BrandName = row.BrandName,
+                Barcode = row.Barcode,
+                BatchNumber = row.BatchNumber,
+                Quantity = row.Quantity,
+                ExpiryDate = row.ExpiryDate,
+                SellingUnitPrice = row.SellingUnitPrice,
+                StockValue = row.Quantity * row.SellingUnitPrice
+            };
         }).ToList();
 
-        var reorderListCount = await _dbContext.ReorderListItems
-            .AsNoTracking()
-            .CountAsync(item => item.ProfileId == profileId, cancellationToken);
+        var reorderListCount = savedReorderItems.Count;
 
         return View(new LowStockViewModel
         {
