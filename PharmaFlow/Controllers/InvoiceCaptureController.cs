@@ -303,7 +303,19 @@ public sealed class InvoiceCaptureController : Controller
         {
             return StatusCode(StatusCodes.Status408RequestTimeout, new
             {
-                message = "Invoice analysis timed out. Please try the invoice again."
+                message = "Invoice analysis was canceled. Please try again."
+            });
+        }
+        catch (TimeoutException ex)
+        {
+            _logger.LogWarning(
+                ex,
+                "Gemini invoice analysis timed out for profile {ProfileId}.",
+                profileId);
+
+            return StatusCode(StatusCodes.Status504GatewayTimeout, new
+            {
+                message = "Gemini is taking too long to analyze this invoice. Please retry. If it happens again, try a smaller, clearer invoice image or PDF."
             });
         }
         catch (Exception ex)
