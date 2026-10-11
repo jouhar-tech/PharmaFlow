@@ -152,6 +152,7 @@ public sealed class PurchaseController : Controller
                         ProductName = item.ProductName,
                         BatchNumber = item.BatchNumber,
                         Quantity = item.Quantity ?? 0m,
+                        PurchaseUnitPrice = item.PurchaseUnitPrice,
                         Mrp = item.Mrp,
                         ExpiryDate = item.ExpiryDate
                     })
