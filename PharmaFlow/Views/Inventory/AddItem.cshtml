@@ -55,6 +55,17 @@
                     <span asp-validation-for="ProductName" class="inventory-add-error"></span>
                 </div>
 
+                <div class="inventory-add-field inventory-add-field-wide">
+                    <label asp-for="BatchNumber">Batch No <small>(Optional)</small></label>
+                    <input asp-for="BatchNumber"
+                           class="inventory-add-input"
+                           type="text"
+                           maxlength="100"
+                           autocomplete="off"
+                           placeholder="Enter batch number (if available)" />
+                    <span asp-validation-for="BatchNumber" class="inventory-add-error"></span>
+                </div>
+
                 <div class="inventory-add-field">
                     <label asp-for="Quantity">Quantity <span>*</span></label>
                     <input asp-for="Quantity"
