@@ -555,6 +555,10 @@ public sealed class InventoryController : Controller
                 return NotFound();
 
             var product = clickedBatch.Product;
+            var distributorName = await GetBatchDistributorNameAsync(
+                profileId,
+                selectedBatch.BatchId,
+                cancellationToken);
 
             var model = new InventoryProductDetailsViewModel
             {
@@ -567,6 +571,7 @@ public sealed class InventoryController : Controller
                 PackSize = product.PackSize,
                 Barcode = product.Barcode,
                 Manufacturer = product.Manufacturer,
+                DistributorName = distributorName,
                 HsnCode = product.HsnCode,
                 GstRate = product.GstRate,
                 ReorderLevel = product.ReorderLevel,
@@ -616,6 +621,12 @@ public sealed class InventoryController : Controller
         var fallbackBatch = productBatches.FirstOrDefault(b => b.IsActive && !b.IsQuarantined)
             ?? productBatches.FirstOrDefault(b => b.IsActive)
             ?? productBatches.FirstOrDefault();
+        var fallbackDistributorName = fallbackBatch is null
+            ? null
+            : await GetBatchDistributorNameAsync(
+                profileId,
+                fallbackBatch.BatchId,
+                cancellationToken);
 
         var fallbackModel = new InventoryProductDetailsViewModel
         {
@@ -628,6 +639,7 @@ public sealed class InventoryController : Controller
             PackSize = productOnly.PackSize,
             Barcode = productOnly.Barcode,
             Manufacturer = productOnly.Manufacturer,
+            DistributorName = fallbackDistributorName,
             HsnCode = productOnly.HsnCode,
             GstRate = productOnly.GstRate,
             ReorderLevel = productOnly.ReorderLevel,
@@ -977,6 +989,26 @@ public sealed class InventoryController : Controller
             TempData["InventoryDetailsError"] = "The stock could not be removed. No inventory changes were saved.";
             return RedirectToAction(nameof(Details), new { productId, batchId, returnTo = NormalizeReturnTo(returnTo) });
         }
+    }
+
+    private async Task<string?> GetBatchDistributorNameAsync(
+        long profileId,
+        long batchId,
+        CancellationToken cancellationToken)
+    {
+        return await _dbContext.InvoiceImportItems
+            .AsNoTracking()
+            .Where(item =>
+                item.SavedBatchId == batchId &&
+                item.ValidationStatus == "saved" &&
+                item.Import.ProfileId == profileId &&
+                item.Import.Status == "saved" &&
+                item.Import.DistributorName != null &&
+                item.Import.DistributorName != "")
+            .OrderByDescending(item => item.Import.UpdatedAt)
+            .ThenByDescending(item => item.UpdatedAt)
+            .Select(item => item.Import.DistributorName)
+            .FirstOrDefaultAsync(cancellationToken);
     }
 
     private static string NormalizeReturnTo(string? returnTo) =>
