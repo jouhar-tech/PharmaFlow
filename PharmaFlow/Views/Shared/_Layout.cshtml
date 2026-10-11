@@ -56,7 +56,9 @@
     var isPurchaseDistributorPage = ViewContext.RouteData.Values["controller"]?.ToString() == "Purchase"
         && ViewContext.RouteData.Values["action"]?.ToString() == "Distributor";
     var isInvoiceReviewPage = ViewContext.RouteData.Values["controller"]?.ToString() == "InvoiceCapture"
-        && ViewContext.RouteData.Values["action"]?.ToString() == "Review";
+        && new[] { "Review", "Save" }.Contains(
+            ViewContext.RouteData.Values["action"]?.ToString() ?? string.Empty,
+            StringComparer.OrdinalIgnoreCase);
     var isAdminPage = ViewContext.RouteData.Values["controller"]?.ToString() == "Admin";
     var isAuthenticated = !string.IsNullOrWhiteSpace(Context.Session.GetString("SupabaseAccessToken"))
         && !string.IsNullOrWhiteSpace(Context.Session.GetString("ProfileId"));
