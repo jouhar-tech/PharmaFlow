@@ -30,6 +30,20 @@
         <button id="lowStockSearchClear" type="button" aria-label="Clear search" hidden>×</button>
     </form>
 
+    <a asp-controller="Reorder"
+       asp-action="Index"
+       id="lowStockReorderListCard"
+       class="low-stock-reorder-list-card @(Model.ReorderListCount > 0 ? "" : "is-hidden")"
+       aria-hidden="@(Model.ReorderListCount > 0 ? "false" : "true")">
+        <span class="low-stock-reorder-list-count" id="lowStockReorderCount">@Model.ReorderListCount</span>
+        <span class="low-stock-reorder-list-copy">
+            <strong>Reorder List</strong>
+            <small>Items queued to order from a distributor</small>
+        </span>
+        <span class="low-stock-reorder-list-chevron" aria-hidden="true">›</span>
+    </a>
+    <p id="lowStockReorderFeedback" class="low-stock-reorder-feedback" role="status" aria-live="polite" hidden></p>
+
     <section class="low-stock-modern-products" aria-label="Low stock products">
         @if (Model.Items.Count == 0)
         {
@@ -113,6 +127,10 @@
     const clear = document.getElementById('lowStockSearchClear');
     const cards = Array.from(document.querySelectorAll('.low-stock-product-card'));
     const empty = document.getElementById('lowStockEmptySearch');
+    const reorderCard = document.getElementById('lowStockReorderListCard');
+    const reorderCount = document.getElementById('lowStockReorderCount');
+    const reorderFeedback = document.getElementById('lowStockReorderFeedback');
+    const reorderForms = Array.from(document.querySelectorAll('.low-stock-reorder-form'));
 
     if (!search) return;
 
@@ -140,6 +158,68 @@
     });
 
     update();
+
+    // Add stock to the Reorder List without navigating away from Low Stock.
+    reorderForms.forEach(form => {
+        form.addEventListener('submit', async function (event) {
+            event.preventDefault();
+
+            const button = form.querySelector('button[type="submit"]');
+            if (!button || button.disabled) return;
+
+            const originalLabel = button.innerHTML;
+            button.disabled = true;
+            button.setAttribute('aria-busy', 'true');
+
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    body: new FormData(form),
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    },
+                    credentials: 'same-origin'
+                });
+
+                const result = await response.json().catch(() => null);
+                if (!response.ok || !result) {
+                    throw new Error(result?.message || 'Could not add this product. Please try again.');
+                }
+
+                if (Number.isInteger(result.count) && result.count >= 0) {
+                    reorderCount.textContent = result.count.toLocaleString();
+                    if (result.count > 0) {
+                        reorderCard.classList.remove('is-hidden');
+                        reorderCard.setAttribute('aria-hidden', 'false');
+                    } else {
+                        reorderCard.classList.add('is-hidden');
+                        reorderCard.setAttribute('aria-hidden', 'true');
+                    }
+                }
+
+                reorderFeedback.textContent = result.success
+                    ? (result.count === 1
+                        ? '1 item added to Reorder List.'
+                        : result.count + ' items currently in Reorder List.')
+                    : (result.message || 'This product could not be added.');
+                reorderFeedback.classList.toggle('is-success', !!result.success);
+                reorderFeedback.classList.toggle('is-error', !result.success);
+                reorderFeedback.hidden = false;
+            } catch (error) {
+                reorderFeedback.textContent = error instanceof Error
+                    ? error.message
+                    : 'Could not add this product. Please try again.';
+                reorderFeedback.classList.remove('is-success');
+                reorderFeedback.classList.add('is-error');
+                reorderFeedback.hidden = false;
+            } finally {
+                button.disabled = false;
+                button.removeAttribute('aria-busy');
+                if (!button.innerHTML) button.innerHTML = originalLabel;
+            }
+        });
+    });
 })();
 </script>
 }
