@@ -1141,11 +1141,17 @@ public sealed class InvoiceCaptureController : Controller
         if (item.Quantity.Value > 1_000_000m)
             return "Quantity is too large.";
 
-        if (item.PurchaseUnitPrice is < 0m or > 999_999_999m)
-            return "Purchase price must be between 0 and 999,999,999.";
+        if (item.PurchaseUnitPrice is not > 0m)
+            return "Enter the invoice purchase price before saving stock.";
 
-        if (item.Mrp is < 0m or > 999_999_999m)
-            return "MRP must be between 0 and 999,999,999.";
+        if (item.PurchaseUnitPrice.Value > 999_999_999m)
+            return "Purchase price is too large.";
+
+        if (item.Mrp is not > 0m)
+            return "Enter the invoice MRP before saving stock.";
+
+        if (item.Mrp.Value > 999_999_999m)
+            return "MRP is too large.";
 
         return null;
     }
