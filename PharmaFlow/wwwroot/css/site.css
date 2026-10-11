@@ -15141,3 +15141,108 @@ body.theme-dark .low-stock-product-actions .low-stock-reorder-form .low-stock-re
   color: #fecdd3;
 }
 
+/* Shared invoice capture actions */
+button.inventory-add-item-option {
+  width: 100%;
+  appearance: none;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+button.inventory-add-item-option:focus-visible {
+  outline: 2px solid #0f766e;
+  outline-offset: 2px;
+}
+
+.home-mobile-scan-invoice-button {
+  display: none;
+}
+
+@media (max-width: 767.98px) {
+  body.home-dashboard-page .home-mobile-scan-invoice-button {
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr) 18px;
+    align-items: center;
+    gap: .7rem;
+    width: 100%;
+    min-height: 72px;
+    margin-top: .72rem;
+    padding: .7rem .8rem;
+    border: 1px solid rgba(15,35,56,.08);
+    border-radius: .9rem;
+    background: #fff;
+    color: #24353b;
+    text-align: left;
+    box-shadow: 0 7px 18px rgba(15,35,56,.06);
+    cursor: pointer;
+  }
+
+  body.home-dashboard-page .home-mobile-scan-invoice-icon {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border-radius: .75rem;
+    background: #e8f7f3;
+    color: #0f766e;
+  }
+
+  body.home-dashboard-page .home-mobile-scan-invoice-icon svg {
+    width: 23px;
+    height: 23px;
+  }
+
+  body.home-dashboard-page .home-mobile-scan-invoice-copy {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: .18rem;
+  }
+
+  body.home-dashboard-page .home-mobile-scan-invoice-copy strong {
+    color: #183b35;
+    font-size: .76rem;
+    font-weight: 900;
+    line-height: 1.2;
+  }
+
+  body.home-dashboard-page .home-mobile-scan-invoice-copy small {
+    color: #71808b;
+    font-size: .59rem;
+    font-weight: 600;
+    line-height: 1.35;
+  }
+
+  body.home-dashboard-page .home-mobile-scan-invoice-chevron {
+    justify-self: end;
+    color: #0f766e;
+    font-size: 1.65rem;
+    line-height: 1;
+  }
+
+  body.theme-dark.home-dashboard-page .home-mobile-scan-invoice-button {
+    border-color: #263449;
+    background: #111c2e;
+    color: #e2e8f0;
+    box-shadow: none;
+  }
+
+  body.theme-dark.home-dashboard-page .home-mobile-scan-invoice-icon {
+    background: #143c38;
+    color: #7dd3ca;
+  }
+
+  body.theme-dark.home-dashboard-page .home-mobile-scan-invoice-copy strong {
+    color: #f8fafc;
+  }
+
+  body.theme-dark.home-dashboard-page .home-mobile-scan-invoice-copy small {
+    color: #94a3b8;
+  }
+
+  body.theme-dark.home-dashboard-page .home-mobile-scan-invoice-chevron {
+    color: #7dd3ca;
+  }
+}
+
