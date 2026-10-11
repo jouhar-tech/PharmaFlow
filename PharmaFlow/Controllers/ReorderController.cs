@@ -218,11 +218,10 @@ public sealed class ReorderController : Controller
             return NotFound();
         }
 
-        var alreadySaved = await _dbContext.ReorderListItems
+        var alreadySavedItemId = await _dbContext.ReorderListItems
             .AsNoTracking()
-            .Include(item => item.Product)
             .Where(item => item.ProfileId == profileId)
-            .AnyAsync(item =>
+            .Where(item =>
                 item.ProductId == productId ||
                 (item.ProductId == null &&
                     ((product.CatalogId.HasValue && item.CatalogId == product.CatalogId) ||
@@ -230,10 +229,11 @@ public sealed class ReorderController : Controller
                         item.Barcode != null &&
                         item.Barcode.ToLower() == product.Barcode.ToLower()) ||
                      (item.ProductName != null &&
-                        item.ProductName.ToLower() == product.ProductName.ToLower()))),
-                cancellationToken);
+                        item.ProductName.ToLower() == product.ProductName.ToLower()))))
+            .Select(item => (long?)item.ReorderListItemId)
+            .FirstOrDefaultAsync(cancellationToken);
 
-        if (alreadySaved)
+        if (alreadySavedItemId.HasValue)
         {
             const string duplicateMessage = "Product already added to Reorder List";
             var currentCount = await _dbContext.ReorderListItems
@@ -241,7 +241,14 @@ public sealed class ReorderController : Controller
                 .CountAsync(item => item.ProfileId == profileId, cancellationToken);
 
             if (isAjaxRequest)
-                return Json(new { success = false, message = duplicateMessage, count = currentCount });
+                return Json(new
+                {
+                    success = false,
+                    alreadyAdded = true,
+                    message = duplicateMessage,
+                    count = currentCount,
+                    reorderListItemId = alreadySavedItemId.Value
+                });
 
             TempData["ReorderListError"] = duplicateMessage;
             return RedirectToAction(nameof(Index));
@@ -279,7 +286,14 @@ public sealed class ReorderController : Controller
                 .CountAsync(item => item.ProfileId == profileId, cancellationToken);
 
             if (isAjaxRequest)
-                return Json(new { success = true, message = "Product added to Reorder List", count = currentCount });
+                return Json(new
+                {
+                    success = true,
+                    alreadyAdded = true,
+                    message = "Product added to Reorder List",
+                    count = currentCount,
+                    reorderListItemId = reorderItem.ReorderListItemId
+                });
 
             TempData["ReorderListSuccess"] = "Product added to Reorder List";
         }
@@ -287,11 +301,13 @@ public sealed class ReorderController : Controller
         {
             _dbContext.Entry(reorderItem).State = EntityState.Detached;
 
-            var duplicateNowExists = await _dbContext.ReorderListItems
+            var duplicateNowItemId = await _dbContext.ReorderListItems
                 .AsNoTracking()
-                .AnyAsync(item => item.ProfileId == profileId && item.ProductId == productId, cancellationToken);
+                .Where(item => item.ProfileId == profileId && item.ProductId == productId)
+                .Select(item => (long?)item.ReorderListItemId)
+                .FirstOrDefaultAsync(cancellationToken);
 
-            if (!duplicateNowExists)
+            if (!duplicateNowItemId.HasValue)
                 throw;
 
             var currentCount = await _dbContext.ReorderListItems
@@ -299,7 +315,14 @@ public sealed class ReorderController : Controller
                 .CountAsync(item => item.ProfileId == profileId, cancellationToken);
 
             if (isAjaxRequest)
-                return Json(new { success = false, message = "Product already added to Reorder List", count = currentCount });
+                return Json(new
+                {
+                    success = false,
+                    alreadyAdded = true,
+                    message = "Product already added to Reorder List",
+                    count = currentCount,
+                    reorderListItemId = duplicateNowItemId.Value
+                });
 
             TempData["ReorderListError"] = "Product already added to Reorder List";
         }
@@ -402,8 +425,26 @@ public sealed class ReorderController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Remove(long reorderListItemId, CancellationToken cancellationToken)
     {
+        var isAjaxRequest = string.Equals(
+            Request.Headers["X-Requested-With"],
+            "XMLHttpRequest",
+            StringComparison.OrdinalIgnoreCase);
+
         if (!TryGetProfileId(out var profileId))
+        {
+            if (isAjaxRequest)
+                return Unauthorized(new { success = false, message = "Your session has expired. Please sign in again.", count = 0 });
+
             return RedirectToAction("Login", "Account");
+        }
+
+        if (reorderListItemId <= 0)
+        {
+            if (isAjaxRequest)
+                return BadRequest(new { success = false, message = "Select a valid Reorder List item.", count = 0 });
+
+            return RedirectToAction(nameof(Index));
+        }
 
         var item = await _dbContext.ReorderListItems
             .FirstOrDefaultAsync(
@@ -414,6 +455,20 @@ public sealed class ReorderController : Controller
         {
             _dbContext.ReorderListItems.Remove(item);
             await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+
+        if (isAjaxRequest)
+        {
+            var currentCount = await _dbContext.ReorderListItems
+                .AsNoTracking()
+                .CountAsync(row => row.ProfileId == profileId, cancellationToken);
+
+            return Json(new
+            {
+                success = true,
+                message = "Product removed from Reorder List",
+                count = currentCount
+            });
         }
 
         return RedirectToAction(nameof(Index));
