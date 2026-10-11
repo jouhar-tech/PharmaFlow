@@ -15613,3 +15613,27 @@ body.theme-dark .invoice-scanner-modal.is-processing.has-processing-error .invoi
     min-height: 44px;
   }
 }
+
+
+/* Remove the duplicate global shell header on the mobile invoice review screen. */
+@media (max-width: 767.98px) {
+  body.invoice-review-page-body .app-topbar,
+  body.invoice-review-page-body .app-footer,
+  body.invoice-review-page-body .app-sidebar,
+  body.invoice-review-page-body .sidebar-overlay {
+    display: none !important;
+  }
+
+  body.invoice-review-page-body .app-main {
+    min-height: 100vh;
+  }
+
+  body.invoice-review-page-body .app-content {
+    max-width: none;
+    padding-top: 0 !important;
+  }
+
+  body.invoice-review-page-body .invoice-review-page {
+    padding-top: 1rem;
+  }
+}
