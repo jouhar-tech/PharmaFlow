@@ -12,6 +12,9 @@ public sealed class LowStockItemViewModel
 {
     public long ProductId { get; init; }
     public long BatchId { get; init; }
+    public long? CatalogId { get; init; }
+    public long? ReorderListItemId { get; init; }
+    public bool IsInReorderList => ReorderListItemId.HasValue;
     public string ProductName { get; init; } = string.Empty;
     public string? GenericName { get; init; }
     public string? BrandName { get; init; }
