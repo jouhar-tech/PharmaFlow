@@ -118,6 +118,11 @@ public sealed class GeminiInvoiceVisionService : IInvoiceVisionService
                                 type = "number",
                                 description = "Billed quantity only, not free quantity. Use 0 when unreadable."
                             },
+                            purchaseUnitPrice = new
+                            {
+                                type = "number",
+                                description = "Net purchase rate per billed unit. Prefer explicit net/trade/purchase rate. If only net line amount and billed quantity are visible, divide that amount by billed quantity. Never use MRP or whole invoice total. Use 0 when unavailable."
+                            },
                             mrp = new
                             {
                                 type = "number",
@@ -129,7 +134,7 @@ public sealed class GeminiInvoiceVisionService : IInvoiceVisionService
                                 description = "Your confidence for this row from 0 to 100."
                             }
                         },
-                        required = new[] { "productName", "batchNumber", "expiryDate", "quantity", "mrp", "confidence" }
+                        required = new[] { "productName", "batchNumber", "expiryDate", "quantity", "purchaseUnitPrice", "mrp", "confidence" }
                     }
                 }
             },
@@ -144,19 +149,23 @@ Return the distributor/company name, supplier invoice number, invoice date, fina
 The stock table typically contains columns similar to:
 Sl No, HSN/SAC, Rack No, Item Description, Quantity/Billed, Free, Pack, Batch, Exp Date, MRP, Trade Price, Discount, Taxable Value, GST.
 
-For EVERY row, extract ONLY:
+For EVERY row, extract:
 1. Product Name
 2. Batch Number
 3. Expiry Date
 4. Billed Quantity
-5. MRP
-6. Confidence
+5. Purchase Unit Price
+6. MRP
+7. Confidence
 
 Rules:
 - Use the visual table structure, not only OCR text.
 - Product Name must contain the item description only. Do not include HSN/SAC, rack number, prices, discount, tax, totals, or footer notices.
 - Preserve the product wording visible on the invoice. Do not invent missing medicine names or silently substitute a different medicine.
 - Quantity means the Billed Quantity column, NOT Free quantity.
+- Purchase Unit Price means the net purchase rate per billed unit paid by the pharmacy. Prefer an explicit net/trade/purchase rate (for example Rate, Trade Price, PTR, PTS or Net Rate) when clearly shown.
+- If the invoice shows only a net line amount and billed quantity, divide the net line amount by billed quantity to obtain purchase unit price.
+- Do not use MRP as Purchase Unit Price. Do not use the whole invoice total or a tax total as a unit price. Use 0 when a reliable purchase unit price is not visible.
 - Batch must come from the Batch column. Do not use HSN, rack, price, invoice number or GST number as the batch.
 - Expiry may be MM/YY, MM-YY, MM/YYYY, DD/MM/YYYY or similar. Convert it to YYYY-MM-DD. For a month-only expiry such as 05-29, use the last day of that month (2029-05-31).
 - If any required field cannot be read confidently, return an empty string for text fields or 0 for quantity and lower the row confidence. Do not guess.
@@ -164,7 +173,7 @@ Rules:
 - Do not confuse distributor name with customer/pharmacy name.
 - The invoice number must be the supplier's printed invoice/bill number, not an order number or GSTIN.
 - The totalAmount must be the final invoice grand total/payable amount, not a line MRP total or tax subtotal.
-- For each stock row, extract the MRP column when present.
+- For each stock row, extract the MRP and purchase unit price columns when present. Prefer the actual net purchase rate; do not substitute MRP for it.
 - Ignore customer details, notices, and unrelated footer text. The distributor name, invoice number, invoice date, and grand total are required invoice-level metadata.
 - Do not merge two different product rows.
 - Return JSON that exactly matches the supplied schema.
@@ -357,6 +366,9 @@ Rules:
         var expiryText = Clean(item.ExpiryDate, 20);
         var confidence = Math.Clamp(item.Confidence, 0m, 100m);
         var quantity = item.Quantity > 0m ? Math.Min(item.Quantity, 1_000_000m) : 0m;
+        var purchaseUnitPrice = item.PurchaseUnitPrice > 0m
+            ? Math.Min(item.PurchaseUnitPrice, 999_999_999m)
+            : 0m;
         var mrp = item.Mrp > 0m ? Math.Min(item.Mrp, 999_999_999m) : 0m;
 
         return new InvoiceVisionItem(
@@ -365,6 +377,7 @@ Rules:
             batch,
             expiryText,
             quantity,
+            purchaseUnitPrice,
             mrp,
             confidence);
     }
@@ -467,6 +480,9 @@ Rules:
         [JsonPropertyName("quantity")]
         public decimal Quantity { get; set; }
 
+        [JsonPropertyName("purchaseUnitPrice")]
+        public decimal PurchaseUnitPrice { get; set; }
+
         [JsonPropertyName("mrp")]
         public decimal Mrp { get; set; }
 
@@ -488,5 +504,6 @@ public sealed record InvoiceVisionItem(
     string BatchNumber,
     string ExpiryDateText,
     decimal Quantity,
+    decimal PurchaseUnitPrice,
     decimal Mrp,
     decimal Confidence);
