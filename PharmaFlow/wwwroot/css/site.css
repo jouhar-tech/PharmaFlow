@@ -15637,3 +15637,48 @@ body.theme-dark .invoice-scanner-modal.is-processing.has-processing-error .invoi
     padding-top: 1rem;
   }
 }
+
+
+/* Global page navigation progress: shared across the application shell. */
+.global-page-progress {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 2147483000;
+  height: 3px;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  background: transparent;
+  transition: opacity 160ms ease, visibility 160ms ease;
+}
+.global-page-progress.is-active {
+  opacity: 1;
+  visibility: visible;
+}
+.global-page-progress-track {
+  display: block;
+  width: 38%;
+  height: 100%;
+  border-radius: 0 999px 999px 0;
+  background: linear-gradient(90deg, #0f766e 0%, #2dd4bf 52%, #0f766e 100%);
+  box-shadow: 0 0 10px rgba(45, 212, 191, .35);
+  transform: translateX(-110%);
+}
+.global-page-progress.is-active .global-page-progress-track {
+  animation: pharmaflow-page-progress 1.25s cubic-bezier(.45, 0, .55, 1) infinite;
+}
+body.theme-dark .global-page-progress-track {
+  background: linear-gradient(90deg, #5eead4 0%, #99f6e4 52%, #5eead4 100%);
+  box-shadow: 0 0 10px rgba(94, 234, 212, .35);
+}
+@keyframes pharmaflow-page-progress {
+  0% { transform: translateX(-110%); }
+  55% { transform: translateX(150%); }
+  100% { transform: translateX(285%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .global-page-progress.is-active .global-page-progress-track {
+    animation-duration: 2.5s;
+  }
+}
