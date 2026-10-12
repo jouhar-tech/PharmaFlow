@@ -74,6 +74,9 @@
     <link rel="stylesheet" href="~/PharmaFlow.styles.css" asp-append-version="true" />
 </head>
 <body class="@((isHomeDashboard ? "home-dashboard-page " : "") + (isExpiryProductsPage ? "expiry-products-page " : "") + (isInventoryPage ? "inventory-page " : "") + (isSlowMovingPage ? "slow-moving-page-body " : "") + (isMorePage ? "more-page " : "") + (isLowStockPage ? "low-stock-page " : "") + (isReorderPage ? "reorder-list-page-body " : "") + (isReportsPage ? "reports-page " : "") + (isStaffAddPage ? "staff-add-page " : "") + (isUnlimitedPlanPage ? "unlimited-plan-detail-page " : "") + (isFeedbackPage ? "feedback-page " : "") + (isBillingCreatePage ? "billing-create-page-body " : "") + (isBillingGeneratedPage ? "billing-generated-page-body " : "") + (isBillsPage ? "bills-page-body " : "") + (isBillDetailsPage ? "bill-details-page-body " : "") + (isCustomersPage ? "customer-management-page-body " : "") + (isCustomerAddPage ? "customer-form-page-body " : "") + (isCustomerDetailsPage ? "customer-details-page-body " : "") + (isCustomerPaymentPage ? "customer-payment-page-body " : "") + (isCustomerReminderPage ? "customer-reminder-page-body " : "") + (isInventoryDetailsPage ? "inventory-details-page-body " : "") + (isInventoryActionPage ? "inventory-action-page-body " : "") + (isPurchasePage ? "purchase-page-body " : "") + (isPurchaseDistributorPage ? "purchase-distributor-page-body " : "") + (isInvoiceReviewPage ? "invoice-review-page-body " : "") + (isAdminPage ? "admin-page-body " : ""))">
+    <div id="globalPageProgress" class="global-page-progress" role="progressbar" aria-label="Loading page" aria-valuemin="0" aria-valuemax="100" aria-valuetext="Loading" aria-hidden="true">
+        <span class="global-page-progress-track"></span>
+    </div>
     <div class="app-shell">
         <aside class="app-sidebar" id="appSidebar" aria-label="Main navigation">
             <div class="sidebar-brand">
