@@ -281,6 +281,61 @@
         const printButton = document.getElementById("billingPrintReceipt");
         const whatsappButton = document.getElementById("billingShareWhatsApp");
 
+        const invoicePdfUrl = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+            Url.Action("InvoicePdf", "Bills", new { billId = Model.BillId })));
+
+        const shareInvoicePdf = async (message, invoiceNumber) => {
+            const fileName = "Invoice-" + String(invoiceNumber || "receipt").replace(/[^a-zA-Z0-9-_]/g, "-") + ".pdf";
+
+            try {
+                const response = await fetch(invoicePdfUrl, {
+                    credentials: "same-origin",
+                    headers: { Accept: "application/pdf" }
+                });
+
+                if (!response.ok) {
+                    throw new Error("Invoice PDF could not be generated (HTTP " + response.status + ").");
+                }
+
+                const pdfBlob = await response.blob();
+                if (!pdfBlob.size || pdfBlob.type !== "application/pdf") {
+                    throw new Error("The invoice PDF response was empty or invalid.");
+                }
+
+                const pdfFile = new File([pdfBlob], fileName, { type: "application/pdf" });
+
+                if (navigator.share && navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+                    try {
+                        await navigator.share({
+                            files: [pdfFile],
+                            title: "Invoice " + invoiceNumber,
+                            text: message
+                        });
+                        return;
+                    } catch (shareError) {
+                        if (shareError?.name === "AbortError") return;
+                        console.warn("Native PDF sharing was unavailable; falling back to download.", shareError);
+                    }
+                }
+
+                const objectUrl = URL.createObjectURL(pdfBlob);
+                const downloadLink = document.createElement("a");
+                downloadLink.href = objectUrl;
+                downloadLink.download = fileName;
+                downloadLink.hidden = true;
+                document.body.appendChild(downloadLink);
+                downloadLink.click();
+                downloadLink.remove();
+                window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60000);
+
+                window.alert("The invoice PDF has been downloaded. WhatsApp will open with your message; attach the downloaded PDF before sending.");
+                window.location.assign("https://wa.me/?text=" + encodeURIComponent(message));
+            } catch (error) {
+                console.error("Could not prepare the invoice PDF for WhatsApp.", error);
+                window.alert("Could not prepare the invoice PDF. WhatsApp has not been opened. Please try again.");
+            }
+        };
+
         printButton?.addEventListener("click", () => window.print());
 
         whatsappButton?.addEventListener("click", () => {
@@ -315,8 +370,6 @@
             }
 
             messageParts.push("");
-            messageParts.push("Your invoice has been successfully generated. Below are your billing summary details:");
-            messageParts.push("");
             messageParts.push("📄 *Invoice Details:*");
             messageParts.push("• Invoice No: #" + invoiceNumber);
             messageParts.push("• Date: " + invoiceDate);
@@ -339,11 +392,7 @@
             messageParts.push("");
             messageParts.push("Stay healthy!");
 
-            // WhatsApp's share endpoint opens the contact picker with this message pre-filled as a draft.
-            window.open(
-                "https://wa.me/?text=" + encodeURIComponent(messageParts.join("\n")),
-                "_blank",
-                "noopener,noreferrer");
+            void shareInvoicePdf(messageParts.join("\n"), invoiceNumber);
         });
     })();
 </script>
