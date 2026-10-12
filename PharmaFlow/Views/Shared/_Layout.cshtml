@@ -62,12 +62,40 @@
     var isAdminPage = ViewContext.RouteData.Values["controller"]?.ToString() == "Admin";
     var isAuthenticated = !string.IsNullOrWhiteSpace(Context.Session.GetString("SupabaseAccessToken"))
         && !string.IsNullOrWhiteSpace(Context.Session.GetString("ProfileId"));
+
+    var skeletonType = isHomeDashboard ? "dashboard"
+        : (isInventoryDetailsPage || isBillDetailsPage || isCustomerDetailsPage || isBillingGeneratedPage) ? "detail"
+        : (isBillingCreatePage || isStaffAddPage || isCustomerAddPage || isCustomerPaymentPage
+            || isCustomerReminderPage || isInventoryActionPage || isInvoiceReviewPage
+            || isFeedbackPage || isUnlimitedPlanPage) ? "form"
+        : (isExpiryProductsPage || isInventoryPage || isSlowMovingPage || isLowStockPage
+            || isReorderPage || isReportsPage || isBillsPage || isCustomersPage
+            || isPurchasePage || isPurchaseDistributorPage || isAdminPage) ? "list"
+        : "generic";
 }
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - @businessName</title>
+    <script>
+        (() => {
+            const root = document.documentElement;
+            const revealTimer = window.setTimeout(() => {
+                root.classList.add("page-skeleton-visible");
+                document.getElementById("pageContent")?.setAttribute("aria-busy", "true");
+            }, 120);
+
+            const finishLoading = () => {
+                window.clearTimeout(revealTimer);
+                root.classList.remove("page-skeleton-visible");
+                document.getElementById("pageContent")?.setAttribute("aria-busy", "false");
+            };
+
+            document.addEventListener("DOMContentLoaded", finishLoading, { once: true });
+            window.addEventListener("pageshow", finishLoading);
+        })();
+    </script>
     <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
@@ -179,7 +207,95 @@
 
             <div class="pharmaflow-connectivity-banner" id="pharmaflowConnectivityBanner" hidden role="status" aria-live="polite"></div>
 
-            <main role="main" class="app-content">
+            <main role="main" class="app-content" id="pageContent" aria-busy="false">
+                <div id="pageSkeleton" class="page-skeleton" data-page-type="@skeletonType" aria-hidden="true">
+                    <div class="page-skeleton-inner">
+                        <section class="page-skeleton-variant page-skeleton-dashboard">
+                            <div class="page-skeleton-dashboard-top">
+                                <span class="skeleton-shimmer skeleton-avatar"></span>
+                                <div class="page-skeleton-stack">
+                                    <span class="skeleton-shimmer skeleton-line skeleton-line-medium"></span>
+                                    <span class="skeleton-shimmer skeleton-line skeleton-line-short"></span>
+                                </div>
+                                <span class="skeleton-shimmer skeleton-circle-action"></span>
+                            </div>
+                            <div class="page-skeleton-dashboard-brand">
+                                <span class="skeleton-shimmer skeleton-line skeleton-line-title"></span>
+                                <span class="skeleton-shimmer skeleton-line skeleton-line-short"></span>
+                            </div>
+                            <div class="page-skeleton-feature-card">
+                                <span class="skeleton-shimmer skeleton-line skeleton-line-short"></span>
+                                <span class="skeleton-shimmer skeleton-line skeleton-line-value"></span>
+                                <span class="skeleton-shimmer skeleton-line skeleton-line-medium"></span>
+                            </div>
+                            <div class="page-skeleton-metrics">
+                                <div class="page-skeleton-card"><span class="skeleton-shimmer skeleton-icon"></span><span class="skeleton-shimmer skeleton-line"></span><span class="skeleton-shimmer skeleton-line skeleton-line-short"></span></div>
+                                <div class="page-skeleton-card"><span class="skeleton-shimmer skeleton-icon"></span><span class="skeleton-shimmer skeleton-line"></span><span class="skeleton-shimmer skeleton-line skeleton-line-short"></span></div>
+                                <div class="page-skeleton-card"><span class="skeleton-shimmer skeleton-icon"></span><span class="skeleton-shimmer skeleton-line"></span><span class="skeleton-shimmer skeleton-line skeleton-line-short"></span></div>
+                                <div class="page-skeleton-card"><span class="skeleton-shimmer skeleton-icon"></span><span class="skeleton-shimmer skeleton-line"></span><span class="skeleton-shimmer skeleton-line skeleton-line-short"></span></div>
+                            </div>
+                            <span class="skeleton-shimmer skeleton-section-title"></span>
+                            <div class="page-skeleton-list-row"><span class="skeleton-shimmer skeleton-icon"></span><div class="page-skeleton-stack"><span class="skeleton-shimmer skeleton-line skeleton-line-medium"></span><span class="skeleton-shimmer skeleton-line skeleton-line-short"></span></div><span class="skeleton-shimmer skeleton-pill"></span></div>
+                            <div class="page-skeleton-list-row"><span class="skeleton-shimmer skeleton-icon"></span><div class="page-skeleton-stack"><span class="skeleton-shimmer skeleton-line skeleton-line-medium"></span><span class="skeleton-shimmer skeleton-line skeleton-line-short"></span></div><span class="skeleton-shimmer skeleton-pill"></span></div>
+                        </section>
+
+                        <section class="page-skeleton-variant page-skeleton-list">
+                            <div class="page-skeleton-heading">
+                                <span class="skeleton-shimmer skeleton-line skeleton-line-title"></span>
+                                <span class="skeleton-shimmer skeleton-action"></span>
+                            </div>
+                            <div class="page-skeleton-summary">
+                                <span class="skeleton-shimmer skeleton-icon"></span>
+                                <div class="page-skeleton-stack"><span class="skeleton-shimmer skeleton-line skeleton-line-medium"></span><span class="skeleton-shimmer skeleton-line skeleton-line-value"></span><span class="skeleton-shimmer skeleton-line skeleton-line-short"></span></div>
+                            </div>
+                            <div class="page-skeleton-search"><span class="skeleton-shimmer skeleton-search-icon"></span><span class="skeleton-shimmer skeleton-line skeleton-line-medium"></span><span class="skeleton-shimmer skeleton-search-action"></span></div>
+                            <div class="page-skeleton-filters"><span class="skeleton-shimmer skeleton-pill"></span><span class="skeleton-shimmer skeleton-pill"></span><span class="skeleton-shimmer skeleton-pill"></span></div>
+                            <div class="page-skeleton-product-grid">
+                                <div class="page-skeleton-product-card"><div class="page-skeleton-product-top"><span class="skeleton-shimmer skeleton-icon"></span><div class="page-skeleton-stack"><span class="skeleton-shimmer skeleton-line skeleton-line-medium"></span><span class="skeleton-shimmer skeleton-line skeleton-line-short"></span></div></div><div class="page-skeleton-product-meta"><span class="skeleton-shimmer skeleton-line"></span><span class="skeleton-shimmer skeleton-line"></span><span class="skeleton-shimmer skeleton-line"></span><span class="skeleton-shimmer skeleton-line"></span></div></div>
+                                <div class="page-skeleton-product-card"><div class="page-skeleton-product-top"><span class="skeleton-shimmer skeleton-icon"></span><div class="page-skeleton-stack"><span class="skeleton-shimmer skeleton-line skeleton-line-medium"></span><span class="skeleton-shimmer skeleton-line skeleton-line-short"></span></div></div><div class="page-skeleton-product-meta"><span class="skeleton-shimmer skeleton-line"></span><span class="skeleton-shimmer skeleton-line"></span><span class="skeleton-shimmer skeleton-line"></span><span class="skeleton-shimmer skeleton-line"></span></div></div>
+                                <div class="page-skeleton-product-card"><div class="page-skeleton-product-top"><span class="skeleton-shimmer skeleton-icon"></span><div class="page-skeleton-stack"><span class="skeleton-shimmer skeleton-line skeleton-line-medium"></span><span class="skeleton-shimmer skeleton-line skeleton-line-short"></span></div></div><div class="page-skeleton-product-meta"><span class="skeleton-shimmer skeleton-line"></span><span class="skeleton-shimmer skeleton-line"></span><span class="skeleton-shimmer skeleton-line"></span><span class="skeleton-shimmer skeleton-line"></span></div></div>
+                                <div class="page-skeleton-product-card"><div class="page-skeleton-product-top"><span class="skeleton-shimmer skeleton-icon"></span><div class="page-skeleton-stack"><span class="skeleton-shimmer skeleton-line skeleton-line-medium"></span><span class="skeleton-shimmer skeleton-line skeleton-line-short"></span></div></div><div class="page-skeleton-product-meta"><span class="skeleton-shimmer skeleton-line"></span><span class="skeleton-shimmer skeleton-line"></span><span class="skeleton-shimmer skeleton-line"></span><span class="skeleton-shimmer skeleton-line"></span></div></div>
+                            </div>
+                        </section>
+
+                        <section class="page-skeleton-variant page-skeleton-form">
+                            <div class="page-skeleton-heading"><span class="skeleton-shimmer skeleton-line skeleton-line-title"></span><span class="skeleton-shimmer skeleton-action"></span></div>
+                            <div class="page-skeleton-form-card">
+                                <span class="skeleton-shimmer skeleton-line skeleton-line-medium"></span>
+                                <div class="page-skeleton-form-grid">
+                                    <div class="page-skeleton-field"><span class="skeleton-shimmer skeleton-line skeleton-line-short"></span><span class="skeleton-shimmer skeleton-input"></span></div>
+                                    <div class="page-skeleton-field"><span class="skeleton-shimmer skeleton-line skeleton-line-short"></span><span class="skeleton-shimmer skeleton-input"></span></div>
+                                    <div class="page-skeleton-field"><span class="skeleton-shimmer skeleton-line skeleton-line-short"></span><span class="skeleton-shimmer skeleton-input"></span></div>
+                                    <div class="page-skeleton-field"><span class="skeleton-shimmer skeleton-line skeleton-line-short"></span><span class="skeleton-shimmer skeleton-input"></span></div>
+                                    <div class="page-skeleton-field"><span class="skeleton-shimmer skeleton-line skeleton-line-short"></span><span class="skeleton-shimmer skeleton-input"></span></div>
+                                    <div class="page-skeleton-field"><span class="skeleton-shimmer skeleton-line skeleton-line-short"></span><span class="skeleton-shimmer skeleton-input"></span></div>
+                                </div>
+                                <span class="skeleton-shimmer skeleton-submit"></span>
+                            </div>
+                        </section>
+
+                        <section class="page-skeleton-variant page-skeleton-detail">
+                            <div class="page-skeleton-heading"><span class="skeleton-shimmer skeleton-line skeleton-line-title"></span><span class="skeleton-shimmer skeleton-action"></span></div>
+                            <div class="page-skeleton-detail-hero"><span class="skeleton-shimmer skeleton-icon"></span><div class="page-skeleton-stack"><span class="skeleton-shimmer skeleton-line skeleton-line-medium"></span><span class="skeleton-shimmer skeleton-line skeleton-line-value"></span><span class="skeleton-shimmer skeleton-line skeleton-line-short"></span></div><span class="skeleton-shimmer skeleton-pill"></span></div>
+                            <div class="page-skeleton-metrics">
+                                <div class="page-skeleton-card"><span class="skeleton-shimmer skeleton-line"></span><span class="skeleton-shimmer skeleton-line skeleton-line-value"></span></div>
+                                <div class="page-skeleton-card"><span class="skeleton-shimmer skeleton-line"></span><span class="skeleton-shimmer skeleton-line skeleton-line-value"></span></div>
+                                <div class="page-skeleton-card"><span class="skeleton-shimmer skeleton-line"></span><span class="skeleton-shimmer skeleton-line skeleton-line-value"></span></div>
+                            </div>
+                            <div class="page-skeleton-detail-panel"><span class="skeleton-shimmer skeleton-line skeleton-line-medium"></span><div class="page-skeleton-detail-row"><span class="skeleton-shimmer skeleton-line skeleton-line-short"></span><span class="skeleton-shimmer skeleton-line skeleton-line-medium"></span></div><div class="page-skeleton-detail-row"><span class="skeleton-shimmer skeleton-line skeleton-line-short"></span><span class="skeleton-shimmer skeleton-line skeleton-line-medium"></span></div><div class="page-skeleton-detail-row"><span class="skeleton-shimmer skeleton-line skeleton-line-short"></span><span class="skeleton-shimmer skeleton-line skeleton-line-medium"></span></div></div>
+                        </section>
+
+                        <section class="page-skeleton-variant page-skeleton-generic">
+                            <div class="page-skeleton-heading"><span class="skeleton-shimmer skeleton-line skeleton-line-title"></span><span class="skeleton-shimmer skeleton-action"></span></div>
+                            <div class="page-skeleton-metrics">
+                                <div class="page-skeleton-card"><span class="skeleton-shimmer skeleton-icon"></span><span class="skeleton-shimmer skeleton-line"></span><span class="skeleton-shimmer skeleton-line skeleton-line-short"></span></div>
+                                <div class="page-skeleton-card"><span class="skeleton-shimmer skeleton-icon"></span><span class="skeleton-shimmer skeleton-line"></span><span class="skeleton-shimmer skeleton-line skeleton-line-short"></span></div>
+                                <div class="page-skeleton-card"><span class="skeleton-shimmer skeleton-icon"></span><span class="skeleton-shimmer skeleton-line"></span><span class="skeleton-shimmer skeleton-line skeleton-line-short"></span></div>
+                            </div>
+                            <div class="page-skeleton-detail-panel"><span class="skeleton-shimmer skeleton-line skeleton-line-medium"></span><div class="page-skeleton-detail-row"><span class="skeleton-shimmer skeleton-line skeleton-line-short"></span><span class="skeleton-shimmer skeleton-line skeleton-line-medium"></span></div><div class="page-skeleton-detail-row"><span class="skeleton-shimmer skeleton-line skeleton-line-short"></span><span class="skeleton-shimmer skeleton-line skeleton-line-medium"></span></div><div class="page-skeleton-detail-row"><span class="skeleton-shimmer skeleton-line skeleton-line-short"></span><span class="skeleton-shimmer skeleton-line skeleton-line-medium"></span></div></div>
+                        </section>
+                    </div>
+                </div>
                 @RenderBody()
             </main>
 
