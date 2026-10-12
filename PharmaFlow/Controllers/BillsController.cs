@@ -4,6 +4,7 @@ using PharmaFlow.Data;
 using PharmaFlow.Filters;
 using PharmaFlow.Models;
 using PharmaFlow.Models.ViewModels;
+using PharmaFlow.Services;
 
 namespace PharmaFlow.Controllers;
 
@@ -64,6 +65,61 @@ public sealed class BillsController : Controller
             BillCount = bills.Count,
             Bills = cards
         });
+    }
+
+    [HttpGet]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    public async Task<IActionResult> InvoicePdf(
+        long billId,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetProfileId(out var profileId))
+            return RedirectToAction("Login", "Account");
+
+        if (billId <= 0)
+            return NotFound();
+
+        // Bills are scoped to the signed-in pharmacy. Do not expose another
+        // pharmacy's receipt just because a bill ID is known.
+        var bill = await _dbContext.SalesBills
+            .AsNoTracking()
+            .Where(b =>
+                b.BillId == billId &&
+                b.ProfileId == profileId &&
+                b.Status == "Completed")
+            .SingleOrDefaultAsync(cancellationToken);
+
+        if (bill is null)
+            return NotFound();
+
+        var items = await _dbContext.SalesBillItems
+            .AsNoTracking()
+            .Where(item => item.BillId == billId)
+            .OrderBy(item => item.BillItemId)
+            .ToListAsync(cancellationToken);
+
+        var profile = await _dbContext.Profiles
+            .AsNoTracking()
+            .Where(p => p.Id == profileId)
+            .Select(p => new
+            {
+                p.BusinessName,
+                p.PhoneNumber,
+                p.Email
+            })
+            .SingleOrDefaultAsync(cancellationToken);
+
+        var pdf = InvoicePdfGenerator.Generate(
+            bill,
+            items,
+            string.IsNullOrWhiteSpace(profile?.BusinessName) ? "PharmaFlow" : profile.BusinessName!,
+            profile?.PhoneNumber,
+            profile?.Email);
+
+        return File(
+            pdf,
+            "application/pdf",
+            $"Invoice-{bill.BillNumber}.pdf");
     }
 
     [HttpGet]
