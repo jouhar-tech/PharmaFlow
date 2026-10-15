@@ -75,8 +75,9 @@
 
                 <div class="account-profile-field">
                     <label asp-for="Email"></label>
-                    <input asp-for="Email" type="email" autocomplete="email" readonly />
-                    <small class="account-profile-field-hint">Used for sign-in. Email changes need a separate verification step.</small>
+                    <input asp-for="Email" type="email" autocomplete="email" required maxlength="160" placeholder="Enter email address" />
+                    <small class="account-profile-field-hint">Email changes go through Supabase's verification flow. After the email changes, sign in with the new address once.</small>
+                    <span asp-validation-for="Email" class="account-profile-field-error"></span>
                 </div>
 
                 <div class="account-profile-field account-profile-field-wide">
