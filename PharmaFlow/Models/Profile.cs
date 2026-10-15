@@ -31,6 +31,9 @@ public sealed class Profile
     [Column("address")]
     public string? Address { get; set; }
 
+    [Column("profile_photo_url")]
+    public string? ProfilePhotoUrl { get; set; }
+
     [Column("subscription_plan")]
     public string SubscriptionPlan { get; set; } = "free";
 
