@@ -2,6 +2,10 @@ namespace PharmaFlow.Models.ViewModels
 {
     public sealed class DashboardViewModel
     {
+        public string? ProfileFullName { get; init; }
+
+        public string? ProfilePhotoUrl { get; init; }
+
         public int ProductsExpiringSoonCount { get; init; }
 
         public int LowStockCount { get; init; }
