@@ -3,6 +3,20 @@
 @{
     ViewData["Title"] = "Dashboard";
     var businessName = Context.Session.GetString("BusinessName") ?? "PharmaFlow";
+    var indiaTimeZone = TimeZoneInfo.FindSystemTimeZoneById(
+        OperatingSystem.IsWindows() ? "India Standard Time" : "Asia/Kolkata");
+    var indiaNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, indiaTimeZone);
+    var greeting = indiaNow.Hour < 12
+        ? "Good Morning,"
+        : indiaNow.Hour < 17
+            ? "Good Afternoon,"
+            : "Good Night,";
+    var displayName = !string.IsNullOrWhiteSpace(Model.ProfileFullName)
+        ? Model.ProfileFullName
+        : Context.Session.GetString("Username") ?? businessName;
+    var avatarInitial = !string.IsNullOrWhiteSpace(displayName)
+        ? displayName.Trim()[0].ToString().ToUpperInvariant()
+        : "U";
 }
 
 @await Html.PartialAsync("_InvoiceCapture")
@@ -11,10 +25,24 @@
     <header class="home-mobile-hero">
         <div class="home-mobile-topline">
             <div class="home-mobile-greeting">
-                <span class="home-mobile-avatar">@((Context.Session.GetString("Username") ?? businessName).FirstOrDefault().ToString().ToUpperInvariant())</span>
-                <div>
-                    <span class="home-mobile-greeting-label">Greetings,</span>
-                    <strong>@(Context.Session.GetString("Username") ?? businessName)</strong>
+                <a asp-controller="Profile" asp-action="Account"
+                   class="home-mobile-avatar-link"
+                   aria-label="Open your profile"
+                   title="Open your profile">
+                    <span class="home-mobile-avatar">
+                        @if (!string.IsNullOrWhiteSpace(Model.ProfilePhotoUrl))
+                        {
+                            <img src="@Model.ProfilePhotoUrl" alt="" />
+                        }
+                        else
+                        {
+                            @avatarInitial
+                        }
+                    </span>
+                </a>
+                <div class="home-mobile-greeting-copy">
+                    <span class="home-mobile-greeting-label">@greeting</span>
+                    <strong>@displayName</strong>
                 </div>
             </div>
             <button type="button" class="home-mobile-notification" data-notification-button aria-label="Enable notifications" title="Enable daily notifications">
@@ -25,7 +53,7 @@
 
         <div class="home-mobile-business">
             <h1>@businessName</h1>
-            <p>@DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(5.5)).ToString("dd MMM yyyy")</p>
+            <p>@indiaNow.ToString("dd MMM yyyy")</p>
         </div>
     </header>
 
