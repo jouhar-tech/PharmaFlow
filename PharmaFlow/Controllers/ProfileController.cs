@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using PharmaFlow.Data;
 using PharmaFlow.Filters;
 using PharmaFlow.Models;
@@ -76,14 +77,29 @@ public sealed class ProfileController : Controller
             return RedirectToAction("Login", "Account");
 
         var currentPhotoUrl = profile.ProfilePhotoUrl;
-        // Email is the Supabase sign-in identity. Do not change it in the
-        // profile row without completing Supabase's email verification flow.
-        model.Email = profile.Email;
-        ModelState.Remove(nameof(model.Email));
+        var requestedEmail = model.Email?.Trim() ?? string.Empty;
+        model.Email = requestedEmail;
         model.ProfilePhotoUrl = currentPhotoUrl;
 
         if (!ModelState.IsValid)
             return View(model);
+
+        if (!string.Equals(requestedEmail, profile.Email, StringComparison.OrdinalIgnoreCase))
+        {
+            var emailTaken = await _dbContext.Profiles
+                .AsNoTracking()
+                .AnyAsync(
+                    p => p.Id != profile.Id &&
+                         p.Email != null &&
+                         p.Email.ToLower() == requestedEmail.ToLower(),
+                    cancellationToken);
+
+            if (emailTaken)
+            {
+                ModelState.AddModelError(nameof(model.Email), "This email is already associated with another PharmaFlow account.");
+                return View(model);
+            }
+        }
 
         var username = model.Username.Trim();
         var usernameTaken = await _dbContext.Profiles
@@ -144,9 +160,28 @@ public sealed class ProfileController : Controller
         {
             _logger.LogError(ex, "Failed to update account profile {ProfileId}.", profile.Id);
             ModelState.AddModelError(string.Empty, "Your profile could not be saved. Please try again.");
-            model.Email = profile.Email;
+            model.Email = requestedEmail;
             model.ProfilePhotoUrl = currentPhotoUrl;
             return View(model);
+        }
+
+        if (!string.Equals(requestedEmail, profile.Email, StringComparison.OrdinalIgnoreCase))
+        {
+            var emailChangeRequested = await RequestEmailChangeAsync(requestedEmail, cancellationToken);
+            if (!emailChangeRequested)
+            {
+                ModelState.AddModelError(nameof(model.Email), "Profile details were saved, but the email change could not be started. Please try again.");
+                model.ProfilePhotoUrl = profile.ProfilePhotoUrl;
+                TempData["ProfileMessage"] = "Your profile details were saved.";
+                return View(model);
+            }
+
+            TempData["ProfileMessage"] =
+                $"Profile updated. Email change requested for {requestedEmail}. If verification is enabled, confirm the link sent to that address; after the email changes, sign in with the new email once to sync your account.";
+        }
+        else
+        {
+            TempData["ProfileMessage"] = "Profile updated successfully.";
         }
 
         HttpContext.Session.SetString("BusinessName", profile.BusinessName ?? string.Empty);
@@ -386,6 +421,40 @@ public sealed class ProfileController : Controller
         }
 
         return $"{baseUrl}/storage/v1/object/public/staff-photos/{objectPath}";
+    }
+
+    private async Task<bool> RequestEmailChangeAsync(string email, CancellationToken cancellationToken)
+    {
+        var accessToken = HttpContext.Session.GetString("SupabaseAccessToken");
+        var configuration = HttpContext.RequestServices.GetRequiredService<IConfiguration>();
+        var baseUrl = configuration["Supabase:Url"]?.TrimEnd('/');
+        var anonKey = configuration["Supabase:AnonKey"];
+
+        if (string.IsNullOrWhiteSpace(accessToken) ||
+            string.IsNullOrWhiteSpace(baseUrl) ||
+            string.IsNullOrWhiteSpace(anonKey))
+            return false;
+
+        var client = _httpClientFactory.CreateClient();
+        using var request = new HttpRequestMessage(HttpMethod.Put, $"{baseUrl}/auth/v1/user");
+        request.Headers.Add("apikey", anonKey);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        request.Content = JsonContent.Create(new { email });
+
+        try
+        {
+            using var response = await client.SendAsync(request, cancellationToken);
+            if (response.IsSuccessStatusCode)
+                return true;
+
+            _logger.LogWarning("Supabase email-change request failed with status {StatusCode}.", response.StatusCode);
+            return false;
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogWarning(ex, "Supabase email-change request could not be completed.");
+            return false;
+        }
     }
 
     private bool IsStaff() =>
