@@ -38,7 +38,7 @@ public sealed class ProfileController : Controller
             BusinessName = profile.BusinessName ?? string.Empty,
             Username = profile.Username,
             PhoneNumber = profile.PhoneNumber,
-            Email = profile.Email
+            Email = profile.Email ?? string.Empty
         });
     }
 
@@ -58,7 +58,7 @@ public sealed class ProfileController : Controller
             Username = profile.Username,
             FullName = profile.FullName,
             PhoneNumber = profile.PhoneNumber,
-            Email = profile.Email,
+            Email = profile.Email ?? string.Empty,
             Address = profile.Address,
             ProfilePhotoUrl = profile.ProfilePhotoUrl
         });
