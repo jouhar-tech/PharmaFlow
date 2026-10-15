@@ -16270,3 +16270,12 @@ body.theme-dark .account-profile-photo-field input[type="file"]::file-selector-b
   .account-profile-cancel,
   .account-profile-save { width: 100%; padding-inline: .7rem; }
 }
+
+
+/* Hide the shared desktop-style shell header on the mobile owner profile screen.
+   Keep the profile page's own heading and the existing bottom navigation. */
+@media (max-width: 767.98px) {
+  body.account-profile-page-body .app-topbar {
+    display: none !important;
+  }
+}
