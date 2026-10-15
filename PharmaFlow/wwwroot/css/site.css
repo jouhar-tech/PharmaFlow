@@ -889,8 +889,8 @@ body.theme-dark .invoice-review-saved-summary strong { color: #dcfce7; }
   }
 
   .home-mobile-hero {
-    min-height: 220px;
-    padding: 1.05rem 1rem 4.3rem;
+    min-height: 198px;
+    padding: .8rem 1rem 3rem;
     background: linear-gradient(180deg, #8ed8d3 0%, #79ccc7 100%);
   }
 
@@ -982,7 +982,7 @@ body.theme-dark .invoice-review-saved-summary strong { color: #dcfce7; }
   }
 
   .home-mobile-business {
-    margin-top: 1.7rem;
+    margin-top: 1rem;
     text-align: center;
   }
 
@@ -1006,7 +1006,7 @@ body.theme-dark .invoice-review-saved-summary strong { color: #dcfce7; }
   .home-mobile-content {
     position: relative;
     z-index: 2;
-    margin-top: -3.25rem;
+    margin-top: -3.5rem;
     padding: 0 .9rem 6.4rem;
   }
 
@@ -1510,7 +1510,7 @@ body.theme-dark .invoice-review-saved-summary strong { color: #dcfce7; }
 
 @media (max-width: 390px) {
   .home-mobile-hero {
-    min-height: 242px;
+    min-height: 205px;
     padding-left: .8rem;
     padding-right: .8rem;
   }
