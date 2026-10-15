@@ -32,9 +32,20 @@ namespace PharmaFlow.Controllers
             decimal customerOutstandingAmount = 0m;
             var customersWithOutstanding = 0;
             var remindersDueCount = 0;
+            string? profileFullName = null;
+            string? profilePhotoUrl = null;
 
             if (long.TryParse(profileIdValue, out var profileId))
             {
+                var profileIdentity = await _dbContext.Profiles
+                    .AsNoTracking()
+                    .Where(profile => profile.Id == profileId)
+                    .Select(profile => new { profile.FullName, profile.ProfilePhotoUrl })
+                    .SingleOrDefaultAsync(cancellationToken);
+
+                profileFullName = profileIdentity?.FullName;
+                profilePhotoUrl = profileIdentity?.ProfilePhotoUrl;
+
                 var indiaTimeZone = TimeZoneInfo.FindSystemTimeZoneById(
                     OperatingSystem.IsWindows() ? "India Standard Time" : "Asia/Kolkata");
                 var indiaNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, indiaTimeZone);
@@ -133,6 +144,8 @@ namespace PharmaFlow.Controllers
 
             var dashboard = new DashboardViewModel
             {
+                ProfileFullName = profileFullName,
+                ProfilePhotoUrl = profilePhotoUrl,
                 ProductsExpiringSoonCount = expiringSoonCount,
                 LowStockCount = lowStockCount,
                 ExpiryAtRiskValue = expiryAtRiskValue,
