@@ -1,0 +1,125 @@
+@model PharmaFlow.Models.ViewModels.ProfileViewModel
+@{
+    ViewData["Title"] = "My Profile";
+    var profileDisplayName = !string.IsNullOrWhiteSpace(Model.FullName) ? Model.FullName : Model.Username;
+    var profileInitial = !string.IsNullOrWhiteSpace(profileDisplayName)
+        ? profileDisplayName.Trim()[0].ToString().ToUpperInvariant()
+        : "U";
+}
+
+<div class="account-profile-page">
+    <header class="account-profile-header">
+        <a asp-controller="Home" asp-action="Index" class="account-profile-back" aria-label="Back to dashboard">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5"></path><path d="m11 18-6-6 6-6"></path></svg>
+        </a>
+        <div>
+            <span class="account-profile-eyebrow">ACCOUNT SETTINGS</span>
+            <h1>My Profile</h1>
+            <p>Manage your personal and pharmacy details.</p>
+        </div>
+    </header>
+
+    @if (TempData["ProfileMessage"] is string message)
+    {
+        <div class="account-profile-success" role="status">@message</div>
+    }
+
+    <form asp-controller="Profile" asp-action="Account" method="post" enctype="multipart/form-data" class="account-profile-form">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="account-profile-validation" role="alert"></div>
+
+        <section class="account-profile-card">
+            <div class="account-profile-card-heading">
+                <h2>Your details</h2>
+                <p>This information helps identify your account and pharmacy.</p>
+            </div>
+
+            <div class="account-profile-photo-row">
+                <div class="account-profile-photo-preview" id="accountProfilePhotoPreview" aria-label="Profile photo preview">
+                    @if (!string.IsNullOrWhiteSpace(Model.ProfilePhotoUrl))
+                    {
+                        <img src="@Model.ProfilePhotoUrl" alt="Current profile photo" id="accountProfilePhotoImage" />
+                    }
+                    else
+                    {
+                        <span id="accountProfilePhotoInitial">@profileInitial</span>
+                        <img src="" alt="Profile photo preview" id="accountProfilePhotoImage" hidden />
+                    }
+                </div>
+                <div class="account-profile-photo-field">
+                    <label asp-for="ProfilePhoto">Profile photo</label>
+                    <input asp-for="ProfilePhoto" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" />
+                    <small>JPG, PNG or WebP. Maximum size: 5 MB.</small>
+                    <span asp-validation-for="ProfilePhoto" class="account-profile-field-error"></span>
+                </div>
+            </div>
+
+            <div class="account-profile-grid">
+                <div class="account-profile-field">
+                    <label asp-for="FullName">Full name</label>
+                    <input asp-for="FullName" autocomplete="name" maxlength="120" placeholder="Enter your full name" />
+                    <span asp-validation-for="FullName" class="account-profile-field-error"></span>
+                </div>
+
+                <div class="account-profile-field">
+                    <label asp-for="Username"></label>
+                    <input asp-for="Username" autocomplete="username" maxlength="50" placeholder="Choose a username" />
+                    <span asp-validation-for="Username" class="account-profile-field-error"></span>
+                </div>
+
+                <div class="account-profile-field">
+                    <label asp-for="PhoneNumber"></label>
+                    <input asp-for="PhoneNumber" type="tel" autocomplete="tel" maxlength="20" placeholder="Enter mobile number" />
+                    <span asp-validation-for="PhoneNumber" class="account-profile-field-error"></span>
+                </div>
+
+                <div class="account-profile-field">
+                    <label asp-for="Email"></label>
+                    <input asp-for="Email" type="email" autocomplete="email" readonly />
+                    <small class="account-profile-field-hint">Used for sign-in. Email changes need a separate verification step.</small>
+                </div>
+
+                <div class="account-profile-field account-profile-field-wide">
+                    <label asp-for="BusinessName"></label>
+                    <input asp-for="BusinessName" maxlength="120" autocomplete="organization" placeholder="Enter pharmacy / shop name" />
+                    <span asp-validation-for="BusinessName" class="account-profile-field-error"></span>
+                </div>
+
+                <div class="account-profile-field account-profile-field-wide">
+                    <label asp-for="Address"></label>
+                    <textarea asp-for="Address" rows="3" maxlength="500" autocomplete="street-address" placeholder="Enter shop address"></textarea>
+                    <span asp-validation-for="Address" class="account-profile-field-error"></span>
+                </div>
+            </div>
+
+            <div class="account-profile-actions">
+                <a asp-controller="Home" asp-action="Index" class="account-profile-cancel">Cancel</a>
+                <button type="submit" class="account-profile-save">Save changes</button>
+            </div>
+        </section>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (() => {
+            const input = document.getElementById("ProfilePhoto");
+            const image = document.getElementById("accountProfilePhotoImage");
+            const initial = document.getElementById("accountProfilePhotoInitial");
+            if (!input || !image) return;
+
+            let previewUrl = null;
+            input.addEventListener("change", () => {
+                const file = input.files && input.files[0];
+                if (!file) return;
+
+                if (previewUrl) URL.revokeObjectURL(previewUrl);
+                previewUrl = URL.createObjectURL(file);
+                image.src = previewUrl;
+                image.hidden = false;
+                if (initial) initial.hidden = true;
+            });
+        })();
+    </script>
+}
