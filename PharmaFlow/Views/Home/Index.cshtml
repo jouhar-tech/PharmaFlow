@@ -60,7 +60,9 @@
     </header>
 
     <main class="home-mobile-content">
-        <section class="home-mobile-sales-card" aria-label="Today's sales">
+        <a asp-controller="Bills" asp-action="Index" asp-route-period="Last 7 Days"
+           class="home-mobile-sales-card home-mobile-sales-card-link"
+           aria-label="View bills from the last 7 days">
             <div class="home-mobile-sales-head">
                 <div>
                     <span class="home-mobile-eyebrow">Today&rsquo;s Sales</span>
@@ -72,7 +74,7 @@
                 </div>
                 <span class="home-mobile-sales-pill">Today</span>
             </div>
-        </section>
+        </a>
 
         @if (Model.ProductsExpiringSoonCount > 0 || Model.LowStockCount > 0 || Model.CustomerOutstandingAmount > 0m || Model.SlowMovingStockCount > 0 || Model.RemindersDueCount > 0)
         {
@@ -273,10 +275,12 @@
                 <div class="metric-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M7 3v4M17 3v4M3.5 9.5h17"/></svg></div>
                 <div><span class="metric-label" data-i18n="productsAlreadyExpired">Products already expired</span><strong class="metric-value">—</strong><span class="metric-note" data-i18n="checkAndQuarantineStock">Check and quarantine stock</span></div>
             </article>
-            <article class="dashboard-card metric-card metric-success">
+            <a asp-controller="Bills" asp-action="Index" asp-route-period="Last 7 Days"
+               class="dashboard-card metric-card metric-success metric-card-link"
+               aria-label="View bills from the last 7 days">
                 <div class="metric-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 5h12M6 9h10M9 5.5c3.5 0 6 1.8 6 4.5s-2.5 4.5-6 4.5l7 5"/></svg></div>
                 <div><span class="metric-label" data-i18n="todaysSales">Today's sales</span><strong class="metric-value">₹ @Model.TodaySalesAmount.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</strong><span class="metric-note" data-i18n="totalSalesForToday">Total sales for today</span></div>
-            </article>
+            </a>
             <article class="dashboard-card metric-card metric-purple">
                 <div class="metric-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4.5h14v15H5z"/><path d="M8 8h8M8 12h8M8 16h4"/></svg></div>
                 <div><span class="metric-label" data-i18n="customerDebitCredit">Customer debit / credit</span><strong class="metric-value">₹ —</strong><span class="metric-note" data-i18n="pendingCustomerBalances">Pending customer balances</span></div>
