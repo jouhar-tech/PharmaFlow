@@ -57,8 +57,8 @@ public static class InvoicePdfGenerator
 
             if (firstPage)
             {
-                Text(40, 728, "Invoice date", 8, true);
-                Text(40, 713, bill.CreatedAt.AddHours(5.5).ToString("dd MMM yyyy", IndiaCulture), 10);
+                Text(40, 728, "Invoice date & time", 8, true);
+                Text(40, 713, bill.CreatedAt.AddHours(5.5).ToString("dd MMM yyyy, hh:mm tt", IndiaCulture), 10);
                 Text(300, 728, "Payment method", 8, true);
                 Text(300, 713, bill.PaymentMethod, 10, true);
 
@@ -72,7 +72,7 @@ public static class InvoicePdfGenerator
             }
             else
             {
-                Text(40, 730, "Invoice date: " + bill.CreatedAt.AddHours(5.5).ToString("dd MMM yyyy", IndiaCulture), 8);
+                Text(40, 730, "Invoice date & time: " + bill.CreatedAt.AddHours(5.5).ToString("dd MMM yyyy, hh:mm tt", IndiaCulture), 8);
                 DrawTableHeader(704);
                 rowY = 681;
             }
