@@ -93,20 +93,66 @@ public class AccountController : Controller
                 (!string.IsNullOrWhiteSpace(p.PhoneNumber) && normalizedPhone != null && p.PhoneNumber == normalizedPhone),
                 cancellationToken);
 
-        if (ownerProfile is null || string.IsNullOrWhiteSpace(ownerProfile.Email))
+        SupabaseAuthResult? result = null;
+
+        if (ownerProfile is not null && !string.IsNullOrWhiteSpace(ownerProfile.Email))
+            result = await _authService.LoginAsync(ownerProfile.Email, model.Password, cancellationToken);
+
+        // If a user has confirmed an email change in Supabase, the profile row
+        // may still contain the previous email until their next successful login.
+        // Authenticate with the entered email and resolve the owner by Auth user ID.
+        if ((result is null || !result.Success) &&
+            identifier.Contains("@", StringComparison.Ordinal) &&
+            !string.Equals(identifier, ownerProfile?.Email, StringComparison.OrdinalIgnoreCase))
         {
-            ModelState.AddModelError(string.Empty, "Invalid username, email, phone or password.");
-            return View(model);
+            var emailLoginResult = await _authService.LoginAsync(identifier, model.Password, cancellationToken);
+            if (emailLoginResult.Success &&
+                Guid.TryParse(emailLoginResult.UserId, out var emailLoginUserId))
+            {
+                var profileByAuthId = await _dbContext.Profiles
+                    .AsNoTracking()
+                    .SingleOrDefaultAsync(p => p.UserId == emailLoginUserId, cancellationToken);
+
+                if (profileByAuthId is not null)
+                {
+                    ownerProfile = profileByAuthId;
+                    result = emailLoginResult;
+                }
+            }
         }
 
-        var result = await _authService.LoginAsync(ownerProfile.Email, model.Password, cancellationToken);
-        if (!result.Success ||
+        if (ownerProfile is null ||
+            result is null ||
+            !result.Success ||
             string.IsNullOrWhiteSpace(result.UserId) ||
             !Guid.TryParse(result.UserId, out var authenticatedUserId) ||
             authenticatedUserId != ownerProfile.UserId)
         {
             ModelState.AddModelError(string.Empty, "Invalid username, email, phone or password.");
             return View(model);
+        }
+
+        // Sync a newly confirmed Supabase email to the local profile after the
+        // user signs in with it. Never write an unverified requested email here.
+        if (!string.IsNullOrWhiteSpace(result.Email) &&
+            !string.Equals(ownerProfile.Email, result.Email, StringComparison.OrdinalIgnoreCase))
+        {
+            var trackedProfile = await _dbContext.Profiles
+                .SingleOrDefaultAsync(p => p.Id == ownerProfile.Id, cancellationToken);
+
+            if (trackedProfile is not null)
+            {
+                trackedProfile.Email = result.Email.Trim().ToLowerInvariant();
+                try
+                {
+                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    ownerProfile = trackedProfile;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Could not sync the confirmed Supabase email for profile {ProfileId}.", ownerProfile.Id);
+                }
+            }
         }
 
         SetAuthenticatedSession(result, ownerProfile.Id, ownerProfile.BusinessName, ownerProfile.Username);
