@@ -21,9 +21,9 @@ public sealed class ProfileViewModel
     [Display(Name = "Mobile Number")]
     public string? PhoneNumber { get; set; }
 
-    [EmailAddress]
+    [Required, EmailAddress, StringLength(160)]
     [Display(Name = "Email")]
-    public string? Email { get; set; }
+    public string Email { get; set; } = string.Empty;
 
     [StringLength(500)]
     [Display(Name = "Shop Address")]
