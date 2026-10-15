@@ -187,7 +187,6 @@ public sealed class ProfileController : Controller
         HttpContext.Session.SetString("BusinessName", profile.BusinessName ?? string.Empty);
         HttpContext.Session.SetString("Username", profile.Username);
 
-        TempData["ProfileMessage"] = "Profile updated successfully.";
         return RedirectToAction(nameof(Account));
     }
 
