@@ -10,7 +10,9 @@
         ? "Good Morning,"
         : indiaNow.Hour < 17
             ? "Good Afternoon,"
-            : "Good Night,";
+            : indiaNow.Hour < 21
+                ? "Good Evening,"
+                : "Good Night,";
     var displayName = !string.IsNullOrWhiteSpace(Model.ProfileFullName)
         ? Model.ProfileFullName
         : Context.Session.GetString("Username") ?? businessName;
