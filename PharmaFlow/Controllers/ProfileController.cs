@@ -79,6 +79,7 @@ public sealed class ProfileController : Controller
         // Email is the Supabase sign-in identity. Do not change it in the
         // profile row without completing Supabase's email verification flow.
         model.Email = profile.Email;
+        ModelState.Remove(nameof(model.Email));
         model.ProfilePhotoUrl = currentPhotoUrl;
 
         if (!ModelState.IsValid)
