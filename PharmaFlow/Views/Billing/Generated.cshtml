@@ -6,6 +6,7 @@
     var hasCustomerName = !string.IsNullOrWhiteSpace(Model.CustomerName);
     var hasPhoneNumber = !string.IsNullOrWhiteSpace(Model.PhoneNumber);
     var hasPaymentMethod = !string.IsNullOrWhiteSpace(Model.PaymentMethod);
+    var invoiceDateTimeText = Model.InvoiceDate.ToString("dd MMM yyyy, hh:mm tt", System.Globalization.CultureInfo.GetCultureInfo("en-IN"));
 }
 
 <div class="billing-generated-page">
@@ -42,8 +43,8 @@
             </div>
 
             <div class="billing-summary-row">
-                <span>Date:</span>
-                <strong>@Model.InvoiceDate.ToString("dd MMM yyyy")</strong>
+                <span>Date &amp; Time:</span>
+                <strong>@invoiceDateTimeText</strong>
             </div>
 
             @if (hasCustomerName)
@@ -194,7 +195,7 @@
                     {
                         <p>Email: @Model.BusinessEmail</p>
                     }
-                    <p>Date: @Model.InvoiceDate.ToString("dd MMM yyyy")</p>
+                    <p>Date &amp; Time: @invoiceDateTimeText</p>
                     <p>Invoice No: @Model.InvoiceNumber</p>
                 </div>
             </header>
@@ -342,7 +343,7 @@
             const businessName = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.BusinessName));
             const businessPhone = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.BusinessPhone));
             const invoiceNumber = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.InvoiceNumber));
-            const invoiceDate = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.InvoiceDate.ToString("dd MMM yyyy")));
+            const invoiceDateTime = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(invoiceDateTimeText));
             const customerName = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CustomerName));
             const paymentMethod = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.PaymentMethod));
             const total = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.TotalAmount.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))));
@@ -372,7 +373,7 @@
             messageParts.push("");
             messageParts.push("📄 *Invoice Details:*");
             messageParts.push("• Invoice No: #" + invoiceNumber);
-            messageParts.push("• Date: " + invoiceDate);
+            messageParts.push("• Date & Time: " + invoiceDateTime);
 
             if (paymentMethod) {
                 messageParts.push("• Payment Mode: " + paymentMethod);
