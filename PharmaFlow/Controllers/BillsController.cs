@@ -22,7 +22,7 @@ public sealed class BillsController : Controller
 
     [HttpGet]
     public async Task<IActionResult> Index(
-        string period = "Today",
+        string period = "Last 7 Days",
         string? search = null,
         DateTime? startDate = null,
         DateTime? endDate = null,
@@ -36,7 +36,7 @@ public sealed class BillsController : Controller
 
         if (period == "Custom" && (!range.StartUtc.HasValue || !range.EndUtc.HasValue))
         {
-            period = "Today";
+            period = "Last 7 Days";
             range = ResolveRange(period, null, null);
         }
 
@@ -193,7 +193,7 @@ public sealed class BillsController : Controller
 
     [HttpGet]
     public async Task<IActionResult> Search(
-        string period = "Today",
+        string period = "Last 7 Days",
         string? q = null,
         DateTime? startDate = null,
         DateTime? endDate = null,
@@ -314,7 +314,7 @@ public sealed class BillsController : Controller
             "last 7 days" => "Last 7 Days",
             "1 month" => "1 Month",
             "custom" => "Custom",
-            _ => "Today"
+            _ => "Last 7 Days"
         };
 
     private static string NormalizeSearch(string? search)
