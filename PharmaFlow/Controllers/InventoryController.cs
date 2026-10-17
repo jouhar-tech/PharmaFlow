@@ -1049,6 +1049,7 @@ public sealed class InventoryController : Controller
                 {
                     ProductId = batch.ProductId,
                     BatchId = batch.BatchId,
+                    CatalogId = batch.Product.CatalogId,
                     ProductName = batch.Product.ProductName,
                     GenericName = batch.Product.GenericName,
                     BrandName = batch.Product.BrandName,
@@ -1061,16 +1062,39 @@ public sealed class InventoryController : Controller
                 })
                 .ToListAsync(cancellationToken));
 
+        var savedReorderItems = await _dbContext.ReorderListItems
+            .AsNoTracking()
+            .Include(item => item.Product)
+            .Where(item => item.ProfileId == profileId)
+            .ToListAsync(cancellationToken);
+
         var items = rows.Select(row =>
         {
             var daysLeft = row.ExpiryDate.DayNumber - today.DayNumber;
             var isLowStock = row.Quantity < 3;
             var isExpiring = daysLeft >= 0 && daysLeft <= 90;
 
+            var savedReorderItem = savedReorderItems.FirstOrDefault(saved =>
+                saved.ProductId == row.ProductId ||
+                (!saved.ProductId.HasValue &&
+                    ((row.CatalogId.HasValue &&
+                        (saved.CatalogId == row.CatalogId ||
+                         saved.Product != null && saved.Product.CatalogId == row.CatalogId)) ||
+                     (!string.IsNullOrWhiteSpace(row.Barcode) &&
+                        ((saved.Barcode != null &&
+                          string.Equals(saved.Barcode.Trim(), row.Barcode.Trim(), StringComparison.OrdinalIgnoreCase)) ||
+                         (saved.Product?.Barcode != null &&
+                          string.Equals(saved.Product.Barcode.Trim(), row.Barcode.Trim(), StringComparison.OrdinalIgnoreCase)))) ||
+                     string.Equals(
+                         (saved.Product?.ProductName ?? saved.ProductName ?? string.Empty).Trim(),
+                         row.ProductName.Trim(),
+                         StringComparison.OrdinalIgnoreCase))));
+
             return new InventoryItemViewModel
             {
                 ProductId = row.ProductId,
                 BatchId = row.BatchId,
+                ReorderListItemId = savedReorderItem?.ReorderListItemId,
                 ProductName = row.ProductName,
                 GenericName = row.GenericName,
                 BrandName = row.BrandName,
@@ -1093,6 +1117,7 @@ public sealed class InventoryController : Controller
             LowStockCount = items.Count(item => item.IsLowStock),
             ExpiringCount = items.Count(item => item.IsExpiring),
             TotalInventoryValue = items.Sum(item => item.StockValue),
+            ReorderListCount = savedReorderItems.Count,
             Items = items
         });
     }
