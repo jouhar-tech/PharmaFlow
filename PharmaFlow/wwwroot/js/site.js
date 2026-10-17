@@ -31,7 +31,7 @@
 
         if (controller === "home" && action === "index") return "dashboard";
         if (["details", "detail", "generated", "generate"].includes(action)) return "detail";
-        if (["create", "add", "additem", "payment", "createreminder", "review", "save", "edit", "feedback", "unlimitedplan", "barcodescanner"].includes(action)) return "form";
+        if (["create", "add", "additem", "payment", "createreminder", "review", "save", "edit", "feedback", "unlimitedplan"].includes(action)) return "form";
         if (["index", "searchproducts", "distributor", "slowmoving", "lowstock", "reorder"].includes(action)) return "list";
         return "generic";
     };
