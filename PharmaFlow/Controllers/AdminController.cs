@@ -319,6 +319,12 @@ public sealed class AdminController : Controller
         model.Address = NormalizeText(model.Address, 500);
         model.SubscriptionPlan = NormalizeSubscriptionPlan(model.SubscriptionPlan);
 
+        // HTML input[type=date] binds DateTime with Kind=Unspecified. PostgreSQL
+        // TIMESTAMPTZ columns require UTC DateTime values with Npgsql. Normalize the
+        // selected calendar days explicitly before persisting the subscription.
+        model.SubscriptionStartsAt = NormalizeSubscriptionStartDate(model.SubscriptionStartsAt);
+        model.SubscriptionEndsAt = NormalizeSubscriptionEndDate(model.SubscriptionEndsAt);
+
         if (string.IsNullOrWhiteSpace(model.Username))
             ModelState.AddModelError(nameof(model.Username), "Username is required.");
 
@@ -424,6 +430,26 @@ public sealed class AdminController : Controller
 
         TempData["AdminMessage"] = "Unlimited Plan removed. User moved to Free Plan.";
         return RedirectToAction(nameof(Unlimited));
+    }
+
+    private static DateTime? NormalizeSubscriptionStartDate(DateTime? value)
+    {
+        if (!value.HasValue)
+            return null;
+
+        // Preserve the date chosen in the admin form; store start-of-day in UTC.
+        return DateTime.SpecifyKind(value.Value.Date, DateTimeKind.Utc);
+    }
+
+    private static DateTime? NormalizeSubscriptionEndDate(DateTime? value)
+    {
+        if (!value.HasValue)
+            return null;
+
+        // The selected end date is inclusive, so access remains active until
+        // the end of that calendar day instead of expiring at 00:00.
+        var startOfNextDay = DateTime.SpecifyKind(value.Value.Date.AddDays(1), DateTimeKind.Utc);
+        return startOfNextDay.AddTicks(-1);
     }
 
     private bool IsAdminAuthenticated() =>
