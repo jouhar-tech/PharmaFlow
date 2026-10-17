@@ -16841,3 +16841,36 @@ body.theme-dark .notification-push-button.is-enabled { background: #173b2d; colo
   body.notifications-page-body .notification-alert-count { min-width: 26px; min-height: 26px; font-size: .65rem; }
   body.notifications-page-body .notification-center-footnote { font-size: .66rem; }
 }
+
+
+.notification-push-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: .45rem;
+  flex-wrap: wrap;
+}
+.notification-push-disable-button {
+  border: 1px solid #dce5eb;
+  background: #fff;
+  color: #526879;
+}
+.notification-push-disable-button:hover {
+  background: #f1f5f8;
+  color: #293f50;
+}
+.notification-push-button[hidden] {
+  display: none !important;
+}
+body.theme-dark .notification-push-disable-button {
+  border-color: #34485a;
+  background: #1b2a3b;
+  color: #d6e2ec;
+}
+@media (max-width: 767.98px) {
+  body.notifications-page-body .notification-push-actions {
+    grid-column: 2;
+    justify-self: start;
+    justify-content: flex-start;
+  }
+}
