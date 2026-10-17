@@ -6,6 +6,7 @@ public sealed class InventoryViewModel
     public int LowStockCount { get; init; }
     public int ExpiringCount { get; init; }
     public decimal TotalInventoryValue { get; init; }
+    public int ReorderListCount { get; init; }
     public string ActiveFilter { get; init; } = "all";
     public string SearchTerm { get; init; } = string.Empty;
     public IReadOnlyList<InventoryItemViewModel> Items { get; init; } = Array.Empty<InventoryItemViewModel>();
@@ -15,6 +16,8 @@ public sealed class InventoryItemViewModel
 {
     public long ProductId { get; init; }
     public long BatchId { get; init; }
+    public long? ReorderListItemId { get; init; }
+    public bool IsInReorderList => ReorderListItemId.HasValue;
     public string ProductName { get; init; } = string.Empty;
     public string? GenericName { get; init; }
     public string? BrandName { get; init; }
