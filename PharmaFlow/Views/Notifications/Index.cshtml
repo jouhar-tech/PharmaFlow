@@ -1,0 +1,155 @@
+@model PharmaFlow.Models.ViewModels.NotificationCenterViewModel
+@{
+    ViewData["Title"] = "Notifications";
+}
+
+<div class="notification-center-page">
+    <header class="notification-center-header">
+        <a asp-controller="Home" asp-action="Index" class="notification-center-back" aria-label="Back to dashboard">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5"></path><path d="m11 18-6-6 6-6"></path></svg>
+        </a>
+        <div class="notification-center-heading">
+            <span class="notification-center-eyebrow">PHARMAFLOW UPDATES</span>
+            <h1>Notifications</h1>
+            <p>Important things to act on in your pharmacy.</p>
+        </div>
+        <a asp-controller="Notifications" asp-action="Index" class="notification-center-refresh" aria-label="Refresh notifications" title="Refresh">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5"></path><path d="M4 17v-5h5"></path><path d="M5.7 9A7 7 0 0 1 18.2 6L20 12M4 12l1.8 6A7 7 0 0 0 18.3 15"></path></svg>
+        </a>
+    </header>
+
+    <section class="notification-center-overview" aria-label="Notification summary">
+        <div class="notification-overview-main">
+            <span class="notification-overview-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path><path d="M10 21h4"></path></svg>
+            </span>
+            <div>
+                <strong>@Model.Alerts.Count active alert@(Model.Alerts.Count == 1 ? "" : "s")</strong>
+                <span>
+                    @if (Model.HasAlerts)
+                    {
+                        <text>@Model.CriticalCount urgent · @Model.WarningCount needing attention</text>
+                    }
+                    else
+                    {
+                        <text>Nothing currently needs your attention.</text>
+                    }
+                </span>
+            </div>
+        </div>
+        <div class="notification-overview-updated">
+            <span>Updated</span>
+            <strong>@Model.GeneratedAt.ToString("dd MMM, hh:mm tt")</strong>
+        </div>
+    </section>
+
+    <section class="notification-push-card" aria-labelledby="notificationPushHeading">
+        <span class="notification-push-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path><path d="M10 21h4"></path></svg>
+        </span>
+        <div class="notification-push-copy">
+            <h2 id="notificationPushHeading">Browser notifications</h2>
+            <p data-notification-status>Enable reminders on this device for the daily stock check, even when PharmaFlow is not open.</p>
+        </div>
+        <button type="button"
+                class="notification-push-button"
+                data-notification-button
+                data-notification-enable-button
+                aria-label="Enable browser notifications">
+            Enable
+        </button>
+    </section>
+
+    <section class="notification-list-section" aria-labelledby="notificationListHeading">
+        <div class="notification-list-heading">
+            <div>
+                <h2 id="notificationListHeading">Needs your attention</h2>
+                <p>Alerts are calculated from your latest stock, customer and invoice data.</p>
+            </div>
+        </div>
+
+        <nav class="notification-filter-chips" aria-label="Filter notifications">
+            <button type="button" class="notification-filter-chip is-active" data-notification-filter="all" aria-pressed="true">All</button>
+            <button type="button" class="notification-filter-chip" data-notification-filter="stock" aria-pressed="false">Stock</button>
+            <button type="button" class="notification-filter-chip" data-notification-filter="customers" aria-pressed="false">Customers</button>
+            <button type="button" class="notification-filter-chip" data-notification-filter="invoices" aria-pressed="false">Supplier invoices</button>
+        </nav>
+
+        @if (Model.HasAlerts)
+        {
+            <div class="notification-center-list" id="notificationCenterList">
+                @foreach (var alert in Model.Alerts)
+                {
+                    <a href="@alert.ActionUrl"
+                       class="notification-alert-card severity-@alert.Severity"
+                       data-notification-card
+                       data-notification-category="@alert.Category">
+                        <span class="notification-alert-icon" aria-hidden="true">@alert.Icon</span>
+                        <span class="notification-alert-content">
+                            <span class="notification-alert-meta">
+                                <span class="notification-alert-category">@alert.CategoryLabel</span>
+                                <span class="notification-alert-severity">@alert.SeverityLabel</span>
+                            </span>
+                            <strong class="notification-alert-title">@alert.Title</strong>
+                            <span class="notification-alert-message">@alert.Message</span>
+                            <span class="notification-alert-action">@alert.ActionLabel <span aria-hidden="true">→</span></span>
+                        </span>
+                        @if (alert.AffectedCount > 1)
+                        {
+                            <span class="notification-alert-count">@alert.AffectedCount.ToString("N0")</span>
+                        }
+                    </a>
+                }
+            </div>
+            <div class="notification-empty-filter" id="notificationEmptyFilter" hidden>
+                <span aria-hidden="true">✓</span>
+                <strong>No alerts in this category</strong>
+                <p>Try another filter to see other active notifications.</p>
+            </div>
+        }
+        else
+        {
+            <div class="notification-all-clear">
+                <span class="notification-all-clear-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="m5 12 4.5 4.5L19 7"></path><circle cx="12" cy="12" r="10"></circle></svg>
+                </span>
+                <h3>You’re all caught up</h3>
+                <p>No expired or near-expiry stock, low-stock batches, due customer reminders, outstanding Udhaar or unsaved supplier invoice drafts were found.</p>
+            </div>
+        }
+    </section>
+
+    <p class="notification-center-footnote">These are live operational alerts, not a history of dismissed notifications. Refresh this page to recalculate them after updating stock, bills or reminders.</p>
+</div>
+
+@section Scripts {
+    <script>
+        (() => {
+            const filterButtons = document.querySelectorAll("[data-notification-filter]");
+            const cards = document.querySelectorAll("[data-notification-card]");
+            const empty = document.getElementById("notificationEmptyFilter");
+            if (!filterButtons.length || !cards.length) return;
+
+            const applyFilter = filter => {
+                let visibleCount = 0;
+                cards.forEach(card => {
+                    const visible = filter === "all" || card.dataset.notificationCategory === filter;
+                    card.hidden = !visible;
+                    if (visible) visibleCount++;
+                });
+
+                filterButtons.forEach(button => {
+                    const active = button.dataset.notificationFilter === filter;
+                    button.classList.toggle("is-active", active);
+                    button.setAttribute("aria-pressed", String(active));
+                });
+
+                if (empty) empty.hidden = visibleCount !== 0;
+            };
+
+            filterButtons.forEach(button => {
+                button.addEventListener("click", () => applyFilter(button.dataset.notificationFilter || "all"));
+            });
+        })();
+    </script>
+}
