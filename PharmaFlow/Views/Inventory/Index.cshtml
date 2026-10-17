@@ -345,5 +345,137 @@
     update();
 })();
 </script>
+<script>
+(function () {
+    const reorderCard = document.getElementById('inventoryReorderListCard');
+    const reorderCount = document.getElementById('inventoryReorderCount');
+    const reorderFeedback = document.getElementById('inventoryReorderFeedback');
+    const reorderForms = Array.from(document.querySelectorAll('.inventory-reorder-form'));
+
+    if (!reorderForms.length || !reorderCard || !reorderCount || !reorderFeedback) return;
+
+    function setReorderButtonState(button, isAdded, reorderListItemId) {
+        if (!button) return;
+
+        if (isAdded) {
+            button.textContent = 'Remove';
+            button.classList.add('is-added');
+            button.dataset.added = 'true';
+            if (reorderListItemId)
+                button.dataset.reorderListItemId = String(reorderListItemId);
+            button.setAttribute('aria-label', 'Remove product from Reorder List');
+        } else {
+            button.innerHTML = 'Reorder <span aria-hidden="true">→</span>';
+            button.classList.remove('is-added');
+            delete button.dataset.added;
+            delete button.dataset.reorderListItemId;
+            button.setAttribute('aria-label', 'Add product to Reorder List');
+        }
+    }
+
+    // Keep every low-stock batch of the same product in sync.
+    function setProductReorderState(productId, isAdded, reorderListItemId) {
+        const key = String(productId);
+        reorderForms
+            .filter(candidate => candidate.dataset.productId === key)
+            .forEach(candidate => setReorderButtonState(
+                candidate.querySelector('button[type="submit"]'),
+                isAdded,
+                reorderListItemId));
+    }
+
+    function updateReorderListCard(count) {
+        if (!Number.isInteger(count) || count < 0) return;
+
+        reorderCount.textContent = count.toLocaleString();
+        if (count > 0) {
+            reorderCard.classList.remove('is-hidden');
+            reorderCard.setAttribute('aria-hidden', 'false');
+        } else {
+            reorderCard.classList.add('is-hidden');
+            reorderCard.setAttribute('aria-hidden', 'true');
+        }
+    }
+
+    function showFeedback(message, isSuccess) {
+        reorderFeedback.textContent = message;
+        reorderFeedback.classList.toggle('is-success', isSuccess);
+        reorderFeedback.classList.toggle('is-error', !isSuccess);
+        reorderFeedback.hidden = false;
+    }
+
+    reorderForms.forEach(form => {
+        form.addEventListener('submit', async event => {
+            event.preventDefault();
+
+            const button = form.querySelector('button[type="submit"]');
+            if (!button || button.disabled) return;
+
+            const isRemoving = button.dataset.added === 'true';
+            const payload = new FormData(form);
+            let requestUrl = form.action;
+
+            if (isRemoving) {
+                const reorderListItemId = button.dataset.reorderListItemId;
+                if (!reorderListItemId) {
+                    showFeedback('Could not identify this Reorder List item. Refresh the page and try again.', false);
+                    return;
+                }
+
+                requestUrl = form.dataset.removeUrl;
+                payload.delete('productId');
+                payload.set('reorderListItemId', reorderListItemId);
+            }
+
+            button.disabled = true;
+            button.setAttribute('aria-busy', 'true');
+
+            try {
+                const response = await fetch(requestUrl, {
+                    method: 'POST',
+                    body: payload,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    },
+                    credentials: 'same-origin'
+                });
+
+                const result = await response.json().catch(() => null);
+                if (!response.ok || !result)
+                    throw new Error(result?.message || 'Could not update the Reorder List. Please try again.');
+
+                updateReorderListCard(result.count);
+
+                if (!isRemoving && (result.success || result.alreadyAdded) && result.reorderListItemId) {
+                    setProductReorderState(form.dataset.productId, true, result.reorderListItemId);
+                } else if (isRemoving && result.success) {
+                    setProductReorderState(form.dataset.productId, false);
+                }
+
+                if (isRemoving && result.success) {
+                    showFeedback(result.count === 0
+                        ? 'Item removed. Your Reorder List is now empty.'
+                        : 'Item removed from Reorder List.', true);
+                } else if (result.success) {
+                    showFeedback(result.count === 1
+                        ? '1 item added to Reorder List.'
+                        : result.count + ' items currently in Reorder List.', true);
+                } else {
+                    showFeedback(result.message || 'This product could not be updated.', false);
+                }
+            } catch (error) {
+                showFeedback(error instanceof Error
+                    ? error.message
+                    : 'Could not update the Reorder List. Please try again.', false);
+            } finally {
+                button.disabled = false;
+                button.removeAttribute('aria-busy');
+            }
+        });
+    });
+})();
+</script>
+
 <script src="~/js/invoice-capture.js" asp-append-version="true"></script>
 }
