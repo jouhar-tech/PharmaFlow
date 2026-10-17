@@ -384,7 +384,11 @@ public sealed class AdminController : Controller
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to update admin user profile {ProfileId}.", id);
+            _logger.LogError(
+                ex,
+                "Failed to update admin user profile {ProfileId}. Root database error: {RootError}",
+                id,
+                ex.GetBaseException().Message);
             ModelState.AddModelError(
                 string.Empty,
                 "User details could not be saved. Please try again.");
@@ -449,7 +453,9 @@ public sealed class AdminController : Controller
         // The selected end date is inclusive, so access remains active until
         // the end of that calendar day instead of expiring at 00:00.
         var startOfNextDay = DateTime.SpecifyKind(value.Value.Date.AddDays(1), DateTimeKind.Utc);
-        return startOfNextDay.AddTicks(-1);
+        // PostgreSQL TIMESTAMPTZ has microsecond precision; subtract one
+        // microsecond to avoid rounding into the following day.
+        return startOfNextDay.AddTicks(-10);
     }
 
     private bool IsAdminAuthenticated() =>
