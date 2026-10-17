@@ -61,6 +61,20 @@
         </button>
     </nav>
 
+    <a asp-controller="Reorder"
+       asp-action="Index"
+       id="inventoryReorderListCard"
+       class="low-stock-reorder-list-card @(Model.ReorderListCount > 0 ? "" : "is-hidden")"
+       aria-hidden="@(Model.ReorderListCount > 0 ? "false" : "true")">
+        <span class="low-stock-reorder-list-count" id="inventoryReorderCount">@Model.ReorderListCount</span>
+        <span class="low-stock-reorder-list-copy">
+            <strong>Reorder List</strong>
+            <small>Items queued to order from a distributor</small>
+        </span>
+        <span class="low-stock-reorder-list-chevron" aria-hidden="true">›</span>
+    </a>
+    <p id="inventoryReorderFeedback" class="low-stock-reorder-feedback" role="status" aria-live="polite" hidden></p>
+
     <main class="inventory-modern-products">
         @if (Model.Items.Count == 0)
         {
@@ -75,52 +89,80 @@
             <div id="inventoryProductsGrid" class="inventory-products-grid">
                 @foreach (var item in Model.Items)
                 {
-                    <a class="inventory-product-card inventory-product-card-link"
-                       asp-controller="Inventory"
-                       asp-action="Details"
-                       asp-route-productId="@item.ProductId"
-                       asp-route-batchId="@item.BatchId"
-                       data-filter-low="@(item.IsLowStock ? "true" : "false")"
+                    <article class="inventory-product-card"
+                             data-filter-low="@(item.IsLowStock ? "true" : "false")"
                              data-filter-expiring="@(item.IsExpiring ? "true" : "false")"
                              data-search-text="@($"{item.ProductName} {item.GenericName} {item.BrandName} {item.BatchNumber} {item.Barcode}")">
-                        <div class="inventory-product-card-top">
-                            <div class="inventory-product-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 21a5 5 0 0 1 0-10h3a5 5 0 0 1 0 10H7Z"/><path d="m8 11 7-7a4.95 4.95 0 1 1 7 7l-7 7"/><path d="m11 8 5 5"/></svg></div>
-                            <div class="inventory-product-heading">
-                                <h2>@item.ProductName</h2>
-                                <span>Batch : @item.BatchNumber</span>
+                        <a class="inventory-product-card-link"
+                           asp-controller="Inventory"
+                           asp-action="Details"
+                           asp-route-productId="@item.ProductId"
+                           asp-route-batchId="@item.BatchId">
+                            <div class="inventory-product-card-top">
+                                <div class="inventory-product-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 21a5 5 0 0 1 0-10h3a5 5 0 0 1 0 10H7Z"/><path d="m8 11 7-7a4.95 4.95 0 1 1 7 7l-7 7"/><path d="m11 8 5 5"/></svg></div>
+                                <div class="inventory-product-heading">
+                                    <h2>@item.ProductName</h2>
+                                    <span>Batch : @item.BatchNumber</span>
+                                </div>
                             </div>
-                        </div>
 
-                        <div class="inventory-product-details">
-                            <div>
-                                <span class="inventory-detail-label">QTY</span>
-                                <strong>@item.Quantity.ToString("0.##")</strong>
+                            <div class="inventory-product-details">
+                                <div>
+                                    <span class="inventory-detail-label">QTY</span>
+                                    <strong>@item.Quantity.ToString("0.##")</strong>
+                                </div>
+                                <div>
+                                    <span class="inventory-detail-label">EXPIRY DATE</span>
+                                    <strong class="@(item.IsExpiring ? "inventory-expiry-warning" : "")">
+                                        @item.ExpiryDate.ToString("dd MMM yyyy")
+                                    </strong>
+                                </div>
+                                <div>
+                                    <span class="inventory-detail-label">SELLING PRICE</span>
+                                    <strong>₹ @item.SellingUnitPrice.ToString("N2")</strong>
+                                </div>
+                                <div>
+                                    <span class="inventory-detail-label">STOCK VALUE</span>
+                                    <strong>₹ @item.StockValue.ToString("N2")</strong>
+                                </div>
                             </div>
-                            <div>
-                                <span class="inventory-detail-label">EXPIRY DATE</span>
-                                <strong class="@(item.IsExpiring ? "inventory-expiry-warning" : "")">
-                                    @item.ExpiryDate.ToString("dd MMM yyyy")
-                                </strong>
-                            </div>
-                            <div>
-                                <span class="inventory-detail-label">SELLING PRICE</span>
-                                <strong>₹ @item.SellingUnitPrice.ToString("N2")</strong>
-                            </div>
-                            <div>
-                                <span class="inventory-detail-label">STOCK VALUE</span>
-                                <strong>₹ @item.StockValue.ToString("N2")</strong>
-                            </div>
-                        </div>
+
+                            @if (!item.IsLowStock && item.IsExpiring)
+                            {
+                                <span class="inventory-status-badge expiring">Expiring soon</span>
+                            }
+                        </a>
 
                         @if (item.IsLowStock)
                         {
-                            <span class="inventory-status-badge low">Low stock</span>
+                            <div class="low-stock-product-actions inventory-product-reorder-actions">
+                                <span class="low-stock-status-badge">Low stock</span>
+                                <form asp-controller="Reorder"
+                                      asp-action="Add"
+                                      data-product-id="@item.ProductId"
+                                      data-remove-url="@Url.Action("Remove", "Reorder")"
+                                      method="post"
+                                      class="low-stock-reorder-form inventory-reorder-form">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="productId" value="@item.ProductId" />
+                                    <button type="submit"
+                                            class="low-stock-reorder-inline @(item.IsInReorderList ? "is-added" : "")"
+                                            data-added="@(item.IsInReorderList ? "true" : "false")"
+                                            data-reorder-list-item-id="@(item.ReorderListItemId?.ToString() ?? string.Empty)"
+                                            aria-label="@(item.IsInReorderList ? "Remove product from Reorder List" : "Add product to Reorder List")">
+                                        @if (item.IsInReorderList)
+                                        {
+                                            <text>Remove</text>
+                                        }
+                                        else
+                                        {
+                                            <text>Reorder <span aria-hidden="true">→</span></text>
+                                        }
+                                    </button>
+                                </form>
+                            </div>
                         }
-                        else if (item.IsExpiring)
-                        {
-                            <span class="inventory-status-badge expiring">Expiring soon</span>
-                        }
-                    </a>
+                    </article>
                 }
             </div>
 
