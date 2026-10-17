@@ -122,12 +122,6 @@ public sealed class InventoryController : Controller
     }
 
     [HttpGet]
-    public IActionResult BarcodeScanner()
-    {
-        return View();
-    }
-
-    [HttpGet]
     public async Task<IActionResult> AddItem(
         long? productId,
         long? catalogId,
@@ -465,33 +459,6 @@ public sealed class InventoryController : Controller
                 "The item could not be added. No inventory changes were saved.");
             return View(model);
         }
-    }
-
-    [HttpGet]
-    public async Task<IActionResult> FindByBarcode(
-        string? barcode,
-        CancellationToken cancellationToken)
-    {
-        if (!TryGetProfileId(out var profileId))
-            return Unauthorized();
-
-        var normalizedBarcode = NormalizeNullableText(barcode, 100);
-        if (normalizedBarcode is null)
-            return BadRequest(new { message = "Barcode is required." });
-
-        var product = await _dbContext.Products
-            .AsNoTracking()
-            .Where(p => p.ProfileId == profileId && p.Barcode != null && p.Barcode == normalizedBarcode)
-            .Select(p => new
-            {
-                p.ProductId,
-                p.ProductName
-            })
-            .SingleOrDefaultAsync(cancellationToken);
-
-        return product is null
-            ? NotFound(new { message = "No matching product was found for this barcode." })
-            : Ok(product);
     }
 
     [HttpGet]
