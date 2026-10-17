@@ -76,7 +76,7 @@
                 signal: controller.signal
             });
 
-            serverReachable = response.status === 200;
+            serverReachable = response.ok;
         } catch {
             serverReachable = false;
         } finally {
