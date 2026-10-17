@@ -204,7 +204,7 @@ public sealed class InvoiceCaptureController : Controller
                     profileId,
                     detectedInvoiceNumber,
                     excludingImportId: null,
-                    cancellationToken))
+                    cancellationToken: cancellationToken))
             {
                 return Conflict(new
                 {
@@ -591,7 +591,7 @@ public sealed class InvoiceCaptureController : Controller
                 profileId,
                 model.InvoiceNumber,
                 excludingImportId: import.ImportId,
-                cancellationToken))
+                cancellationToken: cancellationToken))
         {
             model.ErrorMessage =
                 $"Duplicate invoice detected. Invoice No. '{model.InvoiceNumber}' has already been scanned and saved. No stock was changed.";
