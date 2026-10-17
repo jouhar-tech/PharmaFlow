@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PharmaFlow.Data;
@@ -160,13 +161,15 @@ namespace PharmaFlow.Controllers
             return View(dashboard);
         }
 
+        [AllowAnonymous]
         [HttpGet]
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Ping()
         {
-            return long.TryParse(HttpContext.Session.GetString("ProfileId"), out _)
-                ? Ok()
-                : Unauthorized();
+            // This endpoint only verifies that the web application can respond.
+            // Connectivity must not depend on an owner ProfileId because Admin
+            // sessions are authenticated separately and do not have that key.
+            return Ok(new { reachable = true });
         }
 
         public IActionResult Privacy()
