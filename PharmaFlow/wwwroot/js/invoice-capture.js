@@ -458,19 +458,24 @@
         };
 
         const showProcessingError = (message) => {
+            const isDuplicateInvoice = /duplicate invoice|already been scanned and saved/i.test(message || "");
             isProcessingInvoices = false;
-            processingFailed = retryFiles.length > 0;
+            // Retrying an already-saved invoice cannot succeed; ask the user to choose a different file.
+            processingFailed = !isDuplicateInvoice && retryFiles.length > 0;
             scanner?.classList.add("is-processing", "has-processing-error");
             scanner?.removeAttribute("hidden");
             document.body.classList.add("invoice-scanner-open");
-            if (scannerTitle) scannerTitle.textContent = "Invoice analysis failed";
+            const errorTitle = isDuplicateInvoice ? "Duplicate invoice detected" : "Invoice analysis failed";
+            if (scannerTitle) scannerTitle.textContent = errorTitle;
             setBusy(false);
             if (useButton) {
-                useButton.textContent = retryFiles.length > 0 ? "Retry analysis" : "Retry unavailable";
-                useButton.disabled = retryFiles.length === 0;
+                useButton.textContent = isDuplicateInvoice
+                    ? "Duplicate blocked"
+                    : (retryFiles.length > 0 ? "Retry analysis" : "Retry unavailable");
+                useButton.disabled = isDuplicateInvoice || retryFiles.length === 0;
             }
             if (retakeButton) retakeButton.textContent = "Choose another invoice";
-            updateOcrStatus("Invoice analysis failed", message, 0);
+            updateOcrStatus(errorTitle, message, 0);
         };
 
         const prepareImageForAnalysis = async (file) => {
