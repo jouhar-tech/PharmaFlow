@@ -48,6 +48,22 @@
         });
     };
 
+    const setEnabledUi = () => {
+        document.querySelectorAll("[data-notification-button]").forEach(element => {
+            element.classList.add("is-enabled");
+            if (element.hasAttribute("data-notification-enable-button"))
+                element.setAttribute("aria-label", "Notifications enabled");
+        });
+
+        document.querySelectorAll("[data-notification-status]").forEach(status => {
+            status.textContent = "Browser notifications are enabled on this device. Scheduled stock and savings reminders can now be delivered here.";
+        });
+
+        document.querySelectorAll("[data-notification-enable-button]").forEach(button => {
+            button.textContent = "Enabled";
+        });
+    };
+
     const ensureExistingSubscriptionSynced = async () => {
         if (!isSupported() || Notification.permission !== "granted") return false;
 
@@ -115,10 +131,7 @@
             await saveCurrentSubscription(subscription);
             localStorage.setItem("pharmaflow-notification-sync", String(Date.now()));
 
-            document.querySelectorAll("[data-notification-button]").forEach(button => {
-                button.classList.add("is-enabled");
-                button.setAttribute("aria-label", "Notifications enabled");
-            });
+            setEnabledUi();
 
             if (createdNewSubscription) {
                 try {
@@ -143,18 +156,26 @@
             .then(registration => registration.pushManager.getSubscription())
             .then(subscription => {
                 if (!subscription) return;
-                document.querySelectorAll("[data-notification-button]").forEach(button => {
-                    button.classList.add("is-enabled");
-                    button.setAttribute("aria-label", "Notifications enabled");
-                });
+                setEnabledUi();
             })
             .catch(() => {});
     };
 
     const init = () => {
-        if (!isSupported()) return;
+        const enableButtons = document.querySelectorAll("[data-notification-enable-button]");
 
-        document.querySelectorAll("[data-notification-button]").forEach(button => {
+        if (!isSupported()) {
+            document.querySelectorAll("[data-notification-status]").forEach(status => {
+                status.textContent = "This browser does not support web push notifications. Your live alerts are still available on this page.";
+            });
+            enableButtons.forEach(button => {
+                button.disabled = true;
+                button.textContent = "Not supported";
+            });
+            return;
+        }
+
+        enableButtons.forEach(button => {
             button.addEventListener("click", () => enable());
         });
 
