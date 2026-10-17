@@ -49,15 +49,24 @@
         </span>
         <div class="notification-push-copy">
             <h2 id="notificationPushHeading">Browser notifications</h2>
-            <p data-notification-status>Enable reminders on this device for the daily stock check, even when PharmaFlow is not open.</p>
+            <p data-notification-status role="status" aria-live="polite">Enable reminders on this device for the daily stock check, even when PharmaFlow is not open.</p>
         </div>
-        <button type="button"
-                class="notification-push-button"
-                data-notification-button
-                data-notification-enable-button
-                aria-label="Enable browser notifications">
-            Enable
-        </button>
+        <div class="notification-push-actions">
+            <button type="button"
+                    class="notification-push-button"
+                    data-notification-button
+                    data-notification-enable-button
+                    aria-label="Enable browser notifications">
+                Enable
+            </button>
+            <button type="button"
+                    class="notification-push-button notification-push-disable-button"
+                    data-notification-disable-button
+                    hidden
+                    aria-label="Turn off browser notifications on this device">
+                Turn off
+            </button>
+        </div>
     </section>
 
     <section class="notification-list-section" aria-labelledby="notificationListHeading">
