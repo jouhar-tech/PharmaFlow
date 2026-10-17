@@ -15,7 +15,10 @@
         <h1 data-i18n="more">More</h1>
     </header>
 
-    <section class="more-mobile-profile-card">
+    <a asp-controller="Profile" asp-action="Account"
+       class="more-mobile-profile-card more-mobile-profile-card-link"
+       aria-label="Open My Profile"
+       title="Open My Profile">
         <div class="more-mobile-business">
             <h2>@Model.BusinessName</h2>
             <span>PharmaFlow</span>
@@ -23,7 +26,7 @@
         <div class="more-mobile-avatar">
             @((Model.Username.Length > 0 ? Model.Username[0] : 'U').ToString().ToUpperInvariant())
         </div>
-    </section>
+    </a>
 
     <section class="more-mobile-menu-card">
         @if (!string.Equals(Context.Session.GetString("UserRole"), "Staff", StringComparison.OrdinalIgnoreCase))
