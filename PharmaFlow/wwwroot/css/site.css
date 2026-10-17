@@ -16874,3 +16874,16 @@ body.theme-dark .notification-push-disable-button {
     justify-content: flex-start;
   }
 }
+
+
+/* The mobile bell now navigates to the notification center. */
+.home-mobile-notification {
+  text-decoration: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.home-mobile-notification:focus-visible {
+  outline: 3px solid #0f766e;
+  outline-offset: 3px;
+  border-radius: 12px;
+}
