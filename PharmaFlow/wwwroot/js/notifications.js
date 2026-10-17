@@ -51,8 +51,6 @@
     const setEnabledUi = () => {
         document.querySelectorAll("[data-notification-button]").forEach(element => {
             element.classList.add("is-enabled");
-            if (element.hasAttribute("data-notification-enable-button"))
-                element.setAttribute("aria-label", "Notifications enabled");
         });
 
         document.querySelectorAll("[data-notification-status]").forEach(status => {
@@ -60,7 +58,32 @@
         });
 
         document.querySelectorAll("[data-notification-enable-button]").forEach(button => {
-            button.textContent = "Enabled";
+            button.hidden = true;
+        });
+        document.querySelectorAll("[data-notification-disable-button]").forEach(button => {
+            button.hidden = false;
+            button.disabled = false;
+        });
+    };
+
+    const setDisabledUi = () => {
+        document.querySelectorAll("[data-notification-button]").forEach(element => {
+            element.classList.remove("is-enabled");
+        });
+
+        document.querySelectorAll("[data-notification-status]").forEach(status => {
+            status.textContent = "Browser notifications are off on this device. You can still check live alerts on this page.";
+        });
+
+        document.querySelectorAll("[data-notification-enable-button]").forEach(button => {
+            button.hidden = false;
+            button.disabled = false;
+            button.textContent = "Enable";
+            button.setAttribute("aria-label", "Enable browser notifications");
+        });
+        document.querySelectorAll("[data-notification-disable-button]").forEach(button => {
+            button.hidden = true;
+            button.disabled = false;
         });
     };
 
@@ -149,6 +172,36 @@
         }
     };
 
+    const disable = async () => {
+        if (!isSupported()) {
+            setDisabledUi();
+            return true;
+        }
+
+        try {
+            const registration = await navigator.serviceWorker.ready;
+            const subscription = await registration.pushManager.getSubscription();
+
+            if (subscription) {
+                const json = subscription.toJSON();
+                if (!json.endpoint)
+                    throw new Error("The current browser subscription has no endpoint.");
+
+                // Deactivate this device on the server before removing the local browser subscription.
+                await postJson("/Notifications/Unsubscribe", { endpoint: json.endpoint });
+                await subscription.unsubscribe();
+            }
+
+            localStorage.removeItem("pharmaflow-notification-sync");
+            setDisabledUi();
+            return true;
+        } catch (error) {
+            console.error("PharmaFlow notification disable failed.", error);
+            alert(error?.message || "Notifications could not be turned off. Please try again.");
+            return false;
+        }
+    };
+
     const markEnabledButtons = () => {
         if (!isSupported() || Notification.permission !== "granted") return;
 
@@ -163,6 +216,7 @@
 
     const init = () => {
         const enableButtons = document.querySelectorAll("[data-notification-enable-button]");
+        const disableButtons = document.querySelectorAll("[data-notification-disable-button]");
 
         if (!isSupported()) {
             document.querySelectorAll("[data-notification-status]").forEach(status => {
@@ -172,18 +226,24 @@
                 button.disabled = true;
                 button.textContent = "Not supported";
             });
+            disableButtons.forEach(button => {
+                button.hidden = true;
+            });
             return;
         }
 
         enableButtons.forEach(button => {
             button.addEventListener("click", () => enable());
         });
+        disableButtons.forEach(button => {
+            button.addEventListener("click", () => disable());
+        });
 
         ensureExistingSubscriptionSynced();
         markEnabledButtons();
     };
 
-    window.pharmaFlowNotifications = { enable, isSupported };
+    window.pharmaFlowNotifications = { enable, disable, isSupported };
 
     document.addEventListener("DOMContentLoaded", init);
 })();
