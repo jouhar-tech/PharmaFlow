@@ -12,6 +12,9 @@ public sealed class NotificationCenterViewModel
     public int WarningCount => Alerts.Count(alert =>
         string.Equals(alert.Severity, "warning", StringComparison.Ordinal));
 
+    public int InfoCount => Alerts.Count(alert =>
+        string.Equals(alert.Severity, "info", StringComparison.Ordinal));
+
     public bool HasAlerts => Alerts.Count > 0;
 
     public int AffectedCount => Alerts.Sum(alert => Math.Max(0, alert.AffectedCount));
