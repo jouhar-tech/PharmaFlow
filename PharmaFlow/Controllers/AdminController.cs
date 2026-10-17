@@ -452,7 +452,11 @@ public sealed class AdminController : Controller
 
         // The selected end date is inclusive, so access remains active until
         // the end of that calendar day instead of expiring at 00:00.
-        var startOfNextDay = DateTime.SpecifyKind(value.Value.Date.AddDays(1), DateTimeKind.Utc);
+        var selectedEndDate = value.Value.Date;
+        if (selectedEndDate == DateTime.MaxValue.Date)
+            return DateTime.SpecifyKind(DateTime.MaxValue, DateTimeKind.Utc);
+
+        var startOfNextDay = DateTime.SpecifyKind(selectedEndDate.AddDays(1), DateTimeKind.Utc);
         // PostgreSQL TIMESTAMPTZ has microsecond precision; subtract one
         // microsecond to avoid rounding into the following day.
         return startOfNextDay.AddTicks(-10);
