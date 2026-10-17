@@ -198,6 +198,20 @@ public sealed class InvoiceCaptureController : Controller
                 mimeType,
                 cancellationToken);
 
+            var detectedInvoiceNumber = CleanMetadata(visionResult.InvoiceNumber, 100);
+            if (!string.IsNullOrWhiteSpace(detectedInvoiceNumber) &&
+                await IsInvoiceNumberAlreadySavedAsync(
+                    profileId,
+                    detectedInvoiceNumber,
+                    excludingImportId: null,
+                    cancellationToken))
+            {
+                return Conflict(new
+                {
+                    message = $"Duplicate invoice detected. Invoice No. '{detectedInvoiceNumber}' has already been scanned and saved. This invoice cannot be scanned again."
+                });
+            }
+
             var items = visionResult.Items;
 
             if (items.Count == 0)
@@ -240,7 +254,7 @@ public sealed class InvoiceCaptureController : Controller
                 SourceType = normalizedSource,
                 RawOcrText = null,
                 DistributorName = CleanMetadata(visionResult.DistributorName, 200),
-                InvoiceNumber = CleanMetadata(visionResult.InvoiceNumber, 100),
+                InvoiceNumber = detectedInvoiceNumber,
                 InvoiceDate = TryParseInvoiceDate(visionResult.InvoiceDateText, out var invoiceDate)
                     ? invoiceDate
                     : null,
@@ -329,6 +343,30 @@ public sealed class InvoiceCaptureController : Controller
                 message = "The invoice could not be analyzed right now. Please try again."
             });
         }
+    }
+
+    private async Task<bool> IsInvoiceNumberAlreadySavedAsync(
+        long profileId,
+        string invoiceNumber,
+        long? excludingImportId,
+        CancellationToken cancellationToken)
+    {
+        var normalizedInvoiceNumber = invoiceNumber.Trim().ToUpperInvariant();
+        if (normalizedInvoiceNumber.Length == 0)
+            return false;
+
+        var query = _dbContext.InvoiceImports
+            .AsNoTracking()
+            .Where(existing =>
+                existing.ProfileId == profileId &&
+                existing.Status == "saved" &&
+                existing.InvoiceNumber != null &&
+                existing.InvoiceNumber.Trim().ToUpper() == normalizedInvoiceNumber);
+
+        if (excludingImportId.HasValue)
+            query = query.Where(existing => existing.ImportId != excludingImportId.Value);
+
+        return await query.AnyAsync(cancellationToken);
     }
 
     private static string BuildVisionRawLine(InvoiceVisionItem item) =>
@@ -547,6 +585,19 @@ public sealed class InvoiceCaptureController : Controller
 
         model.DistributorName = CleanMetadata(model.DistributorName, 200) ?? string.Empty;
         model.InvoiceNumber = CleanMetadata(model.InvoiceNumber, 100) ?? string.Empty;
+
+        if (!string.IsNullOrWhiteSpace(model.InvoiceNumber) &&
+            await IsInvoiceNumberAlreadySavedAsync(
+                profileId,
+                model.InvoiceNumber,
+                excludingImportId: import.ImportId,
+                cancellationToken))
+        {
+            model.ErrorMessage =
+                $"Duplicate invoice detected. Invoice No. '{model.InvoiceNumber}' has already been scanned and saved. No stock was changed.";
+            ModelState.AddModelError(nameof(model.InvoiceNumber), model.ErrorMessage);
+            return View("Review", model);
+        }
 
         if (model.TotalAmount is < 0m or > 999_999_999_999m)
         {
