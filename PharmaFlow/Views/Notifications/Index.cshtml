@@ -77,12 +77,15 @@
             </div>
         </div>
 
-        <nav class="notification-filter-chips" aria-label="Filter notifications">
-            <button type="button" class="notification-filter-chip is-active" data-notification-filter="all" aria-pressed="true">All</button>
-            <button type="button" class="notification-filter-chip" data-notification-filter="stock" aria-pressed="false">Stock</button>
-            <button type="button" class="notification-filter-chip" data-notification-filter="customers" aria-pressed="false">Customers</button>
-            <button type="button" class="notification-filter-chip" data-notification-filter="invoices" aria-pressed="false">Supplier invoices</button>
-        </nav>
+        @if (Model.HasAlerts)
+        {
+            <nav class="notification-filter-chips" aria-label="Filter notifications">
+                <button type="button" class="notification-filter-chip is-active" data-notification-filter="all" aria-pressed="true">All</button>
+                <button type="button" class="notification-filter-chip" data-notification-filter="stock" aria-pressed="false">Stock</button>
+                <button type="button" class="notification-filter-chip" data-notification-filter="customers" aria-pressed="false">Customers</button>
+                <button type="button" class="notification-filter-chip" data-notification-filter="invoices" aria-pressed="false">Supplier invoices</button>
+            </nav>
+        }
 
         @if (Model.HasAlerts)
         {
