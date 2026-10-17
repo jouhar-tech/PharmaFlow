@@ -52,7 +52,7 @@
     var isInventoryDetailsPage = ViewContext.RouteData.Values["controller"]?.ToString() == "Inventory"
         && ViewContext.RouteData.Values["action"]?.ToString() == "Details";
     var isInventoryActionPage = ViewContext.RouteData.Values["controller"]?.ToString() == "Inventory"
-        && new[] { "AddItem", "SearchProducts", "BarcodeScanner" }.Contains(
+        && new[] { "AddItem", "SearchProducts" }.Contains(
             ViewContext.RouteData.Values["action"]?.ToString() ?? string.Empty,
             StringComparer.OrdinalIgnoreCase);
     var isPurchasePage = ViewContext.RouteData.Values["controller"]?.ToString() == "Purchase"
