@@ -47,10 +47,14 @@
                     <strong>@displayName</strong>
                 </div>
             </div>
-            <button type="button" class="home-mobile-notification" data-notification-button aria-label="Enable notifications" title="Enable daily notifications">
+            <a asp-controller="Notifications" asp-action="Index"
+               class="home-mobile-notification"
+               data-notification-button
+               aria-label="Open notifications"
+               title="Open notifications">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>
                 <span></span>
-            </button>
+            </a>
         </div>
 
         <div class="home-mobile-business">
