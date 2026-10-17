@@ -28,7 +28,7 @@
                 <span>
                     @if (Model.HasAlerts)
                     {
-                        <text>@Model.CriticalCount urgent · @Model.WarningCount needing attention</text>
+                        <text>@Model.CriticalCount urgent · @Model.WarningCount warnings · @Model.InfoCount follow-ups</text>
                     }
                     else
                     {
