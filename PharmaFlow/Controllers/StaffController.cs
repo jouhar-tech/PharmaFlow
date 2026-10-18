@@ -92,9 +92,14 @@ public sealed class StaffController : Controller
             }
         }
 
+        // The profiles table is populated by the Supabase Auth user trigger.
+        // Use the staff member's full name as username, adding a suffix only
+        // when that username is already taken by another profile.
+        var staffUsername = await CreateUniqueStaffUsernameAsync(fullName, cancellationToken);
         var authResult = await _authService.CreateStaffLoginAsync(
             loginIdentifier,
             fullName,
+            staffUsername,
             model.Password,
             cancellationToken);
 
@@ -119,18 +124,51 @@ public sealed class StaffController : Controller
 
         try
         {
+            var authProfile = await _dbContext.Profiles
+                .SingleOrDefaultAsync(p => p.UserId == authUserId, cancellationToken);
+
+            if (authProfile is not null)
+            {
+                // Keep the trigger-created profile correct even if the trigger
+                // ignores username metadata or creates it with a NULL username.
+                authProfile.Username = staffUsername;
+                authProfile.FullName = fullName;
+            }
+            else
+            {
+                _logger.LogWarning(
+                    "Supabase Auth user {AuthUserId} was created for staff, but no matching public.profiles row was found.",
+                    authUserId);
+            }
+
             _dbContext.Staff.Add(staff);
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to save staff record after Supabase account creation.");
+            _logger.LogError(ex, "Failed to save staff/profile records after Supabase account creation.");
             ModelState.AddModelError(string.Empty, "The staff login was created, but the staff profile could not be saved. Please contact support before trying again.");
             return View(model);
         }
 
         TempData["StaffMessage"] = $"{staff.FullName} was added successfully.";
         return RedirectToAction(nameof(Add));
+    }
+
+    private async Task<string> CreateUniqueStaffUsernameAsync(string fullName, CancellationToken cancellationToken)
+    {
+        var baseUsername = fullName.Trim();
+        var candidate = baseUsername;
+        var suffix = 1;
+
+        while (await _dbContext.Profiles
+                   .AsNoTracking()
+                   .AnyAsync(p => p.Username.ToLower() == candidate.ToLower(), cancellationToken))
+        {
+            candidate = $"{baseUsername}{suffix++}";
+        }
+
+        return candidate;
     }
 
     private async Task<string?> UploadStaffPhotoAsync(IFormFile file, long profileId, CancellationToken cancellationToken)
