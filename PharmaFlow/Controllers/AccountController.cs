@@ -40,24 +40,13 @@ public class AccountController : Controller
             .AsNoTracking()
             .SingleOrDefaultAsync(s =>
                 s.IsActive &&
-                ((normalizedPhone != null && s.PhoneNumber == normalizedPhone) ||
-                 (identifier.Contains("@") && s.Email == identifier.ToLowerInvariant())),
+                s.FullName.ToLower() == identifier.ToLowerInvariant(),
                 cancellationToken);
 
         if (staff is not null)
         {
-            SupabaseAuthResult staffResult;
-
-            if (!string.IsNullOrWhiteSpace(staff.Email) &&
-                string.Equals(staff.Email, identifier, StringComparison.OrdinalIgnoreCase))
-                staffResult = await _authService.LoginAsync(staff.Email, model.Password, cancellationToken);
-            else if (!string.IsNullOrWhiteSpace(staff.PhoneNumber) && normalizedPhone == staff.PhoneNumber)
-                staffResult = await _authService.LoginWithPhoneAsync(staff.PhoneNumber, model.Password, cancellationToken);
-            else
-            {
-                ModelState.AddModelError(string.Empty, "Invalid login details.");
-                return View(model);
-            }
+            var staffLoginEmail = _authService.GetStaffLoginEmail(staff.FullName);
+            var staffResult = await _authService.LoginAsync(staffLoginEmail, model.Password, cancellationToken);
 
             if (!staffResult.Success ||
                 string.IsNullOrWhiteSpace(staffResult.UserId) ||
