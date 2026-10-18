@@ -54,12 +54,6 @@ public sealed class StaffController : Controller
         var email = string.IsNullOrWhiteSpace(model.Email) ? null : model.Email.Trim().ToLowerInvariant();
         var phone = NormalizePhone(model.PhoneNumber);
 
-        if (email is null && phone is null)
-        {
-            ModelState.AddModelError(string.Empty, "Enter a phone number or email address for staff login.");
-            return View(model);
-        }
-
         if (email is not null && await _dbContext.Staff.AnyAsync(s => s.ProfileId == profileId && s.Email == email, cancellationToken))
         {
             ModelState.AddModelError(nameof(model.Email), "This email is already assigned to a staff account.");
@@ -135,7 +129,7 @@ public sealed class StaffController : Controller
         }
 
         TempData["StaffMessage"] = $"{staff.FullName} was added successfully.";
-        return RedirectToAction("Index", "Profile");
+        return RedirectToAction(nameof(Add));
     }
 
     private async Task<string?> UploadStaffPhotoAsync(IFormFile file, long profileId, CancellationToken cancellationToken)
