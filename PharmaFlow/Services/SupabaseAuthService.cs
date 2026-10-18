@@ -147,11 +147,12 @@ public sealed class SupabaseAuthService : ISupabaseAuthService
                     ? tokenElement.GetString()
                     : null;
 
-                if (root.TryGetProperty("user", out var userElement))
-                {
-                    userId = userElement.TryGetProperty("id", out var idElement) ? idElement.GetString() : null;
-                    email = userElement.TryGetProperty("email", out var emailElement) ? emailElement.GetString() : null;
-                }
+                var userElement = root.TryGetProperty("user", out var nestedUser)
+                    ? nestedUser
+                    : root;
+
+                userId = userElement.TryGetProperty("id", out var idElement) ? idElement.GetString() : null;
+                email = userElement.TryGetProperty("email", out var emailElement) ? emailElement.GetString() : null;
             }
         }
         catch (JsonException)
