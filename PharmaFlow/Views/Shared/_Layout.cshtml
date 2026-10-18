@@ -317,7 +317,7 @@
                     <span data-i18n="bills">Bill</span>
                 </a>
                 <a class="home-mobile-nav-item @((isPurchasePage || isPurchaseDistributorPage) ? "is-active" : "")" asp-controller="Purchase" asp-action="Index">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-2.5-1.6L13 21l-3-1.6L7.5 21 6 20V3Z"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.1 10.1a2 2 0 0 0 2 1.6h8.8a2 2 0 0 0 2-1.6L21 8H6"/><path d="M9 19a1.2 1.2 0 1 0 0 .1M18 19a1.2 1.2 0 1 0 0 .1"/></svg>
                     <span data-i18n="purchase">Purchase</span>
                 </a>
                 <a class="home-mobile-nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Profile" ? "is-active" : "")" asp-controller="Profile" asp-action="Index">
