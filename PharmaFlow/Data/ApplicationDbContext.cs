@@ -171,6 +171,7 @@ public class ApplicationDbContext : DbContext
             entity.Property(s => s.ProfileId).HasColumnName("profile_id");
             entity.Property(s => s.AuthUserId).HasColumnName("auth_user_id");
             entity.Property(s => s.FullName).HasColumnName("full_name").HasMaxLength(120);
+            entity.Property(s => s.Username).HasColumnName("username").HasMaxLength(120);
             entity.Property(s => s.Address).HasColumnName("address").HasMaxLength(500);
             entity.Property(s => s.PhoneNumber).HasColumnName("phone_number").HasMaxLength(20);
             entity.Property(s => s.Email).HasColumnName("email").HasMaxLength(160);
