@@ -20,6 +20,11 @@ public sealed class Staff
     [Column("full_name")]
     public string FullName { get; set; } = string.Empty;
 
+    [Required]
+    [StringLength(120)]
+    [Column("username")]
+    public string Username { get; set; } = string.Empty;
+
     [Column("address")]
     public string? Address { get; set; }
 
