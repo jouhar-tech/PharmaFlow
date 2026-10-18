@@ -92,10 +92,8 @@ public sealed class StaffController : Controller
             }
         }
 
-        // The profiles table is populated by the Supabase Auth user trigger.
-        // Use the staff member's full name as username, adding a suffix only
-        // when that username is already taken by another profile.
-        var staffUsername = await CreateUniqueStaffUsernameAsync(fullName, cancellationToken);
+        // Staff usernames belong to public.staff, not public.profiles.
+        var staffUsername = await CreateUniqueStaffUsernameAsync(profileId, fullName, cancellationToken);
         var authResult = await _authService.CreateStaffLoginAsync(
             loginIdentifier,
             fullName,
@@ -114,6 +112,7 @@ public sealed class StaffController : Controller
             ProfileId = profileId,
             AuthUserId = authUserId,
             FullName = fullName,
+            Username = staffUsername,
             Address = string.IsNullOrWhiteSpace(model.Address) ? null : model.Address.Trim(),
             PhoneNumber = phone,
             Email = email,
@@ -124,25 +123,19 @@ public sealed class StaffController : Controller
 
         try
         {
-            var authProfile = await _dbContext.Profiles
-                .SingleOrDefaultAsync(p => p.UserId == authUserId, cancellationToken);
+            // Supabase's auth.users trigger may create a profiles row for each
+            // Auth user. Staff are represented by public.staff only. Use a
+            // direct SQL DELETE via ExecuteDelete so a NULL profiles.username
+            // is never materialized into the Profile model.
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
-            if (authProfile is not null)
-            {
-                // Keep the trigger-created profile correct even if the trigger
-                // ignores username metadata or creates it with a NULL username.
-                authProfile.Username = staffUsername;
-                authProfile.FullName = fullName;
-            }
-            else
-            {
-                _logger.LogWarning(
-                    "Supabase Auth user {AuthUserId} was created for staff, but no matching public.profiles row was found.",
-                    authUserId);
-            }
+            await _dbContext.Profiles
+                .Where(p => p.UserId == authUserId)
+                .ExecuteDeleteAsync(cancellationToken);
 
             _dbContext.Staff.Add(staff);
             await _dbContext.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
         }
         catch (Exception ex)
         {
@@ -155,15 +148,21 @@ public sealed class StaffController : Controller
         return RedirectToAction(nameof(Add));
     }
 
-    private async Task<string> CreateUniqueStaffUsernameAsync(string fullName, CancellationToken cancellationToken)
+    private async Task<string> CreateUniqueStaffUsernameAsync(
+        long profileId,
+        string fullName,
+        CancellationToken cancellationToken)
     {
         var baseUsername = fullName.Trim();
         var candidate = baseUsername;
         var suffix = 1;
 
-        while (await _dbContext.Profiles
+        while (await _dbContext.Staff
                    .AsNoTracking()
-                   .AnyAsync(p => p.Username.ToLower() == candidate.ToLower(), cancellationToken))
+                   .AnyAsync(s =>
+                       s.ProfileId == profileId &&
+                       s.Username.ToLower() == candidate.ToLower(),
+                       cancellationToken))
         {
             candidate = $"{baseUsername}{suffix++}";
         }
