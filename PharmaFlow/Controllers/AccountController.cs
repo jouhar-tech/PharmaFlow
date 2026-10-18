@@ -40,12 +40,17 @@ public class AccountController : Controller
             .AsNoTracking()
             .SingleOrDefaultAsync(s =>
                 s.IsActive &&
-                s.FullName.ToLower() == identifier.ToLowerInvariant(),
+                ((normalizedPhone != null && s.PhoneNumber == normalizedPhone) ||
+                 (identifier.Contains("@", StringComparison.Ordinal) &&
+                  s.Email != null && s.Email.ToLower() == identifier.ToLowerInvariant())),
                 cancellationToken);
 
         if (staff is not null)
         {
-            var staffLoginEmail = _authService.GetStaffLoginEmail(staff.FullName);
+            var staffLoginIdentifier = !string.IsNullOrWhiteSpace(staff.Email)
+                ? staff.Email
+                : staff.PhoneNumber!;
+            var staffLoginEmail = _authService.GetStaffLoginEmail(staffLoginIdentifier);
             var staffResult = await _authService.LoginAsync(staffLoginEmail, model.Password, cancellationToken);
 
             if (!staffResult.Success ||
