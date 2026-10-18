@@ -46,14 +46,15 @@ public sealed class SupabaseAuthService : ISupabaseAuthService
         return await ReadResultAsync(response, requireAccessToken: true, cancellationToken);
     }
 
-    public string GetStaffLoginEmail(string fullName)
+    public string GetStaffLoginEmail(string loginIdentifier)
     {
-        var normalized = fullName.Trim().ToLowerInvariant();
+        var normalized = loginIdentifier.Trim().ToLowerInvariant();
         var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(normalized))).ToLowerInvariant();
-        return $"staff-{hash[..24]}@staff.pharmaflow.app";
+        return $"staff-{hash[..32]}@staff.pharmaflow.app";
     }
 
     public async Task<SupabaseAuthResult> CreateStaffLoginAsync(
+        string loginIdentifier,
         string fullName,
         string password,
         CancellationToken cancellationToken = default)
@@ -62,7 +63,7 @@ public sealed class SupabaseAuthService : ISupabaseAuthService
         if (string.IsNullOrWhiteSpace(serviceRoleKey))
             return new(false, Error: "Staff login setup is incomplete. Configure Supabase:ServiceRoleKey on the server.");
 
-        var email = GetStaffLoginEmail(fullName);
+        var email = GetStaffLoginEmail(loginIdentifier);
         var baseUrl = Required("Supabase:Url").TrimEnd('/');
         using var request = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl}/auth/v1/admin/users");
         request.Headers.Add("apikey", serviceRoleKey);
