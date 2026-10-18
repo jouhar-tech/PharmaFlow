@@ -52,9 +52,19 @@ public sealed class StaffController : Controller
             return RedirectToAction("Login", "Account");
 
         var fullName = model.FullName.Trim();
-        if (await _dbContext.Staff.AnyAsync(s => s.FullName.ToLower() == fullName.ToLower(), cancellationToken))
+        var email = string.IsNullOrWhiteSpace(model.Email) ? null : model.Email.Trim().ToLowerInvariant();
+        var phone = NormalizePhone(model.PhoneNumber);
+        var loginIdentifier = email ?? phone!;
+
+        if (email is not null && await _dbContext.Staff.AnyAsync(s => s.Email != null && s.Email.ToLower() == email, cancellationToken))
         {
-            ModelState.AddModelError(nameof(model.FullName), "This staff name is already in use. Choose a different name so login is unambiguous.");
+            ModelState.AddModelError(nameof(model.Email), "This email is already assigned to a staff account.");
+            return View(model);
+        }
+
+        if (phone is not null && await _dbContext.Staff.AnyAsync(s => s.PhoneNumber == phone, cancellationToken))
+        {
+            ModelState.AddModelError(nameof(model.PhoneNumber), "This phone number is already assigned to a staff account.");
             return View(model);
         }
 
@@ -83,6 +93,7 @@ public sealed class StaffController : Controller
         }
 
         var authResult = await _authService.CreateStaffLoginAsync(
+            loginIdentifier,
             fullName,
             model.Password,
             cancellationToken);
@@ -99,8 +110,8 @@ public sealed class StaffController : Controller
             AuthUserId = authUserId,
             FullName = fullName,
             Address = string.IsNullOrWhiteSpace(model.Address) ? null : model.Address.Trim(),
-            PhoneNumber = null,
-            Email = null,
+            PhoneNumber = phone,
+            Email = email,
             ProfilePhotoUrl = profilePhotoUrl,
             IsActive = true,
             CreatedAt = DateTime.UtcNow
