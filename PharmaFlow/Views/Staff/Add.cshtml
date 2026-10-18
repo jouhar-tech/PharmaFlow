@@ -64,7 +64,7 @@
             <input asp-for="Email" type="email" autocomplete="email" maxlength="160" placeholder="Email Address (optional if phone entered)" aria-describedby="staffContactHint" />
         </div>
         <span asp-validation-for="Email" class="add-staff-field-error"></span>
-        <small id="staffContactHint" class="add-staff-login-hint">Enter either a 10-digit phone number (numbers only) or an email address — not both. Staff will log in using that contact and password.</small>
+        <small id="staffContactHint" class="add-staff-login-hint">Enter a 10-digit phone number (numbers only), an email address, or both. Staff can log in using either saved contact and their password.</small>
 
         <div class="add-staff-field">
             <span class="add-staff-field-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0M16 5a3 3 0 0 1 0 6M18 20a5 5 0 0 0-2-3.9"/></svg></span>
