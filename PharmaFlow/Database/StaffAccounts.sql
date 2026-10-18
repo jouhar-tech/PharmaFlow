@@ -5,6 +5,7 @@ create table if not exists public.staff (
     profile_id bigint not null references public.profiles(id) on delete cascade,
     auth_user_id uuid not null unique,
     full_name varchar(120) not null,
+    username varchar(120) not null,
     address varchar(500),
     phone_number varchar(20),
     email varchar(160),
