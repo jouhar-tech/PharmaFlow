@@ -46,30 +46,41 @@ public sealed class SupabaseAuthService : ISupabaseAuthService
         return await ReadResultAsync(response, requireAccessToken: true, cancellationToken);
     }
 
-    public async Task<SupabaseAuthResult> SignUpStaffAsync(
-        string? email,
-        string? phoneNumber,
-        string password,
+    public string GetStaffLoginEmail(string fullName)
+    {
+        var normalized = fullName.Trim().ToLowerInvariant();
+        var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(normalized))).ToLowerInvariant();
+        return $"staff-{hash[..24]}@staff.pharmaflow.app";
+    }
+
+    public async Task<SupabaseAuthResult> CreateStaffLoginAsync(
         string fullName,
+        string password,
         CancellationToken cancellationToken = default)
     {
-        var payload = new Dictionary<string, object?>
+        var serviceRoleKey = _configuration["Supabase:ServiceRoleKey"];
+        if (string.IsNullOrWhiteSpace(serviceRoleKey))
+            return new(false, Error: "Staff login setup is incomplete. Configure Supabase:ServiceRoleKey on the server.");
+
+        var email = GetStaffLoginEmail(fullName);
+        var baseUrl = Required("Supabase:Url").TrimEnd('/');
+        using var request = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl}/auth/v1/admin/users");
+        request.Headers.Add("apikey", serviceRoleKey);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", serviceRoleKey);
+        request.Content = JsonContent.Create(new
         {
-            ["password"] = password,
-            ["data"] = new
-            {
-                full_name = fullName,
-                account_type = "staff"
-            }
-        };
+            email,
+            password,
+            email_confirm = true,
+            user_metadata = new { full_name = fullName, account_type = "staff" }
+        });
 
-        if (!string.IsNullOrWhiteSpace(email))
-            payload["email"] = email;
-        if (!string.IsNullOrWhiteSpace(phoneNumber))
-            payload["phone"] = phoneNumber;
+        using var response = await _httpClient.SendAsync(request, cancellationToken);
+        var result = await ReadResultAsync(response, requireAccessToken: false, cancellationToken);
+        if (!result.Success)
+            return result;
 
-        var response = await SendAsync("/auth/v1/signup", payload, cancellationToken);
-        return await ReadResultAsync(response, requireAccessToken: false, cancellationToken);
+        return result with { Email = email };
     }
 
     public string GetGoogleLoginUrl(string redirectUri, string codeChallenge)
