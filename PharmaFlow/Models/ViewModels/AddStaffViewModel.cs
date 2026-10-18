@@ -37,8 +37,15 @@ public sealed class AddStaffViewModel : IValidatableObject
         if (hasPhone == hasEmail)
         {
             yield return new ValidationResult(
-                "Enter either a phone number or an email address, not both.",
+                "Enter either a phone number or an email address for staff login, not both.",
                 new[] { nameof(PhoneNumber), nameof(Email) });
+        }
+
+        if (hasPhone && (PhoneNumber!.Any(ch => !char.IsDigit(ch)) || PhoneNumber.Length != 10))
+        {
+            yield return new ValidationResult(
+                "Enter a valid 10-digit phone number using numbers only.",
+                new[] { nameof(PhoneNumber) });
         }
     }
 
