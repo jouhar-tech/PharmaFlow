@@ -56,6 +56,7 @@ public sealed class SupabaseAuthService : ISupabaseAuthService
     public async Task<SupabaseAuthResult> CreateStaffLoginAsync(
         string loginIdentifier,
         string fullName,
+        string username,
         string password,
         CancellationToken cancellationToken = default)
     {
@@ -73,7 +74,7 @@ public sealed class SupabaseAuthService : ISupabaseAuthService
             email,
             password,
             email_confirm = true,
-            user_metadata = new { full_name = fullName, account_type = "staff" }
+            user_metadata = new { username, full_name = fullName, account_type = "staff" }
         });
 
         using var response = await _httpClient.SendAsync(request, cancellationToken);
@@ -98,18 +99,6 @@ public sealed class SupabaseAuthService : ISupabaseAuthService
             cancellationToken);
 
         return await ReadResultAsync(response, requireAccessToken: true, cancellationToken);
-    }
-
-    public static string CreateCodeVerifier()
-    {
-        var bytes = RandomNumberGenerator.GetBytes(32);
-        return Base64UrlEncode(bytes);
-    }
-
-    public static string CreateCodeChallenge(string codeVerifier)
-    {
-        var hash = SHA256.HashData(Encoding.ASCII.GetBytes(codeVerifier));
-        return Base64UrlEncode(hash);
     }
 
     private async Task<SupabaseAuthResult> ReadResultAsync(HttpResponseMessage response, bool requireAccessToken, CancellationToken cancellationToken)
