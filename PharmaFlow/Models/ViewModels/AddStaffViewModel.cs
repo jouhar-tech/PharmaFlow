@@ -34,10 +34,10 @@ public sealed class AddStaffViewModel : IValidatableObject
         var hasPhone = !string.IsNullOrWhiteSpace(PhoneNumber);
         var hasEmail = !string.IsNullOrWhiteSpace(Email);
 
-        if (hasPhone == hasEmail)
+        if (!hasPhone && !hasEmail)
         {
             yield return new ValidationResult(
-                "Enter either a phone number or an email address for staff login, not both.",
+                "Enter a phone number, an email address, or both for staff login.",
                 new[] { nameof(PhoneNumber), nameof(Email) });
         }
 
