@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Http;
 
 namespace PharmaFlow.Models.ViewModels;
 
-public sealed class AddStaffViewModel
+public sealed class AddStaffViewModel : IValidatableObject
 {
     [Required, StringLength(120, MinimumLength = 2)]
     [Display(Name = "Full Name")]
@@ -12,11 +12,11 @@ public sealed class AddStaffViewModel
     [StringLength(500)]
     public string? Address { get; set; }
 
-    [Required, Phone, StringLength(20)]
+    [Phone, StringLength(20)]
     [Display(Name = "Phone Number")]
     public string? PhoneNumber { get; set; }
 
-    [Required, EmailAddress, StringLength(160)]
+    [EmailAddress, StringLength(160)]
     [Display(Name = "Email Address")]
     public string? Email { get; set; }
 
@@ -28,6 +28,25 @@ public sealed class AddStaffViewModel
     [Compare(nameof(Password))]
     [Display(Name = "Confirm Password")]
     public string ConfirmPassword { get; set; } = string.Empty;
+
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        var hasPhone = !string.IsNullOrWhiteSpace(PhoneNumber);
+        var hasEmail = !string.IsNullOrWhiteSpace(Email);
+
+        if (!hasPhone && !hasEmail)
+        {
+            yield return new ValidationResult(
+                "Enter either a phone number or an email address for staff login.",
+                new[] { nameof(PhoneNumber), nameof(Email) });
+        }
+        else if (hasPhone && hasEmail)
+        {
+            yield return new ValidationResult(
+                "Use only one login method: enter either a phone number or an email address, not both.",
+                new[] { nameof(PhoneNumber), nameof(Email) });
+        }
+    }
 
     public string? ProfilePhotoUrl { get; set; }
 
