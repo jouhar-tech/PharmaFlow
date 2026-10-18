@@ -51,18 +51,10 @@ public sealed class StaffController : Controller
         if (!long.TryParse(HttpContext.Session.GetString("ProfileId"), out var profileId))
             return RedirectToAction("Login", "Account");
 
-        var email = string.IsNullOrWhiteSpace(model.Email) ? null : model.Email.Trim().ToLowerInvariant();
-        var phone = NormalizePhone(model.PhoneNumber);
-
-        if (email is not null && await _dbContext.Staff.AnyAsync(s => s.ProfileId == profileId && s.Email == email, cancellationToken))
+        var fullName = model.FullName.Trim();
+        if (await _dbContext.Staff.AnyAsync(s => s.FullName.ToLower() == fullName.ToLower(), cancellationToken))
         {
-            ModelState.AddModelError(nameof(model.Email), "This email is already assigned to a staff account.");
-            return View(model);
-        }
-
-        if (phone is not null && await _dbContext.Staff.AnyAsync(s => s.ProfileId == profileId && s.PhoneNumber == phone, cancellationToken))
-        {
-            ModelState.AddModelError(nameof(model.PhoneNumber), "This phone number is already assigned to a staff account.");
+            ModelState.AddModelError(nameof(model.FullName), "This staff name is already in use. Choose a different name so login is unambiguous.");
             return View(model);
         }
 
@@ -90,11 +82,9 @@ public sealed class StaffController : Controller
             }
         }
 
-        var authResult = await _authService.SignUpStaffAsync(
-            email,
-            phone,
+        var authResult = await _authService.CreateStaffLoginAsync(
+            fullName,
             model.Password,
-            model.FullName.Trim(),
             cancellationToken);
 
         if (!authResult.Success || string.IsNullOrWhiteSpace(authResult.UserId) || !Guid.TryParse(authResult.UserId, out var authUserId))
@@ -107,10 +97,10 @@ public sealed class StaffController : Controller
         {
             ProfileId = profileId,
             AuthUserId = authUserId,
-            FullName = model.FullName.Trim(),
+            FullName = fullName,
             Address = string.IsNullOrWhiteSpace(model.Address) ? null : model.Address.Trim(),
-            PhoneNumber = phone,
-            Email = email,
+            PhoneNumber = null,
+            Email = null,
             ProfilePhotoUrl = profilePhotoUrl,
             IsActive = true,
             CreatedAt = DateTime.UtcNow
