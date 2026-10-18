@@ -9,6 +9,14 @@
         <h1 data-i18n="addStaff">Add Staff</h1>
     </header>
 
+    @if (TempData["StaffMessage"] is string staffMessage)
+    {
+        <div class="add-staff-success" role="status" aria-live="polite">
+            <strong>Staff added successfully</strong>
+            <span>@staffMessage</span>
+        </div>
+    }
+
     <form asp-action="Add" method="post" enctype="multipart/form-data" class="add-staff-mobile-form" autocomplete="off" data-online-required="true">
         @Html.AntiForgeryToken()
         <div asp-validation-summary="ModelOnly" class="add-staff-validation"></div>
@@ -56,7 +64,7 @@
             <input asp-for="Email" data-i18n-placeholder="emailField" placeholder="Email Address" autocomplete="email" maxlength="160" />
         </div>
         <span asp-validation-for="Email" class="add-staff-field-error"></span>
-        <small class="add-staff-login-hint">Phone number and email are used by the staff member to log in.</small>
+        <small class="add-staff-login-hint">Enter either a phone number or an email address for staff login — not both.</small>
 
         <div class="add-staff-field">
             <span class="add-staff-field-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0M16 5a3 3 0 0 1 0 6M18 20a5 5 0 0 0-2-3.9"/></svg></span>
@@ -78,6 +86,21 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <style>
+        .add-staff-success {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin: 12px 10px 16px;
+            padding: 12px 14px;
+            border: 1px solid #9bd9c4;
+            border-radius: 12px;
+            background: #eaf8f1;
+            color: #176548;
+            font-size: 14px;
+        }
+        .add-staff-success strong { font-weight: 700; }
+    </style>
     <script>
         const photoInput = document.getElementById('staffProfilePhoto');
         const photoPreview = document.getElementById('staffPhotoPreview');
