@@ -3526,7 +3526,7 @@ body.theme-dark .reports-export-button { background: #245b57; color: #d9fffa; }
   background: #edf2f7;
 }
 .add-staff-mobile-hero {
-  min-height: 150px;
+  min-height: 75px;
   display: grid;
   grid-template-columns: 42px 1fr 42px;
   align-items: start;
@@ -3555,7 +3555,7 @@ body.theme-dark .reports-export-button { background: #245b57; color: #d9fffa; }
   position: relative;
   z-index: 2;
   width: calc(100% - 1.6rem);
-  margin: -58px auto 0;
+  margin: 12px auto 0;
 }
 .add-staff-photo-wrap {
   position: relative;
