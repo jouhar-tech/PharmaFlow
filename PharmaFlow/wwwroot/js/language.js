@@ -2,9 +2,11 @@
     const translations = {
         en: {
             dashboard: "Dashboard",
+            home: "Home",
             addStock: "Add stock",
             more: "More",
             inventory: "Inventory",
+            stocks: "Stocks",
             edit: "Edit",
             removeFromStock: "Remove from Stock",
             totalInventoryValue: "Total Inventory Value",
@@ -296,9 +298,11 @@
 
         kn: {
             dashboard: "ಡ್ಯಾಶ್‌ಬೋರ್ಡ್",
+            home: "ಮುಖಪುಟ",
             addStock: "ಸ್ಟಾಕ್ ಸೇರಿಸಿ",
             more: "ಇನ್ನಷ್ಟು",
             inventory: "ಇನ್ವೆಂಟರಿ",
+            stocks: "ಸ್ಟಾಕ್",
             edit: "ಸಂಪಾದಿಸಿ",
             removeFromStock: "ಸ್ಟಾಕ್‌ನಿಂದ ತೆಗೆದುಹಾಕಿ",
             totalInventoryValue: "ಒಟ್ಟು ಇನ್ವೆಂಟರಿ ಮೌಲ್ಯ",
@@ -589,9 +593,11 @@
 
         hi: {
             dashboard: "डैशबोर्ड",
+            home: "होम",
             addStock: "स्टॉक जोड़ें",
             more: "अधिक",
             inventory: "इन्वेंटरी",
+            stocks: "स्टॉक",
             edit: "संपादित करें",
             removeFromStock: "स्टॉक से हटाएँ",
             totalInventoryValue: "कुल इन्वेंटरी मूल्य",
