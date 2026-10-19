@@ -8,24 +8,21 @@ namespace PharmaFlow.Controllers;
 
 public sealed class AdminController : Controller
 {
-    // Replace these two values before production deployment.
-    // Do NOT reuse a real user password here; move them to environment/configuration
-    // and add a rate-limiter before exposing the admin endpoint publicly.
-    private const string AdminUsername = "XYZ";
-    private const string AdminPassword = "XXXXXX";
-
     private const string AdminSessionKey = "PharmaFlowAdminAuthenticated";
     private const int PageSize = 25;
 
     private readonly ApplicationDbContext _dbContext;
     private readonly ILogger<AdminController> _logger;
+    private readonly IConfiguration _configuration;
 
     public AdminController(
         ApplicationDbContext dbContext,
-        ILogger<AdminController> logger)
+        ILogger<AdminController> logger,
+        IConfiguration configuration)
     {
         _dbContext = dbContext;
         _logger = logger;
+        _configuration = configuration;
     }
 
     [HttpGet]
@@ -44,10 +41,23 @@ public sealed class AdminController : Controller
         if (!ModelState.IsValid)
             return View(model);
 
+        // Credentials come only from server-side secret configuration.
+        // Never hard-code them in the repository or send them to the browser.
+        var expectedUsername = _configuration["Admin:Username"];
+        var expectedPassword = _configuration["Admin:Password"];
+
+        if (string.IsNullOrWhiteSpace(expectedUsername) ||
+            string.IsNullOrWhiteSpace(expectedPassword))
+        {
+            _logger.LogError("Admin login is disabled because Admin:Username or Admin:Password is not configured.");
+            ModelState.AddModelError(string.Empty, "Admin sign-in is temporarily unavailable.");
+            return View(model);
+        }
+
         var username = model.Username.Trim();
 
-        if (!FixedTimeEquals(username, AdminUsername) ||
-            !FixedTimeEquals(model.Password, AdminPassword))
+        if (!FixedTimeEquals(username, expectedUsername) ||
+            !FixedTimeEquals(model.Password, expectedPassword))
         {
             ModelState.AddModelError(string.Empty, "Invalid admin login details.");
             return View(model);
