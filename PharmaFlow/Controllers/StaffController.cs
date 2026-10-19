@@ -30,10 +30,22 @@ public sealed class StaffController : Controller
     }
 
     [HttpGet]
-    public IActionResult Add()
+    public async Task<IActionResult> Add(bool newStaff = false, CancellationToken cancellationToken = default)
     {
         if (!IsOwner())
             return RedirectToAction("Index", "Home");
+
+        if (!long.TryParse(HttpContext.Session.GetString("ProfileId"), out var profileId))
+            return RedirectToAction("Login", "Account");
+
+        var staffMembers = await _dbContext.Staff
+            .AsNoTracking()
+            .Where(s => s.ProfileId == profileId && s.IsActive)
+            .OrderBy(s => s.FullName)
+            .ToListAsync(cancellationToken);
+
+        ViewBag.StaffMembers = staffMembers;
+        ViewBag.ShowAddForm = newStaff || staffMembers.Count == 0;
 
         return View(new AddStaffViewModel());
     }
@@ -44,6 +56,9 @@ public sealed class StaffController : Controller
     {
         if (!IsOwner())
             return RedirectToAction("Index", "Home");
+
+        // Validation failures should redisplay the form, not the staff roster.
+        ViewBag.ShowAddForm = true;
 
         if (!ModelState.IsValid)
             return View(model);
@@ -145,6 +160,46 @@ public sealed class StaffController : Controller
         }
 
         TempData["StaffMessage"] = $"{staff.FullName} was added successfully.";
+        return RedirectToAction(nameof(Add));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Remove(long staffId, CancellationToken cancellationToken)
+    {
+        if (!IsOwner())
+            return RedirectToAction("Index", "Home");
+
+        if (!long.TryParse(HttpContext.Session.GetString("ProfileId"), out var profileId))
+            return RedirectToAction("Login", "Account");
+
+        try
+        {
+            var staff = await _dbContext.Staff
+                .SingleOrDefaultAsync(
+                    s => s.StaffId == staffId && s.ProfileId == profileId && s.IsActive,
+                    cancellationToken);
+
+            if (staff is null)
+            {
+                TempData["StaffError"] = "That staff member was not found or has already been removed.";
+                return RedirectToAction(nameof(Add));
+            }
+
+            // Deactivate instead of deleting the row so historical/audit links remain intact.
+            // AccountController and TouchSession already reject inactive staff.
+            staff.IsActive = false;
+            staff.LastLogoutAt = DateTime.UtcNow;
+            await _dbContext.SaveChangesAsync(cancellationToken);
+
+            TempData["StaffMessage"] = $"{staff.FullName} was removed. Their sign-in access is now disabled.";
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to remove staff member {StaffId} for profile {ProfileId}.", staffId, profileId);
+            TempData["StaffError"] = "Unable to remove this staff member right now. Please try again.";
+        }
+
         return RedirectToAction(nameof(Add));
     }
 
