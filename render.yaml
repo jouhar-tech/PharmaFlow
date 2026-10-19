@@ -1,0 +1,35 @@
+services:
+  - type: web
+    name: pharmaflow-testing
+    runtime: docker
+    plan: free
+    region: singapore
+    branch: main
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /Account/Login
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ASPNETCORE_FORWARDEDHEADERS_ENABLED
+        value: "true"
+      - key: ConnectionStrings__DefaultConnection
+        sync: false
+      - key: Supabase__Url
+        sync: false
+      - key: Supabase__AnonKey
+        sync: false
+      - key: Supabase__ServiceRoleKey
+        sync: false
+      - key: Admin__Username
+        sync: false
+      - key: Admin__Password
+        sync: false
+      - key: Gemini__ApiKey
+        sync: false
+      - key: WebPush__Subject
+        sync: false
+      - key: WebPush__PublicKey
+        sync: false
+      - key: WebPush__PrivateKey
+        sync: false
