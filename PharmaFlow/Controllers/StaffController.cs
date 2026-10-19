@@ -57,14 +57,20 @@ public sealed class StaffController : Controller
         if (!IsOwner())
             return RedirectToAction("Index", "Home");
 
-        // Validation failures should redisplay the form, not the staff roster.
+        if (!long.TryParse(HttpContext.Session.GetString("ProfileId"), out var profileId))
+            return RedirectToAction("Login", "Account");
+
+        // Validation failures should redisplay the form while preserving the
+        // current staff count so the back button returns to the staff roster.
+        ViewBag.StaffMembers = await _dbContext.Staff
+            .AsNoTracking()
+            .Where(s => s.ProfileId == profileId && s.IsActive)
+            .OrderBy(s => s.FullName)
+            .ToListAsync(cancellationToken);
         ViewBag.ShowAddForm = true;
 
         if (!ModelState.IsValid)
             return View(model);
-
-        if (!long.TryParse(HttpContext.Session.GetString("ProfileId"), out var profileId))
-            return RedirectToAction("Login", "Account");
 
         var fullName = model.FullName.Trim();
         var email = string.IsNullOrWhiteSpace(model.Email) ? null : model.Email.Trim().ToLowerInvariant();
