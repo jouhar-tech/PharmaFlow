@@ -22,7 +22,7 @@
     @if (TempData["StaffMessage"] is string staffMessage)
     {
         <div class="add-staff-success" role="status" aria-live="polite">
-            <strong>Staff added successfully</strong>
+            <strong>@(staffMessage.Contains("removed", StringComparison.OrdinalIgnoreCase) ? "Staff removed successfully" : "Staff added successfully")</strong>
             <span>@staffMessage</span>
         </div>
     }
@@ -78,7 +78,7 @@
                             }
                             <small>Added @staff.CreatedAt.ToLocalTime().ToString("dd MMM yyyy")</small>
                             <form asp-action="Remove" method="post" class="staff-remove-form"
-                                  onsubmit="return confirm('Remove @staff.FullName from this pharmacy? Their sign-in access will be disabled.');">
+                                  onsubmit="return confirm('Remove this staff member from the pharmacy? Their sign-in access will be disabled.');">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="staffId" value="@staff.StaffId" />
                                 <button type="submit" class="staff-remove-button">Remove staff</button>
