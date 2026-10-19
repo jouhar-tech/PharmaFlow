@@ -25,11 +25,3 @@ services:
         sync: false
       - key: Admin__Password
         sync: false
-      - key: Gemini__ApiKey
-        sync: false
-      - key: WebPush__Subject
-        sync: false
-      - key: WebPush__PublicKey
-        sync: false
-      - key: WebPush__PrivateKey
-        sync: false
