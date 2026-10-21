@@ -1,0 +1,111 @@
+@{
+    Layout = null;
+    ViewData["Title"] = "Terms & Conditions";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>Terms & Conditions - PharmaFlow</title>
+    <style>
+        :root{color-scheme:light;--ink:#17212b;--muted:#5c6875;--line:#e1e7ec;--accent:#087f78;--soft:#effaf7}
+        *{box-sizing:border-box}
+        body{margin:0;background:#f5f8fa;color:var(--ink);font:16px/1.7 system-ui,-apple-system,"Segoe UI",sans-serif}
+        .top{background:#fff;border-bottom:1px solid var(--line)}
+        .top-inner{max-width:900px;margin:auto;padding:18px 22px;display:flex;gap:16px;align-items:center;justify-content:space-between}
+        .brand{font-weight:800;font-size:21px;text-decoration:none;color:var(--ink)}
+        nav{display:flex;gap:16px;flex-wrap:wrap}
+        nav a{color:var(--accent);font-weight:650;text-decoration:none}
+        main{max-width:900px;margin:28px auto;padding:0 18px 48px}
+        article{background:#fff;border:1px solid var(--line);border-radius:20px;padding:clamp(22px,5vw,48px);box-shadow:0 10px 35px rgba(20,40,60,.05)}
+        h1{font-size:clamp(29px,5vw,40px);line-height:1.2;margin:0 0 8px}
+        h2{font-size:21px;margin:30px 0 8px}
+        p,li{color:#344252}
+        .muted{color:var(--muted);font-size:14px}
+        .draft{border:1px solid #f1c36c;background:#fff8e6;color:#6c4c0c;border-radius:12px;padding:14px 16px;margin:22px 0}
+        a{color:var(--accent)}
+        footer{max-width:900px;margin:0 auto;padding:0 22px 30px;color:var(--muted);font-size:13px}
+        @media(max-width:560px){.top-inner{align-items:flex-start;flex-direction:column}article{border-radius:14px}}
+    </style>
+</head>
+<body>
+<header class="top">
+    <div class="top-inner">
+        <a class="brand" href="@Url.Action("Login", "Account")">PharmaFlow</a>
+        <nav aria-label="Legal pages">
+            <a href="@Url.Action("Terms", "Legal")" aria-current="page">Terms & Conditions</a>
+            <a href="@Url.Action("Privacy", "Legal")">Privacy Policy</a>
+            <a href="@Url.Action("Login", "Account")">Login</a>
+        </nav>
+    </div>
+</header>
+<main>
+<article>
+    <h1>Terms &amp; Conditions</h1>
+    <p class="muted">Draft for review · Last updated: 21 October 2026</p>
+    <div class="draft"><strong>Draft — not ready for production.</strong> Before publishing, confirm the proprietor’s full legal name, business/correspondence address, pricing and tax presentation, payment workflow, refund processing process, and obtain Indian legal review.</div>
+
+    <p>These Terms &amp; Conditions govern access to and use of PharmaFlow, a pharmacy-management software service. By creating an account or using the service after being given an opportunity to review these terms, you agree to the terms that apply to your use, subject to rights that cannot legally be excluded.</p>
+
+    <h2>1. Who operates PharmaFlow</h2>
+    <p>PharmaFlow is operated under the trade name <strong>JVR Solutions</strong> by an individual proprietor. JVR Solutions is a trade name and is not represented here as a company, LLP, or separately incorporated legal entity.</p>
+    <p><strong>Proprietor’s full legal name:</strong> [ADD EXACT LEGAL NAME BEFORE PRODUCTION]</p>
+    <p><strong>Business/correspondence address:</strong> [ADD VALID ADDRESS BEFORE PRODUCTION]</p>
+    <p><strong>Support and privacy contact:</strong> <a href="mailto:mahammadjouhar@gmail.com">mahammadjouhar@gmail.com</a></p>
+
+    <h2>2. What the service does</h2>
+    <p>PharmaFlow provides software tools that may include pharmacy profiles, staff access, inventory and batch tracking, expiry and reorder reminders, purchase and invoice-import workflows, billing, customer ledgers, reports, and related notifications. Features may change as the service develops. Features and subscription benefits included in a plan should be shown before purchase.</p>
+
+    <h2>3. Account security and authorised use</h2>
+    <ul>
+        <li>Provide information that is accurate and keep account contact details up to date.</li>
+        <li>Keep passwords, verification codes, and access tokens confidential. Notify us promptly if you suspect unauthorised access.</li>
+        <li>Give staff only the access they need, and remove access when a staff member no longer needs it.</li>
+        <li>Do not use PharmaFlow to break the law, access another pharmacy’s data, interfere with the service, or upload malicious content.</li>
+    </ul>
+
+    <h2>4. Pharmacy and regulatory responsibilities</h2>
+    <p>PharmaFlow is a software tool, not a pharmacy, prescribing service, legal adviser, accountant, or substitute for a qualified pharmacist. You remain responsible for the licences and permissions applicable to your pharmacy, lawful medicine sales, prescription checks, statutory registers and records, tax filings, and the accuracy of information entered into the service. Software availability or an automated reminder does not establish that a medicine may lawfully be sold.</p>
+
+    <h2>5. Invoice scanning, OCR, and automated outputs</h2>
+    <p>Invoice scanning and other automated features can misread product names, batch numbers, expiry dates, quantities, prices, tax values, or other fields. Review and correct extracted data before saving stock, making a sale, filing a report, or relying on it for regulatory or financial purposes. You are responsible for confirming important records.</p>
+
+    <h2>6. Your data and other people’s data</h2>
+    <p>You retain the rights you have in data you submit. You authorise PharmaFlow to host, process, display, back up, and otherwise use that data as reasonably necessary to provide, secure, and support the service and as otherwise described in the Privacy Policy or required by law.</p>
+    <p>If you enter information about customers, patients, suppliers, or staff, you are responsible for having the lawful authority and providing any notices required for that collection and use. Do not upload information that is unnecessary for the feature being used.</p>
+
+    <h2>7. Plans, payment, cancellation, and refunds</h2>
+    <p>Available subscription durations, features, and prices will be displayed before a purchase. The checkout or order confirmation must identify the applicable term, total price, and any applicable taxes before payment.</p>
+    <p><strong>Proposed launch approach:</strong> subscriptions are prepaid for the selected term and do not automatically renew. Users can cancel at any time. Unless a refund is requested and approved, cancellation stops any future renewal and access remains available until the already-paid term ends.</p>
+    <p><strong>Proposed refund approach:</strong> on cancellation, the unused portion of a prepaid subscription is eligible for a pro-rata refund based on unused days, subject to applicable law. Refunds should be returned through the original payment method where practical and targeted within 7–10 business days after approval. The final policy and payment-provider process must be confirmed before launch. Nothing in these terms removes a consumer right that cannot legally be excluded.</p>
+
+    <h2>8. Availability and changes</h2>
+    <p>We will take reasonable steps to maintain the service, but uninterrupted operation cannot be guaranteed. Internet connectivity, maintenance, third-party services, and events beyond our reasonable control can affect availability. Keep your own lawful business records and export data when appropriate. We will not use this section to exclude liability where the law does not permit it.</p>
+
+    <h2>9. Suspension, closure, and account deletion</h2>
+    <p>You may request account deletion through the account settings when that feature is available, or by contacting the support address above. We will verify the request and explain the data affected. We intend to delete personal and business data that no longer needs to be retained, subject to legal retention duties, legitimate dispute handling, security requirements, and backup-expiry schedules. Records that a pharmacy must retain by law may need to be retained for the required period with access restricted. Export any records you need before confirming deletion.</p>
+    <p>We may restrict access where reasonably necessary to respond to suspected fraud, security threats, unlawful use, or a legal requirement. Where appropriate, we will provide notice and a route to contact support.</p>
+
+    <h2>10. Intellectual property</h2>
+    <p>PharmaFlow’s software, branding, and related materials are protected by applicable intellectual-property laws. These terms grant a limited, non-exclusive, non-transferable right to use the service for your permitted business operations. They do not transfer ownership of the software or branding.</p>
+
+    <h2>11. Third-party services</h2>
+    <p>Some features depend on third-party authentication, hosting, database, AI/OCR, notification, or medicine/product-catalogue services. Their availability and processing are subject to their own terms and privacy practices. The Privacy Policy should identify the providers actually used and the relevant data flows before production launch.</p>
+
+    <h2>12. Complaints and contact</h2>
+    <p>For support, privacy requests, complaints, or questions about these terms, contact <a href="mailto:mahammadjouhar@gmail.com">mahammadjouhar@gmail.com</a>. Please include enough information for us to identify the issue without sending passwords or unnecessary health information. The formal grievance/contact procedure and applicable address must be finalised before production.</p>
+
+    <h2>13. Governing law and statutory rights</h2>
+    <p>These terms are intended to be governed by the laws of India, subject to any mandatory legal protections and jurisdiction rules that apply. Nothing here limits rights or remedies that cannot legally be limited by contract.</p>
+
+    <h2>14. Updates to these terms</h2>
+    <p>We may update these terms when the service, law, or business practices change. Material changes should be communicated appropriately and, where required, users will be asked to accept the updated terms before continuing to use affected features.</p>
+
+    <p class="muted">This draft is a working document and is not a substitute for legal advice. Do not treat it as final until the highlighted details are verified and the document is reviewed for the actual service, payment design, and applicable law.</p>
+</article>
+</main>
+<footer>PharmaFlow · JVR Solutions (trade name; operator details pending confirmation) · <a href="@Url.Action("Privacy", "Legal")">Privacy Policy</a></footer>
+</body>
+</html>
