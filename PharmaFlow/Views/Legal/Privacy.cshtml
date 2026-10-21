@@ -1,0 +1,113 @@
+@{
+    Layout = null;
+    ViewData["Title"] = "Privacy Policy";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>Privacy Policy - PharmaFlow</title>
+    <style>
+        :root{color-scheme:light;--ink:#17212b;--muted:#5c6875;--line:#e1e7ec;--accent:#087f78}
+        *{box-sizing:border-box}
+        body{margin:0;background:#f5f8fa;color:var(--ink);font:16px/1.7 system-ui,-apple-system,"Segoe UI",sans-serif}
+        .top{background:#fff;border-bottom:1px solid var(--line)}
+        .top-inner{max-width:900px;margin:auto;padding:18px 22px;display:flex;gap:16px;align-items:center;justify-content:space-between}
+        .brand{font-weight:800;font-size:21px;text-decoration:none;color:var(--ink)}
+        nav{display:flex;gap:16px;flex-wrap:wrap}
+        nav a{color:var(--accent);font-weight:650;text-decoration:none}
+        main{max-width:900px;margin:28px auto;padding:0 18px 48px}
+        article{background:#fff;border:1px solid var(--line);border-radius:20px;padding:clamp(22px,5vw,48px);box-shadow:0 10px 35px rgba(20,40,60,.05)}
+        h1{font-size:clamp(29px,5vw,40px);line-height:1.2;margin:0 0 8px}
+        h2{font-size:21px;margin:30px 0 8px}
+        p,li{color:#344252}
+        .muted{color:var(--muted);font-size:14px}
+        .draft{border:1px solid #f1c36c;background:#fff8e6;color:#6c4c0c;border-radius:12px;padding:14px 16px;margin:22px 0}
+        a{color:var(--accent)}
+        footer{max-width:900px;margin:0 auto;padding:0 22px 30px;color:var(--muted);font-size:13px}
+        @media(max-width:560px){.top-inner{align-items:flex-start;flex-direction:column}article{border-radius:14px}}
+    </style>
+</head>
+<body>
+<header class="top">
+    <div class="top-inner">
+        <a class="brand" href="@Url.Action("Login", "Account")">PharmaFlow</a>
+        <nav aria-label="Legal pages">
+            <a href="@Url.Action("Terms", "Legal")">Terms & Conditions</a>
+            <a href="@Url.Action("Privacy", "Legal")" aria-current="page">Privacy Policy</a>
+            <a href="@Url.Action("Login", "Account")">Login</a>
+        </nav>
+    </div>
+</header>
+<main>
+<article>
+    <h1>Privacy Policy</h1>
+    <p class="muted">Draft for review · Last updated: 21 October 2026</p>
+    <div class="draft"><strong>Draft — not ready for production.</strong> Confirm the proprietor’s full legal name, the deployment region and vendor list, actual backup retention, AI data flow, security controls, and contact/address details before publishing.</div>
+
+    <p>This Privacy Policy describes how PharmaFlow collects, uses, shares, protects, and deletes information when pharmacy owners and their authorised staff use the service.</p>
+
+    <h2>1. Who operates the service</h2>
+    <p>PharmaFlow is operated under the trade name <strong>JVR Solutions</strong> by an individual proprietor. JVR Solutions is a trade name, not a separately incorporated company.</p>
+    <p><strong>Proprietor’s full legal name:</strong> [ADD EXACT LEGAL NAME BEFORE PRODUCTION]</p>
+    <p><strong>Business/correspondence address:</strong> [ADD VALID ADDRESS BEFORE PRODUCTION]</p>
+    <p><strong>Privacy and support email:</strong> <a href="mailto:mahammadjouhar@gmail.com">mahammadjouhar@gmail.com</a></p>
+
+    <h2>2. Whose information is involved</h2>
+    <p>PharmaFlow processes information about account holders and their staff. A pharmacy may also enter information about its customers or patients, suppliers, medicines, invoices, and transactions. Depending on the information and the purpose of processing, the pharmacy may decide why its customer or patient information is collected, while PharmaFlow processes that information to provide the software. The parties’ precise legal roles must be documented in the final service terms and, where appropriate, a data-processing agreement.</p>
+
+    <h2>3. Information we may collect</h2>
+    <ul>
+        <li><strong>Account and profile information:</strong> username, name, email, phone number, business name, address, profile image, and authentication identifiers.</li>
+        <li><strong>Pharmacy business data:</strong> products, stock, batch and expiry data, purchase records, bills, amounts, taxes, payment-method labels, customer ledgers, supplier/invoice details, and reports.</li>
+        <li><strong>Uploaded and extracted content:</strong> invoice files or images, extracted OCR text, and fields entered or corrected during invoice review.</li>
+        <li><strong>Staff and access data:</strong> staff account details, role and activity status, login/logout timestamps, and access-management records.</li>
+        <li><strong>Feedback and notifications:</strong> feedback messages/ratings and push-notification subscription information, including device endpoint and browser-related details needed to deliver notifications.</li>
+        <li><strong>Technical and security data:</strong> session information, request and diagnostic logs, and security-related metadata where collected by the application or infrastructure.</li>
+    </ul>
+    <p>Do not enter patient or customer information that a feature does not need. The final policy must be reconciled against the exact data collected by the production build and its hosting providers.</p>
+
+    <h2>4. How we use information</h2>
+    <p>Information may be used to create and authenticate accounts, provide inventory and billing functions, process invoice imports, generate reports and reminders, maintain staff access, provide support, process subscription transactions when enabled, secure the service, investigate faults or abuse, fulfil valid legal requirements, and respond to privacy or deletion requests.</p>
+    <p>We should not use identifiable pharmacy-customer data for advertising or unrelated purposes without an appropriate legal basis and a clear notice.</p>
+
+    <h2>5. AI/OCR and third-party services</h2>
+    <p>Invoice-scanning features may transmit invoice content to an AI/OCR provider to extract fields. The final version of this policy must identify the provider actually used, the categories sent, the processing location where known, and any relevant provider retention or training settings. Users should review invoices before uploading and redact information that is not necessary for the task where practical.</p>
+    <p>The application is configured to use Supabase for authentication and its PostgreSQL database, Google for optional Google sign-in, Gemini for invoice-vision processing, and external medicine/product catalogue APIs (including OpenFDA and Open Food Facts where enabled). Product-search terms may be sent to the relevant catalogue provider. Do not assume customer/patient data is needed for a catalogue lookup.</p>
+    <p>The production hosting provider, regions, notification service, payment provider, subcontractors, and international data-transfer details must be verified and accurately listed before launch. Third-party providers may process information under their own terms and privacy policies.</p>
+
+    <h2>6. Sharing and disclosure</h2>
+    <p>We may share information with service providers when necessary to operate the service, with the relevant account’s authorised owner and staff, or when disclosure is required by applicable law or necessary to protect rights and security. We should not sell identifiable personal information. The final policy and vendor contracts must describe actual sharing practices.</p>
+
+    <h2>7. Data security</h2>
+    <p>We intend to use reasonable technical and organisational safeguards, including role-based access, protected credentials, restricted administrative access, and security monitoring appropriate to the information involved. No internet service can guarantee absolute security. We will investigate suspected incidents and take the steps required by applicable law.</p>
+
+    <h2>8. Retention and deletion</h2>
+    <p>We retain information only for as long as needed for the purposes described in this policy, service operation, security, dispute handling, and applicable legal obligations. Retention periods should be defined by data category before launch.</p>
+    <p>Account holders may request permanent account deletion. We will verify the request, remove data that is eligible for deletion from active systems, revoke account access, and remove related files and staff access as appropriate. Certain business, tax, pharmacy, security, or dispute records may need to be retained for a legally required period. Any retained data should be limited to what is required, protected from ordinary use where appropriate, and deleted when the retention basis ends. Backups may take longer to expire; the production backup-retention period must be documented before launch.</p>
+
+    <h2>9. User requests and complaints</h2>
+    <p>For questions, access/correction/deletion requests, or privacy complaints, contact <a href="mailto:mahammadjouhar@gmail.com">mahammadjouhar@gmail.com</a>. We may need to verify account ownership before acting. Please do not send passwords, one-time codes, or unnecessary health records in an email. A formal request-handling timeline and escalation process must be confirmed before production.</p>
+
+    <h2>10. Cookies, sessions, and notifications</h2>
+    <p>PharmaFlow uses session-related browser storage to keep users signed in and support secure service operation. If push notifications are enabled, the browser provides a subscription endpoint and keys needed to deliver them. The production version should disclose any additional analytics, advertising, or tracking technologies if introduced.</p>
+
+    <h2>11. Children and pharmacy customer information</h2>
+    <p>PharmaFlow is designed for pharmacy businesses and their authorised staff, not as a service for children to create accounts. Pharmacies should enter only the customer or patient data they are legally authorised to process and should take particular care with unnecessary information about children. The final implementation must address any child-related information that the service actually processes.</p>
+
+    <h2>12. Changes to this policy</h2>
+    <p>We may update this policy when service features, providers, processing practices, or applicable law change. Material changes should be communicated appropriately, and consent or renewed acknowledgement will be obtained where required.</p>
+
+    <h2>13. Contact</h2>
+    <p><strong>JVR Solutions / PharmaFlow</strong><br />
+       Email: <a href="mailto:mahammadjouhar@gmail.com">mahammadjouhar@gmail.com</a><br />
+       Business/correspondence address: [ADD BEFORE PRODUCTION]</p>
+
+    <p class="muted">This draft is a working document, not legal advice. Its statements must be verified against actual application behaviour, provider contracts, storage locations, and the law in force before production use.</p>
+</article>
+</main>
+<footer>PharmaFlow · JVR Solutions (trade name; operator details pending confirmation) · <a href="@Url.Action("Terms", "Legal")">Terms &amp; Conditions</a></footer>
+</body>
+</html>
