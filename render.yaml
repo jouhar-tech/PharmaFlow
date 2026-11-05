@@ -25,3 +25,5 @@ services:
         sync: false
       - key: Admin__Password
         sync: false
+      - key: Gemini__ApiKey
+        sync: false
