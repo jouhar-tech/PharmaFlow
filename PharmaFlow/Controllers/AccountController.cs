@@ -271,6 +271,8 @@ public class AccountController : Controller
 
         var username = model.Username.Trim();
         var normalizedUsername = username.ToLowerInvariant();
+        var normalizedEmail = model.Email.Trim().ToLowerInvariant();
+
         var usernameExists = await _dbContext.Profiles
             .AsNoTracking()
             .AnyAsync(
@@ -283,12 +285,72 @@ public class AccountController : Controller
             return View(model);
         }
 
+        var emailExists = await _dbContext.Profiles
+            .AsNoTracking()
+            .AnyAsync(
+                p => p.Email != null && p.Email.ToLower() == normalizedEmail,
+                cancellationToken);
+
+        if (emailExists)
+        {
+            ModelState.AddModelError(nameof(model.Email), "This email is already associated with a PharmaFlow account.");
+            return View(model);
+        }
+
         var result = await _authService.SignUpAsync(
-            model.Email.Trim(), model.Password, username, model.PhoneNumber, cancellationToken);
+            normalizedEmail, model.Password, username, model.PhoneNumber, cancellationToken);
 
         if (!result.Success)
         {
             ModelState.AddModelError(string.Empty, result.Error ?? "Unable to create account.");
+            return View(model);
+        }
+
+        // Supabase's auth.users trigger creates the profile row, but the current
+        // trigger only copies full_name and phone_number. Persist username and
+        // email here as well so the owner can immediately log in with either.
+        if (!Guid.TryParse(result.UserId, out var authUserId))
+        {
+            _logger.LogError(
+                "Supabase signup succeeded but did not return a valid user ID for {Email}.",
+                normalizedEmail);
+            ModelState.AddModelError(
+                string.Empty,
+                "Your account was created, but its profile could not be initialized. Please contact support before trying again.");
+            return View(model);
+        }
+
+        var profile = await _dbContext.Profiles
+            .SingleOrDefaultAsync(p => p.UserId == authUserId, cancellationToken);
+
+        if (profile is null)
+        {
+            profile = new Profile
+            {
+                UserId = authUserId,
+                CreatedAt = DateTime.UtcNow
+            };
+            _dbContext.Profiles.Add(profile);
+        }
+
+        profile.Username = username;
+        profile.Email = normalizedEmail;
+        profile.FullName = username;
+        profile.PhoneNumber = NormalizePhone(model.PhoneNumber);
+
+        try
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Supabase signup succeeded, but PharmaFlow profile details could not be saved for user {UserId}.",
+                authUserId);
+            ModelState.AddModelError(
+                string.Empty,
+                "Your account was created, but your profile details could not be saved. Please contact support before trying again. Do not create another account with the same email.");
             return View(model);
         }
 
