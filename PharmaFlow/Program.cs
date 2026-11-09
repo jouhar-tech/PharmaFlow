@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.AspNetCore.ResponseCompression;
 using System.IO.Compression;
 using PharmaFlow.Data;
@@ -8,8 +10,36 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddMemoryCache();
+
+var defaultConnectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+if (string.IsNullOrWhiteSpace(defaultConnectionString))
+    throw new InvalidOperationException("ConnectionStrings:DefaultConnection is not configured.");
+
 builder.Services.AddDbContextPool<ApplicationDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(defaultConnectionString));
+
+// Render containers can restart or scale to zero. Production sessions and
+// Data Protection keys must therefore live outside the web container.
+if (builder.Environment.IsProduction())
+{
+    builder.Services.AddDistributedPostgresCache(options =>
+    {
+        options.ConnectionString = defaultConnectionString;
+        options.SchemaName = "pharmaflow_private";
+        options.TableName = "session_cache";
+        options.CreateIfNotExists = true;
+        options.DefaultSlidingExpiration = TimeSpan.FromDays(14);
+        options.ExpiredItemsDeletionInterval = TimeSpan.FromHours(1);
+    });
+
+    builder.Services.AddDataProtection()
+        .SetApplicationName("PharmaFlow")
+        .PersistKeysToDbContext<ApplicationDbContext>();
+}
+else
+{
+    builder.Services.AddDistributedMemoryCache();
+}
 
 builder.Services.AddResponseCompression(options =>
 {
@@ -49,12 +79,15 @@ builder.Services.AddScoped<IPharmaFlowPushNotificationService, PharmaFlowPushNot
 builder.Services.AddScoped<IPharmaFlowSavingsService, PharmaFlowSavingsService>();
 builder.Services.AddHostedService<NotificationSchedulerService>();
 builder.Services.AddHostedService<ProfileInactivityService>();
-builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {
+    options.Cookie.Name = ".PharmaFlow.Session";
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
-    options.IdleTimeout = TimeSpan.FromHours(8);
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.SameSite = SameSiteMode.Lax;
+    options.Cookie.MaxAge = TimeSpan.FromDays(14);
+    options.IdleTimeout = TimeSpan.FromDays(14);
 });
 
 var app = builder.Build();
@@ -87,6 +120,47 @@ app.UseStaticFiles(new StaticFileOptions
 });
 app.UseRouting();
 app.UseSession();
+
+// Session cookies normally disappear when the browser closes. Reissue the
+// authenticated session cookie with a fresh 14-day expiry on each app request.
+// The PostgreSQL-backed session entry has the same 14-day sliding idle timeout.
+app.Use(async (context, next) =>
+{
+    const string sessionCookieName = ".PharmaFlow.Session";
+
+    if (context.Request.Cookies.TryGetValue(sessionCookieName, out var sessionCookieValue))
+    {
+        await context.Session.LoadAsync(context.RequestAborted);
+
+        var hasAuthenticatedSession =
+            !string.IsNullOrWhiteSpace(context.Session.GetString("SupabaseUserId")) &&
+            !string.IsNullOrWhiteSpace(context.Session.GetString("ProfileId"));
+
+        if (hasAuthenticatedSession)
+        {
+            context.Response.OnStarting(() =>
+            {
+                context.Response.Cookies.Append(
+                    sessionCookieName,
+                    sessionCookieValue,
+                    new CookieOptions
+                    {
+                        HttpOnly = true,
+                        IsEssential = true,
+                        Secure = true,
+                        SameSite = SameSiteMode.Lax,
+                        Path = "/",
+                        MaxAge = TimeSpan.FromDays(14)
+                    });
+
+                return Task.CompletedTask;
+            });
+        }
+    }
+
+    await next();
+});
+
 app.UseAuthorization();
 
 app.MapControllers();
