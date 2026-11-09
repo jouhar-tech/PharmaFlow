@@ -1,9 +1,10 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using PharmaFlow.Models;
 
 namespace PharmaFlow.Data;
 
-public class ApplicationDbContext : DbContext
+public class ApplicationDbContext : DbContext, IDataProtectionKeyContext
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
         : base(options)
@@ -27,10 +28,16 @@ public class ApplicationDbContext : DbContext
     public DbSet<ReorderListItem> ReorderListItems => Set<ReorderListItem>();
     public DbSet<SalesBill> SalesBills => Set<SalesBill>();
     public DbSet<SalesBillItem> SalesBillItems => Set<SalesBillItem>();
+    public DbSet<DataProtectionKey> DataProtectionKeys { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<DataProtectionKey>(entity =>
+        {
+            entity.ToTable("DataProtectionKeys", "pharmaflow_private");
+        });
 
         modelBuilder.Entity<Feedback>(entity =>
         {
