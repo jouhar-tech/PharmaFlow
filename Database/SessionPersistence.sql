@@ -24,6 +24,3 @@ REVOKE ALL ON TABLE pharmaflow_private."DataProtectionKeys" FROM PUBLIC;
 REVOKE ALL ON TABLE pharmaflow_private."DataProtectionKeys" FROM anon, authenticated, service_role;
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE pharmaflow_private."DataProtectionKeys" TO postgres;
 
-GRANT USAGE, SELECT, UPDATE
-ON SEQUENCE pharmaflow_private."DataProtectionKeys_Id_seq"
-TO postgres;
