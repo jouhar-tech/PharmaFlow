@@ -25,7 +25,27 @@ public class AccountController : Controller
     }
 
     [HttpGet]
-    public IActionResult Login() => View(new LoginViewModel());
+    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+    public IActionResult Login()
+    {
+        // Median and browser launches commonly open the site's root URL, which
+        // maps to Account/Login. Reuse the existing server-side session instead
+        // of showing the login form again when the user is already signed in.
+        var accessToken = HttpContext.Session.GetString("SupabaseAccessToken");
+        var userId = HttpContext.Session.GetString("SupabaseUserId");
+        var profileId = HttpContext.Session.GetString("ProfileId");
+
+        if (!string.IsNullOrWhiteSpace(accessToken) &&
+            !string.IsNullOrWhiteSpace(userId) &&
+            Guid.TryParse(userId, out _) &&
+            long.TryParse(profileId, out _))
+        {
+            return RedirectAfterAuthentication(
+                HttpContext.Session.GetString("BusinessName"));
+        }
+
+        return View(new LoginViewModel());
+    }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
