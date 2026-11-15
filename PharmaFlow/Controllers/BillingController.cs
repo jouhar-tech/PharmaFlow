@@ -15,13 +15,16 @@ namespace PharmaFlow.Controllers;
 public sealed class BillingController : Controller
 {
     private readonly ApplicationDbContext _dbContext;
+    private readonly IGlobalProductCatalogService _globalProductCatalogService;
     private readonly ILogger<BillingController> _logger;
 
     public BillingController(
         ApplicationDbContext dbContext,
+        IGlobalProductCatalogService globalProductCatalogService,
         ILogger<BillingController> logger)
     {
         _dbContext = dbContext;
+        _globalProductCatalogService = globalProductCatalogService;
         _logger = logger;
     }
 
@@ -136,6 +139,304 @@ public sealed class BillingController : Controller
             .ToList();
 
         return Ok(results);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> SearchCatalog(
+        string? q,
+        CancellationToken cancellationToken)
+    {
+        if (!TryGetProfileId(out _))
+            return Unauthorized();
+
+        var searchTerm = q?.Trim();
+        if (string.IsNullOrWhiteSpace(searchTerm) || searchTerm.Length < 2)
+            return Ok(Array.Empty<BillingCatalogSearchResultViewModel>());
+
+        if (searchTerm.Length > 80)
+            searchTerm = searchTerm[..80];
+
+        var results = await _globalProductCatalogService.SearchAsync(searchTerm, cancellationToken);
+
+        return Ok(results
+            .Where(item => !string.IsNullOrWhiteSpace(item.ProductName))
+            .Take(30)
+            .Select(item => new BillingCatalogSearchResultViewModel
+            {
+                CatalogId = item.CatalogId,
+                Source = item.Source,
+                ExternalId = item.ExternalId,
+                ProductType = item.ProductType,
+                ProductName = item.ProductName,
+                GenericName = item.GenericName,
+                BrandName = item.BrandName,
+                Manufacturer = item.Manufacturer,
+                DosageForm = item.DosageForm,
+                Strength = item.Strength,
+                PackSize = item.PackSize,
+                Barcode = item.Barcode,
+                GstRate = item.GstRate,
+                IsPrescriptionRequired = item.IsPrescriptionRequired
+            })
+            .ToList());
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AddCatalogStock(
+        [FromBody] BillingAddCatalogStockRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (!TryGetProfileId(out var profileId))
+            return Unauthorized();
+
+        var source = request.Source?.Trim() ?? string.Empty;
+        var externalId = request.ExternalId?.Trim() ?? string.Empty;
+        var batchNumber = request.BatchNumber?.Trim() ?? string.Empty;
+        var todayIndia = DateOnly.FromDateTime(
+            DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(5.5)).DateTime);
+
+        if (string.IsNullOrWhiteSpace(source) ||
+            string.IsNullOrWhiteSpace(externalId) ||
+            externalId.Length > 160)
+            return BadRequest(new { message = "The selected catalogue product is invalid. Search and select it again." });
+
+        if (string.IsNullOrWhiteSpace(batchNumber) || batchNumber.Length > 100)
+            return BadRequest(new { message = "Enter the batch or lot number printed on the physical product." });
+
+        if (request.ExpiryDate == default || request.ExpiryDate < todayIndia)
+            return BadRequest(new { message = "Enter the actual expiry date. Expired products cannot be added for sale." });
+
+        if (request.AvailableQuantity <= 0m || request.AvailableQuantity > 999_999m)
+            return BadRequest(new { message = "Enter the total usable quantity physically available on the shelf." });
+
+        if (request.QuantityToBill <= 0m ||
+            request.QuantityToBill > request.AvailableQuantity ||
+            request.QuantityToBill > 999_999m)
+            return BadRequest(new { message = "Quantity to bill must be greater than zero and cannot exceed the physical quantity available." });
+
+        if (request.SellingUnitPrice <= 0m || request.SellingUnitPrice > 999_999_999m)
+            return BadRequest(new { message = "Enter a valid per-unit selling price." });
+
+        if (request.PurchaseUnitPrice is < 0m or > 999_999_999m)
+            return BadRequest(new { message = "Purchase price must be zero or a valid positive amount." });
+
+        if (request.GstRate is < 0m or > 100m)
+            return BadRequest(new { message = "GST rate must be between 0 and 100." });
+
+        var globalProduct = await _globalProductCatalogService.GetAsync(
+            source,
+            externalId,
+            request.CatalogId,
+            cancellationToken);
+
+        if (globalProduct is null)
+            return NotFound(new { message = "The catalogue result has expired or is no longer available. Search again." });
+
+        await using var transaction = await _dbContext.Database.BeginTransactionAsync(
+            IsolationLevel.Serializable,
+            cancellationToken);
+
+        try
+        {
+            Product? product = null;
+
+            if (globalProduct.CatalogId.HasValue)
+            {
+                product = await _dbContext.Products.FirstOrDefaultAsync(
+                    item => item.ProfileId == profileId &&
+                            item.CatalogId == globalProduct.CatalogId.Value,
+                    cancellationToken);
+            }
+
+            if (product is null && !string.IsNullOrWhiteSpace(globalProduct.Barcode))
+            {
+                product = await _dbContext.Products.FirstOrDefaultAsync(
+                    item => item.ProfileId == profileId &&
+                            item.Barcode == globalProduct.Barcode,
+                    cancellationToken);
+            }
+
+            if (product is null && !globalProduct.CatalogId.HasValue &&
+                string.IsNullOrWhiteSpace(globalProduct.Barcode))
+            {
+                var productName = globalProduct.ProductName.ToLowerInvariant();
+                var manufacturer = globalProduct.Manufacturer ?? string.Empty;
+                var strength = globalProduct.Strength ?? string.Empty;
+                var packSize = globalProduct.PackSize ?? string.Empty;
+
+                product = await _dbContext.Products.FirstOrDefaultAsync(
+                    item => item.ProfileId == profileId &&
+                            item.ProductName.ToLower() == productName &&
+                            (item.Manufacturer ?? string.Empty) == manufacturer &&
+                            (item.Strength ?? string.Empty) == strength &&
+                            (item.PackSize ?? string.Empty) == packSize,
+                    cancellationToken);
+            }
+
+            if (product is null)
+            {
+                product = new Product
+                {
+                    ProfileId = profileId,
+                    CatalogId = globalProduct.CatalogId,
+                    ProductName = globalProduct.ProductName,
+                    GenericName = globalProduct.GenericName,
+                    BrandName = globalProduct.BrandName,
+                    DosageForm = globalProduct.DosageForm,
+                    Strength = globalProduct.Strength,
+                    PackSize = globalProduct.PackSize,
+                    Barcode = globalProduct.Barcode,
+                    Manufacturer = globalProduct.Manufacturer,
+                    HsnCode = globalProduct.HsnCode,
+                    GstRate = request.GstRate ?? globalProduct.GstRate,
+                    IsPrescriptionRequired = globalProduct.IsPrescriptionRequired,
+                    IsActive = true,
+                    ReorderLevel = 0m,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+
+                _dbContext.Products.Add(product);
+                await _dbContext.SaveChangesAsync(cancellationToken);
+            }
+            else
+            {
+                product.IsActive = true;
+                product.UpdatedAt = DateTime.UtcNow;
+
+                // Preserve pharmacy-maintained details. Fill only fields that are
+                // currently blank, and never overwrite a GST rate already in use.
+                product.GenericName ??= globalProduct.GenericName;
+                product.BrandName ??= globalProduct.BrandName;
+                product.DosageForm ??= globalProduct.DosageForm;
+                product.Strength ??= globalProduct.Strength;
+                product.PackSize ??= globalProduct.PackSize;
+                product.Barcode ??= globalProduct.Barcode;
+                product.Manufacturer ??= globalProduct.Manufacturer;
+                product.HsnCode ??= globalProduct.HsnCode;
+                product.GstRate ??= request.GstRate ?? globalProduct.GstRate;
+            }
+
+            var effectiveGstRate = product.GstRate ?? request.GstRate ?? globalProduct.GstRate;
+            if (!effectiveGstRate.HasValue ||
+                effectiveGstRate.Value < 0m ||
+                effectiveGstRate.Value > 100m)
+            {
+                await transaction.RollbackAsync(CancellationToken.None);
+                return BadRequest(new
+                {
+                    message = "GST rate is missing. Enter and verify the correct GST rate for this product before adding it to a bill."
+                });
+            }
+
+            var existingBatch = await _dbContext.ProductBatches.FirstOrDefaultAsync(
+                batch => batch.ProductId == product.ProductId &&
+                         batch.BatchNumber.ToLower() == batchNumber.ToLower(),
+                cancellationToken);
+
+            if (existingBatch is not null)
+            {
+                if (existingBatch.IsQuarantined)
+                {
+                    await transaction.RollbackAsync(CancellationToken.None);
+                    return Conflict(new
+                    {
+                        message = "This batch is quarantined and cannot be sold. Review it in Inventory before billing."
+                    });
+                }
+
+                if (existingBatch.ExpiryDate != request.ExpiryDate)
+                {
+                    await transaction.RollbackAsync(CancellationToken.None);
+                    return Conflict(new
+                    {
+                        message = "This batch number already exists with a different expiry date. Check the batch details in Inventory."
+                    });
+                }
+
+                // AvailableQuantity is the user's physical shelf count, not an
+                // incremental receipt. Reconcile the stored count to that number.
+                existingBatch.QuantityOnHand = decimal.Round(
+                    request.AvailableQuantity,
+                    2,
+                    MidpointRounding.AwayFromZero);
+                existingBatch.SellingUnitPrice = decimal.Round(
+                    request.SellingUnitPrice,
+                    2,
+                    MidpointRounding.AwayFromZero);
+                if (request.PurchaseUnitPrice.HasValue)
+                {
+                    existingBatch.PurchaseUnitPrice = decimal.Round(
+                        request.PurchaseUnitPrice.Value,
+                        2,
+                        MidpointRounding.AwayFromZero);
+                }
+                existingBatch.IsActive = true;
+                existingBatch.UpdatedAt = DateTime.UtcNow;
+            }
+            else
+            {
+                existingBatch = new ProductBatch
+                {
+                    ProductId = product.ProductId,
+                    BatchNumber = batchNumber,
+                    ExpiryDate = request.ExpiryDate,
+                    QuantityOnHand = decimal.Round(
+                        request.AvailableQuantity,
+                        2,
+                        MidpointRounding.AwayFromZero),
+                    PurchaseUnitPrice = decimal.Round(
+                        request.PurchaseUnitPrice ?? 0m,
+                        2,
+                        MidpointRounding.AwayFromZero),
+                    SellingUnitPrice = decimal.Round(
+                        request.SellingUnitPrice,
+                        2,
+                        MidpointRounding.AwayFromZero),
+                    IsQuarantined = false,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+
+                _dbContext.ProductBatches.Add(existingBatch);
+            }
+
+            await _dbContext.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+
+            return Ok(new
+            {
+                success = true,
+                message = "Physical stock was added to inventory and is ready for billing.",
+                batch = new
+                {
+                    batchId = existingBatch.BatchId,
+                    productName = product.ProductName,
+                    batchNumber = existingBatch.BatchNumber,
+                    expiryDate = existingBatch.ExpiryDate,
+                    availableQty = existingBatch.QuantityOnHand,
+                    unitPrice = existingBatch.SellingUnitPrice,
+                    mrp = existingBatch.SellingUnitPrice,
+                    gstRate = effectiveGstRate.Value
+                },
+                quantityToBill = request.QuantityToBill
+            });
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync(CancellationToken.None);
+            _logger.LogError(
+                ex,
+                "Failed to add catalogue product stock to the bill for profile {ProfileId}.",
+                profileId);
+
+            return StatusCode(StatusCodes.Status500InternalServerError, new
+            {
+                message = "The product could not be added to inventory. No stock changes were committed. Please retry."
+            });
+        }
     }
 
     [HttpPost]
