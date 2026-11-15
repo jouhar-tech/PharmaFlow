@@ -233,6 +233,14 @@ public sealed class BillingController : Controller
         if (globalProduct is null)
             return NotFound(new { message = "The catalogue result has expired or is no longer available. Search again." });
 
+        if (globalProduct.IsPrescriptionRequired && !request.PrescriptionConfirmed)
+        {
+            return BadRequest(new
+            {
+                message = "This catalogue product is marked prescription-required. Verify the prescription before adding it to a bill."
+            });
+        }
+
         await using var transaction = await _dbContext.Database.BeginTransactionAsync(
             IsolationLevel.Serializable,
             cancellationToken);
