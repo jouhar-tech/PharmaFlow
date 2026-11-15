@@ -16785,3 +16785,320 @@ body.theme-dark .notification-push-disable-button {
   outline-offset: 3px;
   border-radius: 12px;
 }
+
+
+
+/* Global medicine catalogue inside Create Bill */
+.billing-global-search-trigger {
+  display: block;
+  width: calc(100% - 1rem);
+  margin: .45rem .5rem .55rem;
+  padding: .72rem .8rem;
+  border: 1px solid #b7ddd6;
+  border-radius: .7rem;
+  background: #effaf7;
+  color: #176e62;
+  font: inherit;
+  font-size: .74rem;
+  font-weight: 800;
+  text-align: center;
+  cursor: pointer;
+}
+
+.billing-global-search-trigger:hover {
+  background: #e3f5f0;
+}
+
+.billing-global-catalog-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: .65rem .75rem .5rem;
+  color: #465569;
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.billing-global-catalog-heading span {
+  display: inline-grid;
+  min-width: 1.35rem;
+  height: 1.35rem;
+  place-items: center;
+  border-radius: 99px;
+  background: #e8f5f1;
+  color: #18796d;
+  font-size: .65rem;
+}
+
+.billing-catalog-result {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: .55rem;
+  padding: .7rem .65rem;
+  border: 0;
+  border-bottom: 1px solid #edf1f5;
+  background: #fff;
+  color: #17202b;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+
+.billing-catalog-result:hover {
+  background: #f6fbfa;
+}
+
+.billing-catalog-result .billing-search-result-icon {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.billing-catalog-result .billing-search-result-price {
+  color: #18796d;
+  font-size: .68rem;
+  font-weight: 800;
+}
+
+.billing-global-catalog-footnote {
+  padding: .6rem .75rem;
+  color: #64748b;
+  font-size: .62rem;
+  line-height: 1.4;
+}
+
+.billing-catalog-modal[hidden] {
+  display: none !important;
+}
+
+.billing-catalog-modal:not([hidden]) {
+  position: fixed;
+  inset: 0;
+  z-index: 10050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.billing-catalog-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(8, 20, 35, .68);
+  backdrop-filter: blur(5px);
+}
+
+.billing-catalog-modal-panel {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 560px);
+  max-height: min(92vh, 780px);
+  overflow: auto;
+  padding: 1.15rem;
+  border: 1px solid #dce5ec;
+  border-radius: 1.1rem;
+  background: #fff;
+  box-shadow: 0 24px 70px rgba(4, 18, 35, .3);
+}
+
+.billing-catalog-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: .85rem;
+  padding-bottom: .85rem;
+  border-bottom: 1px solid #e7edf2;
+}
+
+.billing-catalog-modal-eyebrow {
+  color: #238878;
+  font-size: .62rem;
+  font-weight: 850;
+  letter-spacing: .11em;
+}
+
+.billing-catalog-modal-header h2 {
+  margin: .22rem 0 .25rem;
+  color: #17202b;
+  font-size: 1.12rem;
+  font-weight: 850;
+}
+
+.billing-catalog-modal-header p {
+  margin: 0;
+  color: #64748b;
+  font-size: .7rem;
+  line-height: 1.4;
+}
+
+.billing-catalog-modal-close {
+  display: grid;
+  flex: 0 0 36px;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 1px solid #dbe3ea;
+  border-radius: 50%;
+  background: #fff;
+  color: #334155;
+  font-size: 1.4rem;
+  cursor: pointer;
+}
+
+.billing-catalog-modal-note,
+.billing-catalog-modal-footnote {
+  margin-top: .85rem;
+  color: #526174;
+  font-size: .7rem;
+  line-height: 1.5;
+}
+
+.billing-catalog-modal-note {
+  padding: .75rem;
+  border: 1px solid #cfe8e2;
+  border-radius: .75rem;
+  background: #f1faf7;
+}
+
+.billing-catalog-modal-warning {
+  margin-top: .7rem;
+  padding: .75rem;
+  border: 1px solid #f2c98b;
+  border-radius: .7rem;
+  background: #fff8eb;
+  color: #854d0e;
+  font-size: .7rem;
+  line-height: 1.45;
+}
+
+.billing-catalog-prescription-confirm {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  margin-top: .55rem;
+  font-weight: 750;
+}
+
+.billing-catalog-prescription-confirm input {
+  width: 17px;
+  height: 17px;
+  accent-color: #238878;
+}
+
+.billing-catalog-stock-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .72rem;
+  margin-top: .9rem;
+}
+
+.billing-catalog-stock-field label {
+  display: block;
+  margin-bottom: .28rem;
+  color: #28323d;
+  font-size: .69rem;
+  font-weight: 750;
+}
+
+.billing-catalog-stock-field input {
+  width: 100%;
+  min-height: 43px;
+  padding: .55rem .65rem;
+  border: 1px solid #cbd5df;
+  border-radius: .62rem;
+  background: #fff;
+  color: #17202b;
+  font: inherit;
+  font-size: .8rem;
+}
+
+.billing-catalog-stock-field input:focus {
+  outline: 0;
+  border-color: #58b6a8;
+  box-shadow: 0 0 0 3px rgba(88, 182, 168, .13);
+}
+
+.billing-catalog-modal-error {
+  margin-top: .7rem;
+  padding: .65rem .75rem;
+  border: 1px solid #fecaca;
+  border-radius: .65rem;
+  background: #fff7f7;
+  color: #991b1b;
+  font-size: .72rem;
+  line-height: 1.4;
+}
+
+.billing-catalog-modal-error[hidden] {
+  display: none;
+}
+
+.billing-catalog-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: .55rem;
+  margin-top: 1rem;
+  padding-top: .8rem;
+  border-top: 1px solid #e7edf2;
+}
+
+.billing-catalog-cancel,
+.billing-catalog-save {
+  min-height: 44px;
+  padding: .65rem .9rem;
+  border-radius: .7rem;
+  font: inherit;
+  font-size: .76rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.billing-catalog-cancel {
+  border: 1px solid #cbd5df;
+  background: #fff;
+  color: #334155;
+}
+
+.billing-catalog-save {
+  border: 1px solid #087e70;
+  background: #138f80;
+  color: #fff;
+}
+
+.billing-catalog-save:disabled {
+  opacity: .65;
+  cursor: wait;
+}
+
+body.billing-catalog-modal-open {
+  overflow: hidden;
+}
+
+@media (max-width: 575.98px) {
+  .billing-catalog-modal:not([hidden]) {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .billing-catalog-modal-panel {
+    width: 100%;
+    max-height: 92vh;
+    padding: 1rem .9rem calc(1rem + env(safe-area-inset-bottom));
+    border-radius: 1.1rem 1.1rem 0 0;
+  }
+
+  .billing-catalog-stock-grid {
+    gap: .6rem;
+  }
+
+  .billing-catalog-stock-field label {
+    font-size: .66rem;
+  }
+
+  .billing-catalog-modal-actions > button {
+    flex: 1;
+  }
+}
