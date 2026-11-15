@@ -60,8 +60,14 @@ builder.Services.AddHttpClient<ISupabaseAuthService, SupabaseAuthService>();
 builder.Services.AddHttpClient<IInvoiceVisionService, GeminiInvoiceVisionService>();
 builder.Services.AddHttpClient("IndiaMedicine", client =>
 {
-    client.Timeout = TimeSpan.FromSeconds(8);
+    client.Timeout = TimeSpan.FromSeconds(45);
 });
+builder.Services.AddHttpClient("IndiaMedicineDataset", client =>
+{
+    client.Timeout = TimeSpan.FromMinutes(5);
+    client.DefaultRequestHeaders.UserAgent.ParseAdd("PharmaHex/1.0 (Indian medicine catalogue)");
+});
+builder.Services.AddSingleton<IIndiaMedicineDatasetService, IndiaMedicineDatasetService>();
 builder.Services.AddHttpClient("OpenFda", client =>
 {
     client.BaseAddress = new Uri("https://api.fda.gov");
