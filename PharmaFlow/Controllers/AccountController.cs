@@ -54,7 +54,8 @@ public class AccountController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Login(LoginViewModel model, CancellationToken cancellationToken)
     {
-        if (!ModelState.IsValid) return View(model);
+        if (!ModelState.IsValid) ViewBag.GoogleNativeState = CreateGoogleNativeState();
+                return View(model);
 
         var identifier = model.Username.Trim();
         var normalizedPhone = NormalizePhone(identifier);
@@ -82,6 +83,7 @@ public class AccountController : Controller
                 staffUserId != staff.AuthUserId)
             {
                 ModelState.AddModelError(string.Empty, "Invalid login details.");
+                ViewBag.GoogleNativeState = CreateGoogleNativeState();
                 return View(model);
             }
 
@@ -92,6 +94,7 @@ public class AccountController : Controller
             if (profile is null)
             {
                 ModelState.AddModelError(string.Empty, "This pharmacy account is no longer available.");
+                ViewBag.GoogleNativeState = CreateGoogleNativeState();
                 return View(model);
             }
 
@@ -146,7 +149,8 @@ public class AccountController : Controller
             authenticatedUserId != ownerProfile.UserId)
         {
             ModelState.AddModelError(string.Empty, "Invalid username, email, phone or password.");
-            return View(model);
+            ViewBag.GoogleNativeState = CreateGoogleNativeState();
+                return View(model);
         }
 
         // Sync a newly confirmed Supabase email to the local profile after the
