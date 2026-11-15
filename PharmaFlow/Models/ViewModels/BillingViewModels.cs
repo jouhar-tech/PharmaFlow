@@ -55,4 +55,5 @@ public sealed class BillingAddCatalogStockRequest
     public decimal? PurchaseUnitPrice { get; set; }
     public decimal SellingUnitPrice { get; set; }
     public decimal? GstRate { get; set; }
+    public bool PrescriptionConfirmed { get; set; }
 }
