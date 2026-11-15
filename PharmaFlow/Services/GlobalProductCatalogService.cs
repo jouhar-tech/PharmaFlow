@@ -47,9 +47,10 @@ public sealed class GlobalProductCatalogService : IGlobalProductCatalogService
     private const string OpenFdaSource = "openfda-ndc";
     private const string OpenFoodFactsSource = "openfoodfacts";
 
-    private static readonly TimeSpan SearchCacheDuration = TimeSpan.FromSeconds(20);
+    private static readonly TimeSpan SearchCacheDuration = TimeSpan.FromSeconds(45);
 
     private readonly ApplicationDbContext _dbContext;
+    private readonly IIndiaMedicineDatasetService _indiaMedicineDatasetService;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IConfiguration _configuration;
     private readonly ILogger<GlobalProductCatalogService> _logger;
@@ -57,12 +58,14 @@ public sealed class GlobalProductCatalogService : IGlobalProductCatalogService
 
     public GlobalProductCatalogService(
         ApplicationDbContext dbContext,
+        IIndiaMedicineDatasetService indiaMedicineDatasetService,
         IHttpClientFactory httpClientFactory,
         IConfiguration configuration,
         ILogger<GlobalProductCatalogService> logger,
         IMemoryCache memoryCache)
     {
         _dbContext = dbContext;
+        _indiaMedicineDatasetService = indiaMedicineDatasetService;
         _httpClientFactory = httpClientFactory;
         _configuration = configuration;
         _logger = logger;
@@ -83,13 +86,19 @@ public sealed class GlobalProductCatalogService : IGlobalProductCatalogService
                 out IReadOnlyList<GlobalProductSearchResult>? cachedResults))
             return cachedResults;
 
-        var indiaTask = SearchIndiaMedicinesAsync(normalizedQuery, cancellationToken);
-        var openFdaTask = SearchOpenFdaAsync(normalizedQuery, cancellationToken);
-        var openFoodFactsTask = SearchOpenFoodFactsAsync(normalizedQuery, cancellationToken);
+        var indiaResults = await SearchIndiaMedicinesAsync(normalizedQuery, cancellationToken);
 
-        var indiaResults = await indiaTask;
-        var openFdaResults = await openFdaTask;
-        var openFoodFactsResults = await openFoodFactsTask;
+        // The Indian medicine source is primary. Query openFDA only when the
+        // Indian catalogue has no exact/partial results; it is US NDC data and
+        // should remain a fallback rather than compete with Indian records.
+        var openFdaResults = indiaResults.Count == 0
+            ? await SearchOpenFdaAsync(normalizedQuery, cancellationToken)
+            : [];
+
+        // Open Food Facts is only queried for barcode-shaped searches. Its
+        // public text-search endpoint is tightly rate-limited and is not a
+        // medicine catalogue.
+        var openFoodFactsResults = await SearchOpenFoodFactsAsync(normalizedQuery, cancellationToken);
 
         // Only Indian medicine results are persisted in product_catalog.
         // OpenFDA and Open Food Facts remain live API results.
@@ -265,10 +274,45 @@ public sealed class GlobalProductCatalogService : IGlobalProductCatalogService
         CancellationToken cancellationToken)
     {
         var baseUrl = _configuration["GlobalProductCatalog:IndiaMedicineApiBaseUrl"];
+
+        // Production default: search the bundled service directly. This avoids
+        // requiring a second hosted website just for the medicine catalogue.
+        // A separately hosted IndiaMedicineApi can still be used by configuring
+        // GlobalProductCatalog__IndiaMedicineApiBaseUrl.
         if (string.IsNullOrWhiteSpace(baseUrl))
         {
-            _logger.LogWarning("India Medicine API base URL is not configured.");
-            return [];
+            try
+            {
+                var records = await _indiaMedicineDatasetService.SearchAsync(
+                    query,
+                    ProviderLimit,
+                    cancellationToken);
+
+                return records.Select(item => new GlobalProductSearchResult
+                    {
+                        Source = IndiaSource,
+                        ExternalId = item.Id.ToString(),
+                        ProductType = "medicine",
+                        ProductName = item.ProductName,
+                        GenericName = item.Composition,
+                        Manufacturer = item.Manufacturer,
+                        DosageForm = item.DosageType,
+                        PackSize = item.PackSize,
+                        // This dataset does not provide reliable HSN/GST or
+                        // prescription classification; users must verify these.
+                        IsPrescriptionRequired = false
+                    })
+                    .ToList();
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Local Indian medicine catalogue search failed.");
+                return [];
+            }
         }
 
         try
@@ -461,38 +505,13 @@ public sealed class GlobalProductCatalogService : IGlobalProductCatalogService
         CancellationToken cancellationToken)
     {
         if (!(_configuration.GetValue<bool?>("GlobalProductCatalog:OpenFoodFactsEnabled") ?? true) ||
-            query.Length < 3)
+            !IsBarcodeQuery(query))
             return [];
 
         try
         {
-            var client = _httpClientFactory.CreateClient("OpenFoodFacts");
-            var url =
-                $"/cgi/search.pl?search_terms={Uri.EscapeDataString(query)}" +
-                $"&search_simple=1&action=process&json=1&page_size={ProviderLimit}" +
-                "&product_type=all" +
-                "&fields=code,product_name,brands,categories,quantity,manufacturing_places,url";
-
-            using var response = await client.GetAsync(url, cancellationToken);
-            if (!response.IsSuccessStatusCode)
-            {
-                _logger.LogWarning(
-                    "Open Food Facts returned HTTP {StatusCode}.",
-                    response.StatusCode);
-                return [];
-            }
-
-            var payload = await response.Content.ReadFromJsonAsync<OpenFoodFactsSearchResponse>(
-                cancellationToken: cancellationToken);
-
-            return payload?.Products?
-                .Select(MapOpenFoodFacts)
-                .Where(item => item is not null)
-                .Select(item => item!)
-                .Where(item => !string.IsNullOrWhiteSpace(item.ExternalId))
-                .Take(ProviderLimit)
-                .ToList()
-                ?? [];
+            var product = await GetOpenFoodFactsAsync(query, cancellationToken);
+            return product is null ? [] : [product];
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -663,6 +682,13 @@ public sealed class GlobalProductCatalogService : IGlobalProductCatalogService
 
     private static string EscapeOpenFdaValue(string value) =>
         value.Replace("\\", "\\\\").Replace("\"", "\\\"");
+
+    private static bool IsBarcodeQuery(string value)
+    {
+        var candidate = value.Trim();
+        return candidate.Length is >= 8 and <= 14 &&
+               candidate.All(char.IsDigit);
+    }
 
     private static string NormalizeProductType(string? categories) =>
         string.IsNullOrWhiteSpace(categories)
