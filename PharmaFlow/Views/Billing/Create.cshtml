@@ -181,6 +181,93 @@
             <span>Generate Bill</span>
         </button>
     </form>
+
+    <div class="billing-catalog-modal" id="billingCatalogStockModal" hidden>
+        <div class="billing-catalog-modal-backdrop" data-catalog-modal-close></div>
+        <section class="billing-catalog-modal-panel"
+                 role="dialog"
+                 aria-modal="true"
+                 aria-labelledby="billingCatalogStockTitle">
+            <header class="billing-catalog-modal-header">
+                <div>
+                    <span class="billing-catalog-modal-eyebrow">GLOBAL MEDICINE CATALOG</span>
+                    <h2 id="billingCatalogStockTitle">Add physical stock to bill</h2>
+                    <p id="billingCatalogStockProductMeta"></p>
+                </div>
+                <button type="button"
+                        class="billing-catalog-modal-close"
+                        id="billingCatalogStockClose"
+                        aria-label="Close">×</button>
+            </header>
+
+            <div class="billing-catalog-modal-note">
+                Enter the details from the actual product pack. The physical quantity entered
+                will be added to this pharmacy's inventory, and the billed quantity will be
+                deducted when the bill is generated.
+            </div>
+
+            <div class="billing-catalog-modal-warning" id="billingCatalogPrescriptionWarning" hidden>
+                This catalogue record is marked as prescription-required. Verify the prescription
+                and applicable dispensing rules before sale.
+            </div>
+
+            <div class="billing-catalog-stock-grid">
+                <div class="billing-catalog-stock-field">
+                    <label for="billingCatalogBatchNumber">Batch / Lot number *</label>
+                    <input id="billingCatalogBatchNumber" type="text" maxlength="100"
+                           autocomplete="off" required />
+                </div>
+                <div class="billing-catalog-stock-field">
+                    <label for="billingCatalogExpiryDate">Expiry date *</label>
+                    <input id="billingCatalogExpiryDate" type="date" required />
+                </div>
+                <div class="billing-catalog-stock-field">
+                    <label for="billingCatalogAvailableQuantity">Physical quantity on shelf *</label>
+                    <input id="billingCatalogAvailableQuantity" type="number" min="0.01"
+                           max="999999" step="0.01" inputmode="decimal" required />
+                </div>
+                <div class="billing-catalog-stock-field">
+                    <label for="billingCatalogQuantityToBill">Quantity to bill *</label>
+                    <input id="billingCatalogQuantityToBill" type="number" min="0.01"
+                           step="0.01" value="1" inputmode="decimal" required />
+                </div>
+                <div class="billing-catalog-stock-field">
+                    <label for="billingCatalogPurchasePrice">Purchase price / unit</label>
+                    <input id="billingCatalogPurchasePrice" type="number" min="0"
+                           max="999999999" step="0.01" inputmode="decimal"
+                           placeholder="Optional" />
+                </div>
+                <div class="billing-catalog-stock-field">
+                    <label for="billingCatalogSellingPrice">Selling price / unit *</label>
+                    <input id="billingCatalogSellingPrice" type="number" min="0.01"
+                           max="999999999" step="0.01" inputmode="decimal" required />
+                </div>
+                <div class="billing-catalog-stock-field">
+                    <label for="billingCatalogGstRate">GST rate (%) *</label>
+                    <input id="billingCatalogGstRate" type="number" min="0" max="100"
+                           step="0.01" inputmode="decimal" required />
+                </div>
+            </div>
+
+            <div class="billing-catalog-modal-footnote">
+                Catalogue data is a reference only. Verify the exact brand, strength, pack size,
+                batch, expiry, printed MRP and GST from the physical product. Enter the total
+                usable stock on the shelf, not only the quantity being sold.
+            </div>
+
+            <div class="billing-catalog-modal-error" id="billingCatalogStockError"
+                 role="alert" hidden></div>
+
+            <footer class="billing-catalog-modal-actions">
+                <button type="button" class="billing-catalog-cancel" id="billingCatalogStockCancel">
+                    Cancel
+                </button>
+                <button type="button" class="billing-catalog-save" id="billingCatalogStockSave">
+                    Add stock & add to bill
+                </button>
+            </footer>
+        </section>
+    </div>
 </div>
 
 @section Scripts {
