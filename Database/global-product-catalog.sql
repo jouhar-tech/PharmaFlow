@@ -103,3 +103,8 @@ CREATE INDEX IF NOT EXISTS ix_products_catalog_id
 CREATE UNIQUE INDEX IF NOT EXISTS uq_products_profile_catalog_id
     ON public.products(profile_id, catalog_id)
     WHERE catalog_id IS NOT NULL;
+
+-- Catalogue records are read/written by the PharmaHex server through its
+-- PostgreSQL connection. Do not expose this cache through the Supabase client API.
+ALTER TABLE public.product_catalog ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON TABLE public.product_catalog FROM anon, authenticated;
