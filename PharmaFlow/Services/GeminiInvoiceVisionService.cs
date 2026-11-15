@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Globalization;
 using System.Net.Http.Headers;
 using System.Text;
@@ -17,6 +18,7 @@ public interface IInvoiceVisionService
 public sealed class GeminiInvoiceVisionService : IInvoiceVisionService
 {
     private const string DefaultModel = "gemini-3.8-flash";
+    private const string DefaultFallbackModel = "gemini-3.5-flash-lite";
     private const string EndpointTemplate = "https://generativelanguage.googleapis.com/v1beta/models/{0}:generateContent";
     private const int MaxFileBytes = 25 * 1024 * 1024;
 
@@ -61,9 +63,13 @@ public sealed class GeminiInvoiceVisionService : IInvoiceVisionService
             throw new InvalidOperationException("The invoice file is too large. Please use a file smaller than 25 MB.");
 
         var fileData = Convert.ToBase64String(memory.ToArray());
-        var model = _configuration["Gemini:Model"]?.Trim();
-        if (string.IsNullOrWhiteSpace(model))
-            model = DefaultModel;
+        var primaryModel = _configuration["Gemini:Model"]?.Trim();
+        if (string.IsNullOrWhiteSpace(primaryModel))
+            primaryModel = DefaultModel;
+
+        var fallbackModel = _configuration["Gemini:FallbackModel"]?.Trim();
+        if (string.IsNullOrWhiteSpace(fallbackModel))
+            fallbackModel = DefaultFallbackModel;
 
         var schema = new
         {
@@ -179,26 +185,6 @@ Rules:
 - Return JSON that exactly matches the supplied schema.
 """;
 
-        object inputDocument;
-        if (string.Equals(mimeType, "application/pdf", StringComparison.OrdinalIgnoreCase))
-        {
-            inputDocument = new
-            {
-                type = "document",
-                data = fileData,
-                mime_type = mimeType
-            };
-        }
-        else
-        {
-            inputDocument = new
-            {
-                type = "image",
-                data = fileData,
-                mime_type = mimeType
-            };
-        }
-
         var payload = new
         {
             contents = new[]
@@ -233,97 +219,179 @@ Rules:
             }
         };
 
-        var endpoint = string.Format(
-            CultureInfo.InvariantCulture,
-            EndpointTemplate,
-            Uri.EscapeDataString(model));
         var requestJson = JsonSerializer.Serialize(payload);
+        var modelCandidates = new[] { primaryModel, fallbackModel }
+            .Where(candidate => !string.IsNullOrWhiteSpace(candidate))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
 
-        const int timeoutSeconds = 180;
-        const int maxAttempts = 3; // Initial request plus two retries for temporary HTTP 503 overloads.
+        const int timeoutSeconds = 90;
+        const int primaryMaxAttempts = 3; // Initial request plus two retries for temporary 503 overloads.
         HttpResponseMessage? response = null;
         var responseBody = string.Empty;
+        var selectedModel = primaryModel;
+        var fallbackUsed = false;
+        var apiStopwatch = Stopwatch.StartNew();
 
-        for (var attempt = 1; attempt <= maxAttempts; attempt++)
+        for (var modelIndex = 0; modelIndex < modelCandidates.Length; modelIndex++)
         {
-            using var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
-            request.Headers.Add("x-goog-api-key", apiKey);
-            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            request.Content = new StringContent(
-                requestJson,
-                Encoding.UTF8,
-                "application/json");
+            var currentModel = modelCandidates[modelIndex];
+            var endpoint = string.Format(
+                CultureInfo.InvariantCulture,
+                EndpointTemplate,
+                Uri.EscapeDataString(currentModel));
+            var maxAttempts = modelIndex == 0 ? primaryMaxAttempts : 1;
+            var switchToFallback = false;
 
-            using var requestTimeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            requestTimeout.CancelAfter(TimeSpan.FromSeconds(timeoutSeconds));
-
-            HttpResponseMessage attemptResponse;
-            string attemptResponseBody;
-            try
+            for (var attempt = 1; attempt <= maxAttempts; attempt++)
             {
-                attemptResponse = await _httpClient.SendAsync(
-                    request,
-                    HttpCompletionOption.ResponseHeadersRead,
-                    requestTimeout.Token);
+                using var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
+                request.Headers.Add("x-goog-api-key", apiKey);
+                request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                request.Content = new StringContent(
+                    requestJson,
+                    Encoding.UTF8,
+                    "application/json");
+
+                using var requestTimeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                requestTimeout.CancelAfter(TimeSpan.FromSeconds(timeoutSeconds));
+
+                var attemptStopwatch = Stopwatch.StartNew();
+                HttpResponseMessage attemptResponse;
+                string attemptResponseBody;
 
                 try
                 {
-                    attemptResponseBody = await attemptResponse.Content.ReadAsStringAsync(requestTimeout.Token);
+                    attemptResponse = await _httpClient.SendAsync(
+                        request,
+                        HttpCompletionOption.ResponseHeadersRead,
+                        requestTimeout.Token);
+
+                    try
+                    {
+                        attemptResponseBody = await attemptResponse.Content.ReadAsStringAsync(requestTimeout.Token);
+                    }
+                    catch
+                    {
+                        attemptResponse.Dispose();
+                        throw;
+                    }
                 }
-                catch
+                catch (OperationCanceledException ex)
+                    when (!cancellationToken.IsCancellationRequested && requestTimeout.IsCancellationRequested)
                 {
-                    attemptResponse.Dispose();
-                    throw;
+                    attemptStopwatch.Stop();
+
+                    _logger.LogWarning(
+                        ex,
+                        "Gemini invoice request timed out. Model {Model}; attempt {AttemptNumber}; elapsed {ElapsedMilliseconds} ms; input {InputBytes} bytes.",
+                        currentModel,
+                        attempt,
+                        attemptStopwatch.ElapsedMilliseconds,
+                        memory.Length);
+
+                    if (modelIndex + 1 < modelCandidates.Length)
+                    {
+                        _logger.LogWarning(
+                            "Switching invoice analysis from {PrimaryModel} to fallback model {FallbackModel} after a timeout.",
+                            currentModel,
+                            modelCandidates[modelIndex + 1]);
+                        switchToFallback = true;
+                        break;
+                    }
+
+                    throw new TimeoutException(
+                        $"Gemini did not respond within {timeoutSeconds} seconds. Please retry. If it happens again, use a clear, well-lit invoice image.",
+                        ex);
                 }
+
+                attemptStopwatch.Stop();
+
+                if (attemptResponse.StatusCode == System.Net.HttpStatusCode.ServiceUnavailable &&
+                    attempt < maxAttempts)
+                {
+                    var retryDelay = GetRetryDelay(attemptResponse, attempt);
+
+                    _logger.LogWarning(
+                        "Gemini returned HTTP {StatusCode} for invoice analysis using model {Model}. Retrying attempt {NextAttempt} of {MaxAttempts} after {DelayMilliseconds} ms. Request time: {ElapsedMilliseconds} ms.",
+                        (int)attemptResponse.StatusCode,
+                        currentModel,
+                        attempt + 1,
+                        maxAttempts,
+                        (int)retryDelay.TotalMilliseconds,
+                        attemptStopwatch.ElapsedMilliseconds);
+
+                    attemptResponse.Dispose();
+                    await Task.Delay(retryDelay, cancellationToken);
+                    continue;
+                }
+
+                var canUseFallback =
+                    modelIndex + 1 < modelCandidates.Length &&
+                    (attemptResponse.StatusCode == System.Net.HttpStatusCode.ServiceUnavailable ||
+                     attemptResponse.StatusCode == System.Net.HttpStatusCode.TooManyRequests ||
+                     (int)attemptResponse.StatusCode >= 500);
+
+                if (canUseFallback)
+                {
+                    _logger.LogWarning(
+                        "Gemini primary model {PrimaryModel} returned HTTP {StatusCode} after {ElapsedMilliseconds} ms. Switching to fallback model {FallbackModel}.",
+                        currentModel,
+                        (int)attemptResponse.StatusCode,
+                        attemptStopwatch.ElapsedMilliseconds,
+                        modelCandidates[modelIndex + 1]);
+
+                    attemptResponse.Dispose();
+                    switchToFallback = true;
+                    break;
+                }
+
+                response = attemptResponse;
+                responseBody = attemptResponseBody;
+                selectedModel = currentModel;
+                fallbackUsed = modelIndex > 0;
+                break;
             }
-            catch (OperationCanceledException ex)
-                when (!cancellationToken.IsCancellationRequested && requestTimeout.IsCancellationRequested)
-            {
-                _logger.LogWarning(
-                    ex,
-                    "Gemini invoice request exceeded {TimeoutSeconds} seconds on attempt {AttemptNumber} for model {Model}.",
-                    timeoutSeconds,
-                    attempt,
-                    model);
 
-                throw new TimeoutException(
-                    "Gemini did not respond within 3 minutes. Please retry. If it happens again, try a smaller, clearer invoice image.",
-                    ex);
-            }
+            if (response is not null)
+                break;
 
-            if (attemptResponse.StatusCode == System.Net.HttpStatusCode.ServiceUnavailable &&
-                attempt < maxAttempts)
-            {
-                var retryDelay = GetRetryDelay(attemptResponse, attempt);
-
-                _logger.LogWarning(
-                    "Gemini returned HTTP 503 for invoice analysis using model {Model}. Retrying attempt {NextAttempt} of {MaxAttempts} after {DelayMilliseconds} ms.",
-                    model,
-                    attempt + 1,
-                    maxAttempts,
-                    (int)retryDelay.TotalMilliseconds);
-
-                attemptResponse.Dispose();
-                await Task.Delay(retryDelay, cancellationToken);
-                continue;
-            }
-
-            response = attemptResponse;
-            responseBody = attemptResponseBody;
-            break;
+            if (!switchToFallback)
+                break;
         }
 
+        apiStopwatch.Stop();
+
         if (response is null)
-            throw new InvalidOperationException("Gemini did not return a response.");
+            throw new InvalidOperationException("Gemini did not return a response from the primary or fallback model.");
 
         using var responseToDispose = response;
 
-        if (!response.IsSuccessStatusCode)
+        if (response.IsSuccessStatusCode)
+        {
+            _logger.LogInformation(
+                "Gemini invoice API response succeeded. Model {Model}; fallback used {FallbackUsed}; HTTP {StatusCode}; elapsed {ElapsedMilliseconds} ms; input {InputBytes} bytes; MIME {MimeType}.",
+                selectedModel,
+                fallbackUsed,
+                (int)response.StatusCode,
+                apiStopwatch.ElapsedMilliseconds,
+                memory.Length,
+                mimeType);
+        }
+        else
         {
             _logger.LogWarning(
-                "Gemini invoice extraction failed with status {StatusCode}. Response: {Response}",
-                response.StatusCode,
+                "Gemini invoice API response failed. Model {Model}; fallback used {FallbackUsed}; HTTP {StatusCode}; elapsed {ElapsedMilliseconds} ms; input {InputBytes} bytes; response: {Response}",
+                selectedModel,
+                fallbackUsed,
+                (int)response.StatusCode,
+                apiStopwatch.ElapsedMilliseconds,
+                memory.Length,
                 responseBody.Length > 2000 ? responseBody[..2000] : responseBody);
+        }
+
+        if (!response.IsSuccessStatusCode)
+        {
 
             var apiDetail = TryExtractGeminiError(responseBody);
 
@@ -379,6 +447,13 @@ Rules:
                 !string.IsNullOrWhiteSpace(item.ExpiryDateText) ||
                 item.Quantity > 0m)
             .ToList();
+
+        _logger.LogInformation(
+            "Gemini invoice extraction parsed {ItemCount} item rows using model {Model}. Total API time: {ElapsedMilliseconds} ms; fallback used: {FallbackUsed}.",
+            items.Count,
+            selectedModel,
+            apiStopwatch.ElapsedMilliseconds,
+            fallbackUsed);
 
         return new InvoiceVisionResult(
             Clean(extracted.DistributorName, 200),
