@@ -486,6 +486,7 @@
             }
 
             const angle = ((rotation % 360) + 360) % 360;
+            const preparationStartedAt = performance.now();
             const objectUrl = URL.createObjectURL(file);
 
             try {
@@ -543,11 +544,13 @@
                     }, "image/jpeg", quality);
                 });
 
-                let blob = await createJpeg(0.90);
+                let jpegQuality = 0.90;
+                let blob = await createJpeg(jpegQuality);
                 // Larger scans get one extra compression pass; dimensions are not
                 // reduced further so small printed invoice values remain readable.
                 if (blob.size > 8 * 1024 * 1024) {
-                    blob = await createJpeg(0.82);
+                    jpegQuality = 0.82;
+                    blob = await createJpeg(jpegQuality);
                 }
 
                 const baseName = (file.name || "invoice").replace(/\\.[^.]+$/, "") || "invoice";
@@ -564,7 +567,8 @@
                     originalHeight: image.naturalHeight,
                     outputWidth: canvas.width,
                     outputHeight: canvas.height,
-                    quality: blob.size > 8 * 1024 * 1024 ? 0.82 : 0.90
+                    quality: jpegQuality,
+                    preparationMs: Math.round(performance.now() - preparationStartedAt)
                 });
 
                 return optimizedFile;
