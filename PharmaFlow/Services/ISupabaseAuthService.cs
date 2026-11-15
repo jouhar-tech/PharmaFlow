@@ -9,6 +9,7 @@ public interface ISupabaseAuthService
     string GetStaffLoginEmail(string loginIdentifier);
     string GetGoogleLoginUrl(string redirectUri, string codeChallenge);
     Task<SupabaseAuthResult> ExchangeGoogleCodeAsync(string code, string codeVerifier, CancellationToken cancellationToken = default);
+    Task<SupabaseAuthResult> SignInWithGoogleIdTokenAsync(string idToken, CancellationToken cancellationToken = default);
 }
 
 public sealed record SupabaseAuthResult(
