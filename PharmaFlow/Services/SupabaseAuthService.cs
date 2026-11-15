@@ -114,6 +114,18 @@ public sealed class SupabaseAuthService : ISupabaseAuthService
         return await ReadResultAsync(response, requireAccessToken: true, cancellationToken);
     }
 
+    public async Task<SupabaseAuthResult> SignInWithGoogleIdTokenAsync(
+        string idToken,
+        CancellationToken cancellationToken = default)
+    {
+        var response = await SendAsync(
+            "/auth/v1/token?grant_type=id_token",
+            new { provider = "google", id_token = idToken },
+            cancellationToken);
+
+        return await ReadResultAsync(response, requireAccessToken: true, cancellationToken);
+    }
+
     private async Task<SupabaseAuthResult> ReadResultAsync(HttpResponseMessage response, bool requireAccessToken, CancellationToken cancellationToken)
     {
         using var responseScope = response;
