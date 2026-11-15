@@ -291,6 +291,7 @@
         const catalogStockTitle = document.getElementById("billingCatalogStockTitle");
         const catalogStockProductMeta = document.getElementById("billingCatalogStockProductMeta");
         const catalogPrescriptionWarning = document.getElementById("billingCatalogPrescriptionWarning");
+        const catalogPrescriptionConfirm = document.getElementById("billingCatalogPrescriptionConfirm");
         const catalogBatchNumber = document.getElementById("billingCatalogBatchNumber");
         const catalogExpiryDate = document.getElementById("billingCatalogExpiryDate");
         const catalogAvailableQuantity = document.getElementById("billingCatalogAvailableQuantity");
@@ -650,11 +651,193 @@
             }
         };
 
+        const closeCatalogStockModal = () => {
+            if (catalogStockModal) catalogStockModal.hidden = true;
+            document.body.classList.remove("billing-catalog-modal-open");
+            if (catalogStockError) {
+                catalogStockError.hidden = true;
+                catalogStockError.textContent = "";
+            }
+            selectedCatalogProduct = null;
+        };
+
+        const openCatalogStockModal = product => {
+            selectedCatalogProduct = product;
+            catalogStockTitle.textContent = product.productName || "Add catalogue product";
+            const details = [
+                product.genericName,
+                product.strength,
+                product.packSize,
+                product.manufacturer
+            ].filter(Boolean);
+            catalogStockProductMeta.textContent = details.join(" · ") || sourceLabel(product.source);
+
+            catalogPrescriptionWarning.hidden = !product.isPrescriptionRequired;
+            if (catalogPrescriptionConfirm) catalogPrescriptionConfirm.checked = false;
+
+            catalogBatchNumber.value = "";
+            catalogExpiryDate.value = "";
+            catalogAvailableQuantity.value = "";
+            catalogQuantityToBill.value = "1";
+            catalogPurchasePrice.value = "";
+            catalogSellingPrice.value = "";
+            catalogGstRate.value = product.gstRate == null
+                ? ""
+                : String(Number(product.gstRate));
+
+            const now = new Date();
+            const localDate = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+                .toISOString()
+                .slice(0, 10);
+            catalogExpiryDate.min = localDate;
+
+            catalogStockError.hidden = true;
+            catalogStockError.textContent = "";
+            catalogStockSave.disabled = false;
+            catalogStockSave.textContent = "Add stock & add to bill";
+            catalogStockModal.hidden = false;
+            document.body.classList.add("billing-catalog-modal-open");
+            catalogBatchNumber.focus();
+        };
+
+        const saveCatalogStock = async () => {
+            if (!selectedCatalogProduct || catalogStockSave.disabled) return;
+
+            const requiredInputs = [
+                catalogBatchNumber,
+                catalogExpiryDate,
+                catalogAvailableQuantity,
+                catalogQuantityToBill,
+                catalogSellingPrice,
+                catalogGstRate
+            ];
+
+            const firstInvalid = requiredInputs.find(input => !input.checkValidity());
+            if (firstInvalid) {
+                firstInvalid.reportValidity();
+                return;
+            }
+
+            const availableQuantity = Number(catalogAvailableQuantity.value);
+            const quantityToBill = Number(catalogQuantityToBill.value);
+
+            if (quantityToBill > availableQuantity) {
+                catalogStockError.textContent =
+                    "Quantity to bill cannot exceed the physical quantity available on the shelf.";
+                catalogStockError.hidden = false;
+                catalogQuantityToBill.focus();
+                return;
+            }
+
+            if (selectedCatalogProduct.isPrescriptionRequired &&
+                !catalogPrescriptionConfirm?.checked) {
+                catalogStockError.textContent =
+                    "Confirm that the required prescription has been verified before adding this product.";
+                catalogStockError.hidden = false;
+                catalogPrescriptionConfirm?.focus();
+                return;
+            }
+
+            const token = createForm.querySelector(
+                'input[name="__RequestVerificationToken"]'
+            )?.value;
+
+            if (!token) {
+                catalogStockError.textContent =
+                    "Security token is missing. Refresh the billing page and try again.";
+                catalogStockError.hidden = false;
+                return;
+            }
+
+            const payload = {
+                catalogId: selectedCatalogProduct.catalogId,
+                source: selectedCatalogProduct.source,
+                externalId: selectedCatalogProduct.externalId,
+                batchNumber: catalogBatchNumber.value.trim(),
+                expiryDate: catalogExpiryDate.value,
+                availableQuantity,
+                quantityToBill,
+                purchaseUnitPrice: catalogPurchasePrice.value === ""
+                    ? null
+                    : Number(catalogPurchasePrice.value),
+                sellingUnitPrice: Number(catalogSellingPrice.value),
+                gstRate: catalogGstRate.value === ""
+                    ? null
+                    : Number(catalogGstRate.value),
+                prescriptionConfirmed: !!catalogPrescriptionConfirm?.checked
+            };
+
+            catalogStockSave.disabled = true;
+            catalogStockSave.textContent = "Adding stock...";
+            catalogStockError.hidden = true;
+
+            try {
+                const response = await fetch('@Url.Action("AddCatalogStock", "Billing")', {
+                    method: "POST",
+                    credentials: "same-origin",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "RequestVerificationToken": token
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                let result = null;
+                try {
+                    result = await response.json();
+                } catch {
+                    // Show the safe generic error below.
+                }
+
+                if (!response.ok || !result?.success || !result?.batch) {
+                    throw new Error(
+                        result?.message ||
+                        "The product stock could not be added. Please check the details and retry."
+                    );
+                }
+
+                const batch = result.batch;
+                addBatch({
+                    batchId: Number(batch.batchId),
+                    productName: batch.productName,
+                    batchNumber: batch.batchNumber,
+                    expiryDate: batch.expiryDate,
+                    availableQty: Number(batch.availableQty || 0),
+                    unitPrice: Number(batch.unitPrice || 0),
+                    mrp: Number(batch.mrp || batch.unitPrice || 0),
+                    gstRate: Number(batch.gstRate || 0)
+                }, Number(result.quantityToBill || 1));
+
+                closeCatalogStockModal();
+            } catch (error) {
+                catalogStockError.textContent =
+                    error?.message || "The product stock could not be added. Please retry.";
+                catalogStockError.hidden = false;
+            } finally {
+                catalogStockSave.disabled = false;
+                catalogStockSave.textContent = "Add stock & add to bill";
+            }
+        };
+
+        document.getElementById("billingCatalogStockClose")
+            ?.addEventListener("click", closeCatalogStockModal);
+        document.getElementById("billingCatalogStockCancel")
+            ?.addEventListener("click", closeCatalogStockModal);
+        catalogStockModal?.querySelectorAll("[data-catalog-modal-close]")
+            .forEach(element => element.addEventListener("click", closeCatalogStockModal));
+        catalogStockSave?.addEventListener("click", saveCatalogStock);
+
+        document.addEventListener("keydown", event => {
+            if (event.key === "Escape" && catalogStockModal && !catalogStockModal.hidden) {
+                closeCatalogStockModal();
+            }
+        });
+
         searchInput?.addEventListener("input", () => {
             clearTimeout(state.searchTimer);
             const query = searchInput.value;
 
-            state.searchTimer = setTimeout(() => loadSearchResults(query), 350);
+            state.searchTimer = setTimeout(() => loadSearchResults(query), 500);
         });
 
         document.addEventListener("click", event => {
