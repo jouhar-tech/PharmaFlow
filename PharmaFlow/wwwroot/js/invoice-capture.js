@@ -43,6 +43,8 @@
 
         let pendingFile = null;
         let pendingSourceType = "upload";
+        // Prevent the single-file preview path from compressing an image twice.
+        const preparedInvoiceImages = new WeakSet();
         let previewUrl = null;
         let rotation = 0;
         let enhanceText = false;
@@ -479,12 +481,13 @@
         };
 
         const prepareImageForAnalysis = async (file) => {
-            const angle = ((rotation % 360) + 360) % 360;
-            if (!file?.type?.startsWith("image/") || (angle === 0 && !enhanceText)) {
+            if (!file?.type?.startsWith("image/") || preparedInvoiceImages.has(file)) {
                 return file;
             }
 
+            const angle = ((rotation % 360) + 360) % 360;
             const objectUrl = URL.createObjectURL(file);
+
             try {
                 const image = new Image();
                 if (typeof image.decode === "function") {
@@ -498,10 +501,22 @@
                     });
                 }
 
+                if (!image.naturalWidth || !image.naturalHeight) {
+                    throw new Error("The invoice image has invalid dimensions.");
+                }
+
+                // Keep a large enough image for small batch/expiry text, while
+                // avoiding unnecessarily huge phone-camera uploads to Gemini.
+                const maxDimension = 3000;
+                const sourceMaxDimension = Math.max(image.naturalWidth, image.naturalHeight);
+                const scale = Math.min(1, maxDimension / sourceMaxDimension);
+                const sourceWidth = Math.max(1, Math.round(image.naturalWidth * scale));
+                const sourceHeight = Math.max(1, Math.round(image.naturalHeight * scale));
                 const rotated = angle === 90 || angle === 270;
+
                 const canvas = document.createElement("canvas");
-                canvas.width = rotated ? image.naturalHeight : image.naturalWidth;
-                canvas.height = rotated ? image.naturalWidth : image.naturalHeight;
+                canvas.width = rotated ? sourceHeight : sourceWidth;
+                canvas.height = rotated ? sourceWidth : sourceHeight;
 
                 const context = canvas.getContext("2d", { alpha: false });
                 if (!context) throw new Error("Image preparation is not supported by this browser.");
@@ -510,21 +525,49 @@
                 context.fillRect(0, 0, canvas.width, canvas.height);
                 context.translate(canvas.width / 2, canvas.height / 2);
                 context.rotate(angle * Math.PI / 180);
-                if (enhanceText) context.filter = "grayscale(1) contrast(1.2) brightness(1.06)";
-                context.drawImage(image, -image.naturalWidth / 2, -image.naturalHeight / 2);
+                if (enhanceText) {
+                    context.filter = "grayscale(1) contrast(1.2) brightness(1.06)";
+                }
+                context.drawImage(
+                    image,
+                    -sourceWidth / 2,
+                    -sourceHeight / 2,
+                    sourceWidth,
+                    sourceHeight
+                );
 
-                const blob = await new Promise((resolve, reject) => {
-                    canvas.toBlob(result => {
-                        if (result) resolve(result);
+                const createJpeg = quality => new Promise((resolve, reject) => {
+                    canvas.toBlob(blob => {
+                        if (blob) resolve(blob);
                         else reject(new Error("The prepared invoice image could not be created."));
-                    }, "image/jpeg", 0.94);
+                    }, "image/jpeg", quality);
                 });
 
+                let blob = await createJpeg(0.90);
+                // Larger scans get one extra compression pass; dimensions are not
+                // reduced further so small printed invoice values remain readable.
+                if (blob.size > 8 * 1024 * 1024) {
+                    blob = await createJpeg(0.82);
+                }
+
                 const baseName = (file.name || "invoice").replace(/\\.[^.]+$/, "") || "invoice";
-                return new File([blob], baseName + "-scan.jpg", {
+                const optimizedFile = new File([blob], baseName + "-scan.jpg", {
                     type: "image/jpeg",
                     lastModified: Date.now()
                 });
+
+                preparedInvoiceImages.add(optimizedFile);
+                console.info("PharmaHex invoice image optimized", {
+                    originalBytes: file.size,
+                    optimizedBytes: optimizedFile.size,
+                    originalWidth: image.naturalWidth,
+                    originalHeight: image.naturalHeight,
+                    outputWidth: canvas.width,
+                    outputHeight: canvas.height,
+                    quality: blob.size > 8 * 1024 * 1024 ? 0.82 : 0.90
+                });
+
+                return optimizedFile;
             } finally {
                 URL.revokeObjectURL(objectUrl);
             }
@@ -674,8 +717,18 @@
                         Math.round((index / validFiles.length) * 90) + 5
                     );
 
+                    let analysisFile = validFiles[index];
+                    if (analysisFile.type.startsWith("image/")) {
+                        updateOcrStatus(
+                            "Optimising invoice image...",
+                            "Resizing oversized camera images and compressing the upload while preserving readable invoice text.",
+                            Math.round((index / validFiles.length) * 90) + 10
+                        );
+                        analysisFile = await prepareImageForAnalysis(analysisFile);
+                    }
+
                     const importId = await postVisionForParsing(
-                        validFiles[index],
+                        analysisFile,
                         validFiles.length === 1
                             ? "Analyzing invoice..."
                             : "Analyzing invoice " + current + " of " + validFiles.length + "..."
