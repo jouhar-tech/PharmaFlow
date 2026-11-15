@@ -134,10 +134,17 @@ app.UseSession();
 app.Use(async (context, next) =>
 {
     const string sessionCookieName = ".PharmaFlow.Session";
+    var isInventoryIndex =
+        HttpMethods.IsGet(context.Request.Method) &&
+        context.Request.Path.Equals("/Inventory/Index", StringComparison.OrdinalIgnoreCase);
+    var sessionLoadMilliseconds = 0d;
 
     if (context.Request.Cookies.TryGetValue(sessionCookieName, out var sessionCookieValue))
     {
+        var sessionStopwatch = Stopwatch.StartNew();
         await context.Session.LoadAsync(context.RequestAborted);
+        sessionStopwatch.Stop();
+        sessionLoadMilliseconds = sessionStopwatch.Elapsed.TotalMilliseconds;
 
         var hasAuthenticatedSession =
             !string.IsNullOrWhiteSpace(context.Session.GetString("SupabaseUserId")) &&
@@ -163,6 +170,22 @@ app.Use(async (context, next) =>
                 return Task.CompletedTask;
             });
         }
+    }
+
+    if (isInventoryIndex)
+    {
+        context.Response.OnStarting(() =>
+        {
+            context.Response.Headers.Append(
+                "Server-Timing",
+                $"inventory_session_load;dur={sessionLoadMilliseconds:0.0}");
+
+            app.Logger.LogInformation(
+                "Inventory session load took {SessionLoadMilliseconds} ms.",
+                sessionLoadMilliseconds);
+
+            return Task.CompletedTask;
+        });
     }
 
     await next();
