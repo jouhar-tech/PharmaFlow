@@ -237,51 +237,84 @@ Rules:
             CultureInfo.InvariantCulture,
             EndpointTemplate,
             Uri.EscapeDataString(model));
-
-        using var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
-        request.Headers.Add("x-goog-api-key", apiKey);
-        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-        request.Content = new StringContent(
-            JsonSerializer.Serialize(payload),
-            Encoding.UTF8,
-            "application/json");
+        var requestJson = JsonSerializer.Serialize(payload);
 
         const int timeoutSeconds = 180;
-        using var requestTimeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        requestTimeout.CancelAfter(TimeSpan.FromSeconds(timeoutSeconds));
+        const int maxAttempts = 3; // Initial request plus two retries for temporary HTTP 503 overloads.
+        HttpResponseMessage? response = null;
+        var responseBody = string.Empty;
 
-        HttpResponseMessage response;
-        string responseBody;
-        try
+        for (var attempt = 1; attempt <= maxAttempts; attempt++)
         {
-            response = await _httpClient.SendAsync(
-                request,
-                HttpCompletionOption.ResponseHeadersRead,
-                requestTimeout.Token);
+            using var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
+            request.Headers.Add("x-goog-api-key", apiKey);
+            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            request.Content = new StringContent(
+                requestJson,
+                Encoding.UTF8,
+                "application/json");
 
+            using var requestTimeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            requestTimeout.CancelAfter(TimeSpan.FromSeconds(timeoutSeconds));
+
+            HttpResponseMessage attemptResponse;
+            string attemptResponseBody;
             try
             {
-                responseBody = await response.Content.ReadAsStringAsync(requestTimeout.Token);
-            }
-            catch
-            {
-                response.Dispose();
-                throw;
-            }
-        }
-        catch (OperationCanceledException ex)
-            when (!cancellationToken.IsCancellationRequested && requestTimeout.IsCancellationRequested)
-        {
-            _logger.LogWarning(
-                ex,
-                "Gemini invoice request exceeded {TimeoutSeconds} seconds for model {Model}.",
-                timeoutSeconds,
-                model);
+                attemptResponse = await _httpClient.SendAsync(
+                    request,
+                    HttpCompletionOption.ResponseHeadersRead,
+                    requestTimeout.Token);
 
-            throw new TimeoutException(
-                "Gemini did not respond within 3 minutes. Please retry. If it happens again, try a smaller, clearer invoice image or PDF.",
-                ex);
+                try
+                {
+                    attemptResponseBody = await attemptResponse.Content.ReadAsStringAsync(requestTimeout.Token);
+                }
+                catch
+                {
+                    attemptResponse.Dispose();
+                    throw;
+                }
+            }
+            catch (OperationCanceledException ex)
+                when (!cancellationToken.IsCancellationRequested && requestTimeout.IsCancellationRequested)
+            {
+                _logger.LogWarning(
+                    ex,
+                    "Gemini invoice request exceeded {TimeoutSeconds} seconds on attempt {AttemptNumber} for model {Model}.",
+                    timeoutSeconds,
+                    attempt,
+                    model);
+
+                throw new TimeoutException(
+                    "Gemini did not respond within 3 minutes. Please retry. If it happens again, try a smaller, clearer invoice image.",
+                    ex);
+            }
+
+            if (attemptResponse.StatusCode == System.Net.HttpStatusCode.ServiceUnavailable &&
+                attempt < maxAttempts)
+            {
+                var retryDelay = GetRetryDelay(attemptResponse, attempt);
+
+                _logger.LogWarning(
+                    "Gemini returned HTTP 503 for invoice analysis using model {Model}. Retrying attempt {NextAttempt} of {MaxAttempts} after {DelayMilliseconds} ms.",
+                    model,
+                    attempt + 1,
+                    maxAttempts,
+                    (int)retryDelay.TotalMilliseconds);
+
+                attemptResponse.Dispose();
+                await Task.Delay(retryDelay, cancellationToken);
+                continue;
+            }
+
+            response = attemptResponse;
+            responseBody = attemptResponseBody;
+            break;
         }
+
+        if (response is null)
+            throw new InvalidOperationException("Gemini did not return a response.");
 
         using var responseToDispose = response;
 
@@ -395,6 +428,29 @@ Rules:
         return cleaned.Length <= maxLength
             ? cleaned
             : cleaned[..maxLength];
+    }
+
+    private static TimeSpan GetRetryDelay(HttpResponseMessage response, int retryNumber)
+    {
+        var retryAfter = response.Headers.RetryAfter;
+
+        if (retryAfter?.Delta is TimeSpan delta &&
+            delta > TimeSpan.Zero &&
+            delta <= TimeSpan.FromSeconds(10))
+        {
+            return delta;
+        }
+
+        if (retryAfter?.Date is DateTimeOffset retryDate)
+        {
+            var delay = retryDate - DateTimeOffset.UtcNow;
+            if (delay > TimeSpan.Zero && delay <= TimeSpan.FromSeconds(10))
+                return delay;
+        }
+
+        return retryNumber == 1
+            ? TimeSpan.FromSeconds(2)
+            : TimeSpan.FromSeconds(4);
     }
 
     private static string? ExtractOutputText(string responseBody)
