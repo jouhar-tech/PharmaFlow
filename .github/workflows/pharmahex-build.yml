@@ -35,3 +35,21 @@ jobs:
 
       - name: Check invoice capture JavaScript syntax
         run: node --check ./PharmaFlow/wwwroot/js/invoice-capture.js
+
+      - name: Check Create Bill inline JavaScript syntax
+        run: |
+          python - <<'PY'
+          import re
+          from pathlib import Path
+
+          source = Path("./PharmaFlow/Views/Billing/Create.cshtml").read_text(encoding="utf-8")
+          scripts = re.findall(r"<script>(.*?)</script>", source, flags=re.DOTALL)
+          if not scripts:
+              raise SystemExit("Create.cshtml has no inline script block.")
+
+          # Replace the three Razor-generated URL expressions with a valid JS string.
+          script = scripts[-1]
+          script = re.sub(r"@Url\.Action\([^)]*\)", '"/"', script)
+          Path("/tmp/billing-create.js").write_text(script, encoding="utf-8")
+          PY
+          node --check /tmp/billing-create.js
