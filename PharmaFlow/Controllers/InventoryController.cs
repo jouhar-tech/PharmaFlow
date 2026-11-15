@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Npgsql.EntityFrameworkCore.PostgreSQL;
@@ -1023,6 +1024,8 @@ public sealed class InventoryController : Controller
     [HttpGet]
     public async Task<IActionResult> Index(CancellationToken cancellationToken)
     {
+        var totalStopwatch = Stopwatch.StartNew();
+
         if (!long.TryParse(HttpContext.Session.GetString("ProfileId"), out var profileId))
             return RedirectToAction("Login", "Account");
 
@@ -1034,6 +1037,7 @@ public sealed class InventoryController : Controller
             _dbContext,
             maxRetryCount: 3);
 
+        var batchQueryStopwatch = Stopwatch.StartNew();
         var rows = await inventoryExecutionStrategy.ExecuteAsync(
             () => _dbContext.ProductBatches
                 .AsNoTracking()
@@ -1061,13 +1065,17 @@ public sealed class InventoryController : Controller
                     SellingUnitPrice = batch.SellingUnitPrice
                 })
                 .ToListAsync(cancellationToken));
+        batchQueryStopwatch.Stop();
 
+        var reorderQueryStopwatch = Stopwatch.StartNew();
         var savedReorderItems = await _dbContext.ReorderListItems
             .AsNoTracking()
             .Include(item => item.Product)
             .Where(item => item.ProfileId == profileId)
             .ToListAsync(cancellationToken);
+        reorderQueryStopwatch.Stop();
 
+        var mappingStopwatch = Stopwatch.StartNew();
         var items = rows.Select(row =>
         {
             var daysLeft = row.ExpiryDate.DayNumber - today.DayNumber;
@@ -1110,6 +1118,27 @@ public sealed class InventoryController : Controller
                 IsExpiring = isExpiring
             };
         }).ToList();
+
+        mappingStopwatch.Stop();
+        totalStopwatch.Stop();
+
+        Response.Headers.Append(
+            "Server-Timing",
+            $"inventory_batches;dur={batchQueryStopwatch.Elapsed.TotalMilliseconds:0.0}, " +
+            $"inventory_reorder;dur={reorderQueryStopwatch.Elapsed.TotalMilliseconds:0.0}, " +
+            $"inventory_mapping;dur={mappingStopwatch.Elapsed.TotalMilliseconds:0.0}, " +
+            $"inventory_total;dur={totalStopwatch.Elapsed.TotalMilliseconds:0.0}");
+
+        _logger.LogInformation(
+            "Inventory page timing for profile {ProfileId}: batches {BatchCount} in {BatchQueryMs} ms; " +
+            "reorder rows {ReorderCount} in {ReorderQueryMs} ms; mapping {MappingMs} ms; total {TotalMs} ms.",
+            profileId,
+            rows.Count,
+            batchQueryStopwatch.Elapsed.TotalMilliseconds,
+            savedReorderItems.Count,
+            reorderQueryStopwatch.Elapsed.TotalMilliseconds,
+            mappingStopwatch.Elapsed.TotalMilliseconds,
+            totalStopwatch.Elapsed.TotalMilliseconds);
 
         return View(new InventoryViewModel
         {
