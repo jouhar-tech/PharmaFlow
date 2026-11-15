@@ -25,3 +25,34 @@ public sealed class BillingLineInput
     public decimal Quantity { get; set; }
 }
 
+public sealed class BillingCatalogSearchResultViewModel
+{
+    public long? CatalogId { get; init; }
+    public string Source { get; init; } = string.Empty;
+    public string ExternalId { get; init; } = string.Empty;
+    public string ProductType { get; init; } = string.Empty;
+    public string ProductName { get; init; } = string.Empty;
+    public string? GenericName { get; init; }
+    public string? BrandName { get; init; }
+    public string? Manufacturer { get; init; }
+    public string? DosageForm { get; init; }
+    public string? Strength { get; init; }
+    public string? PackSize { get; init; }
+    public string? Barcode { get; init; }
+    public decimal? GstRate { get; init; }
+    public bool IsPrescriptionRequired { get; init; }
+}
+
+public sealed class BillingAddCatalogStockRequest
+{
+    public long? CatalogId { get; set; }
+    public string Source { get; set; } = string.Empty;
+    public string ExternalId { get; set; } = string.Empty;
+    public string BatchNumber { get; set; } = string.Empty;
+    public DateOnly ExpiryDate { get; set; }
+    public decimal AvailableQuantity { get; set; }
+    public decimal QuantityToBill { get; set; }
+    public decimal? PurchaseUnitPrice { get; set; }
+    public decimal SellingUnitPrice { get; set; }
+    public decimal? GstRate { get; set; }
+}
