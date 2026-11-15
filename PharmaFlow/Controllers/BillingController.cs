@@ -8,6 +8,7 @@ using PharmaFlow.Data;
 using PharmaFlow.Filters;
 using PharmaFlow.Models;
 using PharmaFlow.Models.ViewModels;
+using PharmaFlow.Services;
 
 namespace PharmaFlow.Controllers;
 
@@ -265,9 +266,11 @@ public sealed class BillingController : Controller
                     cancellationToken);
             }
 
-            if (product is null && !globalProduct.CatalogId.HasValue &&
-                string.IsNullOrWhiteSpace(globalProduct.Barcode))
+            if (product is null && string.IsNullOrWhiteSpace(globalProduct.Barcode))
             {
+                // A pharmacist may already have created this product manually.
+                // Reuse it instead of creating a duplicate when a catalogue record
+                // is selected later. Match name + manufacturer + strength + pack.
                 var productName = globalProduct.ProductName.ToLowerInvariant();
                 var manufacturer = globalProduct.Manufacturer ?? string.Empty;
                 var strength = globalProduct.Strength ?? string.Empty;
@@ -280,6 +283,20 @@ public sealed class BillingController : Controller
                             (item.Strength ?? string.Empty) == strength &&
                             (item.PackSize ?? string.Empty) == packSize,
                     cancellationToken);
+            }
+
+            if (product is not null &&
+                globalProduct.CatalogId.HasValue &&
+                !product.CatalogId.HasValue)
+            {
+                var catalogAlreadyLinked = await _dbContext.Products.AnyAsync(
+                    item => item.ProfileId == profileId &&
+                            item.CatalogId == globalProduct.CatalogId.Value &&
+                            item.ProductId != product.ProductId,
+                    cancellationToken);
+
+                if (!catalogAlreadyLinked)
+                    product.CatalogId = globalProduct.CatalogId.Value;
             }
 
             if (product is null)
