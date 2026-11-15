@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.AspNetCore.ResponseCompression;
+using System.Diagnostics;
 using System.IO.Compression;
 using PharmaFlow.Data;
 using PharmaFlow.Services;
@@ -168,6 +169,51 @@ app.Use(async (context, next) =>
 });
 
 app.UseAuthorization();
+
+// Diagnose the full Inventory MVC request, including SessionAuthorize,
+// Razor view rendering and response generation. The controller-level
+// Server-Timing entries intentionally measure only the action's own work.
+app.Use(async (context, next) =>
+{
+    var isInventoryIndex =
+        HttpMethods.IsGet(context.Request.Method) &&
+        context.Request.Path.Equals("/Inventory/Index", StringComparison.OrdinalIgnoreCase);
+
+    if (!isInventoryIndex)
+    {
+        await next();
+        return;
+    }
+
+    var totalRequestStopwatch = Stopwatch.StartNew();
+    var firstByteStopwatch = Stopwatch.StartNew();
+
+    context.Response.OnStarting(() =>
+    {
+        firstByteStopwatch.Stop();
+        context.Response.Headers.Append(
+            "Server-Timing",
+            $"inventory_pipeline;dur={firstByteStopwatch.Elapsed.TotalMilliseconds:0.0}");
+
+        return Task.CompletedTask;
+    });
+
+    context.Response.OnCompleted(() =>
+    {
+        totalRequestStopwatch.Stop();
+
+        app.Logger.LogInformation(
+            "Inventory full HTTP request completed. Status {StatusCode}; server elapsed {ElapsedMilliseconds} ms; response content length {ContentLength}; content type {ContentType}.",
+            context.Response.StatusCode,
+            totalRequestStopwatch.Elapsed.TotalMilliseconds,
+            context.Response.ContentLength,
+            context.Response.ContentType);
+
+        return Task.CompletedTask;
+    });
+
+    await next();
+});
 
 app.MapControllers();
 
