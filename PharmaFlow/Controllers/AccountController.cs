@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Cryptography;
+using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PharmaFlow.Data;
@@ -44,6 +46,7 @@ public class AccountController : Controller
                 HttpContext.Session.GetString("BusinessName"));
         }
 
+        ViewBag.GoogleNativeState = CreateGoogleNativeState();
         return View(new LoginViewModel());
     }
 
@@ -382,6 +385,92 @@ public class AccountController : Controller
     }
 
     [HttpGet]
+    [HttpGet]
+    public async Task<IActionResult> GoogleNativeCallback(
+        string? idToken,
+        string? type,
+        string? state,
+        string? error,
+        CancellationToken cancellationToken)
+    {
+        var expectedState = HttpContext.Session.GetString("GoogleNativeState");
+        HttpContext.Session.Remove("GoogleNativeState");
+
+        if (string.IsNullOrWhiteSpace(expectedState) ||
+            string.IsNullOrWhiteSpace(state) ||
+            !CryptographicOperations.FixedTimeEquals(
+                Encoding.UTF8.GetBytes(expectedState),
+                Encoding.UTF8.GetBytes(state)))
+        {
+            TempData["AuthError"] = "Google sign-in could not be verified. Please try again.";
+            return RedirectToAction(nameof(Login));
+        }
+
+        if (!string.IsNullOrWhiteSpace(error) ||
+            !string.Equals(type, "google", StringComparison.OrdinalIgnoreCase) ||
+            string.IsNullOrWhiteSpace(idToken))
+        {
+            TempData["AuthError"] = "Google sign-in was cancelled or could not be completed.";
+            return RedirectToAction(nameof(Login));
+        }
+
+        // Supabase verifies Google's ID-token signature, issuer, audience and expiry.
+        var result = await _authService.SignInWithGoogleIdTokenAsync(idToken, cancellationToken);
+        if (!result.Success ||
+            string.IsNullOrWhiteSpace(result.UserId) ||
+            !Guid.TryParse(result.UserId, out var userId))
+        {
+            _logger.LogWarning("Median native Google sign-in was rejected by Supabase: {Error}", result.Error);
+            TempData["AuthError"] = result.Error ?? "Google sign-in failed. Please try again.";
+            return RedirectToAction(nameof(Login));
+        }
+
+        var profile = await _dbContext.Profiles.SingleOrDefaultAsync(p => p.UserId == userId, cancellationToken);
+        var isNewGoogleProfile = profile is null;
+
+        if (profile is null)
+        {
+            if (string.IsNullOrWhiteSpace(result.Email))
+            {
+                TempData["AuthError"] = "Google account email could not be retrieved.";
+                return RedirectToAction(nameof(Login));
+            }
+
+            profile = new Profile
+            {
+                UserId = userId,
+                Username = await CreateUniqueUsernameAsync(result.Email, cancellationToken),
+                Email = result.Email,
+                CreatedAt = DateTime.UtcNow
+            };
+            _dbContext.Profiles.Add(profile);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+        else if (string.IsNullOrWhiteSpace(profile.Email) && !string.IsNullOrWhiteSpace(result.Email))
+        {
+            profile.Email = result.Email;
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+
+        SetAuthenticatedSession(result, profile.Id, profile.BusinessName, profile.Username);
+        await MarkProfileActiveAsync(profile.Id, cancellationToken);
+
+        if (isNewGoogleProfile)
+            HttpContext.Session.SetString("GoogleProfileSetupRequired", "true");
+
+        return RedirectAfterAuthentication(profile.BusinessName);
+    }
+
+    private string CreateGoogleNativeState()
+    {
+        var state = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32))
+            .TrimEnd('=')
+            .Replace('+', '-')
+            .Replace('/', '_');
+        HttpContext.Session.SetString("GoogleNativeState", state);
+        return state;
+    }
+
     public IActionResult GoogleLogin()
     {
         var redirectUri = Url.Action(nameof(GoogleCallback), "Account", null, Request.Scheme)!;
