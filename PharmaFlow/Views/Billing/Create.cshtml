@@ -283,13 +283,29 @@
         const paymentInput = document.getElementById("billingPaymentMethod");
         const createForm = document.getElementById("billingCreateForm");
         const generateButton = document.getElementById("billingGenerateButton");
+        const catalogStockModal = document.getElementById("billingCatalogStockModal");
+        const catalogStockTitle = document.getElementById("billingCatalogStockTitle");
+        const catalogStockProductMeta = document.getElementById("billingCatalogStockProductMeta");
+        const catalogPrescriptionWarning = document.getElementById("billingCatalogPrescriptionWarning");
+        const catalogBatchNumber = document.getElementById("billingCatalogBatchNumber");
+        const catalogExpiryDate = document.getElementById("billingCatalogExpiryDate");
+        const catalogAvailableQuantity = document.getElementById("billingCatalogAvailableQuantity");
+        const catalogQuantityToBill = document.getElementById("billingCatalogQuantityToBill");
+        const catalogPurchasePrice = document.getElementById("billingCatalogPurchasePrice");
+        const catalogSellingPrice = document.getElementById("billingCatalogSellingPrice");
+        const catalogGstRate = document.getElementById("billingCatalogGstRate");
+        const catalogStockSave = document.getElementById("billingCatalogStockSave");
+        const catalogStockError = document.getElementById("billingCatalogStockError");
 
         const state = {
             items: new Map(),
             searchTimer: null,
             requestSequence: 0,
-            activeController: null
+            activeController: null,
+            catalogResults: []
         };
+
+        let selectedCatalogProduct = null;
 
         const formatMoney = value =>
             "₹" + Number(value || 0).toLocaleString("en-IN", {
@@ -369,16 +385,19 @@
             syncForm();
         };
 
-        const addBatch = batch => {
+        const addBatch = (batch, initialQuantity = 1) => {
+            const requestedQuantity = Number(initialQuantity || 1);
             const existing = state.items.get(batch.batchId);
 
             if (existing) {
-                if (existing.quantity >= existing.availableQty) return;
-                existing.quantity += 1;
+                existing.quantity = Math.min(
+                    existing.availableQty,
+                    existing.quantity + requestedQuantity
+                );
             } else {
                 state.items.set(batch.batchId, {
                     ...batch,
-                    quantity: 1
+                    quantity: Math.min(Number(batch.availableQty || 0), requestedQuantity)
                 });
             }
 
@@ -388,7 +407,16 @@
             searchInput.focus();
         };
 
-        const renderSearchResults = products => {
+        const sourceLabel = source => {
+            switch (source) {
+                case "india-medicine-api": return "Indian medicine dataset";
+                case "openfda-ndc": return "US FDA reference";
+                case "openfoodfacts": return "Open Food Facts";
+                default: return "External catalogue";
+            }
+        };
+
+        const renderSearchResults = (products, query) => {
             const rows = [];
 
             for (const product of products) {
@@ -419,19 +447,19 @@
                 }
             }
 
-            if (rows.length === 0) {
-                searchResults.innerHTML = `
-                    <div class="billing-search-empty">
-                        <svg viewBox="0 0 24 24" aria-hidden="true">
-                            <circle cx="11" cy="11" r="6.5"></circle>
-                            <path d="m16 16 4.5 4.5"></path>
-                        </svg>
-                        <strong>No saleable stock found</strong>
-                        <span>Try another medicine name, batch or barcode.</span>
-                    </div>`;
-            } else {
-                searchResults.innerHTML = rows.join("");
-            }
+            const emptyMarkup = rows.length === 0
+                ? `<div class="billing-search-empty">
+                       <strong>No saleable stock found in your inventory</strong>
+                       <span>You can search the global catalogue and record the physical batch you have on the shelf.</span>
+                   </div>`
+                : "";
+
+            searchResults.innerHTML = emptyMarkup + rows.join("") + `
+                <button type="button"
+                        class="billing-global-search-trigger"
+                        data-action="search-global-catalog">
+                    Search global medicine catalogue for “${escapeHtml(query)}”
+                </button>`;
 
             searchResults.hidden = false;
 
@@ -459,6 +487,112 @@
                     });
                 });
             });
+
+            searchResults.querySelector("[data-action='search-global-catalog']")
+                ?.addEventListener("click", () => searchGlobalCatalog(query));
+        };
+
+        const renderCatalogResults = products => {
+            state.catalogResults = products || [];
+
+            if (!state.catalogResults.length) {
+                searchResults.innerHTML = `
+                    <div class="billing-search-empty">
+                        <strong>No global catalogue matches</strong>
+                        <span>Try the generic name, brand name or barcode. You can add a custom product from Inventory if it is not listed.</span>
+                    </div>`;
+                searchResults.hidden = false;
+                return;
+            }
+
+            const rows = state.catalogResults.map((product, index) => {
+                const detailParts = [
+                    product.genericName,
+                    product.strength,
+                    product.packSize,
+                    product.manufacturer
+                ].filter(Boolean);
+
+                const subtitle = detailParts.length
+                    ? detailParts.join(" · ")
+                    : sourceLabel(product.source);
+
+                return `
+                    <button type="button"
+                            class="billing-catalog-result"
+                            data-catalog-index="${index}">
+                        <span class="billing-search-result-icon" aria-hidden="true">＋</span>
+                        <span class="billing-search-result-copy">
+                            <strong>${escapeHtml(product.productName)}</strong>
+                            <small>${escapeHtml(subtitle)} · ${escapeHtml(sourceLabel(product.source))}</small>
+                        </span>
+                        <span class="billing-search-result-price">Add stock</span>
+                    </button>`;
+            });
+
+            searchResults.innerHTML = `
+                <div class="billing-global-catalog-heading">
+                    Global catalogue results <span>${state.catalogResults.length}</span>
+                </div>
+                ${rows.join("")}
+                <div class="billing-global-catalog-footnote">
+                    Catalogue details are reference data. Verify the physical pack before adding stock.
+                </div>`;
+
+            searchResults.hidden = false;
+
+            searchResults.querySelectorAll(".billing-catalog-result").forEach(button => {
+                button.addEventListener("click", () => {
+                    const product = state.catalogResults[Number(button.dataset.catalogIndex)];
+                    if (product) openCatalogStockModal(product);
+                });
+            });
+        };
+
+        const loadCatalogResults = async (query, sequence) => {
+            if (sequence !== state.requestSequence) return;
+
+            searchResults.hidden = false;
+            searchResults.innerHTML = `
+                <div class="billing-search-loading">
+                    <span class="billing-mini-spinner" aria-hidden="true"></span>
+                    <span>Searching global medicine catalogue...</span>
+                </div>`;
+
+            try {
+                const response = await fetch(
+                    '@Url.Action("SearchCatalog", "Billing")?q=' + encodeURIComponent(query.trim()),
+                    {
+                        credentials: "same-origin",
+                        signal: state.activeController?.signal
+                    });
+
+                if (sequence !== state.requestSequence) return;
+                const products = response.ok ? await response.json() : [];
+
+                if (!response.ok) {
+                    throw new Error("Global catalogue search failed.");
+                }
+
+                renderCatalogResults(products);
+            } catch (error) {
+                if (error?.name === "AbortError") return;
+                if (sequence !== state.requestSequence) return;
+
+                searchResults.innerHTML = `
+                    <div class="billing-search-empty">
+                        <strong>Global catalogue is temporarily unavailable</strong>
+                        <span>Your existing inventory search is still available. Please retry in a moment.</span>
+                    </div>`;
+                searchResults.hidden = false;
+            }
+        };
+
+        const searchGlobalCatalog = async query => {
+            const sequence = ++state.requestSequence;
+            state.activeController?.abort();
+            state.activeController = new AbortController();
+            await loadCatalogResults(query, sequence);
         };
 
         const loadSearchResults = async query => {
@@ -476,7 +610,7 @@
             searchResults.innerHTML = `
                 <div class="billing-search-loading">
                     <span class="billing-mini-spinner" aria-hidden="true"></span>
-                    <span>Searching stock...</span>
+                    <span>Searching your inventory...</span>
                 </div>`;
 
             try {
@@ -490,11 +624,15 @@
                 if (sequence !== state.requestSequence) return;
 
                 if (!response.ok) {
-                    throw new Error("Search failed.");
+                    throw new Error("Inventory search failed.");
                 }
 
                 const products = await response.json();
-                renderSearchResults(products);
+                if (products.length === 0) {
+                    await loadCatalogResults(query, sequence);
+                } else {
+                    renderSearchResults(products, query);
+                }
             } catch (error) {
                 if (error?.name === "AbortError") return;
                 if (sequence !== state.requestSequence) return;
