@@ -808,7 +808,7 @@ public sealed class BillingController : Controller
             var generated = new GeneratedBillViewModel
             {
                 BillId = bill.BillId,
-                BusinessName = string.IsNullOrWhiteSpace(profile?.BusinessName) ? "PharmaFlow" : profile.BusinessName!,
+                BusinessName = string.IsNullOrWhiteSpace(profile?.BusinessName) ? "PharmaHex" : profile.BusinessName!,
                 BusinessPhone = profile?.PhoneNumber,
                 BusinessEmail = profile?.Email,
                 InvoiceNumber = bill.BillNumber,
