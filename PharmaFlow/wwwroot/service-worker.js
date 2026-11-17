@@ -36,14 +36,14 @@ self.addEventListener("push", event => {
         payload = event.data ? event.data.json() : {};
     } catch {
         payload = {
-            title: "PharmaFlow",
-            body: event.data?.text() || "You have a new PharmaFlow update."
+            title: "PharmaHex",
+            body: event.data?.text() || "You have a new PharmaHex update."
         };
     }
 
-    const title = payload.title || "PharmaFlow";
+    const title = payload.title || "PharmaHex";
     const options = {
-        body: payload.body || "You have a new PharmaFlow update.",
+        body: payload.body || "You have a new PharmaHex update.",
         icon: "/favicon.ico",
         badge: "/favicon.ico",
         tag: payload.tag || "pharmaflow-notification",
