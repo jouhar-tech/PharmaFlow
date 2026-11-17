@@ -4998,9 +4998,9 @@ body.theme-dark .billing-section-icon {
   body.billing-generated-page-body .billing-generated-mobile-header {
     position: relative;
     z-index: 4;
-    display: grid;
-    grid-template-columns: 40px minmax(0, 1fr) 40px;
+    display: flex;
     align-items: center;
+    justify-content: center;
     min-height: 68px;
     padding: .55rem .75rem;
     background: linear-gradient(180deg, #a9e3d8 0%, #98dacc 100%);
@@ -5022,11 +5022,12 @@ body.theme-dark .billing-section-icon {
   }
 
   body.billing-generated-page-body .billing-generated-mobile-title {
+    width: 100%;
     min-width: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: .5rem;
+    text-align: center;
   }
 
   body.billing-generated-page-body .billing-generated-mobile-title .billing-generated-success-icon {
@@ -17075,6 +17076,18 @@ body.theme-dark .notification-push-disable-button {
 
 body.billing-catalog-modal-open {
   overflow: hidden;
+}
+
+/* A fixed bottom navigation must not cover modal actions or form controls. */
+body.billing-catalog-modal-open .home-mobile-bottom-nav {
+  display: none !important;
+}
+
+@media (max-width: 767.98px) {
+  body.billing-catalog-modal-open .billing-catalog-modal-panel {
+    max-height: calc(100dvh - env(safe-area-inset-top));
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+  }
 }
 
 @media (max-width: 575.98px) {

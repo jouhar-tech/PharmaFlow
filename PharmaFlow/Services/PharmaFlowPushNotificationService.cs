@@ -58,7 +58,7 @@ public sealed class PharmaFlowPushNotificationService : IPharmaFlowPushNotificat
 
         var delivered = await SendToProfileAsync(
             profileId,
-            "PharmaFlow Daily Stock Check",
+            "PharmaHex Daily Stock Check",
             body,
             "/Home",
             cancellationToken);
@@ -92,12 +92,12 @@ public sealed class PharmaFlowPushNotificationService : IPharmaFlowPushNotificat
             return false;
 
         var body =
-            $"Your PharmaFlow savings for the last 30 days: " +
+            $"Your PharmaHex savings for the last 30 days: " +
             $"₹{savings.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))}.";
 
         var delivered = await SendToProfileAsync(
             profileId,
-            "PharmaFlow 30-Day Savings",
+            "PharmaHex 30-Day Savings",
             body,
             "/Home",
             cancellationToken);
@@ -114,8 +114,8 @@ public sealed class PharmaFlowPushNotificationService : IPharmaFlowPushNotificat
     {
         return await SendToProfileAsync(
             profileId,
-            "PharmaFlow Notifications Enabled",
-            "Your PharmaFlow notifications are working. Daily stock alerts will arrive at 8:30 AM.",
+            "PharmaHex Notifications Enabled",
+            "Your PharmaHex notifications are working. Daily stock alerts will arrive at 8:30 AM.",
             "/Home",
             cancellationToken);
     }

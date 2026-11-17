@@ -2,7 +2,7 @@
 
 @{
     ViewData["Title"] = "Dashboard";
-    var businessName = Context.Session.GetString("BusinessName") ?? "PharmaFlow";
+    var businessName = Context.Session.GetString("BusinessName") ?? "PharmaHex";
     var indiaTimeZone = TimeZoneInfo.FindSystemTimeZoneById(
         OperatingSystem.IsWindows() ? "India Standard Time" : "Asia/Kolkata");
     var indiaNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, indiaTimeZone);
@@ -187,8 +187,8 @@
 
         @if (Model.HasPharmaFlowValue)
         {
-            <section class="home-mobile-value-card" aria-label="PharmaFlow business value">
-                <span>Your PharmaFlow value</span>
+            <section class="home-mobile-value-card" aria-label="PharmaHex business value">
+                <span>Your PharmaHex value</span>
                 <strong>₹ @Model.EstimatedMoneySaved.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</strong>
                 <small>Estimated money saved or protected from better stock control.</small>
             </section>
@@ -213,7 +213,7 @@
             <div>
                 <span class="dashboard-eyebrow" data-i18n="welcomeBack">Welcome back</span>
                 <h1 class="dashboard-title">@businessName <span data-i18n="dashboard">Dashboard</span></h1>
-                <p class="dashboard-subtitle"> <span data-i18n="dashboardSubtitle">Monitor your pharmacy activity and the value PharmaFlow creates for your business.</span></p>
+                <p class="dashboard-subtitle"> <span data-i18n="dashboardSubtitle">Monitor your pharmacy activity and the value PharmaHex creates for your business.</span></p>
             </div>
             <div class="dashboard-date">@DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(5.5)).ToString("dd MMM yyyy")</div>
         </div>
@@ -246,12 +246,12 @@
 
         @if (Model.HasPharmaFlowValue)
         {
-            <section class="dashboard-value-card" aria-label="PharmaFlow business value">
+            <section class="dashboard-value-card" aria-label="PharmaHex business value">
                 <div class="value-card-main">
                     <div>
-                        <span class="section-kicker value-kicker" data-i18n="valueKicker">Your PharmaFlow value</span>
-                        <h2 data-i18n="valueHeading">See how much money PharmaFlow protects for your pharmacy</h2>
-                        <p class="value-description" data-i18n="valueDescription">As your sales, purchases, inventory and payment data grows, PharmaFlow will calculate the estimated money saved or protected through better stock control, expiry prevention and payment follow-up.</p>
+                        <span class="section-kicker value-kicker" data-i18n="valueKicker">Your PharmaHex value</span>
+                        <h2 data-i18n="valueHeading">See how much money PharmaHex protects for your pharmacy</h2>
+                        <p class="value-description" data-i18n="valueDescription">As your sales, purchases, inventory and payment data grows, PharmaHex will calculate the estimated money saved or protected through better stock control, expiry prevention and payment follow-up.</p>
                     </div>
                     <div class="value-total">
                         <span class="value-total-label" data-i18n="estimatedMoneySaved">Estimated money saved</span>
