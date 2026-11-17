@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>PharmaFlow - Offline</title>
+    <title>PharmaHex - Offline</title>
     <style>
         :root{font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#1f2937;background:#f5f7fb}
         *{box-sizing:border-box}
@@ -40,7 +40,7 @@
             <div id="offlineDashboard"></div>
             <div class="offline-empty" id="offlineEmpty" hidden>
                 <h2 id="emptyTitle">Offline data isn't ready yet</h2>
-                <p id="emptyMessage">Connect to the internet once and open your dashboard. PharmaFlow will save the latest dashboard data for offline viewing.</p>
+                <p id="emptyMessage">Connect to the internet once and open your dashboard. PharmaHex will save the latest dashboard data for offline viewing.</p>
                 <div class="offline-actions">
                     <button type="button" id="retryButton">Try again</button>
                 </div>
@@ -57,7 +57,7 @@
             dashboard: "Dashboard",
             showing: "Showing the last dashboard data saved on this device.",
             emptyTitle: "Offline data isn't ready yet",
-            emptyMessage: "Connect to the internet once and open your dashboard. PharmaFlow will save the latest dashboard data for offline viewing.",
+            emptyMessage: "Connect to the internet once and open your dashboard. PharmaHex will save the latest dashboard data for offline viewing.",
             retry: "Try again",
             unavailableTitle: "This page isn't available offline yet",
             unavailableMessage: "Your saved dashboard can still be viewed offline."
@@ -68,7 +68,7 @@
             dashboard: "ಡ್ಯಾಶ್‌ಬೋರ್ಡ್",
             showing: "ಈ ಸಾಧನದಲ್ಲಿ ಕೊನೆಯದಾಗಿ ಉಳಿಸಿದ ಡ್ಯಾಶ್‌ಬೋರ್ಡ್ ಡೇಟಾವನ್ನು ತೋರಿಸಲಾಗುತ್ತಿದೆ.",
             emptyTitle: "ಆಫ್‌ಲೈನ್ ಡೇಟಾ ಇನ್ನೂ ಸಿದ್ಧವಾಗಿಲ್ಲ",
-            emptyMessage: "ಒಮ್ಮೆ ಇಂಟರ್ನೆಟ್‌ಗೆ ಸಂಪರ್ಕಿಸಿ ಮತ್ತು ನಿಮ್ಮ ಡ್ಯಾಶ್‌ಬೋರ್ಡ್ ತೆರೆಯಿರಿ. PharmaFlow ಇತ್ತೀಚಿನ ಡ್ಯಾಶ್‌ಬೋರ್ಡ್ ಡೇಟಾವನ್ನು ಆಫ್‌ಲೈನ್ ವೀಕ್ಷಣೆಗೆ ಉಳಿಸುತ್ತದೆ.",
+            emptyMessage: "ಒಮ್ಮೆ ಇಂಟರ್ನೆಟ್‌ಗೆ ಸಂಪರ್ಕಿಸಿ ಮತ್ತು ನಿಮ್ಮ ಡ್ಯಾಶ್‌ಬೋರ್ಡ್ ತೆರೆಯಿರಿ. PharmaHex ಇತ್ತೀಚಿನ ಡ್ಯಾಶ್‌ಬೋರ್ಡ್ ಡೇಟಾವನ್ನು ಆಫ್‌ಲೈನ್ ವೀಕ್ಷಣೆಗೆ ಉಳಿಸುತ್ತದೆ.",
             retry: "ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ",
             unavailableTitle: "ಈ ಪುಟವು ಇನ್ನೂ ಆಫ್‌ಲೈನ್‌ನಲ್ಲಿ ಲಭ್ಯವಿಲ್ಲ",
             unavailableMessage: "ನಿಮ್ಮ ಉಳಿಸಿದ ಡ್ಯಾಶ್‌ಬೋರ್ಡ್ ಅನ್ನು ಇನ್ನೂ ಆಫ್‌ಲೈನ್‌ನಲ್ಲಿ ನೋಡಬಹುದು."
@@ -79,7 +79,7 @@
             dashboard: "डैशबोर्ड",
             showing: "इस डिवाइस पर सहेजे गए अंतिम डैशबोर्ड डेटा को दिखाया जा रहा है।",
             emptyTitle: "ऑफ़लाइन डेटा अभी तैयार नहीं है",
-            emptyMessage: "एक बार इंटरनेट से कनेक्ट करें और अपना डैशबोर्ड खोलें। PharmaFlow नवीनतम डैशबोर्ड डेटा को ऑफ़लाइन देखने के लिए सहेज देगा।",
+            emptyMessage: "एक बार इंटरनेट से कनेक्ट करें और अपना डैशबोर्ड खोलें। PharmaHex नवीनतम डैशबोर्ड डेटा को ऑफ़लाइन देखने के लिए सहेज देगा।",
             retry: "फिर से प्रयास करें",
             unavailableTitle: "यह पेज अभी ऑफ़लाइन उपलब्ध नहीं है",
             unavailableMessage: "आपका सहेजा गया डैशबोर्ड अभी भी ऑफ़लाइन देखा जा सकता है।"
@@ -124,7 +124,7 @@
     retry.onclick = () => location.reload();
 
     try {
-        const request = indexedDB.open("PharmaFlowOffline", 1);
+        const request = indexedDB.open("PharmaHexOffline", 1);
 
         request.onupgradeneeded = () => {
             if (!request.result.objectStoreNames.contains("snapshots")) {
