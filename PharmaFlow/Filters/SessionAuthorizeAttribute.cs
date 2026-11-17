@@ -14,6 +14,14 @@ public sealed class SessionAuthorizeAttribute : Attribute, IAsyncActionFilter
         var accessToken = session.GetString("SupabaseAccessToken");
         var userId = session.GetString("SupabaseUserId");
         var profileId = session.GetString("ProfileId");
+        var controller = context.RouteData.Values["controller"]?.ToString();
+        var action = context.RouteData.Values["action"]?.ToString();
+
+        // Business setup must remain reachable, but no other authenticated app
+        // page should be accessible until the owner has saved a business name.
+        var isBusinessSetup =
+            string.Equals(controller, "Business", StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(action, "Setup", StringComparison.OrdinalIgnoreCase);
 
         if (string.IsNullOrWhiteSpace(accessToken) ||
             string.IsNullOrWhiteSpace(userId) ||
@@ -21,6 +29,12 @@ public sealed class SessionAuthorizeAttribute : Attribute, IAsyncActionFilter
             !long.TryParse(profileId, out _))
         {
             context.Result = new RedirectToActionResult("Login", "Account", null);
+            return;
+        }
+
+        if (!isBusinessSetup && string.IsNullOrWhiteSpace(session.GetString("BusinessName")))
+        {
+            context.Result = new RedirectToActionResult("Setup", "Business", null);
             return;
         }
 
