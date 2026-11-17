@@ -17077,6 +17077,18 @@ body.billing-catalog-modal-open {
   overflow: hidden;
 }
 
+/* A fixed bottom navigation must not cover modal actions or form controls. */
+body.billing-catalog-modal-open .home-mobile-bottom-nav {
+  display: none !important;
+}
+
+@media (max-width: 767.98px) {
+  body.billing-catalog-modal-open .billing-catalog-modal-panel {
+    max-height: calc(100dvh - env(safe-area-inset-top));
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+  }
+}
+
 @media (max-width: 575.98px) {
   .billing-catalog-modal:not([hidden]) {
     align-items: flex-end;
