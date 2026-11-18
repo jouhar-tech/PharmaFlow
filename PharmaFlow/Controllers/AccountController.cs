@@ -421,50 +421,57 @@ public class AccountController : Controller
             return RedirectToAction(nameof(Login));
         }
 
+        return await CompleteGoogleNativeSignInAsync(idToken, cancellationToken);
+    }
+
+    private async Task<IActionResult> CompleteGoogleNativeSignInAsync(
+        string idToken,
+        CancellationToken cancellationToken)
+    {
         // Supabase verifies Google's ID-token signature, issuer, audience and expiry.
         var result = await _authService.SignInWithGoogleIdTokenAsync(idToken, cancellationToken);
         if (!result.Success ||
-            string.IsNullOrWhiteSpace(result.UserId) ||
-            !Guid.TryParse(result.UserId, out var userId))
+        string.IsNullOrWhiteSpace(result.UserId) ||
+        !Guid.TryParse(result.UserId, out var userId))
         {
-            _logger.LogWarning("Median native Google sign-in was rejected by Supabase: {Error}", result.Error);
-            TempData["AuthError"] = result.Error ?? "Google sign-in failed. Please try again.";
-            return RedirectToAction(nameof(Login));
+        _logger.LogWarning("Median native Google sign-in was rejected by Supabase: {Error}", result.Error);
+        TempData["AuthError"] = result.Error ?? "Google sign-in failed. Please try again.";
+        return RedirectToAction(nameof(Login));
         }
-
+        
         var profile = await _dbContext.Profiles.SingleOrDefaultAsync(p => p.UserId == userId, cancellationToken);
         var isNewGoogleProfile = profile is null;
-
+        
         if (profile is null)
         {
-            if (string.IsNullOrWhiteSpace(result.Email))
-            {
-                TempData["AuthError"] = "Google account email could not be retrieved.";
-                return RedirectToAction(nameof(Login));
-            }
-
-            profile = new Profile
-            {
-                UserId = userId,
-                Username = await CreateUniqueUsernameAsync(result.Email, cancellationToken),
-                Email = result.Email,
-                CreatedAt = DateTime.UtcNow
-            };
-            _dbContext.Profiles.Add(profile);
-            await _dbContext.SaveChangesAsync(cancellationToken);
+        if (string.IsNullOrWhiteSpace(result.Email))
+        {
+        TempData["AuthError"] = "Google account email could not be retrieved.";
+        return RedirectToAction(nameof(Login));
+        }
+        
+        profile = new Profile
+        {
+        UserId = userId,
+        Username = await CreateUniqueUsernameAsync(result.Email, cancellationToken),
+        Email = result.Email,
+        CreatedAt = DateTime.UtcNow
+        };
+        _dbContext.Profiles.Add(profile);
+        await _dbContext.SaveChangesAsync(cancellationToken);
         }
         else if (string.IsNullOrWhiteSpace(profile.Email) && !string.IsNullOrWhiteSpace(result.Email))
         {
-            profile.Email = result.Email;
-            await _dbContext.SaveChangesAsync(cancellationToken);
+        profile.Email = result.Email;
+        await _dbContext.SaveChangesAsync(cancellationToken);
         }
-
+        
         SetAuthenticatedSession(result, profile.Id, profile.BusinessName, profile.Username);
         await MarkProfileActiveAsync(profile.Id, cancellationToken);
-
+        
         if (isNewGoogleProfile)
-            HttpContext.Session.SetString("GoogleProfileSetupRequired", "true");
-
+        HttpContext.Session.SetString("GoogleProfileSetupRequired", "true");
+        
         return RedirectAfterAuthentication(profile.BusinessName);
     }
 
@@ -476,6 +483,32 @@ public class AccountController : Controller
             .Replace('/', '_');
         HttpContext.Session.SetString("GoogleNativeState", state);
         return state;
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> GoogleNativeSignIn(
+        string? idToken,
+        string? type,
+        string? error,
+        CancellationToken cancellationToken)
+    {
+        if (!string.IsNullOrWhiteSpace(error))
+        {
+            _logger.LogWarning("Median native Google sign-in returned an error: {Error}", error);
+            TempData["AuthError"] = "Google sign-in could not be completed. Please try again.";
+            return RedirectToAction(nameof(Login));
+        }
+
+        if (!string.Equals(type, "google", StringComparison.OrdinalIgnoreCase) ||
+            string.IsNullOrWhiteSpace(idToken))
+        {
+            _logger.LogWarning("Median native Google sign-in returned an incomplete response.");
+            TempData["AuthError"] = "Google did not return a valid sign-in token. Please try again.";
+            return RedirectToAction(nameof(Login));
+        }
+
+        return await CompleteGoogleNativeSignInAsync(idToken, cancellationToken);
     }
 
     public IActionResult GoogleLogin()
