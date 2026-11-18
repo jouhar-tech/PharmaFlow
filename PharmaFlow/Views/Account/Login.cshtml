@@ -233,6 +233,16 @@
             <h1 class="auth-title">Welcome Back</h1>
             <p class="auth-subtitle">Login with username, email or phone</p>
 
+            @if (TempData["AuthError"] is string authError && !string.IsNullOrWhiteSpace(authError))
+            {
+                <div class="alert alert-danger auth-feedback" role="alert">@authError</div>
+            }
+            @if (TempData["AuthMessage"] is string authMessage && !string.IsNullOrWhiteSpace(authMessage))
+            {
+                <div class="alert alert-success auth-feedback" role="status">@authMessage</div>
+            }
+            <div class="alert alert-danger auth-feedback" id="nativeGoogleFeedback" role="alert" hidden></div>
+
             <form asp-controller="Account" asp-action="Login" method="post" id="loginForm" class="auth-form">
                 @Html.AntiForgeryToken()
                 <div asp-validation-summary="ModelOnly" class="text-danger auth-error mb-3"></div>
@@ -267,8 +277,7 @@
                 Continue with Google
             </a>
             <button type="button" class="google-button native-google-login" id="nativeGoogleLogin"
-                    data-redirect-uri="@Url.Action("GoogleNativeCallback", "Account", null, Context.Request.Scheme)"
-                    data-state="@ViewBag.GoogleNativeState" hidden>
+                    data-callback-url="@Url.Action("GoogleNativeSignIn", "Account")" hidden>
                 <svg class="google-logo" viewBox="0 0 24 24" aria-hidden="true">
                     <path fill="#4285F4" d="M21.35 12.23c0-.72-.06-1.42-.18-2.09H12v3.96h5.24a4.48 4.48 0 0 1-1.94 2.94v2.45h3.14c1.84-1.69 2.91-4.18 2.91-7.26Z"/>
                     <path fill="#34A853" d="M12 21.75c2.63 0 4.84-.87 6.45-2.36l-3.14-2.45c-.87.58-1.98.92-3.31.92-2.54 0-4.69-1.72-5.46-4.03H3.3v2.53A9.75 9.75 0 0 0 12 21.75Z"/>
@@ -303,18 +312,69 @@
         if (!nativeButton) return;
         nativeButton.hidden = false;
 
+        const showNativeGoogleError = message => {
+            const feedback = document.getElementById('nativeGoogleFeedback');
+            if (feedback) {
+                feedback.textContent = message;
+                feedback.hidden = false;
+            }
+            nativeButton.disabled = false;
+        };
+
         nativeButton.addEventListener('click', () => {
             if (!window.median?.socialLogin?.google?.login) {
-                alert('Google sign-in is not enabled in this app build. Please contact support.');
+                showNativeGoogleError('Google sign-in is not enabled in this app build. Please contact support.');
                 return;
             }
 
             nativeButton.disabled = true;
-            window.median.socialLogin.google.login({
-                redirectUri: nativeButton.dataset.redirectUri,
-                state: nativeButton.dataset.state
-            });
-            window.setTimeout(() => { nativeButton.disabled = false; }, 8000);
+            const loginForm = document.getElementById('loginForm');
+            const antiForgeryToken = loginForm?.querySelector('input[name="__RequestVerificationToken"]')?.value;
+
+            if (!antiForgeryToken) {
+                showNativeGoogleError('The sign-in page expired. Refresh the page and try again.');
+                return;
+            }
+
+            try {
+                window.median.socialLogin.google.login({
+                    callback: response => {
+                        if (response?.error) {
+                            showNativeGoogleError('Google sign-in failed: ' + response.error);
+                            return;
+                        }
+
+                        if (response?.type?.toLowerCase() !== 'google' || !response?.idToken) {
+                            showNativeGoogleError('Google did not return a valid sign-in token. Please try again.');
+                            return;
+                        }
+
+                        const postForm = document.createElement('form');
+                        postForm.method = 'post';
+                        postForm.action = nativeButton.dataset.callbackUrl;
+
+                        const fields = {
+                            __RequestVerificationToken: antiForgeryToken,
+                            idToken: response.idToken,
+                            type: response.type
+                        };
+
+                        Object.entries(fields).forEach(([name, value]) => {
+                            const input = document.createElement('input');
+                            input.type = 'hidden';
+                            input.name = name;
+                            input.value = value;
+                            postForm.appendChild(input);
+                        });
+
+                        document.body.appendChild(postForm);
+                        postForm.submit();
+                    }
+                });
+            } catch (error) {
+                showNativeGoogleError('Google sign-in could not be started. Please try again.');
+                console.error('Median Google sign-in could not be started.', error);
+            }
         });
     })();
 </script>
