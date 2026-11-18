@@ -84,7 +84,10 @@ namespace PharmaFlow.Controllers
                                 batch.ExpiryDate >= today &&
                                 batch.ExpiryDate <= ninetyDaysFromToday)
                             .Sum(batch => (decimal?)(
-                                batch.QuantityOnHand * batch.PurchaseUnitPrice)) ?? 0m,
+                                batch.QuantityOnHand *
+                                (batch.PurchaseUnitPrice > 0m
+                                    ? batch.PurchaseUnitPrice
+                                    : batch.SellingUnitPrice))) ?? 0m,
                         SlowMovingStockCount = group
                             .Where(batch =>
                                 !_dbContext.SalesBillItems.Any(item =>
