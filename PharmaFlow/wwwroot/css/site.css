@@ -16894,14 +16894,29 @@ body.theme-dark .notification-push-disable-button {
 .billing-catalog-modal-panel {
   position: relative;
   z-index: 1;
+  display: flex;
+  flex-direction: column;
   width: min(100%, 560px);
-  max-height: min(92vh, 780px);
-  overflow: auto;
+  max-height: min(92dvh, 780px);
+  overflow: hidden;
   padding: 1.15rem;
   border: 1px solid #dce5ec;
   border-radius: 1.1rem;
   background: #fff;
   box-shadow: 0 24px 70px rgba(4, 18, 35, .3);
+}
+
+.billing-catalog-modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+.billing-catalog-modal-header,
+.billing-catalog-modal-actions {
+  flex: 0 0 auto;
 }
 
 .billing-catalog-modal-header {
@@ -17040,9 +17055,10 @@ body.theme-dark .notification-push-disable-button {
   display: flex;
   justify-content: flex-end;
   gap: .55rem;
-  margin-top: 1rem;
+  margin-top: .75rem;
   padding-top: .8rem;
   border-top: 1px solid #e7edf2;
+  background: #fff;
 }
 
 .billing-catalog-cancel,
@@ -17077,6 +17093,12 @@ body.billing-catalog-modal-open {
   overflow: hidden;
 }
 
+@media (max-width: 767.98px) {
+  body.billing-catalog-modal-open .home-mobile-bottom-nav {
+    display: none !important;
+  }
+}
+
 @media (max-width: 575.98px) {
   .billing-catalog-modal:not([hidden]) {
     align-items: flex-end;
@@ -17085,9 +17107,14 @@ body.billing-catalog-modal-open {
 
   .billing-catalog-modal-panel {
     width: 100%;
-    max-height: 92vh;
-    padding: 1rem .9rem calc(1rem + env(safe-area-inset-bottom));
+    max-height: calc(100vh - env(safe-area-inset-top));
+    max-height: calc(100dvh - env(safe-area-inset-top));
+    padding: 1rem .9rem 0;
     border-radius: 1.1rem 1.1rem 0 0;
+  }
+
+  .billing-catalog-modal-actions {
+    padding-bottom: calc(.35rem + env(safe-area-inset-bottom));
   }
 
   .billing-catalog-stock-grid {
