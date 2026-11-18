@@ -120,7 +120,8 @@ public sealed class ExpiryProductsController : Controller
                 BatchNumber = batch.BatchNumber,
                 ExpiryDate = batch.ExpiryDate,
                 Quantity = batch.QuantityOnHand,
-                PurchaseUnitPrice = batch.PurchaseUnitPrice
+                PurchaseUnitPrice = batch.PurchaseUnitPrice,
+                Mrp = batch.SellingUnitPrice
             })
             .ToListAsync(cancellationToken);
 
@@ -135,7 +136,8 @@ public sealed class ExpiryProductsController : Controller
                 DaysLeft = row.ExpiryDate.DayNumber - today.DayNumber,
                 Quantity = row.Quantity,
                 PurchaseUnitPrice = row.PurchaseUnitPrice,
-                TotalValue = row.Quantity * row.PurchaseUnitPrice
+                TotalValue = row.Quantity *
+                    (row.PurchaseUnitPrice > 0m ? row.PurchaseUnitPrice : row.Mrp)
             })
             .ToList();
 
