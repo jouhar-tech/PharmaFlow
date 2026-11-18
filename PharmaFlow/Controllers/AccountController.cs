@@ -54,8 +54,11 @@ public class AccountController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Login(LoginViewModel model, CancellationToken cancellationToken)
     {
-        if (!ModelState.IsValid) ViewBag.GoogleNativeState = CreateGoogleNativeState();
-                return View(model);
+        if (!ModelState.IsValid)
+        {
+            ViewBag.GoogleNativeState = CreateGoogleNativeState();
+            return View(model);
+        }
 
         var identifier = model.Username.Trim();
         var normalizedPhone = NormalizePhone(identifier);
