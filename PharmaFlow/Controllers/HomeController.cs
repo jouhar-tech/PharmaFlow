@@ -41,11 +41,22 @@ namespace PharmaFlow.Controllers
                 var profileIdentity = await _dbContext.Profiles
                     .AsNoTracking()
                     .Where(profile => profile.Id == profileId)
-                    .Select(profile => new { profile.FullName, profile.ProfilePhotoUrl })
+                    .Select(profile => new
+                    {
+                        profile.FullName,
+                        profile.ProfilePhotoUrl,
+                        profile.BusinessName
+                    })
                     .SingleOrDefaultAsync(cancellationToken);
 
-                profileFullName = profileIdentity?.FullName;
-                profilePhotoUrl = profileIdentity?.ProfilePhotoUrl;
+                if (profileIdentity is null)
+                    return RedirectToAction("Login", "Account");
+
+                if (string.IsNullOrWhiteSpace(profileIdentity.BusinessName))
+                    return RedirectToAction("Setup", "Business");
+
+                profileFullName = profileIdentity.FullName;
+                profilePhotoUrl = profileIdentity.ProfilePhotoUrl;
 
                 var indiaTimeZone = TimeZoneInfo.FindSystemTimeZoneById(
                     OperatingSystem.IsWindows() ? "India Standard Time" : "Asia/Kolkata");
