@@ -130,7 +130,7 @@
                 stopCamera();
 
                 if (error?.name === "NotAllowedError" || error?.name === "SecurityError") {
-                    alert("Camera permission was blocked. Allow camera access for PharmaFlow and try again.");
+                    alert("Camera permission was blocked. Allow camera access for PharmaHex and try again.");
                 } else {
                     alert("The camera could not be opened. Please use Upload Invoice instead.");
                 }
