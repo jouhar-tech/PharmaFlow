@@ -17131,6 +17131,14 @@ body.billing-catalog-modal-open {
 }
 
 
+/* Keep the mobile app navigation out of the way while scanning invoices. */
+@media (max-width: 767.98px) {
+  body.pharma-camera-open .home-mobile-bottom-nav,
+  body.invoice-scanner-open .home-mobile-bottom-nav {
+    display: none !important;
+  }
+}
+
 /* Median mobile app: avoid rendering a duplicate website header above app navigation. */
 @media (max-width: 767.98px) {
     body.median-app .app-topbar {
