@@ -1,6 +1,6 @@
 ﻿<!DOCTYPE html>
 @{
-    var businessName = Context.Session.GetString("BusinessName") ?? "PharmaFlow";
+    var businessName = Context.Session.GetString("BusinessName") ?? "PharmaHex";
     var isHomeDashboard = ViewContext.RouteData.Values["controller"]?.ToString() == "Home"
         && ViewContext.RouteData.Values["action"]?.ToString() == "Index";
     var isExpiryProductsPage = ViewContext.RouteData.Values["controller"]?.ToString() == "ExpiryProducts"
@@ -155,7 +155,7 @@
                     <a class="sidebar-sublink" href="#"><span data-i18n="stockInventoryReport">Stock / Inventory Report</span></a>
                     <a class="sidebar-sublink" href="#"><span data-i18n="stockMovementReport">Stock Movement Report</span></a>
                     <a class="sidebar-sublink" href="#"><span data-i18n="expiryReport">Expiry Report</span></a>
-                    <a class="sidebar-sublink" href="#"><span data-i18n="pharmaFlowValueReport">PharmaFlow Value Report</span></a>
+                    <a class="sidebar-sublink" href="#"><span data-i18n="pharmaFlowValueReport">PharmaHex Value Report</span></a>
                 </div>
                 }
 
