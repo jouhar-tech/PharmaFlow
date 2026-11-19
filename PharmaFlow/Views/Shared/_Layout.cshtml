@@ -67,6 +67,8 @@
     var isMedianApp = Context.Request.Headers.UserAgent.ToString().Contains("median", StringComparison.OrdinalIgnoreCase);
     var isAuthenticated = !string.IsNullOrWhiteSpace(Context.Session.GetString("SupabaseAccessToken"))
         && !string.IsNullOrWhiteSpace(Context.Session.GetString("ProfileId"));
+    var hasCompletedBusinessSetup = !string.IsNullOrWhiteSpace(Context.Session.GetString("BusinessName"));
+    var showMobileBottomNav = isAuthenticated && hasCompletedBusinessSetup;
 
     var skeletonType = isHomeDashboard ? "dashboard"
         : (isInventoryDetailsPage || isBillDetailsPage || isCustomerDetailsPage || isBillingGeneratedPage) ? "detail"
@@ -298,13 +300,8 @@
                                 <div class="page-skeleton-card"><span class="skeleton-shimmer skeleton-icon"></span><span class="skeleton-shimmer skeleton-line"></span><span class="skeleton-shimmer skeleton-line skeleton-line-short"></span></div>
                                 <div class="page-skeleton-card"><span class="skeleton-shimmer skeleton-icon"></span><span class="skeleton-shimmer skeleton-line"></span><span class="skeleton-shimmer skeleton-line skeleton-line-short"></span></div>
                             </div>
-                            <div class="page-skeleton-detail-panel"><span class="skeleton-shimmer skeleton-line skeleton-line-medium"></span><div class="page-skeleton-detail-row"><span class="skeleton-shimmer skeleton-line skeleton-line-short"></span><span class="skeleton-shimmer skeleton-line skeleton-line-medium"></span></div><div class="page-skeleton-detail-row"><span class="skeleton-shimmer skeleton-line skeleton-line-short"></span><span class="skeleton-shimmer skeleton-line skeleton-line-medium"></span></div><div class="page-skeleton-detail-row"><span class="skeleton-shimmer skeleton-line skeleton-line-short"></span><span class="skeleton-shimmer skeleton-line skeleton-line-medium"></span></div></div>
-                        </section>
-                    </div>
-                </div>
-                @RenderBody()
-            </main>
-
+                            <div class="page-skeleton-detail-panel"><span class="skeleton-shimmer skeleton-line skeleton-line-medium"></span><div class="page-skeleton-detail-row"><span class="skeleton-shimmer skeleton-line skeleton-line-short"></span><span class="skeleton-shimmer skeleton-line skeleton-line-medium"></span></div><div class="page-skeleton-detail-row"><span class="skeleton-shimmer skeleton-line skeleton-line-short"></span><span class="skeleton-shimmer skeleton-line skeleton-line-medium"></span></div><div class="page-skeleton-detail-row"><span class="skeleton-shimmer skeleton-line skeleton-line-short"></span><span class="skeleton-shimmer skeleton-            @if (showMobileBottomNav)
+            {
             <nav class="home-mobile-bottom-nav" aria-label="Main mobile navigation">
                 <a class="home-mobile-nav-item @(isHomeDashboard ? "is-active" : "")" asp-controller="Home" asp-action="Index">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.8 12 3l9 7.8v9.2a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>
@@ -324,6 +321,11 @@
                 </a>
                 <a class="home-mobile-nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Profile" ? "is-active" : "")" asp-controller="Profile" asp-action="Index">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>
+                    <span data-i18n="more">More</span>
+                </a>
+            </nav>
+            }
+y="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>
                     <span data-i18n="more">More</span>
                 </a>
             </nav>
