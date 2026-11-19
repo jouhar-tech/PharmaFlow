@@ -300,7 +300,14 @@
                                 <div class="page-skeleton-card"><span class="skeleton-shimmer skeleton-icon"></span><span class="skeleton-shimmer skeleton-line"></span><span class="skeleton-shimmer skeleton-line skeleton-line-short"></span></div>
                                 <div class="page-skeleton-card"><span class="skeleton-shimmer skeleton-icon"></span><span class="skeleton-shimmer skeleton-line"></span><span class="skeleton-shimmer skeleton-line skeleton-line-short"></span></div>
                             </div>
-                            <div class="page-skeleton-detail-panel"><span class="skeleton-shimmer skeleton-line skeleton-line-medium"></span><div class="page-skeleton-detail-row"><span class="skeleton-shimmer skeleton-line skeleton-line-short"></span><span class="skeleton-shimmer skeleton-line skeleton-line-medium"></span></div><div class="page-skeleton-detail-row"><span class="skeleton-shimmer skeleton-line skeleton-line-short"></span><span class="skeleton-shimmer skeleton-line skeleton-line-medium"></span></div><div class="page-skeleton-detail-row"><span class="skeleton-shimmer skeleton-line skeleton-line-short"></span><span class="skeleton-shimmer skeleton-            @if (showMobileBottomNav)
+                            <div class="page-skeleton-detail-panel"><span class="skeleton-shimmer skeleton-line skeleton-line-medium"></span><div class="page-skeleton-detail-row"><span class="skeleton-shimmer skeleton-line skeleton-line-short"></span><span class="skeleton-shimmer skeleton-line skeleton-line-medium"></span></div><div class="page-skeleton-detail-row"><span class="skeleton-shimmer skeleton-line skeleton-line-short"></span><span class="skeleton-shimmer skeleton-line skeleton-line-medium"></span></div><div class="page-skeleton-detail-row"><span class="skeleton-shimmer skeleton-line skeleton-line-short"></span><span class="skeleton-shimmer skeleton-line skeleton-line-medium"></span></div></div>
+                        </section>
+                    </div>
+                </div>
+                @RenderBody()
+            </main>
+
+            @if (showMobileBottomNav)
             {
             <nav class="home-mobile-bottom-nav" aria-label="Main mobile navigation">
                 <a class="home-mobile-nav-item @(isHomeDashboard ? "is-active" : "")" asp-controller="Home" asp-action="Index">
@@ -325,10 +332,6 @@
                 </a>
             </nav>
             }
-y="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>
-                    <span data-i18n="more">More</span>
-                </a>
-            </nav>
             <footer class="app-footer">
                 <span>&copy; 2026 - @businessName</span>
                 <a asp-area="" asp-controller="Home" asp-action="Privacy" data-i18n="privacy">Privacy</a>
