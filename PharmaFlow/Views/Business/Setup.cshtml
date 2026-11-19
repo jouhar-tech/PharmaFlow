@@ -20,7 +20,7 @@
                 <div class="text-center mb-4">
                     <div class="display-6 mb-3">🏥</div>
                     <h1 class="h3 fw-bold">Set up your pharmacy</h1>
-                    <p class="text-muted mb-0">Enter your business name. It will appear across your PharmaFlow dashboard.</p>
+                    <p class="text-muted mb-0">Enter your business name. It will appear across your PharmaHex dashboard.</p>
                 </div>
 
                 <form asp-action="Setup" method="post" data-online-required="true">
@@ -36,7 +36,7 @@
                     {
                         <div class="mb-4">
                             <label asp-for="PhoneNumber" class="form-label fw-semibold"></label>
-                            <input asp-for="PhoneNumber" type="tel" class="form-control form-control-lg" placeholder="e.g. 9876543210" maxlength="20" autocomplete="tel" inputmode="tel" required />
+                            <input asp-for="PhoneNumber" type="tel" class="form-control form-control-lg" placeholder="e.g. 9876543210" maxlength="10" minlength="10" pattern="[0-9]{10}" autocomplete="tel-national" inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9]/g, '').slice(0, 10);" required />
                             <span asp-validation-for="PhoneNumber" class="text-danger"></span>
                             <div class="form-text">Your mobile number is used for important pharmacy alerts and account communication.</div>
                         </div>
