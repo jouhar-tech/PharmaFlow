@@ -31,11 +31,21 @@ public sealed class BusinessController : Controller
         if (profile is null)
             return RedirectToAction("Login", "Account");
 
-        if (!string.IsNullOrWhiteSpace(profile.BusinessName))
+        var googlePhoneRequired =
+            HttpContext.Session.GetString("GoogleProfileSetupRequired") == "true";
+
+        if (googlePhoneRequired && !string.IsNullOrWhiteSpace(profile.PhoneNumber))
+        {
+            HttpContext.Session.Remove("GoogleProfileSetupRequired");
+            googlePhoneRequired = false;
+        }
+
+        if (!string.IsNullOrWhiteSpace(profile.BusinessName) && !googlePhoneRequired)
             return RedirectToAction("Index", "Home");
 
         return View(new BusinessSetupViewModel
         {
+            BusinessName = profile.BusinessName ?? string.Empty,
             PhoneNumber = profile.PhoneNumber
         });
     }
