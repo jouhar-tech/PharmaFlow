@@ -1,9 +1,10 @@
+/* Slightly larger base typography across the app for better readability. */
 html {
-  font-size: 14px;
+  font-size: 15px;
 }
 
 @media (min-width: 768px) {
-  html { font-size: 16px; }
+  html { font-size: 17px; }
 }
 
 .btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
