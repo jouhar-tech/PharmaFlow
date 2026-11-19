@@ -9,8 +9,8 @@ public sealed class BusinessSetupViewModel
     [Display(Name = "Business name")]
     public string BusinessName { get; set; } = string.Empty;
 
-    [Phone(ErrorMessage = "Enter a valid mobile number.")]
-    [StringLength(20)]
+    [StringLength(10, ErrorMessage = "Mobile number must be exactly 10 digits.")]
+    [RegularExpression(@"^$|^[0-9]{10}$", ErrorMessage = "Enter exactly 10 digits using numbers only.")]
     [Display(Name = "Mobile number")]
     public string? PhoneNumber { get; set; }
 }
