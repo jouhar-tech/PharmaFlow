@@ -68,7 +68,8 @@
     var isAuthenticated = !string.IsNullOrWhiteSpace(Context.Session.GetString("SupabaseAccessToken"))
         && !string.IsNullOrWhiteSpace(Context.Session.GetString("ProfileId"));
     var hasCompletedBusinessSetup = !string.IsNullOrWhiteSpace(Context.Session.GetString("BusinessName"));
-    var showMobileBottomNav = isAuthenticated && hasCompletedBusinessSetup;
+    var googlePhoneSetupRequired = Context.Session.GetString("GoogleProfileSetupRequired") == "true";
+    var showMobileBottomNav = isAuthenticated && hasCompletedBusinessSetup && !googlePhoneSetupRequired;
 
     var skeletonType = isHomeDashboard ? "dashboard"
         : (isInventoryDetailsPage || isBillDetailsPage || isCustomerDetailsPage || isBillingGeneratedPage) ? "detail"
