@@ -36,7 +36,7 @@
                     {
                         <div class="mb-4">
                             <label asp-for="PhoneNumber" class="form-label fw-semibold"></label>
-                            <input asp-for="PhoneNumber" class="form-control form-control-lg" placeholder="e.g. 9876543210" maxlength="20" autocomplete="tel" />
+                            <input asp-for="PhoneNumber" type="tel" class="form-control form-control-lg" placeholder="e.g. 9876543210" maxlength="20" autocomplete="tel" inputmode="tel" required />
                             <span asp-validation-for="PhoneNumber" class="text-danger"></span>
                             <div class="form-text">Your mobile number is used for important pharmacy alerts and account communication.</div>
                         </div>
