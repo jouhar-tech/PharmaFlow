@@ -10,7 +10,7 @@ public sealed class BusinessSetupViewModel
     public string BusinessName { get; set; } = string.Empty;
 
     [StringLength(10, ErrorMessage = "Mobile number must be exactly 10 digits.")]
-    [RegularExpression(@"\A(?:[0-9]{10})?\z", ErrorMessage = "Enter exactly 10 digits using numbers only.")]
+    [RegularExpression(@"^[0-9]{10}$", ErrorMessage = "Enter exactly 10 digits using numbers only.")]
     [Display(Name = "Mobile number")]
     public string? PhoneNumber { get; set; }
 }
