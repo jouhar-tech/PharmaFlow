@@ -24,6 +24,9 @@ namespace PharmaFlow.Controllers
         {
             var profileIdValue = HttpContext.Session.GetString("ProfileId");
 
+            if (HttpContext.Session.GetString("GoogleProfileSetupRequired") == "true")
+                return RedirectToAction("Setup", "Business");
+
             var expiringSoonCount = 0;
             var lowStockCount = 0;
             decimal expiryAtRiskValue = 0m;
