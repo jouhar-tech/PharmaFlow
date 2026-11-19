@@ -112,7 +112,7 @@ public sealed class BillsController : Controller
         var pdf = InvoicePdfGenerator.Generate(
             bill,
             items,
-            string.IsNullOrWhiteSpace(profile?.BusinessName) ? "PharmaFlow" : profile.BusinessName!,
+            string.IsNullOrWhiteSpace(profile?.BusinessName) ? "PharmaHex" : profile.BusinessName!,
             profile?.PhoneNumber,
             profile?.Email);
 
@@ -172,7 +172,7 @@ public sealed class BillsController : Controller
         {
             BillId = bill.BillId,
             BusinessName = string.IsNullOrWhiteSpace(profile?.BusinessName)
-                ? "PharmaFlow"
+                ? "PharmaHex"
                 : profile.BusinessName!,
             BusinessPhone = profile?.PhoneNumber,
             BusinessEmail = profile?.Email,
