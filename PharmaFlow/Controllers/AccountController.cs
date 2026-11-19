@@ -441,7 +441,6 @@ public class AccountController : Controller
         var profile = await _dbContext.Profiles.SingleOrDefaultAsync(
             p => p.UserId == userId,
             cancellationToken);
-        var isNewGoogleProfile = profile is null;
 
         if (profile is null)
         {
@@ -470,10 +469,7 @@ public class AccountController : Controller
         SetAuthenticatedSession(result, profile.Id, profile.BusinessName, profile.Username);
         await MarkProfileActiveAsync(profile.Id, cancellationToken);
 
-        if (isNewGoogleProfile)
-        {
-            HttpContext.Session.SetString("GoogleProfileSetupRequired", "true");
-        }
+        SetGooglePhoneSetupRequirement(profile);
 
         return RedirectAfterAuthentication(profile.BusinessName);
     }
@@ -550,7 +546,6 @@ public class AccountController : Controller
         }
 
         var profile = await _dbContext.Profiles.SingleOrDefaultAsync(p => p.UserId == userId, cancellationToken);
-        var isNewGoogleProfile = profile is null;
 
         if (profile is null)
         {
@@ -579,8 +574,7 @@ public class AccountController : Controller
         SetAuthenticatedSession(result, profile.Id, profile.BusinessName, profile.Username);
         await MarkProfileActiveAsync(profile.Id, cancellationToken);
 
-        if (isNewGoogleProfile)
-            HttpContext.Session.SetString("GoogleProfileSetupRequired", "true");
+        SetGooglePhoneSetupRequirement(profile);
 
         return RedirectAfterAuthentication(profile.BusinessName);
     }
@@ -633,6 +627,7 @@ public class AccountController : Controller
         HttpContext.Session.SetString("Username", username);
         HttpContext.Session.SetString("UserRole", "Owner");
         HttpContext.Session.Remove("StaffId");
+        HttpContext.Session.Remove("GoogleProfileSetupRequired");
 
         if (!string.IsNullOrWhiteSpace(businessName))
             HttpContext.Session.SetString("BusinessName", businessName);
@@ -679,10 +674,24 @@ public class AccountController : Controller
                 .SetProperty(p => p.LastLogoutAt, DateTime.UtcNow), cancellationToken);
     }
 
-    private IActionResult RedirectAfterAuthentication(string? businessName) =>
-        string.IsNullOrWhiteSpace(businessName)
-            ? RedirectToAction("Setup", "Business")
-            : RedirectToAction("Index", "Home");
+    private void SetGooglePhoneSetupRequirement(Profile profile)
+    {
+        if (string.IsNullOrWhiteSpace(profile.PhoneNumber))
+            HttpContext.Session.SetString("GoogleProfileSetupRequired", "true");
+        else
+            HttpContext.Session.Remove("GoogleProfileSetupRequired");
+    }
+
+    private IActionResult RedirectAfterAuthentication(string? businessName)
+    {
+        if (HttpContext.Session.GetString("GoogleProfileSetupRequired") == "true" ||
+            string.IsNullOrWhiteSpace(businessName))
+        {
+            return RedirectToAction("Setup", "Business");
+        }
+
+        return RedirectToAction("Index", "Home");
+    }
 
     private async Task<string> CreateUniqueUsernameAsync(string email, CancellationToken cancellationToken)
     {
