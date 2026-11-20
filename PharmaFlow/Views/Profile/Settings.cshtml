@@ -123,14 +123,13 @@
         });
     }
     const applyThemeState = () => {
-        const current = localStorage.getItem('pharmaflow-theme') || document.documentElement.getAttribute('data-theme') || 'light';
+        const current = localStorage.getItem('pharmaflow-theme') || 'light';
         document.querySelectorAll('[data-phx-theme]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.phxTheme === current)));
     };
     document.querySelectorAll('[data-phx-theme]').forEach(button => button.addEventListener('click', () => {
         const theme = button.dataset.phxTheme;
         localStorage.setItem('pharmaflow-theme', theme);
-        document.documentElement.setAttribute('data-theme', theme);
-        document.body.classList.toggle('dark-mode', theme === 'dark');
+        document.body.classList.toggle('theme-dark', theme === 'dark');
         applyThemeState();
     }));
     applyThemeState();
