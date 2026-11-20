@@ -43,6 +43,22 @@ public sealed class ProfileController : Controller
     }
 
     [HttpGet]
+    public async Task<IActionResult> Settings(CancellationToken cancellationToken)
+    {
+        var profile = await GetCurrentProfileAsync(cancellationToken);
+        if (profile is null)
+            return RedirectToAction("Login", "Account");
+
+        return View(new ProfileViewModel
+        {
+            BusinessName = profile.BusinessName ?? string.Empty,
+            Username = profile.Username,
+            PhoneNumber = profile.PhoneNumber,
+            Email = profile.Email ?? string.Empty
+        });
+    }
+
+    [HttpGet]
     public async Task<IActionResult> Account(CancellationToken cancellationToken)
     {
         if (IsStaff())
