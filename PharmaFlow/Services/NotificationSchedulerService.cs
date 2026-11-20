@@ -7,7 +7,7 @@ public sealed class NotificationSchedulerService : BackgroundService
 {
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<NotificationSchedulerService> _logger;
-    private static readonly TimeSpan DailySendTime = new(8, 30, 0);
+    private static readonly TimeSpan DailySendTime = new(10, 30, 0);
     private const int MaxParallelProfiles = 10;
     private const int SavingsCycleDays = 30;
 
