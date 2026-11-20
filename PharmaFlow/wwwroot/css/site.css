@@ -17146,3 +17146,10 @@ body.billing-catalog-modal-open {
         display: none !important;
     }
 }
+
+/* Settings page: use its own page heading on mobile; hide global menu/title/avatar header. */
+@media (max-width: 767.98px) {
+  body.settings-page-body .app-topbar {
+    display: none !important;
+  }
+}
