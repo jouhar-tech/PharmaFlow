@@ -115,7 +115,7 @@ public sealed class PharmaFlowPushNotificationService : IPharmaFlowPushNotificat
         return await SendToProfileAsync(
             profileId,
             "PharmaHex Notifications Enabled",
-            "Your PharmaHex notifications are working. Daily stock alerts will arrive at 8:30 AM.",
+            "Your PharmaHex notifications are working. Daily stock alerts will arrive at 10:30 AM.",
             "/Home",
             cancellationToken);
     }
