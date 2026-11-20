@@ -1,0 +1,138 @@
+@model PharmaFlow.Models.ViewModels.ProfileViewModel
+@{
+    ViewData["Title"] = "Settings";
+    var isStaff = string.Equals(Context.Session.GetString("UserRole"), "Staff", StringComparison.OrdinalIgnoreCase);
+}
+
+<div class="phx-settings-page">
+    <header class="phx-settings-header">
+        <a asp-controller="Profile" asp-action="Index" class="phx-settings-back" aria-label="Back to More">‹</a>
+        <div>
+            <span class="phx-settings-eyebrow">PHARMAHEX</span>
+            <h1>Settings</h1>
+            <p>Manage your pharmacy, notifications and app preferences.</p>
+        </div>
+    </header>
+
+    <section class="phx-settings-account">
+        <div class="phx-settings-avatar">@((string.IsNullOrWhiteSpace(Model.Username) ? "U" : Model.Username[..1]).ToUpperInvariant())</div>
+        <div class="phx-settings-account-copy">
+            <strong>@(string.IsNullOrWhiteSpace(Model.BusinessName) ? "Your pharmacy" : Model.BusinessName)</strong>
+            <span>@Model.Email</span>
+        </div>
+        <a asp-controller="Profile" asp-action="Account" class="phx-settings-edit">Edit profile</a>
+    </section>
+
+    <section class="phx-settings-group">
+        <div class="phx-settings-group-heading"><span>BUSINESS</span><small>Pharmacy information and team</small></div>
+        <a asp-controller="Profile" asp-action="Account" class="phx-settings-row">
+            <span class="phx-settings-icon">⌂</span><span class="phx-settings-row-copy"><strong>Pharmacy profile</strong><small>Business name, contact details and address</small></span><span class="phx-settings-chevron">›</span>
+        </a>
+        @if (!isStaff)
+        {
+            <a asp-controller="Profile" asp-action="BusinessSummary" class="phx-settings-row">
+                <span class="phx-settings-icon">▤</span><span class="phx-settings-row-copy"><strong>Business summary</strong><small>Sales, profit and outstanding balances</small></span><span class="phx-settings-chevron">›</span>
+            </a>
+            <a asp-controller="Staff" asp-action="Add" class="phx-settings-row">
+                <span class="phx-settings-icon">♙</span><span class="phx-settings-row-copy"><strong>Staff &amp; access</strong><small>Manage staff accounts and access</small></span><span class="phx-settings-chevron">›</span>
+            </a>
+        }
+    </section>
+
+    <section class="phx-settings-group">
+        <div class="phx-settings-group-heading"><span>OPERATIONS</span><small>Control daily pharmacy workflows</small></div>
+        <a asp-controller="Notifications" asp-action="Index" class="phx-settings-row">
+            <span class="phx-settings-icon">♧</span><span class="phx-settings-row-copy"><strong>Notifications</strong><small>View pharmacy alerts and reminders</small></span><span class="phx-settings-chevron">›</span>
+        </a>
+        <a asp-controller="Inventory" asp-action="Index" class="phx-settings-row">
+            <span class="phx-settings-icon">▦</span><span class="phx-settings-row-copy"><strong>Inventory</strong><small>Manage stock, batches and expiry information</small></span><span class="phx-settings-chevron">›</span>
+        </a>
+        <a asp-controller="Bills" asp-action="Index" class="phx-settings-row">
+            <span class="phx-settings-icon">▧</span><span class="phx-settings-row-copy"><strong>Billing</strong><small>View bills and sales records</small></span><span class="phx-settings-chevron">›</span>
+        </a>
+    </section>
+
+    <section class="phx-settings-group">
+        <div class="phx-settings-group-heading"><span>APP PREFERENCES</span><small>Personalise your PharmaHex experience</small></div>
+        <div class="phx-settings-row">
+            <span class="phx-settings-icon">文</span><span class="phx-settings-row-copy"><strong>Language</strong><small>Choose your preferred language</small></span>
+            <select id="phxSettingsLanguage" class="phx-settings-select" aria-label="Language">
+                <option value="en">English</option><option value="kn">ಕನ್ನಡ</option><option value="hi">हिन्दी</option>
+            </select>
+        </div>
+        <div class="phx-settings-row">
+            <span class="phx-settings-icon">◐</span><span class="phx-settings-row-copy"><strong>Appearance</strong><small>Choose light or dark theme</small></span>
+            <div class="phx-settings-theme" role="group" aria-label="Appearance">
+                <button type="button" data-phx-theme="light">Light</button><button type="button" data-phx-theme="dark">Dark</button>
+            </div>
+        </div>
+    </section>
+
+    <section class="phx-settings-group">
+        <div class="phx-settings-group-heading"><span>ACCOUNT &amp; SUPPORT</span><small>Plan details and help</small></div>
+        <a asp-controller="Profile" asp-action="UnlimitedPlan" class="phx-settings-row">
+            <span class="phx-settings-icon">◇</span><span class="phx-settings-row-copy"><strong>Subscription</strong><small>View plans and upgrade options</small></span><span class="phx-settings-chevron">›</span>
+        </a>
+        <a asp-controller="Profile" asp-action="Feedback" class="phx-settings-row">
+            <span class="phx-settings-icon">♡</span><span class="phx-settings-row-copy"><strong>Help &amp; feedback</strong><small>Send feedback to the PharmaHex team</small></span><span class="phx-settings-chevron">›</span>
+        </a>
+    </section>
+    <p class="phx-settings-footnote">Some advanced controls will appear here as they become available.</p>
+</div>
+
+<style>
+.phx-settings-page{width:100%;max-width:900px;margin:0 auto;padding:1.25rem 0 2.5rem;color:#172033}
+.phx-settings-header{display:flex;align-items:flex-start;gap:1rem;margin:0 0 1.35rem}
+.phx-settings-back{width:42px;height:42px;flex:0 0 42px;display:grid;place-items:center;border-radius:13px;background:#fff;border:1px solid #e4eaf2;color:#243247;text-decoration:none;font-size:1.8rem;line-height:1;box-shadow:0 3px 12px rgba(15,23,42,.05)}
+.phx-settings-eyebrow{font-size:.68rem;font-weight:800;letter-spacing:.13em;color:#269c95}
+.phx-settings-header h1{font-size:clamp(1.55rem,4vw,2rem);font-weight:800;letter-spacing:-.035em;margin:.12rem 0 .2rem}
+.phx-settings-header p{margin:0;color:#718096;font-size:.9rem}
+.phx-settings-account{display:flex;align-items:center;gap:.85rem;padding:1rem 1.1rem;margin-bottom:1.1rem;background:linear-gradient(135deg,#fff,#f7fbfc);border:1px solid #e5edf0;border-radius:18px;box-shadow:0 5px 18px rgba(15,23,42,.04)}
+.phx-settings-avatar{width:46px;height:46px;display:grid;place-items:center;flex:0 0 46px;border-radius:15px;background:#dff5f1;color:#168b84;font-weight:800;font-size:1.15rem}
+.phx-settings-account-copy{min-width:0;display:flex;flex-direction:column;gap:.18rem}
+.phx-settings-account-copy strong{font-size:.98rem;font-weight:750;overflow-wrap:anywhere}
+.phx-settings-account-copy span{font-size:.78rem;color:#718096;overflow-wrap:anywhere}
+.phx-settings-edit{margin-left:auto;color:#168b84;text-decoration:none;font-size:.82rem;font-weight:750;white-space:nowrap}
+.phx-settings-group{margin:0 0 1rem;padding:.35rem .95rem .45rem;background:#fff;border:1px solid #e7edf3;border-radius:17px;box-shadow:0 5px 18px rgba(15,23,42,.035)}
+.phx-settings-group-heading{display:flex;flex-direction:column;gap:.12rem;padding:.8rem .15rem .55rem}
+.phx-settings-group-heading span{font-size:.68rem;letter-spacing:.1em;font-weight:850;color:#259b94}
+.phx-settings-group-heading small{font-size:.76rem;color:#8995a6}
+.phx-settings-row{min-height:66px;display:flex;align-items:center;gap:.8rem;padding:.72rem .15rem;border-top:1px solid #f0f3f6;color:inherit;text-decoration:none}
+.phx-settings-row:first-of-type{border-top:0}
+.phx-settings-row:hover{color:inherit;background:#fbfdfd}
+.phx-settings-icon{width:38px;height:38px;flex:0 0 38px;display:grid;place-items:center;border-radius:12px;background:#eef8f7;color:#218f89;font-size:1.15rem;font-weight:700}
+.phx-settings-row-copy{min-width:0;display:flex;flex-direction:column;gap:.16rem}
+.phx-settings-row-copy strong{font-size:.88rem;font-weight:750;color:#253247}
+.phx-settings-row-copy small{font-size:.74rem;line-height:1.35;color:#7c899b}
+.phx-settings-chevron{margin-left:auto;color:#9aa6b5;font-size:1.5rem;line-height:1}
+.phx-settings-select{margin-left:auto;max-width:130px;border:1px solid #dce5eb;border-radius:10px;background:#fff;padding:.48rem .55rem;color:#334155;font:inherit;font-size:.78rem}
+.phx-settings-theme{margin-left:auto;display:flex;padding:3px;border-radius:10px;background:#f0f4f6;gap:2px}
+.phx-settings-theme button{border:0;background:transparent;border-radius:8px;padding:.42rem .6rem;color:#64748b;font:inherit;font-size:.74rem;font-weight:700}
+.phx-settings-theme button[aria-pressed="true"]{background:#fff;color:#168b84;box-shadow:0 1px 4px rgba(15,23,42,.12)}
+.phx-settings-footnote{text-align:center;color:#98a3b2;font-size:.74rem;padding:.35rem .5rem}
+@media(max-width:767.98px){.phx-settings-page{padding:1rem 0 5.5rem}.phx-settings-header{gap:.75rem}.phx-settings-group{padding-right:.8rem;padding-left:.8rem}.phx-settings-row{gap:.65rem}.phx-settings-row-copy small{font-size:.72rem}.phx-settings-account{padding:.85rem}.phx-settings-edit{font-size:.76rem}}
+</style>
+<script>
+(() => {
+    const language = document.getElementById('phxSettingsLanguage');
+    if (language) {
+        language.value = localStorage.getItem('pharmaflow-language') || 'en';
+        language.addEventListener('change', () => {
+            localStorage.setItem('pharmaflow-language', language.value);
+            window.pharmaFlowLanguage?.apply(language.value);
+        });
+    }
+    const applyThemeState = () => {
+        const current = localStorage.getItem('pharmaflow-theme') || document.documentElement.getAttribute('data-theme') || 'light';
+        document.querySelectorAll('[data-phx-theme]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.phxTheme === current)));
+    };
+    document.querySelectorAll('[data-phx-theme]').forEach(button => button.addEventListener('click', () => {
+        const theme = button.dataset.phxTheme;
+        localStorage.setItem('pharmaflow-theme', theme);
+        document.documentElement.setAttribute('data-theme', theme);
+        document.body.classList.toggle('dark-mode', theme === 'dark');
+        applyThemeState();
+    }));
+    applyThemeState();
+})();
+</script>
