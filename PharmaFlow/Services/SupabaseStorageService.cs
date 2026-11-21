@@ -150,11 +150,16 @@ public sealed class SupabaseStorageService : ISupabaseStorageService
 
     private void AddServerCredentials(HttpRequestMessage request)
     {
-        var key = _configuration["Supabase:ServiceRoleKey"];
+        // Prefer Supabase's current server-only secret API key. Keep the legacy
+        // service_role setting as a backwards-compatible fallback for existing deployments.
+        var key = _configuration["Supabase:SecretKey"];
+        if (string.IsNullOrWhiteSpace(key))
+            key = _configuration["Supabase:ServiceRoleKey"];
+
         if (string.IsNullOrWhiteSpace(key))
         {
             throw new InvalidOperationException(
-                "Invoice image storage is not configured. Set Supabase:ServiceRoleKey on the server.");
+                "Invoice image storage is not configured. Set Supabase:SecretKey on the server (preferred), or the legacy Supabase:ServiceRoleKey.");
         }
 
         request.Headers.Add("apikey", key);
