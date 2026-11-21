@@ -96,13 +96,8 @@ public sealed class InvoiceCaptureController : Controller
 
         var now = DateTime.UtcNow;
 
-        // Drafts contain only temporary OCR text. Remove abandoned drafts after 24 hours.
-        await _dbContext.InvoiceImports
-            .Where(item =>
-                item.ProfileId == profileId &&
-                item.Status == "draft" &&
-                item.CreatedAt < now.AddHours(-24))
-            .ExecuteDeleteAsync(cancellationToken);
+        // Remove abandoned drafts and their private Storage objects after 24 hours.
+        await CleanupExpiredDraftsAsync(profileId, now.AddHours(-24), cancellationToken);
 
         var import = new InvoiceImport
         {
@@ -229,39 +224,10 @@ public sealed class InvoiceCaptureController : Controller
 
             var now = DateTime.UtcNow;
 
-            var expiredDrafts = await _dbContext.InvoiceImports
-                .AsNoTracking()
-                .Where(item =>
-                    item.ProfileId == profileId &&
-                    item.Status == "draft" &&
-                    item.CreatedAt < now.AddHours(-24))
-                .Select(item => new { item.ImportId, item.StoragePath })
-                .ToListAsync(cancellationToken);
-
-            foreach (var expiredDraft in expiredDrafts)
-            {
-                if (string.IsNullOrWhiteSpace(expiredDraft.StoragePath))
-                    continue;
-
-                try
-                {
-                    await _storageService.DeleteAsync(expiredDraft.StoragePath, cancellationToken);
-                }
-                catch (Exception storageCleanupException)
-                {
-                    _logger.LogWarning(
-                        storageCleanupException,
-                        "Could not remove stored scan for expired invoice draft {ImportId}.",
-                        expiredDraft.ImportId);
-                }
-            }
-
-            await _dbContext.InvoiceImports
-                .Where(item =>
-                    item.ProfileId == profileId &&
-                    item.Status == "draft" &&
-                    item.CreatedAt < now.AddHours(-24))
-                .ExecuteDeleteAsync(cancellationToken);
+            await CleanupExpiredDraftsAsync(
+                profileId,
+                now.AddHours(-24),
+                cancellationToken);
 
             var safeFileName = Path.GetFileName(
                 string.IsNullOrWhiteSpace(originalFileName)
@@ -1323,6 +1289,46 @@ public sealed class InvoiceCaptureController : Controller
 
     private static string BatchKey(long productId, string batchNumber) =>
         $"{productId}\u001F{NormalizeKey(batchNumber)}";
+
+    private async Task CleanupExpiredDraftsAsync(
+        long profileId,
+        DateTime olderThanUtc,
+        CancellationToken cancellationToken)
+    {
+        var expiredDrafts = await _dbContext.InvoiceImports
+            .AsNoTracking()
+            .Where(item =>
+                item.ProfileId == profileId &&
+                item.Status == "draft" &&
+                item.CreatedAt < olderThanUtc)
+            .Select(item => new { item.ImportId, item.StoragePath })
+            .ToListAsync(cancellationToken);
+
+        foreach (var expiredDraft in expiredDrafts)
+        {
+            if (string.IsNullOrWhiteSpace(expiredDraft.StoragePath))
+                continue;
+
+            try
+            {
+                await _storageService.DeleteAsync(expiredDraft.StoragePath, cancellationToken);
+            }
+            catch (Exception storageCleanupException)
+            {
+                _logger.LogWarning(
+                    storageCleanupException,
+                    "Could not remove stored scan for expired invoice draft {ImportId}.",
+                    expiredDraft.ImportId);
+            }
+        }
+
+        await _dbContext.InvoiceImports
+            .Where(item =>
+                item.ProfileId == profileId &&
+                item.Status == "draft" &&
+                item.CreatedAt < olderThanUtc)
+            .ExecuteDeleteAsync(cancellationToken);
+    }
 
     private bool TryGetProfileId(out long profileId) =>
         long.TryParse(HttpContext.Session.GetString("ProfileId"), out profileId);
