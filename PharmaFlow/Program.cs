@@ -58,6 +58,10 @@ builder.Services.Configure<GzipCompressionProviderOptions>(options =>
 });
 
 builder.Services.AddHttpClient<ISupabaseAuthService, SupabaseAuthService>();
+builder.Services.AddHttpClient<ISupabaseStorageService, SupabaseStorageService>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(90);
+});
 builder.Services.AddHttpClient<IInvoiceVisionService, GeminiInvoiceVisionService>();
 builder.Services.AddHttpClient("IndiaMedicine", client =>
 {
