@@ -334,13 +334,19 @@ public sealed class InvoiceCaptureController : Controller
             {
                 bufferedInvoice.Position = 0;
                 var storageUploadStopwatch = Stopwatch.StartNew();
-                await _storageService.UploadAsync(
-                    storagePath,
-                    bufferedInvoice,
-                    mimeType,
-                    cancellationToken);
-                storageUploadStopwatch.Stop();
-                storageUploadMs = storageUploadStopwatch.ElapsedMilliseconds;
+                try
+                {
+                    await _storageService.UploadAsync(
+                        storagePath,
+                        bufferedInvoice,
+                        mimeType,
+                        cancellationToken);
+                }
+                finally
+                {
+                    storageUploadStopwatch.Stop();
+                    storageUploadMs = storageUploadStopwatch.ElapsedMilliseconds;
+                }
 
                 import.StoragePath = storagePath;
                 import.StorageContentType = mimeType;
@@ -356,11 +362,32 @@ public sealed class InvoiceCaptureController : Controller
             }
             catch (Exception storageException)
             {
+                requestStopwatch.Stop();
+                var failedServerTotalMs = requestStopwatch.ElapsedMilliseconds;
+                Response.Headers["Server-Timing"] = string.Join(", ", new[]
+                {
+                    $"image-buffer;dur={imageBufferMs.ToString(CultureInfo.InvariantCulture)}",
+                    $"gemini-pipeline;dur={geminiPipelineMs.ToString(CultureInfo.InvariantCulture)}",
+                    $"draft-cleanup;dur={draftCleanupMs.ToString(CultureInfo.InvariantCulture)}",
+                    $"database-insert;dur={databaseInsertMs.ToString(CultureInfo.InvariantCulture)}",
+                    $"storage-upload;dur={storageUploadMs.ToString(CultureInfo.InvariantCulture)}",
+                    $"server-total;dur={failedServerTotalMs.ToString(CultureInfo.InvariantCulture)}"
+                });
+
                 _logger.LogError(
                     storageException,
-                    "Could not persist scanned invoice file for import {ImportId}, profile {ProfileId}.",
+                    "Invoice scan failed while storing original file. ProfileId {ProfileId}; ImportId {ImportId}; FileBytes {FileBytes}; MimeType {MimeType}; ExtractedRows {ExtractedRows}; ImageBufferMs {ImageBufferMs}; GeminiPipelineMs {GeminiPipelineMs}; DraftCleanupMs {DraftCleanupMs}; DatabaseInsertMs {DatabaseInsertMs}; StorageUploadMs {StorageUploadMs}; FailedServerTotalMs {ServerTotalMs}.",
+                    profileId,
                     import.ImportId,
-                    profileId);
+                    invoice.Length,
+                    mimeType,
+                    import.Items.Count,
+                    imageBufferMs,
+                    geminiPipelineMs,
+                    draftCleanupMs,
+                    databaseInsertMs,
+                    storageUploadMs,
+                    failedServerTotalMs);
 
                 try
                 {
