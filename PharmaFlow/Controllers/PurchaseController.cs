@@ -219,7 +219,7 @@ public sealed class PurchaseController : Controller
                 return NotFound();
 
             Response.Headers.CacheControl = "private, no-store";
-            Response.Headers.XContentTypeOptions = "nosniff";
+            Response.Headers["X-Content-Type-Options"] = "nosniff";
 
             var isPdf = string.Equals(
                 storedObject.ContentType,
