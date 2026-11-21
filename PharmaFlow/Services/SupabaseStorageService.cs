@@ -53,8 +53,17 @@ public sealed class SupabaseStorageService : ISupabaseStorageService
 
         if (!response.IsSuccessStatusCode)
         {
+            var errorBody = await response.Content.ReadAsStringAsync(cancellationToken);
+            var diagnostic = string.IsNullOrWhiteSpace(errorBody)
+                ? response.ReasonPhrase ?? "No response details returned."
+                : errorBody.Length > 1000
+                    ? errorBody[..1000]
+                    : errorBody;
+
+            // This exception is written to server logs by InvoiceCaptureController.
+            // It deliberately excludes request headers and credentials.
             throw new InvalidOperationException(
-                $"Supabase Storage upload failed with HTTP {(int)response.StatusCode}.");
+                $"Supabase Storage upload failed with HTTP {(int)response.StatusCode}: {diagnostic}");
         }
     }
 
