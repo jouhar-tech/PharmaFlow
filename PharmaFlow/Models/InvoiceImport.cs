@@ -5,6 +5,8 @@ public sealed class InvoiceImport
     public long ImportId { get; set; }
     public long ProfileId { get; set; }
     public string OriginalFileName { get; set; } = string.Empty;
+    public string? StoragePath { get; set; }
+    public string? StorageContentType { get; set; }
     public string SourceType { get; set; } = "upload";
     public string? DistributorName { get; set; }
     public string? InvoiceNumber { get; set; }
