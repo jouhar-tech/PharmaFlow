@@ -17154,3 +17154,8 @@ body.billing-catalog-modal-open {
     display: none !important;
   }
 }
+
+/* Ensure purchase summary values remain readable on the dark distributor page. */
+body.theme-dark .purchase-distributor-page .purchase-distributor-summary > div > strong {
+  color: #f8fafc !important;
+}
