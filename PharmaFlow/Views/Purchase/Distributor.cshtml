@@ -52,6 +52,61 @@
                         </summary>
 
                         <div class="purchase-invoice-body">
+                            <section class="purchase-invoice-scan" aria-label="Scanned invoice document">
+                                <div class="purchase-invoice-scan-heading">
+                                    <div>
+                                        <strong>Scanned invoice</strong>
+                                        <small>Original document captured for this purchase</small>
+                                    </div>
+                                    <span class="purchase-invoice-scan-badge">ORIGINAL</span>
+                                </div>
+
+                                @if (invoice.HasScannedFile)
+                                {
+                                    var invoiceFileUrl = Url.Action("InvoiceFile", "Purchase", new { id = invoice.ImportId });
+                                    if (invoice.IsPdf)
+                                    {
+                                        <div class="purchase-invoice-pdf-preview">
+                                            <div class="purchase-invoice-pdf-label">
+                                                <span class="purchase-invoice-pdf-icon">PDF</span>
+                                                <div>
+                                                    <strong>Invoice PDF</strong>
+                                                    <small>Preview below or open the document separately</small>
+                                                </div>
+                                            </div>
+                                            <iframe src="@invoiceFileUrl" title="Scanned invoice PDF for invoice @invoice.InvoiceNumber" loading="lazy"></iframe>
+                                            <a href="@invoiceFileUrl" target="_blank" rel="noopener noreferrer" class="purchase-invoice-open-file">Open PDF in new tab</a>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <a href="@invoiceFileUrl"
+                                           target="_blank"
+                                           rel="noopener noreferrer"
+                                           class="purchase-invoice-image-trigger"
+                                           data-invoice-preview
+                                           data-preview-url="@invoiceFileUrl"
+                                           data-preview-title="Invoice @invoice.InvoiceNumber"
+                                           aria-label="Open scanned invoice @invoice.InvoiceNumber">
+                                            <img src="@invoiceFileUrl"
+                                                 alt="Scanned purchase invoice @invoice.InvoiceNumber"
+                                                 loading="lazy" />
+                                            <span>Tap to view full invoice</span>
+                                        </a>
+                                    }
+                                }
+                                else
+                                {
+                                    <div class="purchase-invoice-scan-unavailable">
+                                        <span aria-hidden="true">▧</span>
+                                        <div>
+                                            <strong>Original scan unavailable</strong>
+                                            <small>This invoice was saved before PharmaHex began retaining scanned documents.</small>
+                                        </div>
+                                    </div>
+                                }
+                            </section>
+
                             @if (invoice.Items.Count == 0)
                             {
                                 <div class="purchase-invoice-empty">No product rows were saved for this invoice.</div>
@@ -88,3 +143,53 @@
         </section>
     </main>
 </div>
+
+<dialog class="purchase-invoice-preview-dialog" id="purchaseInvoicePreviewDialog" aria-labelledby="purchaseInvoicePreviewTitle">
+    <div class="purchase-invoice-preview-dialog-panel">
+        <header>
+            <strong id="purchaseInvoicePreviewTitle">Scanned invoice</strong>
+            <button type="button" id="purchaseInvoicePreviewClose" aria-label="Close invoice preview">×</button>
+        </header>
+        <div class="purchase-invoice-preview-dialog-body">
+            <img id="purchaseInvoicePreviewImage" alt="Full scanned invoice preview" />
+        </div>
+    </div>
+</dialog>
+
+<script>
+(() => {
+    const dialog = document.getElementById("purchaseInvoicePreviewDialog");
+    const previewImage = document.getElementById("purchaseInvoicePreviewImage");
+    const previewTitle = document.getElementById("purchaseInvoicePreviewTitle");
+    const closeButton = document.getElementById("purchaseInvoicePreviewClose");
+
+    if (!dialog || !previewImage || !previewTitle || !closeButton || dialog.dataset.initialized === "true")
+        return;
+
+    dialog.dataset.initialized = "true";
+
+    document.querySelectorAll("[data-invoice-preview]").forEach(link => {
+        link.addEventListener("click", event => {
+            if (typeof dialog.showModal !== "function")
+                return;
+
+            event.preventDefault();
+            previewImage.src = link.dataset.previewUrl || link.href;
+            previewTitle.textContent = link.dataset.previewTitle || "Scanned invoice";
+            dialog.showModal();
+        });
+    });
+
+    const closePreview = () => {
+        dialog.close();
+        previewImage.removeAttribute("src");
+    };
+
+    closeButton.addEventListener("click", closePreview);
+    dialog.addEventListener("click", event => {
+        if (event.target === dialog)
+            closePreview();
+    });
+    dialog.addEventListener("close", () => previewImage.removeAttribute("src"));
+})();
+</script>
