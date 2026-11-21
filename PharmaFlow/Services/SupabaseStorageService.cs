@@ -150,20 +150,27 @@ public sealed class SupabaseStorageService : ISupabaseStorageService
 
     private void AddServerCredentials(HttpRequestMessage request)
     {
-        // Prefer Supabase's current server-only secret API key. Keep the legacy
-        // service_role setting as a backwards-compatible fallback for existing deployments.
-        var key = _configuration["Supabase:SecretKey"];
-        if (string.IsNullOrWhiteSpace(key))
-            key = _configuration["Supabase:ServiceRoleKey"];
+        // Supabase's new sb_secret_* API keys are opaque API keys, not JWTs.
+        // Send them through apikey only; do not place them in Authorization: Bearer.
+        var secretKey = _configuration["Supabase:SecretKey"];
+        if (!string.IsNullOrWhiteSpace(secretKey))
+        {
+            request.Headers.Add("apikey", secretKey.Trim());
+            return;
+        }
 
-        if (string.IsNullOrWhiteSpace(key))
+        // Backwards compatibility: the legacy service_role value is a JWT and
+        // is accepted in both headers by the Storage API.
+        var serviceRoleKey = _configuration["Supabase:ServiceRoleKey"];
+        if (string.IsNullOrWhiteSpace(serviceRoleKey))
         {
             throw new InvalidOperationException(
                 "Invoice image storage is not configured. Set Supabase:SecretKey on the server (preferred), or the legacy Supabase:ServiceRoleKey.");
         }
 
-        request.Headers.Add("apikey", key);
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", key);
+        request.Headers.Add("apikey", serviceRoleKey.Trim());
+        request.Headers.Authorization =
+            new AuthenticationHeaderValue("Bearer", serviceRoleKey.Trim());
     }
 
     private string GetBaseUrl()
