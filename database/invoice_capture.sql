@@ -1,7 +1,7 @@
 -- PharmaFlow - Invoice capture staging and audit tables
 -- Run this script once in the Supabase PostgreSQL SQL editor.
--- It does not store the invoice image. Raw OCR text is temporary and is
--- cleared by the application after a successful stock save.
+-- Scanned files are stored in the private Supabase Storage bucket configured by
+-- database/invoice_image_storage.sql. The database stores only the object path.
 
 CREATE OR REPLACE FUNCTION public.set_updated_at()
 RETURNS trigger
