@@ -18,15 +18,18 @@ public sealed class InvoiceCaptureController : Controller
     private readonly ApplicationDbContext _dbContext;
     private readonly ILogger<InvoiceCaptureController> _logger;
     private readonly IInvoiceVisionService _invoiceVisionService;
+    private readonly ISupabaseStorageService _storageService;
 
     public InvoiceCaptureController(
         ApplicationDbContext dbContext,
         ILogger<InvoiceCaptureController> logger,
-        IInvoiceVisionService invoiceVisionService)
+        IInvoiceVisionService invoiceVisionService,
+        ISupabaseStorageService storageService)
     {
         _dbContext = dbContext;
         _logger = logger;
         _invoiceVisionService = invoiceVisionService;
+        _storageService = storageService;
     }
 
     [HttpPost]
@@ -191,10 +194,14 @@ public sealed class InvoiceCaptureController : Controller
 
         try
         {
-            await using var stream = invoice.OpenReadStream();
+            // Keep one bounded copy so the exact file sent to OCR can also be persisted
+            // after Gemini succeeds. The request is already limited to 25 MB above.
+            await using var bufferedInvoice = new MemoryStream((int)invoice.Length);
+            await invoice.CopyToAsync(bufferedInvoice, cancellationToken);
+            bufferedInvoice.Position = 0;
 
             var visionResult = await _invoiceVisionService.ExtractAsync(
-                stream,
+                bufferedInvoice,
                 mimeType,
                 cancellationToken);
 
@@ -221,6 +228,33 @@ public sealed class InvoiceCaptureController : Controller
                 });
 
             var now = DateTime.UtcNow;
+
+            var expiredDrafts = await _dbContext.InvoiceImports
+                .AsNoTracking()
+                .Where(item =>
+                    item.ProfileId == profileId &&
+                    item.Status == "draft" &&
+                    item.CreatedAt < now.AddHours(-24))
+                .Select(item => new { item.ImportId, item.StoragePath })
+                .ToListAsync(cancellationToken);
+
+            foreach (var expiredDraft in expiredDrafts)
+            {
+                if (string.IsNullOrWhiteSpace(expiredDraft.StoragePath))
+                    continue;
+
+                try
+                {
+                    await _storageService.DeleteAsync(expiredDraft.StoragePath, cancellationToken);
+                }
+                catch (Exception storageCleanupException)
+                {
+                    _logger.LogWarning(
+                        storageCleanupException,
+                        "Could not remove stored scan for expired invoice draft {ImportId}.",
+                        expiredDraft.ImportId);
+                }
+            }
 
             await _dbContext.InvoiceImports
                 .Where(item =>
@@ -303,6 +337,66 @@ public sealed class InvoiceCaptureController : Controller
 
             _dbContext.InvoiceImports.Add(import);
             await _dbContext.SaveChangesAsync(cancellationToken);
+
+            // Supabase Storage object path: invoice-scans/profile-{id}/invoice-{id}.{ext}
+            // The bucket is private; only the authenticated server endpoint serves the file.
+            var storagePath = $"profile-{profileId}/invoice-{import.ImportId}{extension}";
+            try
+            {
+                bufferedInvoice.Position = 0;
+                await _storageService.UploadAsync(
+                    storagePath,
+                    bufferedInvoice,
+                    mimeType,
+                    cancellationToken);
+
+                import.StoragePath = storagePath;
+                import.StorageContentType = mimeType;
+                import.UpdatedAt = DateTime.UtcNow;
+                await _dbContext.SaveChangesAsync(cancellationToken);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception storageException)
+            {
+                _logger.LogError(
+                    storageException,
+                    "Could not persist scanned invoice file for import {ImportId}, profile {ProfileId}.",
+                    import.ImportId,
+                    profileId);
+
+                try
+                {
+                    await _storageService.DeleteAsync(storagePath, CancellationToken.None);
+                }
+                catch (Exception cleanupException)
+                {
+                    _logger.LogWarning(
+                        cleanupException,
+                        "Could not clean up invoice storage object after a failed save for import {ImportId}.",
+                        import.ImportId);
+                }
+
+                _dbContext.InvoiceImports.Remove(import);
+                try
+                {
+                    await _dbContext.SaveChangesAsync(CancellationToken.None);
+                }
+                catch (Exception cleanupException)
+                {
+                    _logger.LogError(
+                        cleanupException,
+                        "Could not remove incomplete invoice draft {ImportId} after storage failure.",
+                        import.ImportId);
+                }
+
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, new
+                {
+                    message = "The invoice was analyzed, but its original scan could not be stored securely. Please retry. No stock has been changed."
+                });
+            }
 
             return Ok(new
             {
