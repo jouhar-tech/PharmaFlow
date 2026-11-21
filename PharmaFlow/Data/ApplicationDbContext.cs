@@ -114,6 +114,8 @@ public class ApplicationDbContext : DbContext, IDataProtectionKeyContext
             entity.Property(item => item.ImportId).HasColumnName("import_id");
             entity.Property(item => item.ProfileId).HasColumnName("profile_id");
             entity.Property(item => item.OriginalFileName).HasColumnName("original_file_name");
+            entity.Property(item => item.StoragePath).HasColumnName("storage_path");
+            entity.Property(item => item.StorageContentType).HasColumnName("storage_content_type");
             entity.Property(item => item.SourceType).HasColumnName("source_type");
             entity.Property(item => item.DistributorName).HasColumnName("distributor_name");
             entity.Property(item => item.InvoiceNumber).HasColumnName("invoice_number");
