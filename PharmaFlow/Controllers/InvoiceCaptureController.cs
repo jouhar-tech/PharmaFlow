@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Mvc;
@@ -154,6 +155,16 @@ public sealed class InvoiceCaptureController : Controller
         string? sourceType,
         CancellationToken cancellationToken)
     {
+        // Starts after ASP.NET has bound the multipart form. Browser-side round-trip
+        // timing separately includes the actual network upload from the device.
+        var requestStopwatch = Stopwatch.StartNew();
+        long imageBufferMs = 0;
+        long geminiPipelineMs = 0;
+        long draftCleanupMs = 0;
+        long databaseInsertMs = 0;
+        long storageUploadMs = 0;
+        long storageMetadataSaveMs = 0;
+
         if (!TryGetProfileId(out var profileId))
             return Unauthorized();
 
@@ -192,13 +203,19 @@ public sealed class InvoiceCaptureController : Controller
             // Keep one bounded copy so the exact file sent to OCR can also be persisted
             // after Gemini succeeds. The request is already limited to 25 MB above.
             await using var bufferedInvoice = new MemoryStream((int)invoice.Length);
+            var imageBufferStopwatch = Stopwatch.StartNew();
             await invoice.CopyToAsync(bufferedInvoice, cancellationToken);
+            imageBufferStopwatch.Stop();
+            imageBufferMs = imageBufferStopwatch.ElapsedMilliseconds;
             bufferedInvoice.Position = 0;
 
+            var geminiStopwatch = Stopwatch.StartNew();
             var visionResult = await _invoiceVisionService.ExtractAsync(
                 bufferedInvoice,
                 mimeType,
                 cancellationToken);
+            geminiStopwatch.Stop();
+            geminiPipelineMs = geminiStopwatch.ElapsedMilliseconds;
 
             var detectedInvoiceNumber = CleanMetadata(visionResult.InvoiceNumber, 100);
             if (!string.IsNullOrWhiteSpace(detectedInvoiceNumber) &&
@@ -224,10 +241,13 @@ public sealed class InvoiceCaptureController : Controller
 
             var now = DateTime.UtcNow;
 
+            var draftCleanupStopwatch = Stopwatch.StartNew();
             await CleanupExpiredDraftsAsync(
                 profileId,
                 now.AddHours(-24),
                 cancellationToken);
+            draftCleanupStopwatch.Stop();
+            draftCleanupMs = draftCleanupStopwatch.ElapsedMilliseconds;
 
             var safeFileName = Path.GetFileName(
                 string.IsNullOrWhiteSpace(originalFileName)
@@ -302,7 +322,10 @@ public sealed class InvoiceCaptureController : Controller
                 return BadRequest(new { message = "The AI returned no usable invoice rows." });
 
             _dbContext.InvoiceImports.Add(import);
+            var databaseInsertStopwatch = Stopwatch.StartNew();
             await _dbContext.SaveChangesAsync(cancellationToken);
+            databaseInsertStopwatch.Stop();
+            databaseInsertMs = databaseInsertStopwatch.ElapsedMilliseconds;
 
             // Supabase Storage object path: invoice-scans/profile-{id}/invoice-{id}.{ext}
             // The bucket is private; only the authenticated server endpoint serves the file.
@@ -310,16 +333,22 @@ public sealed class InvoiceCaptureController : Controller
             try
             {
                 bufferedInvoice.Position = 0;
+                var storageUploadStopwatch = Stopwatch.StartNew();
                 await _storageService.UploadAsync(
                     storagePath,
                     bufferedInvoice,
                     mimeType,
                     cancellationToken);
+                storageUploadStopwatch.Stop();
+                storageUploadMs = storageUploadStopwatch.ElapsedMilliseconds;
 
                 import.StoragePath = storagePath;
                 import.StorageContentType = mimeType;
                 import.UpdatedAt = DateTime.UtcNow;
+                var storageMetadataSaveStopwatch = Stopwatch.StartNew();
                 await _dbContext.SaveChangesAsync(cancellationToken);
+                storageMetadataSaveStopwatch.Stop();
+                storageMetadataSaveMs = storageMetadataSaveStopwatch.ElapsedMilliseconds;
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
@@ -363,6 +392,37 @@ public sealed class InvoiceCaptureController : Controller
                     message = "The invoice was analyzed, but its original scan could not be stored securely. Please retry. No stock has been changed."
                 });
             }
+
+            requestStopwatch.Stop();
+            var totalServerMs = requestStopwatch.ElapsedMilliseconds;
+
+            // Exposes stage timings to same-origin browser diagnostics without
+            // returning invoice content, extracted medicine details or user data.
+            Response.Headers["Server-Timing"] = string.Join(", ", new[]
+            {
+                $"image-buffer;dur={imageBufferMs.ToString(CultureInfo.InvariantCulture)}",
+                $"gemini-pipeline;dur={geminiPipelineMs.ToString(CultureInfo.InvariantCulture)}",
+                $"draft-cleanup;dur={draftCleanupMs.ToString(CultureInfo.InvariantCulture)}",
+                $"database-insert;dur={databaseInsertMs.ToString(CultureInfo.InvariantCulture)}",
+                $"storage-upload;dur={storageUploadMs.ToString(CultureInfo.InvariantCulture)}",
+                $"storage-metadata-save;dur={storageMetadataSaveMs.ToString(CultureInfo.InvariantCulture)}",
+                $"server-total;dur={totalServerMs.ToString(CultureInfo.InvariantCulture)}"
+            });
+
+            _logger.LogInformation(
+                "Invoice scan baseline. ProfileId {ProfileId}; ImportId {ImportId}; FileBytes {FileBytes}; MimeType {MimeType}; ExtractedRows {ExtractedRows}; ImageBufferMs {ImageBufferMs}; GeminiPipelineMs {GeminiPipelineMs}; DraftCleanupMs {DraftCleanupMs}; DatabaseInsertMs {DatabaseInsertMs}; StorageUploadMs {StorageUploadMs}; StorageMetadataSaveMs {StorageMetadataSaveMs}; ServerTotalMs {ServerTotalMs}. See GeminiInvoiceVisionService logs for model, fallback and Gemini API duration.",
+                profileId,
+                import.ImportId,
+                invoice.Length,
+                mimeType,
+                import.Items.Count,
+                imageBufferMs,
+                geminiPipelineMs,
+                draftCleanupMs,
+                databaseInsertMs,
+                storageUploadMs,
+                storageMetadataSaveMs,
+                totalServerMs);
 
             return Ok(new
             {
