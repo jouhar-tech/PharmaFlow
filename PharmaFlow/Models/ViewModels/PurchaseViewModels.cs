@@ -31,6 +31,8 @@ public sealed class PurchaseInvoiceViewModel
     public string InvoiceNumber { get; init; } = string.Empty;
     public DateOnly? InvoiceDate { get; init; }
     public decimal TotalAmount { get; init; }
+    public bool HasScannedFile { get; init; }
+    public bool IsPdf { get; init; }
     public IReadOnlyList<PurchaseInvoiceItemViewModel> Items { get; init; } = [];
 }
 
