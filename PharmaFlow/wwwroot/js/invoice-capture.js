@@ -631,13 +631,27 @@
                 pendingSourceType === "camera" ? "camera" : "upload"
             );
 
-            const response = await fetch("/InvoiceCapture/ParseWithVision", {
-                method: "POST",
-                headers: {
-                    "RequestVerificationToken": token
-                },
-                body: formData
-            });
+            // Client round-trip includes uploading the file and waiting for the
+            // complete server response. Server-Timing below breaks out server stages.
+            const requestStartedAt = performance.now();
+            let response;
+            try {
+                response = await fetch("/InvoiceCapture/ParseWithVision", {
+                    method: "POST",
+                    headers: {
+                        "RequestVerificationToken": token
+                    },
+                    body: formData
+                });
+            } catch (error) {
+                console.warn("PharmaHex invoice scan baseline", {
+                    outcome: "network-error",
+                    fileBytes: file.size,
+                    mimeType: file.type || "unknown",
+                    clientRoundTripMs: Math.round(performance.now() - requestStartedAt)
+                });
+                throw error;
+            }
 
             let payload = null;
             try {
@@ -645,6 +659,15 @@
             } catch {
                 // Keep the generic error below.
             }
+
+            console.info("PharmaHex invoice scan baseline", {
+                outcome: response.ok && payload?.redirectUrl ? "success" : "server-error",
+                fileBytes: file.size,
+                mimeType: file.type || "unknown",
+                clientRoundTripMs: Math.round(performance.now() - requestStartedAt),
+                serverTiming: response.headers.get("Server-Timing") || "not available",
+                httpStatus: response.status
+            });
 
             if (!response.ok || !payload?.redirectUrl) {
                 throw new Error(
