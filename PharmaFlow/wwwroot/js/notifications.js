@@ -100,6 +100,13 @@
         nativePushCard && (nativePushCard.hidden = false);
         if (browserPushCard) browserPushCard.hidden = true;
 
+        // Do not silently opt a user in on Android versions where the OS
+        // grants notification permission without displaying a prompt.
+        if (localStorage.getItem("pharmahex-native-push-opt-in") !== "true") {
+            setNativeDisabledUi();
+            return false;
+        }
+
         try {
             const permission = await invokeFcm("checkPermission");
             if (!permission.granted) {
@@ -151,6 +158,7 @@
                 throw new Error("Firebase registration succeeded, but no device token was returned.");
 
             await saveFcmDeviceToken(result.token);
+            localStorage.setItem("pharmahex-native-push-opt-in", "true");
             setNativeEnabledUi();
 
             // A test push is best-effort. Device registration remains enabled
@@ -182,6 +190,7 @@
             }
 
             await invokeFcm("deleteToken");
+            localStorage.removeItem("pharmahex-native-push-opt-in");
             setNativeDisabledUi("Native notifications are turned off on this device.");
             return true;
         } catch (error) {
@@ -209,6 +218,7 @@
                         await postJson("/Notifications/UnregisterFcmDevice", { token: result.token });
                     }
                     await invokeFcm("deleteToken").catch(() => {});
+                    localStorage.removeItem("pharmahex-native-push-opt-in");
                 } catch (error) {
                     console.warn("Could not unlink this native notification device before logout.", error);
                 } finally {
