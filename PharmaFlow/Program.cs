@@ -86,6 +86,15 @@ builder.Services.AddHttpClient("OpenFoodFacts", client =>
 });
 builder.Services.AddScoped<IGlobalProductCatalogService, GlobalProductCatalogService>();
 builder.Services.AddSingleton<WebPush.WebPushClient>();
+builder.Services.AddSingleton<FirebaseAccessTokenProvider>();
+builder.Services.AddHttpClient("FirebaseOAuth", client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(20);
+});
+builder.Services.AddHttpClient<IFirebaseCloudMessagingService, FirebaseCloudMessagingService>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(20);
+});
 builder.Services.AddScoped<IPharmaFlowPushNotificationService, PharmaFlowPushNotificationService>();
 builder.Services.AddScoped<IPharmaFlowSavingsService, PharmaFlowSavingsService>();
 builder.Services.AddHostedService<NotificationSchedulerService>();
