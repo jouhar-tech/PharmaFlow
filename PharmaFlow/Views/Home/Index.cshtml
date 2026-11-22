@@ -208,112 +208,164 @@
 </div>
 
 <div class="home-desktop-dashboard">
-    <div class="dashboard-page">
-        <div class="dashboard-header">
+    <div class="home-desktop-container">
+        <header class="home-desktop-header">
             <div>
-                <span class="dashboard-eyebrow" data-i18n="welcomeBack">Welcome back</span>
-                <h1 class="dashboard-title">@businessName <span data-i18n="dashboard">Dashboard</span></h1>
-                <p class="dashboard-subtitle"> <span data-i18n="dashboardSubtitle">Monitor your pharmacy activity and the value PharmaHex creates for your business.</span></p>
+                <span class="home-desktop-eyebrow" data-i18n="welcomeBack">Welcome back</span>
+                <h1>@businessName</h1>
+                <p>Your pharmacy at a glance. Review today's activity and anything that needs attention.</p>
             </div>
-            <div class="dashboard-date">@DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(5.5)).ToString("dd MMM yyyy")</div>
-        </div>
+            <div class="home-desktop-date">@indiaNow.ToString("dd MMM yyyy")</div>
+        </header>
 
-        <section id="add-stock" class="dashboard-stock-actions" aria-label="Add stock">
-            <div class="dashboard-stock-actions-copy">
-                <span class="section-kicker" data-i18n="addStock">Add stock</span>
-                <h2 data-i18n="stockCaptureHeading">Capture an invoice in seconds</h2>
-                <p data-i18n="stockCaptureDescription">Scan a printed pharmacy invoice with your camera or upload a document from your device.</p>
+        <a asp-controller="Bills" asp-action="Index" asp-route-period="Last 7 Days"
+           class="home-desktop-sales-card"
+           aria-label="View bills from the last 7 days">
+            <div>
+                <span class="home-desktop-section-kicker" data-i18n="todaysSales">Today's sales</span>
+                <strong>₹@Model.TodaySalesAmount.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</strong>
+                @if (Model.TodaySalesAmount <= 0)
+                {
+                    <small data-i18n="noSalesToday">No sales recorded today yet.</small>
+                }
+                else
+                {
+                    <small>Total sales recorded today</small>
+                }
+            </div>
+            <span class="home-desktop-sales-pill">Today <span aria-hidden="true">↗</span></span>
+        </a>
+
+        @if (Model.ProductsExpiringSoonCount > 0 || Model.LowStockCount > 0 || Model.CustomerOutstandingAmount > 0m || Model.SlowMovingStockCount > 0 || Model.RemindersDueCount > 0)
+        {
+            <section class="home-desktop-section" aria-labelledby="homeDesktopAttentionHeading">
+                <div class="home-desktop-section-heading">
+                    <div>
+                        <span class="home-desktop-section-kicker">Business overview</span>
+                        <h2 id="homeDesktopAttentionHeading" data-i18n="whatNeedsAttention">What needs your attention</h2>
+                    </div>
+                    <span class="home-desktop-section-note">Important items from your pharmacy</span>
+                </div>
+
+                <div class="home-desktop-attention-grid">
+                    @if (Model.ProductsExpiringSoonCount > 0)
+                    {
+                        <a asp-controller="ExpiryProducts" asp-action="Index" class="home-desktop-attention-row home-desktop-attention-expiry">
+                            <span class="home-desktop-attention-icon" aria-hidden="true">!</span>
+                            <span class="home-desktop-attention-copy">
+                                <strong>@Model.ProductsExpiringSoonCount <span data-i18n="expiring">Expiring</span></strong>
+                                <small>₹@Model.ExpiryAtRiskValue.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("en-IN")) <span data-i18n="atRisk">at risk</span></small>
+                            </span>
+                            <span class="home-desktop-attention-view" data-i18n="view">View</span>
+                            <span class="home-desktop-attention-chevron" aria-hidden="true">›</span>
+                        </a>
+                    }
+
+                    @if (Model.LowStockCount > 0)
+                    {
+                        <a asp-controller="LowStock" asp-action="Index" class="home-desktop-attention-row home-desktop-attention-low-stock">
+                            <span class="home-desktop-attention-icon" aria-hidden="true">!</span>
+                            <span class="home-desktop-attention-copy">
+                                <strong>@Model.LowStockCount <span data-i18n="lowStock">Low Stock</span></strong>
+                                <small>Items below your reorder level</small>
+                            </span>
+                            <span class="home-desktop-attention-view" data-i18n="view">View</span>
+                            <span class="home-desktop-attention-chevron" aria-hidden="true">›</span>
+                        </a>
+                    }
+
+                    @if (Model.CustomerOutstandingAmount > 0m)
+                    {
+                        <a asp-controller="Customers" asp-action="Index" class="home-desktop-attention-row home-desktop-attention-money">
+                            <span class="home-desktop-attention-icon" aria-hidden="true">₹</span>
+                            <span class="home-desktop-attention-copy">
+                                <strong>₹@Model.CustomerOutstandingAmount.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("en-IN")) <span data-i18n="udhaar">Udhaar</span></strong>
+                                <small>@Model.CustomersWithOutstanding <span data-i18n="customers">customers</span></small>
+                            </span>
+                            <span class="home-desktop-attention-view" data-i18n="view">View</span>
+                            <span class="home-desktop-attention-chevron" aria-hidden="true">›</span>
+                        </a>
+                    }
+
+                    @if (Model.SlowMovingStockCount > 0)
+                    {
+                        <a asp-controller="SlowMoving" asp-action="Index" class="home-desktop-attention-row home-desktop-attention-slow">
+                            <span class="home-desktop-attention-icon" aria-hidden="true">↘</span>
+                            <span class="home-desktop-attention-copy">
+                                <strong>₹@Model.SlowMovingStockValue.ToString("N0", System.Globalization.CultureInfo.GetCultureInfo("en-IN")) <span data-i18n="slowMoving">Slow Moving</span></strong>
+                                <small>@Model.SlowMovingStockCount slow-moving products</small>
+                            </span>
+                            <span class="home-desktop-attention-view" data-i18n="view">View</span>
+                            <span class="home-desktop-attention-chevron" aria-hidden="true">›</span>
+                        </a>
+                    }
+
+                    @if (Model.RemindersDueCount > 0)
+                    {
+                        <a asp-controller="Customers" asp-action="Index" class="home-desktop-attention-row home-desktop-attention-reminder">
+                            <span class="home-desktop-attention-icon" aria-hidden="true">✓</span>
+                            <span class="home-desktop-attention-copy">
+                                <strong>@Model.RemindersDueCount <span data-i18n="remindersDue">Reminders Due</span></strong>
+                                <small>Customer follow-ups to review</small>
+                            </span>
+                            <span class="home-desktop-attention-view" data-i18n="view">View</span>
+                            <span class="home-desktop-attention-chevron" aria-hidden="true">›</span>
+                        </a>
+                    }
+                </div>
+            </section>
+        }
+
+        <section class="home-desktop-section home-desktop-quick-actions" aria-labelledby="homeDesktopQuickActionsHeading">
+            <div class="home-desktop-section-heading">
+                <div>
+                    <span class="home-desktop-section-kicker" data-i18n="quickActions">Quick Actions</span>
+                    <h2 id="homeDesktopQuickActionsHeading">Get work done</h2>
+                </div>
             </div>
 
-            <div class="dashboard-stock-actions-buttons">
-                <label class="stock-capture-button stock-capture-primary" for="dashboardCameraInput">
-                    <span class="stock-capture-icon">⌁</span>
+            <div class="home-desktop-action-grid">
+                <label class="home-desktop-action home-desktop-action-stock" for="dashboardUploadInput">
+                    <span class="home-desktop-action-icon" aria-hidden="true">＋</span>
+                    <span>
+                        <strong data-i18n="addStock">Add Stock</strong>
+                        <small>Upload a supplier invoice</small>
+                    </span>
+                    <span class="home-desktop-action-arrow" aria-hidden="true">›</span>
+                </label>
+
+                <a class="home-desktop-action home-desktop-action-bill" asp-controller="Billing" asp-action="Create">
+                    <span class="home-desktop-action-icon" aria-hidden="true">₹</span>
+                    <span>
+                        <strong data-i18n="createBill">Create Bill</strong>
+                        <small>Create a customer bill</small>
+                    </span>
+                    <span class="home-desktop-action-arrow" aria-hidden="true">›</span>
+                </a>
+
+                <button type="button" class="home-desktop-action home-desktop-action-scan" id="dashboardDesktopScanInvoiceTrigger">
+                    <span class="home-desktop-action-icon" aria-hidden="true">⌗</span>
                     <span>
                         <strong data-i18n="scanInvoice">Scan Invoice</strong>
-                        <small data-i18n="scanInvoiceHint">Use camera</small>
+                        <small>Capture with your camera</small>
                     </span>
-                </label>
-
-                <label class="stock-capture-button stock-capture-secondary" for="dashboardUploadInput">
-                    <span class="stock-capture-icon">↑</span>
-                    <span>
-                        <strong data-i18n="uploadInvoice">Upload Invoice</strong>
-                        <small data-i18n="uploadInvoiceHint">From device</small>
-                    </span>
-                </label>
+                    <span class="home-desktop-action-arrow" aria-hidden="true">›</span>
+                </button>
             </div>
         </section>
 
         @if (Model.HasPharmaFlowValue)
         {
-            <section class="dashboard-value-card" aria-label="PharmaHex business value">
-                <div class="value-card-main">
-                    <div>
-                        <span class="section-kicker value-kicker" data-i18n="valueKicker">Your PharmaHex value</span>
-                        <h2 data-i18n="valueHeading">See how much money PharmaHex protects for your pharmacy</h2>
-                        <p class="value-description" data-i18n="valueDescription">As your sales, purchases, inventory and payment data grows, PharmaHex will calculate the estimated money saved or protected through better stock control, expiry prevention and payment follow-up.</p>
-                    </div>
-                    <div class="value-total">
-                        <span class="value-total-label" data-i18n="estimatedMoneySaved">Estimated money saved</span>
-                        <strong>₹ @Model.EstimatedMoneySaved.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</strong>
-                        <small data-i18n="calculatedFromActualData">Calculated from your actual business data.</small>
-                    </div>
+            <section class="home-desktop-value-card" aria-label="PharmaHex business value">
+                <div class="home-desktop-value-icon" aria-hidden="true">✦</div>
+                <div>
+                    <span class="home-desktop-section-kicker">Your PharmaHex value</span>
+                    <h2>Money saved or protected</h2>
+                    <p>Estimated value created through better stock control, expiry prevention and payment follow-up.</p>
                 </div>
+                <strong>₹@Model.EstimatedMoneySaved.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</strong>
             </section>
         }
-
-        <section class="dashboard-grid" aria-label="Pharmacy overview">
-            <a asp-controller="ExpiryProducts" asp-action="Index" class="dashboard-card metric-card metric-warning metric-card-link">
-                <div class="metric-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M7 3v4M17 3v4M3.5 9.5h17"/></svg></div>
-                <div><span class="metric-label" data-i18n="productsExpiringSoon">Products expiring soon</span><strong class="metric-value">@Model.ProductsExpiringSoonCount</strong><span class="metric-note" data-i18n="reviewUpcomingExpiries">Critical + upcoming stock</span><span class="metric-at-risk-value">At-risk ₹ @Model.ExpiryAtRiskValue.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</span></div>
-            </a>
-            <a asp-controller="LowStock" asp-action="Index" class="dashboard-card metric-card metric-info metric-card-link">
-                <div class="metric-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 7 8-4 8 4-8 4-8-4Z"/><path d="M4 7v10l8 4 8-4V7"/><path d="M9 15h6"/></svg></div>
-                <div><span class="metric-label" data-i18n="lowStockDetailsMetric">Low stock details</span><strong class="metric-value">@Model.LowStockCount</strong><span class="metric-note" data-i18n="itemsBelowReorderLevel">Quantity below 3</span></div>
-            </a>
-            <article class="dashboard-card metric-card metric-danger">
-                <div class="metric-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 7 8-4 8 4-8 4-8-4Z"/><path d="M4 7v10l8 4 8-4V7M12 11v10"/></svg></div>
-                <div><span class="metric-label" data-i18n="outOfStockItems">Out-of-stock items</span><strong class="metric-value">—</strong><span class="metric-note" data-i18n="productsNeedingReplenishment">Products needing replenishment</span></div>
-            </article>
-            <article class="dashboard-card metric-card metric-expired">
-                <div class="metric-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M7 3v4M17 3v4M3.5 9.5h17"/></svg></div>
-                <div><span class="metric-label" data-i18n="productsAlreadyExpired">Products already expired</span><strong class="metric-value">—</strong><span class="metric-note" data-i18n="checkAndQuarantineStock">Check and quarantine stock</span></div>
-            </article>
-            <a asp-controller="Bills" asp-action="Index" asp-route-period="Last 7 Days"
-               class="dashboard-card metric-card metric-success metric-card-link"
-               aria-label="View bills from the last 7 days">
-                <div class="metric-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 5h12M6 9h10M9 5.5c3.5 0 6 1.8 6 4.5s-2.5 4.5-6 4.5l7 5"/></svg></div>
-                <div><span class="metric-label" data-i18n="todaysSales">Today's sales</span><strong class="metric-value">₹ @Model.TodaySalesAmount.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</strong><span class="metric-note" data-i18n="totalSalesForToday">Total sales for today</span></div>
-            </a>
-            <article class="dashboard-card metric-card metric-purple">
-                <div class="metric-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4.5h14v15H5z"/><path d="M8 8h8M8 12h8M8 16h4"/></svg></div>
-                <div><span class="metric-label" data-i18n="customerDebitCredit">Customer debit / credit</span><strong class="metric-value">₹ —</strong><span class="metric-note" data-i18n="pendingCustomerBalances">Pending customer balances</span></div>
-            </article>
-        </section>
-
-        <section class="dashboard-section-grid">
-            <article class="dashboard-card detail-card">
-                <div class="card-heading"><div><span class="section-kicker" data-i18n="payables">Payables</span><h2 data-i18n="supplierPendingPayments">Supplier pending payments</h2></div><span class="heading-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-2.5-1.6L13 21l-3-1.6L7.5 21 6 20V3Z"/><path d="M9 8h6M9 12h6M9 16h3"/></svg></span></div>
-                <div class="empty-state"><span><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 5h12M6 9h10M9 5.5c3.5 0 6 1.8 6 4.5s-2.5 4.5-6 4.5l7 5"/></svg></span><p data-i18n="noSupplierPaymentData">No supplier payment data available yet.</p></div>
-            </article>
-            <article class="dashboard-card detail-card">
-                <div class="card-heading"><div><span class="section-kicker" data-i18n="inventoryTrends">Inventory trends</span><h2 data-i18n="fastMovingProducts">Fast-moving products</h2></div><span class="heading-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 15 5-5 4 4 7-8"/><path d="M15 6h5v5"/></svg></span></div>
-                <div class="empty-state"><span><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 15 5-5 4 4 7-8"/><path d="M15 6h5v5"/></svg></span><p data-i18n="fastMovingInsights">Fast-moving product insights will appear here.</p></div>
-            </article>
-            <a asp-controller="SlowMoving" asp-action="Index" class="dashboard-card detail-card dashboard-detail-card-link">
-                <div class="card-heading"><div><span class="section-kicker" data-i18n="inventoryTrends">Inventory trends</span><h2 data-i18n="slowMovingProducts">Slow-moving products</h2></div><span class="heading-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 9 5 5 4-4 7 8"/><path d="M15 18h5v-5"/></svg></span></div>
-                <div class="slow-moving-dashboard-summary">
-                    <div class="slow-moving-dashboard-count">
-                        <strong>@Model.SlowMovingStockCount</strong>
-                        <span data-i18n="slowMovingDashboardCount">slow-moving products</span>
-                    </div>
-                    <div class="slow-moving-dashboard-value">
-                        <span data-i18n="slowMovingDashboardAmount">Amount stuck</span>
-                        <strong>₹ @Model.SlowMovingStockValue.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))</strong>
-                    </div>
-                </div>
-            </a>
-        </section>
     </div>
 </div>
 
