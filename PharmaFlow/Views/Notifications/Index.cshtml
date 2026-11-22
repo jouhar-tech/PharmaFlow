@@ -43,7 +43,7 @@
         </div>
     </section>
 
-    <section class="notification-push-card" aria-labelledby="notificationPushHeading">
+    <section class="notification-push-card" id="browserNotificationCard" aria-labelledby="notificationPushHeading">
         <span class="notification-push-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path><path d="M10 21h4"></path></svg>
         </span>
@@ -64,6 +64,31 @@
                     data-notification-disable-button
                     hidden
                     aria-label="Turn off browser notifications on this device">
+                Turn off
+            </button>
+        </div>
+    </section>
+
+    <section class="notification-push-card" id="nativeFcmNotificationCard" aria-labelledby="nativeFcmNotificationHeading" hidden>
+        <span class="notification-push-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path><path d="M10 21h4"></path></svg>
+        </span>
+        <div class="notification-push-copy">
+            <h2 id="nativeFcmNotificationHeading">App notifications</h2>
+            <p data-fcm-notification-status role="status" aria-live="polite">Enable native notifications on this phone to receive PharmaHex stock and savings alerts even when the app is closed.</p>
+        </div>
+        <div class="notification-push-actions">
+            <button type="button"
+                    class="notification-push-button"
+                    data-fcm-enable-button
+                    aria-label="Enable PharmaHex app notifications">
+                Enable
+            </button>
+            <button type="button"
+                    class="notification-push-button notification-push-disable-button"
+                    data-fcm-disable-button
+                    hidden
+                    aria-label="Turn off PharmaHex app notifications on this device">
                 Turn off
             </button>
         </div>
