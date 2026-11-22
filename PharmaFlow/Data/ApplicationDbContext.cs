@@ -311,6 +311,9 @@ public class ApplicationDbContext : DbContext, IDataProtectionKeyContext
             entity.Property(n => n.NotificationType).HasColumnName("notification_type").HasMaxLength(40);
             entity.Property(n => n.PeriodKey).HasColumnName("period_key").HasMaxLength(20);
             entity.Property(n => n.SentAt).HasColumnName("sent_at");
+            entity.Property(n => n.Status).HasColumnName("status").HasMaxLength(20);
+            entity.Property(n => n.AttemptedAt).HasColumnName("attempted_at");
+            entity.Property(n => n.AttemptToken).HasColumnName("attempt_token");
             entity.HasOne<Profile>()
                 .WithMany()
                 .HasForeignKey(n => n.ProfileId)
