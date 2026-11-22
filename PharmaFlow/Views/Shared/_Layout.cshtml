@@ -127,40 +127,27 @@
             </div>
 
             <div class="sidebar-caption" data-i18n="workspace">Workspace</div>
-            <nav class="sidebar-nav">
-                <a class="sidebar-link active" asp-area="" asp-controller="Home" asp-action="Index"><span class="sidebar-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.2"/><rect x="14" y="3" width="7" height="7" rx="1.2"/><rect x="3" y="14" width="7" height="7" rx="1.2"/><rect x="14" y="14" width="7" height="7" rx="1.2"/></svg></span><span data-i18n="dashboard">Dashboard</span></a>
-                <a class="sidebar-link" asp-controller="ExpiryProducts" asp-action="Index"><span class="sidebar-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M7 3v4M17 3v4M3.5 9.5h17"/></svg></span><span data-i18n="expiringDetails">Expiring Details</span><span class="sidebar-badge">Voice</span></a>
-                <a class="sidebar-link" href="#"><span class="sidebar-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 7 8-4 8 4-8 4-8-4Z"/><path d="M4 7v10l8 4 8-4V7"/><path d="M9 15h6"/></svg></span><span data-i18n="lowStockDetails">Low Stock Details</span><span class="sidebar-badge">Voice</span></a>
-
-                <a class="sidebar-link" href="#"><span class="sidebar-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 20v-1.2a4.5 4.5 0 0 0-4.5-4.5H7.5A4.5 4.5 0 0 0 3 18.8V20"/><circle cx="9.5" cy="7.5" r="3.2"/><path d="M16 4.8a3.2 3.2 0 0 1 0 5.4M21 20v-1.2a4.5 4.5 0 0 0-3.1-4.3"/></svg></span><span data-i18n="customerManagement">Customer Management</span><span class="sidebar-badge">Voice</span></a>
-                <a class="sidebar-link" href="#"><span class="sidebar-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 15 5-5 4 4 7-8"/><path d="M15 6h5v5"/></svg></span><span data-i18n="topSellingLowSelling">Top Selling / Low Selling</span></a>
-@if (!isStaffUser)
-                {
-                <button type="button" class="sidebar-link sidebar-dropdown-toggle" aria-expanded="false" aria-controls="salesReportsMenu">
-                    <span class="sidebar-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span>
-                    <span data-i18n="salesReports">Sales Reports</span>
-                    <span class="sidebar-menu-arrow">⌄</span>
-                </button>
-                <div class="sidebar-subnav" id="salesReportsMenu" hidden>
-                    <a class="sidebar-sublink" href="#"><span data-i18n="monthlySalesReport">Monthly Sales Report</span></a>
-                    <a class="sidebar-sublink" href="#"><span data-i18n="salesSummaryReport">Sales Summary Report</span></a>
-                    <a class="sidebar-sublink" href="#"><span data-i18n="productWiseSalesReport">Product-wise Sales Report</span></a>
-                    <a class="sidebar-sublink" href="#"><span data-i18n="customerWiseSalesReport">Customer-wise Sales Report</span></a>
-                </div>
-
-                <button type="button" class="sidebar-link sidebar-dropdown-toggle" aria-expanded="false" aria-controls="managementReportsMenu">
+            <nav class="sidebar-nav" aria-label="Main navigation">
+                <a class="sidebar-link @(isHomeDashboard ? "active" : "")" asp-controller="Home" asp-action="Index">
                     <span class="sidebar-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.2"/><rect x="14" y="3" width="7" height="7" rx="1.2"/><rect x="3" y="14" width="7" height="7" rx="1.2"/><rect x="14" y="14" width="7" height="7" rx="1.2"/></svg></span>
-                    <span data-i18n="managementReports">Management Reports</span>
-                    <span class="sidebar-menu-arrow">⌄</span>
-                </button>
-                <div class="sidebar-subnav" id="managementReportsMenu" hidden>
-                    <a class="sidebar-sublink" href="#"><span data-i18n="stockInventoryReport">Stock / Inventory Report</span></a>
-                    <a class="sidebar-sublink" href="#"><span data-i18n="stockMovementReport">Stock Movement Report</span></a>
-                    <a class="sidebar-sublink" href="#"><span data-i18n="expiryReport">Expiry Report</span></a>
-                    <a class="sidebar-sublink" href="#"><span data-i18n="pharmaFlowValueReport">PharmaHex Value Report</span></a>
-                </div>
-                }
-
+                    <span data-i18n="home">Home</span>
+                </a>
+                <a class="sidebar-link @((isInventoryPage || isSlowMovingPage || isReorderPage) ? "active" : "")" asp-controller="Inventory" asp-action="Index">
+                    <span class="sidebar-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 7 8-4 8 4-8 4-8-4Z"/><path d="M4 7v10l8 4 8-4V7"/><path d="M9 15h6"/></svg></span>
+                    <span data-i18n="stocks">Stocks</span>
+                </a>
+                <a class="sidebar-link @(isBillingCreatePage ? "active" : "")" asp-controller="Billing" asp-action="Create">
+                    <span class="sidebar-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-3-1.8-3 1.8-3-1.8-3 1.8V3Z"/><path d="M9 8h6M9 12h6M9 16h3"/></svg></span>
+                    <span data-i18n="bills">Bill</span>
+                </a>
+                <a class="sidebar-link @((isPurchasePage || isPurchaseDistributorPage) ? "active" : "")" asp-controller="Purchase" asp-action="Index">
+                    <span class="sidebar-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="20" r="1.2"/><circle cx="18" cy="20" r="1.2"/><path d="M2.5 4h2.2l2.1 10.1a2 2 0 0 0 2 1.6h8.6a2 2 0 0 0 2-1.6L21 8H5.5"/></svg></span>
+                    <span data-i18n="purchase">Purchase</span>
+                </a>
+                <a class="sidebar-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Profile" ? "active" : "")" asp-controller="Profile" asp-action="Index">
+                    <span class="sidebar-icon"><svg class="pharma-feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></span>
+                    <span data-i18n="more">More</span>
+                </a>
             </nav>
 
             <div class="sidebar-footer">
@@ -206,7 +193,7 @@
                             <button type="button" data-language-choice="hi">हिन्दी</button>
                         </div>
                         <a asp-controller="Profile" asp-action="Feedback" class="profile-menu-item"><span>💬</span><span data-i18n="sendFeedback">Send Feedback</span></a>
-                        <a class="profile-menu-item" href="#"><span>⚙</span><span data-i18n="settings">Settings</span></a>
+                        <a asp-controller="Profile" asp-action="Settings" class="profile-menu-item"><span>⚙</span><span data-i18n="settings">Settings</span></a>
                         <div class="profile-dropdown-divider"></div>
                         <form asp-area="" asp-controller="Account" asp-action="Logout" method="post" data-online-required="true">
                             @Html.AntiForgeryToken()
