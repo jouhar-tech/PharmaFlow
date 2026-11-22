@@ -7,7 +7,8 @@ public sealed class NotificationSchedulerService : BackgroundService
 {
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<NotificationSchedulerService> _logger;
-    private static readonly TimeSpan DailySendTime = new(10, 30, 0);
+    private static readonly TimeSpan DailySendTime = new(8, 30, 0);
+    private static readonly TimeSpan RetryInterval = TimeSpan.FromMinutes(5);
     private const int MaxParallelProfiles = 10;
     private const int SavingsCycleDays = 30;
 
@@ -21,30 +22,63 @@ public sealed class NotificationSchedulerService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        var india = NotificationTimeZone.GetIndiaStandardTimeZone();
+
+        _logger.LogInformation(
+            "PharmaHex notification scheduler started. Daily notifications are due at 8:30 AM IST.");
+
         while (!stoppingToken.IsCancellationRequested)
         {
-            var india = NotificationTimeZone.GetIndiaStandardTimeZone();
             var nowIndia = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, india);
-            var nextRun = nowIndia.Date.Add(DailySendTime);
 
-            if (nowIndia >= nextRun)
-                nextRun = nextRun.AddDays(1);
+            // Run immediately after startup when today's 8:30 AM schedule has passed.
+            // This catches up the current day after an idle app pool or server wake-up.
+            if (nowIndia.TimeOfDay >= DailySendTime)
+            {
+                var runDate = DateOnly.FromDateTime(nowIndia);
 
-            var delay = nextRun - nowIndia;
+                try
+                {
+                    var profiles = await GetActiveNotificationProfilesAsync(stoppingToken);
 
-            _logger.LogInformation(
-                "PharmaFlow notification scheduler next run: {NextRunIndia:yyyy-MM-dd HH:mm:ss} IST.",
-                nextRun);
+                    _logger.LogInformation(
+                        "Processing daily notifications for {RunDate}; {ProfileCount} active profiles found.",
+                        runDate,
+                        profiles.Count);
+
+                    // The dispatch log prevents duplicate sends for profiles that already
+                    // received today's notification. Failed sends are released for retry.
+                    await SendDailyNotificationsAsync(profiles, runDate, stoppingToken);
+                    await SendDueSavingsNotificationsAsync(profiles, runDate, stoppingToken);
+                }
+                catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+                {
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(
+                        ex,
+                        "Notification scheduler cycle failed for {RunDate}. It will retry.",
+                        runDate);
+                }
+            }
+
+            nowIndia = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, india);
+
+            var nextScheduledTime = nowIndia.Date.Add(DailySendTime);
+            var delay = nowIndia < nextScheduledTime
+                ? nextScheduledTime - nowIndia
+                : RetryInterval;
+
+            // Before 8:30 AM, sleep until the scheduled time. After 8:30 AM,
+            // poll every five minutes so transient failures are retried the same day.
+            _logger.LogDebug(
+                "Notification scheduler next check in {Delay}. Current India time: {CurrentTime:yyyy-MM-dd HH:mm:ss}.",
+                delay,
+                nowIndia);
 
             await Task.Delay(delay, stoppingToken);
-
-            var runDate = DateOnly.FromDateTime(
-                TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, india));
-
-            var profiles = await GetActiveNotificationProfilesAsync(stoppingToken);
-
-            await SendDailyNotificationsAsync(profiles, runDate, stoppingToken);
-            await SendDueSavingsNotificationsAsync(profiles, runDate, stoppingToken);
         }
     }
 
@@ -96,11 +130,15 @@ public sealed class NotificationSchedulerService : BackgroundService
                         localDate,
                         token);
                 }
+                catch (OperationCanceledException) when (token.IsCancellationRequested)
+                {
+                    throw;
+                }
                 catch (Exception ex)
                 {
                     _logger.LogWarning(
                         ex,
-                        "Daily stock notification failed for profile {ProfileId}.",
+                        "Daily stock notification failed for profile {ProfileId}. It will be retried.",
                         profileId);
                 }
             });
@@ -131,8 +169,8 @@ public sealed class NotificationSchedulerService : BackgroundService
 
                     var completedCycles = elapsedDays / SavingsCycleDays;
 
-                    // Send at most one overdue cycle per scheduled run. If the server was
-                    // offline for multiple cycles, the next 8:30 AM run catches up the next one.
+                    // Send at most one overdue cycle per scheduler check. If the server
+                    // was asleep, the next five-minute check can catch up the next cycle.
                     var cycleNumber = await GetFirstUnsentCycleAsync(
                         profile.ProfileId,
                         completedCycles,
@@ -168,6 +206,10 @@ public sealed class NotificationSchedulerService : BackgroundService
                         cycleNumber,
                         token);
                 }
+                catch (OperationCanceledException) when (token.IsCancellationRequested)
+                {
+                    throw;
+                }
                 catch (Exception ex)
                 {
                     _logger.LogWarning(
@@ -194,6 +236,7 @@ public sealed class NotificationSchedulerService : BackgroundService
             .Where(n =>
                 n.ProfileId == profileId &&
                 n.NotificationType == "monthly-savings" &&
+                n.Status == "sent" &&
                 n.PeriodKey.StartsWith("30day-"))
             .Select(n => n.PeriodKey)
             .ToListAsync(cancellationToken);
