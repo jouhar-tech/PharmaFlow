@@ -75,7 +75,7 @@ public sealed class PharmaFlowPushNotificationService : IPharmaFlowPushNotificat
                 profileId,
                 "PharmaHex Daily Stock Check",
                 body,
-                "/Home",
+                "/Home/Index",
                 cancellationToken);
 
             if (delivered)
@@ -145,7 +145,7 @@ public sealed class PharmaFlowPushNotificationService : IPharmaFlowPushNotificat
                 profileId,
                 "PharmaHex 30-Day Savings",
                 body,
-                "/Home",
+                "/Home/Index",
                 cancellationToken);
 
             if (delivered)
@@ -183,7 +183,7 @@ public sealed class PharmaFlowPushNotificationService : IPharmaFlowPushNotificat
             profileId,
             "PharmaHex Notifications Enabled",
             "Your PharmaHex notifications are working. Daily stock alerts will arrive at 8:30 AM.",
-            "/Home",
+            "/Home/Index",
             cancellationToken);
     }
 
