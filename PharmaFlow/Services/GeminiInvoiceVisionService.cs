@@ -17,7 +17,7 @@ public interface IInvoiceVisionService
 
 public sealed class GeminiInvoiceVisionService : IInvoiceVisionService
 {
-    private const string DefaultModel = "gemini-3.8-flash";
+    private const string DefaultModel = "gemini-3.1-flash-lite";
     private const string DefaultFallbackModel = "gemini-3.5-flash-lite";
     private const string EndpointTemplate = "https://generativelanguage.googleapis.com/v1beta/models/{0}:generateContent";
     private const int MaxFileBytes = 25 * 1024 * 1024;
