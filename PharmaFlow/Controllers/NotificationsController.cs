@@ -412,6 +412,114 @@ public sealed class NotificationsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RegisterFcmDevice(
+        [FromBody] FcmDeviceRegistrationRequest? request,
+        CancellationToken cancellationToken)
+    {
+        if (request is null || !ModelState.IsValid)
+            return BadRequest(new { message = "A valid Firebase device token is required." });
+
+        var token = request.Token?.Trim();
+        var platform = request.Platform?.Trim().ToLowerInvariant();
+
+        if (string.IsNullOrWhiteSpace(token) || token.Length < 20 || token.Length > 4096)
+            return BadRequest(new { message = "The Firebase device token is invalid." });
+
+        if (platform is not ("android" or "ios"))
+            return BadRequest(new { message = "The device platform must be Android or iOS." });
+
+        if (!request.PermissionGranted)
+            return BadRequest(new { message = "Notification permission has not been granted on this device." });
+
+        if (!long.TryParse(HttpContext.Session.GetString("ProfileId"), out var profileId))
+            return Unauthorized();
+
+        var profileActive = await _db.Profiles
+            .AsNoTracking()
+            .AnyAsync(p => p.Id == profileId && p.ActiveStatus == 1, cancellationToken);
+
+        if (!profileActive)
+            return Unauthorized();
+
+        var now = DateTime.UtcNow;
+        try
+        {
+            // FCM tokens identify an app installation, not a signed-in person.
+            // Reassign an existing token when a different account signs in on
+            // the same device so the previous account cannot receive its alerts.
+            var existing = await _db.FcmDeviceTokens
+                .SingleOrDefaultAsync(t => t.Token == token, cancellationToken);
+
+            if (existing is null)
+            {
+                _db.FcmDeviceTokens.Add(new FcmDeviceToken
+                {
+                    ProfileId = profileId,
+                    Token = token,
+                    Platform = platform,
+                    UserAgent = Request.Headers.UserAgent.ToString(),
+                    PermissionGranted = true,
+                    IsActive = true,
+                    CreatedAt = now,
+                    UpdatedAt = now
+                });
+            }
+            else
+            {
+                existing.ProfileId = profileId;
+                existing.Platform = platform;
+                existing.UserAgent = Request.Headers.UserAgent.ToString();
+                existing.PermissionGranted = true;
+                existing.IsActive = true;
+                existing.UpdatedAt = now;
+            }
+
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to save FCM device token for profile {ProfileId}.", profileId);
+            return StatusCode(StatusCodes.Status503ServiceUnavailable,
+                new { message = "The app notification device could not be registered. Please try again." });
+        }
+
+        return NoContent();
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UnregisterFcmDevice(
+        [FromBody] FcmDeviceUnregistrationRequest? request,
+        CancellationToken cancellationToken)
+    {
+        if (request is null || !ModelState.IsValid)
+            return BadRequest(new { message = "A valid Firebase device token is required." });
+
+        if (!long.TryParse(HttpContext.Session.GetString("ProfileId"), out var profileId))
+            return Unauthorized();
+
+        var token = request.Token.Trim();
+        if (string.IsNullOrWhiteSpace(token) || token.Length > 4096)
+            return BadRequest(new { message = "The Firebase device token is invalid." });
+
+        try
+        {
+            await _db.FcmDeviceTokens
+                .Where(t => t.ProfileId == profileId && t.Token == token)
+                .ExecuteDeleteAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to remove FCM device token for profile {ProfileId}.", profileId);
+            return StatusCode(StatusCodes.Status503ServiceUnavailable,
+                new { message = "The app notification device could not be removed. Please try again." });
+        }
+
+        return NoContent();
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Test(CancellationToken cancellationToken)
     {
         if (!long.TryParse(HttpContext.Session.GetString("ProfileId"), out var profileId))
@@ -419,6 +527,23 @@ public sealed class NotificationsController : Controller
 
         var sent = await _notifications.SendTestNotificationAsync(profileId, cancellationToken);
         return sent ? Ok() : StatusCode(StatusCodes.Status503ServiceUnavailable);
+    }
+
+    public sealed class FcmDeviceRegistrationRequest
+    {
+        [Required, StringLength(4096, MinimumLength = 20)]
+        public string Token { get; set; } = string.Empty;
+
+        [Required, StringLength(12)]
+        public string Platform { get; set; } = string.Empty;
+
+        public bool PermissionGranted { get; set; }
+    }
+
+    public sealed class FcmDeviceUnregistrationRequest
+    {
+        [Required, StringLength(4096, MinimumLength = 20)]
+        public string Token { get; set; } = string.Empty;
     }
 
     public sealed class PushSubscriptionRequest
