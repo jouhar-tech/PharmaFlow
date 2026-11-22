@@ -4,6 +4,7 @@
         const sourceModal = document.getElementById("invoiceCaptureSourceModal");
         const sourceTrigger = document.getElementById("dashboardScanUploadTrigger");
         const mobileScanTrigger = document.getElementById("dashboardMobileScanInvoiceTrigger");
+        const desktopScanTrigger = document.getElementById("dashboardDesktopScanInvoiceTrigger");
         const inventoryScanTrigger = document.getElementById("inventoryScanInvoiceTrigger");
         const inventoryUploadTrigger = document.getElementById("inventoryUploadInvoiceTrigger");
         const sourceCamera = document.getElementById("invoiceCaptureSourceCamera");
@@ -922,6 +923,7 @@
 
         // Shared invoice controls work directly from both Dashboard and Inventory.
         mobileScanTrigger?.addEventListener("click", openCamera);
+        desktopScanTrigger?.addEventListener("click", openCamera);
         inventoryScanTrigger?.addEventListener("click", openCamera);
         inventoryUploadTrigger?.addEventListener("click", () => chooseSource(uploadInput));
 
