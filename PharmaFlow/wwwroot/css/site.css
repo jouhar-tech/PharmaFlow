@@ -46,6 +46,15 @@ body { margin: 0; background: #f5f7fb; color: #1f2937; }
 .topbar-business { color: #64748b; font-size: .8rem; font-weight: 600; }
 .status-dot { display: inline-block; width: 7px; height: 7px; margin-right: .4rem; border-radius: 50%; background: #22c55e; }
 .app-content { width: 100%; max-width: 1600px; margin: 0 auto; padding: 0 1.75rem; flex: 1; }
+
+/* The authenticated bottom navigation is phone-only.
+   Hide it on tablets and desktop so its inline SVGs cannot render at their
+   browser-default size outside the mobile navigation breakpoint. */
+@media (min-width: 768px) {
+  .home-mobile-bottom-nav {
+    display: none !important;
+  }
+}
 .app-footer { display: flex; justify-content: space-between; gap: 1rem; padding: 1rem 1.75rem; color: #94a3b8; font-size: .75rem; }
 .app-footer a { color: #64748b; text-decoration: none; }
 
