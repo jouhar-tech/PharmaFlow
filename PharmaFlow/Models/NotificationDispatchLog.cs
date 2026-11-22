@@ -23,4 +23,14 @@ public sealed class NotificationDispatchLog
 
     [Column("sent_at")]
     public DateTime SentAt { get; set; }
+
+    [Required]
+    [Column("status")]
+    public string Status { get; set; } = "sent";
+
+    [Column("attempted_at")]
+    public DateTime? AttemptedAt { get; set; }
+
+    [Column("attempt_token")]
+    public Guid? AttemptToken { get; set; }
 }
