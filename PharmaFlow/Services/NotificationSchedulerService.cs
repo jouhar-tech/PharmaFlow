@@ -9,6 +9,7 @@ public sealed class NotificationSchedulerService : BackgroundService
     private readonly ILogger<NotificationSchedulerService> _logger;
     private static readonly TimeSpan DailySendTime = new(8, 30, 0);
     private static readonly TimeSpan RetryInterval = TimeSpan.FromMinutes(5);
+    private DateOnly? _lastSavingsCheckDate;
     private const int MaxParallelProfiles = 10;
     private const int SavingsCycleDays = 30;
 
@@ -49,7 +50,14 @@ public sealed class NotificationSchedulerService : BackgroundService
                     // The dispatch log prevents duplicate sends for profiles that already
                     // received today's notification. Failed sends are released for retry.
                     await SendDailyNotificationsAsync(profiles, runDate, stoppingToken);
-                    await SendDueSavingsNotificationsAsync(profiles, runDate, stoppingToken);
+
+                    // Daily stock alerts may retry every five minutes. Keep the separate
+                    // 30-day savings catch-up to one cycle per calendar day per process.
+                    if (_lastSavingsCheckDate != runDate)
+                    {
+                        await SendDueSavingsNotificationsAsync(profiles, runDate, stoppingToken);
+                        _lastSavingsCheckDate = runDate;
+                    }
                 }
                 catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
                 {
