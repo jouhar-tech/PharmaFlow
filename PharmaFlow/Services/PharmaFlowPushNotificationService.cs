@@ -251,7 +251,7 @@ public sealed class PharmaFlowPushNotificationService : IPharmaFlowPushNotificat
 
         var affected = await _db.Database.ExecuteSqlInterpolatedAsync(
             $"""
-            INSERT INTO public.notification_dispatch_log
+            INSERT INTO public.notification_dispatch_log AS existing
                 (profile_id, notification_type, period_key, sent_at, status, attempted_at, attempt_token)
             VALUES
                 ({profileId}, {notificationType}, {periodKey}, NOW(), 'processing', NOW(), {attemptToken})
@@ -261,10 +261,10 @@ public sealed class PharmaFlowPushNotificationService : IPharmaFlowPushNotificat
                 status = 'processing',
                 attempted_at = NOW(),
                 attempt_token = EXCLUDED.attempt_token
-            WHERE public.notification_dispatch_log.status <> 'sent'
+            WHERE existing.status <> 'sent'
               AND (
-                    public.notification_dispatch_log.attempted_at IS NULL
-                    OR public.notification_dispatch_log.attempted_at < NOW() - INTERVAL '30 minutes'
+                    existing.attempted_at IS NULL
+                    OR existing.attempted_at < NOW() - INTERVAL '30 minutes'
               );
             """,
             cancellationToken);
