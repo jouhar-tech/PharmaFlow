@@ -49,7 +49,7 @@ self.addEventListener("push", event => {
         tag: payload.tag || "pharmaflow-notification",
         renotify: Boolean(payload.renotify),
         data: {
-            url: payload.url || "/Home"
+            url: payload.url || "/Home/Index"
         }
     };
 
@@ -61,7 +61,7 @@ self.addEventListener("push", event => {
 self.addEventListener("notificationclick", event => {
     event.notification.close();
 
-    const targetUrl = event.notification?.data?.url || "/Home";
+    const targetUrl = event.notification?.data?.url || "/Home/Index";
 
     event.waitUntil(
         clients.matchAll({ type: "window", includeUncontrolled: true })
