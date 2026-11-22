@@ -264,7 +264,7 @@ public sealed class PharmaFlowPushNotificationService : IPharmaFlowPushNotificat
             WHERE existing.status <> 'sent'
               AND (
                     existing.attempted_at IS NULL
-                    OR existing.attempted_at < NOW() - INTERVAL '30 minutes'
+                    OR existing.attempted_at < NOW() - INTERVAL '5 minutes'
               );
             """,
             cancellationToken);
@@ -340,7 +340,7 @@ public sealed class PharmaFlowPushNotificationService : IPharmaFlowPushNotificat
         }
         catch (Exception ex)
         {
-            // If the database is unavailable during shutdown, the 30-minute
+            // If the database is unavailable during shutdown, the five-minute
             // processing lease allows a later scheduler pass to retry this day.
             _logger.LogWarning(
                 ex,
