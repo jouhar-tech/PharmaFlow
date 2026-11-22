@@ -20,3 +20,8 @@ CREATE UNIQUE INDEX IF NOT EXISTS fcm_device_tokens_token_unique_idx
 
 CREATE INDEX IF NOT EXISTS fcm_device_tokens_profile_active_idx
     ON public.fcm_device_tokens(profile_id, is_active);
+
+
+-- Device registration tokens are sensitive identifiers. Keep them inaccessible
+-- through Supabase's public Data API; PharmaHex accesses this table server-side.
+ALTER TABLE public.fcm_device_tokens ENABLE ROW LEVEL SECURITY;
