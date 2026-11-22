@@ -16360,6 +16360,9 @@ body.theme-dark.more-page .more-mobile-profile-card-link:focus-visible {
   font-size: .76rem;
   font-weight: 750;
 }
+.notification-push-card[hidden] {
+  display: none !important;
+}
 .notification-push-card {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
