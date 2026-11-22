@@ -20,6 +20,7 @@ public class ApplicationDbContext : DbContext, IDataProtectionKeyContext
     public DbSet<InvoiceImportItem> InvoiceImportItems => Set<InvoiceImportItem>();
     public DbSet<Staff> Staff => Set<Staff>();
     public DbSet<PushDeviceSubscription> PushDeviceSubscriptions => Set<PushDeviceSubscription>();
+    public DbSet<FcmDeviceToken> FcmDeviceTokens => Set<FcmDeviceToken>();
     public DbSet<NotificationDispatchLog> NotificationDispatchLogs => Set<NotificationDispatchLog>();
     public DbSet<PharmaFlowSavingsEvent> PharmaFlowSavingsEvents => Set<PharmaFlowSavingsEvent>();
     public DbSet<Customer> Customers => Set<Customer>();
@@ -274,6 +275,31 @@ public class ApplicationDbContext : DbContext, IDataProtectionKeyContext
                 .OnDelete(DeleteBehavior.Cascade);
             entity.HasIndex(s => s.Endpoint).IsUnique();
             entity.HasIndex(s => new { s.ProfileId, s.IsActive });
+        });
+
+        modelBuilder.Entity<FcmDeviceToken>(entity =>
+        {
+            entity.ToTable("fcm_device_tokens", "public");
+            entity.HasKey(t => t.DeviceTokenId);
+            entity.Property(t => t.DeviceTokenId).HasColumnName("device_token_id");
+            entity.Property(t => t.ProfileId).HasColumnName("profile_id");
+            entity.Property(t => t.Token).HasColumnName("token");
+            entity.Property(t => t.Platform).HasColumnName("platform").HasMaxLength(12);
+            entity.Property(t => t.UserAgent).HasColumnName("user_agent");
+            entity.Property(t => t.PermissionGranted).HasColumnName("permission_granted");
+            entity.Property(t => t.IsActive).HasColumnName("is_active");
+            entity.Property(t => t.CreatedAt).HasColumnName("created_at");
+            entity.Property(t => t.UpdatedAt).HasColumnName("updated_at");
+            entity.Property(t => t.LastSuccessAt).HasColumnName("last_success_at");
+            entity.Property(t => t.LastFailureAt).HasColumnName("last_failure_at");
+
+            entity.HasOne<Profile>()
+                .WithMany()
+                .HasForeignKey(t => t.ProfileId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(t => t.Token).IsUnique();
+            entity.HasIndex(t => new { t.ProfileId, t.IsActive });
         });
 
         modelBuilder.Entity<NotificationDispatchLog>(entity =>
