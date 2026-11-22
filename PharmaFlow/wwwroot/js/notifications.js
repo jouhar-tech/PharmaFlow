@@ -6,6 +6,236 @@
 
     const antiForgeryToken = () =>
         document.querySelector('input[name="__RequestVerificationToken"]')?.value || "";
+    const browserPushCard = document.getElementById("browserNotificationCard");
+    const nativePushCard = document.getElementById("nativeFcmNotificationCard");
+    const nativePushStatus = document.querySelector("[data-fcm-notification-status]");
+    const nativeEnableButton = document.querySelector("[data-fcm-enable-button]");
+    const nativeDisableButton = document.querySelector("[data-fcm-disable-button]");
+    let nativeFcmInitialized = false;
+
+    const getFcmBridge = () => window.median?.firebaseMessaging || null;
+
+    const invokeFcm = (method, options = {}) => new Promise((resolve, reject) => {
+        const bridge = getFcmBridge();
+        if (!bridge || typeof bridge[method] !== "function") {
+            reject(new Error("Native Firebase notifications are not available in this app build."));
+            return;
+        }
+
+        let completed = false;
+        const timeout = window.setTimeout(() => {
+            if (completed) return;
+            completed = true;
+            reject(new Error("The notification service did not respond. Please try again."));
+        }, 15000);
+
+        try {
+            bridge[method]({
+                ...options,
+                callback: result => {
+                    if (completed) return;
+                    completed = true;
+                    window.clearTimeout(timeout);
+                    resolve(result || {});
+                }
+            });
+        } catch (error) {
+            if (completed) return;
+            completed = true;
+            window.clearTimeout(timeout);
+            reject(error);
+        }
+    });
+
+    const getNativePlatform = () =>
+        /iPad|iPhone|iPod/i.test(navigator.userAgent) ? "ios" : "android";
+
+    const setNativeEnabledUi = () => {
+        if (nativePushStatus) {
+            nativePushStatus.textContent = "Native notifications are enabled on this device. PharmaHex can now deliver stock and savings alerts even when the app is closed.";
+        }
+        if (nativeEnableButton) nativeEnableButton.hidden = true;
+        if (nativeDisableButton) {
+            nativeDisableButton.hidden = false;
+            nativeDisableButton.disabled = false;
+        }
+    };
+
+    const setNativeDisabledUi = (message = "Notifications are off on this device. Enable them to receive PharmaHex alerts when the app is closed.") => {
+        if (nativePushStatus) nativePushStatus.textContent = message;
+        if (nativeEnableButton) {
+            nativeEnableButton.hidden = false;
+            nativeEnableButton.disabled = false;
+            nativeEnableButton.textContent = "Enable";
+        }
+        if (nativeDisableButton) nativeDisableButton.hidden = true;
+    };
+
+    const saveFcmDeviceToken = async token => {
+        if (!token || typeof token !== "string")
+            throw new Error("Firebase did not return a device token.");
+
+        await postJson("/Notifications/RegisterFcmDevice", {
+            token,
+            platform: getNativePlatform(),
+            permissionGranted: true
+        });
+    };
+
+    const createNativeNotificationChannel = () => {
+        const bridge = getFcmBridge();
+        if (!bridge || typeof bridge.createChannel !== "function") return;
+
+        invokeFcm("createChannel", {
+            channelId: "pharmahex_alerts",
+            channelName: "PharmaHex alerts",
+            importance: "high"
+        }).catch(() => {});
+    };
+
+    const refreshNativeFcmRegistration = async () => {
+        const bridge = getFcmBridge();
+        if (!bridge) return false;
+
+        nativePushCard && (nativePushCard.hidden = false);
+        if (browserPushCard) browserPushCard.hidden = true;
+
+        try {
+            const permission = await invokeFcm("checkPermission");
+            if (!permission.granted) {
+                setNativeDisabledUi();
+                return false;
+            }
+
+            createNativeNotificationChannel();
+
+            let result = await invokeFcm("getToken");
+            if (!result.token) {
+                result = await invokeFcm("register");
+            }
+
+            if (!result.token)
+                throw new Error("Firebase has not generated a device token yet.");
+
+            await saveFcmDeviceToken(result.token);
+            setNativeEnabledUi();
+            return true;
+        } catch (error) {
+            console.warn("PharmaHex native notification registration could not be synced.", error);
+            setNativeDisabledUi("Notifications are allowed, but this device could not be registered with PharmaHex. Reopen the app or try enabling notifications again.");
+            return false;
+        }
+    };
+
+    const enableNativeFcm = async () => {
+        if (!getFcmBridge()) {
+            alert("Native Firebase notifications are not available in this app build. Rebuild the Median app with Firebase Cloud Messaging enabled.");
+            return false;
+        }
+
+        if (nativeEnableButton) nativeEnableButton.disabled = true;
+        if (nativePushStatus) nativePushStatus.textContent = "Requesting notification permission...";
+
+        try {
+            const permission = await invokeFcm("requestPermission");
+            if (!permission.granted) {
+                setNativeDisabledUi("Notification permission was not granted. Allow notifications in Android settings to receive PharmaHex alerts.");
+                return false;
+            }
+
+            createNativeNotificationChannel();
+
+            let result = await invokeFcm("register");
+            if (!result.token) result = await invokeFcm("getToken");
+            if (!result.token)
+                throw new Error("Firebase registration succeeded, but no device token was returned.");
+
+            await saveFcmDeviceToken(result.token);
+            setNativeEnabledUi();
+
+            // A test push is best-effort. Device registration remains enabled
+            // even while the server-side Firebase credential is being configured.
+            try {
+                await postJson("/Notifications/Test", {});
+            } catch (error) {
+                console.info("Native device registered; test push is not available yet.", error);
+            }
+
+            return true;
+        } catch (error) {
+            console.error("PharmaHex native notification setup failed.", error);
+            setNativeDisabledUi(error?.message || "Native notifications could not be enabled. Please try again.");
+            return false;
+        } finally {
+            if (nativeEnableButton && !nativeEnableButton.hidden)
+                nativeEnableButton.disabled = false;
+        }
+    };
+
+    const disableNativeFcm = async () => {
+        if (nativeDisableButton) nativeDisableButton.disabled = true;
+
+        try {
+            const result = await invokeFcm("getToken").catch(() => ({}));
+            if (result.token) {
+                await postJson("/Notifications/UnregisterFcmDevice", { token: result.token });
+            }
+
+            await invokeFcm("deleteToken");
+            setNativeDisabledUi("Native notifications are turned off on this device.");
+            return true;
+        } catch (error) {
+            console.error("PharmaHex native notification disable failed.", error);
+            if (nativePushStatus)
+                nativePushStatus.textContent = error?.message || "Notifications could not be turned off. Please try again.";
+            return false;
+        } finally {
+            if (nativeDisableButton) nativeDisableButton.disabled = false;
+        }
+    };
+
+    const handleNativeFcmLogout = () => {
+        document.querySelectorAll('form[action*="/Account/Logout"], form[action*="Account/Logout"]').forEach(form => {
+            form.addEventListener("submit", async event => {
+                if (!getFcmBridge() || form.dataset.nativeFcmLogoutStarted === "true")
+                    return;
+
+                event.preventDefault();
+                form.dataset.nativeFcmLogoutStarted = "true";
+
+                try {
+                    const result = await invokeFcm("getToken").catch(() => ({}));
+                    if (result.token) {
+                        await postJson("/Notifications/UnregisterFcmDevice", { token: result.token });
+                    }
+                    await invokeFcm("deleteToken").catch(() => {});
+                } catch (error) {
+                    console.warn("Could not unlink this native notification device before logout.", error);
+                } finally {
+                    form.submit();
+                }
+            });
+        });
+    };
+
+    const activateNativeFcmUi = () => {
+        if (nativeFcmInitialized || !getFcmBridge()) return;
+        nativeFcmInitialized = true;
+
+        if (nativePushCard) nativePushCard.hidden = false;
+        if (browserPushCard) browserPushCard.hidden = true;
+
+        nativeEnableButton?.addEventListener("click", enableNativeFcm);
+        nativeDisableButton?.addEventListener("click", disableNativeFcm);
+        handleNativeFcmLogout();
+        refreshNativeFcmRegistration();
+    };
+
+    // Median injects the bridge asynchronously. This callback is the supported
+    // page-load hook; the fallback also covers cases where the bridge is ready first.
+    window.median_library_ready = activateNativeFcmUi;
+    if (window.median) activateNativeFcmUi();
+
 
     const base64UrlToBytes = value => {
         const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
@@ -215,6 +445,8 @@
     };
 
     const init = () => {
+        if (getFcmBridge()) activateNativeFcmUi();
+
         const enableButtons = document.querySelectorAll("[data-notification-enable-button]");
         const disableButtons = document.querySelectorAll("[data-notification-disable-button]");
 
