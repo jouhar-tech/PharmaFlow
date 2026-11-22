@@ -51,25 +51,56 @@ public sealed class PharmaFlowPushNotificationService : IPharmaFlowPushNotificat
         var stats = await GetStockStatsAsync(profileId, localDate, cancellationToken);
 
         var periodKey = localDate.ToString("yyyy-MM-dd");
-        if (!await TryClaimDispatchAsync(profileId, DailyNotificationType, periodKey, cancellationToken))
-            return false;
-
-        var body =
-            $"Expiring: {stats.ExpiringCount} products • " +
-            $"At-risk value: ₹{stats.ExpiringValue.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))} • " +
-            $"Low stock: {stats.LowStockCount} products";
-
-        var delivered = await SendToProfileAsync(
+        var attemptToken = await TryClaimDispatchAsync(
             profileId,
-            "PharmaHex Daily Stock Check",
-            body,
-            "/Home",
+            DailyNotificationType,
+            periodKey,
             cancellationToken);
 
-        if (!delivered)
-            await ReleaseDispatchAsync(profileId, DailyNotificationType, periodKey, cancellationToken);
+        if (!attemptToken.HasValue)
+            return false;
 
-        return delivered;
+        var dispatchCompleted = false;
+
+        try
+        {
+            var body =
+                $"Expiring: {stats.ExpiringCount} products • " +
+                $"At-risk value: ₹{stats.ExpiringValue.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))} • " +
+                $"Low stock: {stats.LowStockCount} products";
+
+            var delivered = await SendToProfileAsync(
+                profileId,
+                "PharmaHex Daily Stock Check",
+                body,
+                "/Home",
+                cancellationToken);
+
+            if (delivered)
+            {
+                await CompleteDispatchAsync(
+                    profileId,
+                    DailyNotificationType,
+                    periodKey,
+                    attemptToken.Value,
+                    cancellationToken);
+
+                dispatchCompleted = true;
+            }
+
+            return delivered;
+        }
+        finally
+        {
+            if (!dispatchCompleted)
+            {
+                await ReleaseDispatchSafelyAsync(
+                    profileId,
+                    DailyNotificationType,
+                    periodKey,
+                    attemptToken.Value);
+            }
+        }
     }
 
     public async Task<bool> Send30DaySavingsNotificationAsync(
@@ -91,24 +122,55 @@ public sealed class PharmaFlowPushNotificationService : IPharmaFlowPushNotificat
             .SumAsync(e => (decimal?)e.Amount, cancellationToken) ?? 0m;
 
         var periodKey = $"30day-{cycleNumber}";
-        if (!await TryClaimDispatchAsync(profileId, MonthlyNotificationType, periodKey, cancellationToken))
-            return false;
-
-        var body =
-            $"Your PharmaHex savings for the last 30 days: " +
-            $"₹{savings.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))}.";
-
-        var delivered = await SendToProfileAsync(
+        var attemptToken = await TryClaimDispatchAsync(
             profileId,
-            "PharmaHex 30-Day Savings",
-            body,
-            "/Home",
+            MonthlyNotificationType,
+            periodKey,
             cancellationToken);
 
-        if (!delivered)
-            await ReleaseDispatchAsync(profileId, MonthlyNotificationType, periodKey, cancellationToken);
+        if (!attemptToken.HasValue)
+            return false;
 
-        return delivered;
+        var dispatchCompleted = false;
+
+        try
+        {
+            var body =
+                $"Your PharmaHex savings for the last 30 days: " +
+                $"₹{savings.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))}.";
+
+            var delivered = await SendToProfileAsync(
+                profileId,
+                "PharmaHex 30-Day Savings",
+                body,
+                "/Home",
+                cancellationToken);
+
+            if (delivered)
+            {
+                await CompleteDispatchAsync(
+                    profileId,
+                    MonthlyNotificationType,
+                    periodKey,
+                    attemptToken.Value,
+                    cancellationToken);
+
+                dispatchCompleted = true;
+            }
+
+            return delivered;
+        }
+        finally
+        {
+            if (!dispatchCompleted)
+            {
+                await ReleaseDispatchSafelyAsync(
+                    profileId,
+                    MonthlyNotificationType,
+                    periodKey,
+                    attemptToken.Value);
+            }
+        }
     }
 
     public async Task<bool> SendTestNotificationAsync(
@@ -118,7 +180,7 @@ public sealed class PharmaFlowPushNotificationService : IPharmaFlowPushNotificat
         return await SendToProfileAsync(
             profileId,
             "PharmaHex Notifications Enabled",
-            "Your PharmaHex notifications are working. Daily stock alerts will arrive at 10:30 AM.",
+            "Your PharmaHex notifications are working. Daily stock alerts will arrive at 8:30 AM.",
             "/Home",
             cancellationToken);
     }
@@ -179,30 +241,74 @@ public sealed class PharmaFlowPushNotificationService : IPharmaFlowPushNotificat
                 cancellationToken);
     }
 
-    private async Task<bool> TryClaimDispatchAsync(
+    private async Task<Guid?> TryClaimDispatchAsync(
         long profileId,
         string notificationType,
         string periodKey,
         CancellationToken cancellationToken)
     {
+        var attemptToken = Guid.NewGuid();
+
         var affected = await _db.Database.ExecuteSqlInterpolatedAsync(
             $"""
             INSERT INTO public.notification_dispatch_log
-                (profile_id, notification_type, period_key, sent_at)
+                (profile_id, notification_type, period_key, sent_at, status, attempted_at, attempt_token)
             VALUES
-                ({profileId}, {notificationType}, {periodKey}, NOW())
+                ({profileId}, {notificationType}, {periodKey}, NOW(), 'processing', NOW(), {attemptToken})
             ON CONFLICT (profile_id, notification_type, period_key)
-            DO NOTHING;
+            DO UPDATE
+            SET sent_at = NOW(),
+                status = 'processing',
+                attempted_at = NOW(),
+                attempt_token = EXCLUDED.attempt_token
+            WHERE public.notification_dispatch_log.status <> 'sent'
+              AND (
+                    public.notification_dispatch_log.attempted_at IS NULL
+                    OR public.notification_dispatch_log.attempted_at < NOW() - INTERVAL '30 minutes'
+              );
             """,
             cancellationToken);
 
-        return affected > 0;
+        return affected > 0 ? attemptToken : null;
+    }
+
+    private async Task CompleteDispatchAsync(
+        long profileId,
+        string notificationType,
+        string periodKey,
+        Guid attemptToken,
+        CancellationToken cancellationToken)
+    {
+        var affected = await _db.Database.ExecuteSqlInterpolatedAsync(
+            $"""
+            UPDATE public.notification_dispatch_log
+            SET status = 'sent',
+                sent_at = NOW(),
+                attempted_at = NOW(),
+                attempt_token = NULL
+            WHERE profile_id = {profileId}
+              AND notification_type = {notificationType}
+              AND period_key = {periodKey}
+              AND attempt_token = {attemptToken}
+              AND status = 'processing';
+            """,
+            cancellationToken);
+
+        if (affected == 0)
+        {
+            _logger.LogWarning(
+                "Notification delivery succeeded but its dispatch record could not be marked sent for profile {ProfileId}, type {NotificationType}, period {PeriodKey}.",
+                profileId,
+                notificationType,
+                periodKey);
+        }
     }
 
     private async Task ReleaseDispatchAsync(
         long profileId,
         string notificationType,
         string periodKey,
+        Guid attemptToken,
         CancellationToken cancellationToken)
     {
         await _db.Database.ExecuteSqlInterpolatedAsync(
@@ -210,9 +316,39 @@ public sealed class PharmaFlowPushNotificationService : IPharmaFlowPushNotificat
             DELETE FROM public.notification_dispatch_log
             WHERE profile_id = {profileId}
               AND notification_type = {notificationType}
-              AND period_key = {periodKey};
+              AND period_key = {periodKey}
+              AND attempt_token = {attemptToken}
+              AND status = 'processing';
             """,
             cancellationToken);
+    }
+
+    private async Task ReleaseDispatchSafelyAsync(
+        long profileId,
+        string notificationType,
+        string periodKey,
+        Guid attemptToken)
+    {
+        try
+        {
+            await ReleaseDispatchAsync(
+                profileId,
+                notificationType,
+                periodKey,
+                attemptToken,
+                CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            // If the database is unavailable during shutdown, the 30-minute
+            // processing lease allows a later scheduler pass to retry this day.
+            _logger.LogWarning(
+                ex,
+                "Could not release failed notification dispatch for profile {ProfileId}, type {NotificationType}, period {PeriodKey}.",
+                profileId,
+                notificationType,
+                periodKey);
+        }
     }
 
     private async Task<bool> SendToProfileAsync(
