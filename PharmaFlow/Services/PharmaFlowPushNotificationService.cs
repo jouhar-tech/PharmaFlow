@@ -45,11 +45,6 @@ public sealed class PharmaFlowPushNotificationService : IPharmaFlowPushNotificat
         DateOnly localDate,
         CancellationToken cancellationToken)
     {
-        if (!await HasActiveSubscriptionAsync(profileId, cancellationToken))
-            return false;
-
-        var stats = await GetStockStatsAsync(profileId, localDate, cancellationToken);
-
         var periodKey = localDate.ToString("yyyy-MM-dd");
         var attemptToken = await TryClaimDispatchAsync(
             profileId,
@@ -64,6 +59,13 @@ public sealed class PharmaFlowPushNotificationService : IPharmaFlowPushNotificat
 
         try
         {
+            // Claim first so already-sent profiles do not repeatedly load stock
+            // aggregates during the five-minute retry checks.
+            if (!await HasActiveSubscriptionAsync(profileId, cancellationToken))
+                return false;
+
+            var stats = await GetStockStatsAsync(profileId, localDate, cancellationToken);
+
             var body =
                 $"Expiring: {stats.ExpiringCount} products • " +
                 $"At-risk value: ₹{stats.ExpiringValue.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("en-IN"))} • " +
