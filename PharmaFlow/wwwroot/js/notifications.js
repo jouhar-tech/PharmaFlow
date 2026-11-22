@@ -218,7 +218,6 @@
                         await postJson("/Notifications/UnregisterFcmDevice", { token: result.token });
                     }
                     await invokeFcm("deleteToken").catch(() => {});
-                    localStorage.removeItem("pharmahex-native-push-opt-in");
                 } catch (error) {
                     console.warn("Could not unlink this native notification device before logout.", error);
                 } finally {
@@ -240,12 +239,6 @@
         handleNativeFcmLogout();
         refreshNativeFcmRegistration();
     };
-
-    // Median injects the bridge asynchronously. This callback is the supported
-    // page-load hook; the fallback also covers cases where the bridge is ready first.
-    window.median_library_ready = activateNativeFcmUi;
-    if (window.median) activateNativeFcmUi();
-
 
     const base64UrlToBytes = value => {
         const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
@@ -274,6 +267,11 @@
 
         return response;
     };
+
+    // Install Median's page-ready callback only after all FCM and HTTP helpers
+    // have been initialized, so an early bridge callback cannot hit a TDZ.
+    window.median_library_ready = activateNativeFcmUi;
+    if (window.median) activateNativeFcmUi();
 
     const saveCurrentSubscription = async subscription => {
         const json = subscription.toJSON();
