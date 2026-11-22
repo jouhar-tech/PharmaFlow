@@ -22,17 +22,20 @@ public sealed class PharmaFlowPushNotificationService : IPharmaFlowPushNotificat
 
     private readonly ApplicationDbContext _db;
     private readonly WebPushClient _webPushClient;
+    private readonly IFirebaseCloudMessagingService _firebaseMessaging;
     private readonly IConfiguration _configuration;
     private readonly ILogger<PharmaFlowPushNotificationService> _logger;
 
     public PharmaFlowPushNotificationService(
         ApplicationDbContext db,
         WebPushClient webPushClient,
+        IFirebaseCloudMessagingService firebaseMessaging,
         IConfiguration configuration,
         ILogger<PharmaFlowPushNotificationService> logger)
     {
         _db = db;
         _webPushClient = webPushClient;
+        _firebaseMessaging = firebaseMessaging;
         _configuration = configuration;
         _logger = logger;
     }
@@ -158,10 +161,21 @@ public sealed class PharmaFlowPushNotificationService : IPharmaFlowPushNotificat
         long profileId,
         CancellationToken cancellationToken)
     {
-        return await _db.PushDeviceSubscriptions
+        var hasBrowserSubscription = await _db.PushDeviceSubscriptions
             .AsNoTracking()
             .AnyAsync(
                 s => s.ProfileId == profileId && s.IsActive,
+                cancellationToken);
+
+        if (hasBrowserSubscription)
+            return true;
+
+        return await _db.FcmDeviceTokens
+            .AsNoTracking()
+            .AnyAsync(
+                device => device.ProfileId == profileId &&
+                          device.IsActive &&
+                          device.PermissionGranted,
                 cancellationToken);
     }
 
@@ -208,6 +222,39 @@ public sealed class PharmaFlowPushNotificationService : IPharmaFlowPushNotificat
         string url,
         CancellationToken cancellationToken)
     {
+        // Keep browser Web Push and native FCM as independent delivery channels.
+        // A profile may have one, the other, or both.
+        var browserDelivered = await SendToBrowserSubscriptionsAsync(
+            profileId,
+            title,
+            body,
+            url,
+            cancellationToken);
+
+        var nativeDelivered = await _firebaseMessaging.SendToProfileAsync(
+            profileId,
+            title,
+            body,
+            url,
+            cancellationToken);
+
+        return browserDelivered || nativeDelivered;
+    }
+
+    private async Task<bool> SendToBrowserSubscriptionsAsync(
+        long profileId,
+        string title,
+        string body,
+        string url,
+        CancellationToken cancellationToken)
+    {
+        var subscriptions = await _db.PushDeviceSubscriptions
+            .Where(s => s.ProfileId == profileId && s.IsActive)
+            .ToListAsync(cancellationToken);
+
+        if (subscriptions.Count == 0)
+            return false;
+
         var subject = _configuration["WebPush:Subject"];
         var publicKey = _configuration["WebPush:PublicKey"];
         var privateKey = _configuration["WebPush:PrivateKey"];
@@ -216,16 +263,11 @@ public sealed class PharmaFlowPushNotificationService : IPharmaFlowPushNotificat
             string.IsNullOrWhiteSpace(publicKey) ||
             string.IsNullOrWhiteSpace(privateKey))
         {
-            _logger.LogError("Web Push VAPID configuration is missing.");
+            _logger.LogWarning(
+                "Browser Web Push delivery skipped for profile {ProfileId}: VAPID configuration is missing.",
+                profileId);
             return false;
         }
-
-        var subscriptions = await _db.PushDeviceSubscriptions
-            .Where(s => s.ProfileId == profileId && s.IsActive)
-            .ToListAsync(cancellationToken);
-
-        if (subscriptions.Count == 0)
-            return false;
 
         var vapid = new VapidDetails(subject, publicKey, privateKey);
         var options = new WebPushOptions
@@ -243,7 +285,6 @@ public sealed class PharmaFlowPushNotificationService : IPharmaFlowPushNotificat
         });
 
         var delivered = false;
-
         foreach (var item in subscriptions)
         {
             try
@@ -271,7 +312,7 @@ public sealed class PharmaFlowPushNotificationService : IPharmaFlowPushNotificat
                 item.LastFailureAt = DateTime.UtcNow;
                 item.UpdatedAt = DateTime.UtcNow;
                 _logger.LogInformation(
-                    "Removed expired push subscription {SubscriptionId} for profile {ProfileId}.",
+                    "Removed expired browser push subscription {SubscriptionId} for profile {ProfileId}.",
                     item.SubscriptionId,
                     profileId);
             }
@@ -281,7 +322,7 @@ public sealed class PharmaFlowPushNotificationService : IPharmaFlowPushNotificat
                 item.UpdatedAt = DateTime.UtcNow;
                 _logger.LogWarning(
                     ex,
-                    "Push delivery failed for subscription {SubscriptionId}, profile {ProfileId}.",
+                    "Browser push delivery failed for subscription {SubscriptionId}, profile {ProfileId}.",
                     item.SubscriptionId,
                     profileId);
             }
