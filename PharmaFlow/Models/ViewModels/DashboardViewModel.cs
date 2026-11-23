@@ -6,6 +6,8 @@ namespace PharmaFlow.Models.ViewModels
 
         public string? ProfilePhotoUrl { get; init; }
 
+        public string? DashboardBackgroundUrl { get; init; }
+
         public int ProductsExpiringSoonCount { get; init; }
 
         public int LowStockCount { get; init; }
