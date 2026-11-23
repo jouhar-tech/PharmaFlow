@@ -122,7 +122,7 @@ public sealed class SupabaseSessionTokenProvider : ISupabaseSessionTokenProvider
                 .Replace('-', '+')
                 .Replace('_', '/');
 
-            payload = payload.Length % 4 switch
+            payload = (payload.Length % 4) switch
             {
                 2 => payload + "==",
                 3 => payload + "=",
