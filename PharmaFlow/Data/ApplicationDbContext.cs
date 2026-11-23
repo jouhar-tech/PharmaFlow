@@ -214,6 +214,7 @@ public class ApplicationDbContext : DbContext, IDataProtectionKeyContext
             entity.Property(p => p.FullName).HasColumnName("full_name");
             entity.Property(p => p.Address).HasColumnName("address");
             entity.Property(p => p.ProfilePhotoUrl).HasColumnName("profile_photo_url");
+            entity.Property(p => p.DashboardBackgroundUrl).HasColumnName("dashboard_background_url");
             entity.Property(p => p.SubscriptionPlan).HasColumnName("subscription_plan").HasMaxLength(20);
             entity.Property(p => p.SubscriptionStartsAt).HasColumnName("subscription_starts_at");
             entity.Property(p => p.SubscriptionEndsAt).HasColumnName("subscription_ends_at");
