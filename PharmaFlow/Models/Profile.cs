@@ -34,6 +34,9 @@ public sealed class Profile
     [Column("profile_photo_url")]
     public string? ProfilePhotoUrl { get; set; }
 
+    [Column("dashboard_background_url")]
+    public string? DashboardBackgroundUrl { get; set; }
+
     [Column("subscription_plan")]
     public string SubscriptionPlan { get; set; } = "free";
 
