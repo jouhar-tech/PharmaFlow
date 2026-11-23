@@ -126,6 +126,21 @@ public sealed class SupabaseAuthService : ISupabaseAuthService
         return await ReadResultAsync(response, requireAccessToken: true, cancellationToken);
     }
 
+    public async Task<SupabaseAuthResult> RefreshSessionAsync(
+        string refreshToken,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(refreshToken))
+            return new(false, Error: "A Supabase refresh token is not available.");
+
+        var response = await SendAsync(
+            "/auth/v1/token?grant_type=refresh_token",
+            new { refresh_token = refreshToken },
+            cancellationToken);
+
+        return await ReadResultAsync(response, requireAccessToken: true, cancellationToken);
+    }
+
     private async Task<SupabaseAuthResult> ReadResultAsync(HttpResponseMessage response, bool requireAccessToken, CancellationToken cancellationToken)
     {
         using var responseScope = response;
@@ -148,6 +163,7 @@ public sealed class SupabaseAuthService : ISupabaseAuthService
         }
 
         string? accessToken = null;
+        string? refreshToken = null;
         string? userId = null;
         string? email = null;
 
@@ -160,6 +176,9 @@ public sealed class SupabaseAuthService : ISupabaseAuthService
 
                 accessToken = root.TryGetProperty("access_token", out var tokenElement)
                     ? tokenElement.GetString()
+                    : null;
+                refreshToken = root.TryGetProperty("refresh_token", out var refreshTokenElement)
+                    ? refreshTokenElement.GetString()
                     : null;
 
                 var userElement = root.TryGetProperty("user", out var nestedUser)
@@ -178,7 +197,7 @@ public sealed class SupabaseAuthService : ISupabaseAuthService
         if (requireAccessToken && string.IsNullOrWhiteSpace(accessToken))
             return new(false, Error: "Authentication response was incomplete.");
 
-        return new(true, accessToken, userId, email);
+        return new(true, accessToken, userId, email, RefreshToken: refreshToken);
     }
 
     private async Task<HttpResponseMessage> SendAsync(string path, object body, CancellationToken cancellationToken)
