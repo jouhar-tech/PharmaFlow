@@ -10,7 +10,6 @@ public interface ISupabaseAuthService
     string GetGoogleLoginUrl(string redirectUri, string codeChallenge);
     Task<SupabaseAuthResult> ExchangeGoogleCodeAsync(string code, string codeVerifier, CancellationToken cancellationToken = default);
     Task<SupabaseAuthResult> SignInWithGoogleIdTokenAsync(string idToken, CancellationToken cancellationToken = default);
-    Task<SupabaseAuthResult> RefreshSessionAsync(string refreshToken, CancellationToken cancellationToken = default);
 }
 
 public sealed record SupabaseAuthResult(
@@ -18,5 +17,4 @@ public sealed record SupabaseAuthResult(
     string? AccessToken = null,
     string? UserId = null,
     string? Email = null,
-    string? Error = null,
-    string? RefreshToken = null);
+    string? Error = null);
