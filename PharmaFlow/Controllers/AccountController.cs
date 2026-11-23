@@ -387,6 +387,9 @@ public class AccountController : Controller
         if (!string.IsNullOrWhiteSpace(result.AccessToken))
             HttpContext.Session.SetString("SupabaseAccessToken", result.AccessToken);
 
+        if (!string.IsNullOrWhiteSpace(result.RefreshToken))
+            HttpContext.Session.SetString("SupabaseRefreshToken", result.RefreshToken);
+
         TempData["AuthMessage"] = "Account created successfully. Please check your email if verification is required.";
         return RedirectToAction(nameof(Login));
     }
@@ -582,6 +585,11 @@ public class AccountController : Controller
     private void SetStaffAuthenticatedSession(SupabaseAuthResult result, Staff staff, Profile profile)
     {
         HttpContext.Session.SetString("SupabaseAccessToken", result.AccessToken!);
+        if (!string.IsNullOrWhiteSpace(result.RefreshToken))
+            HttpContext.Session.SetString("SupabaseRefreshToken", result.RefreshToken);
+        else
+            HttpContext.Session.Remove("SupabaseRefreshToken");
+
         HttpContext.Session.SetString("SupabaseUserId", result.UserId!);
         HttpContext.Session.SetString("ProfileId", profile.Id.ToString());
         HttpContext.Session.SetString("StaffId", staff.StaffId.ToString());
@@ -622,6 +630,11 @@ public class AccountController : Controller
     private void SetAuthenticatedSession(SupabaseAuthResult result, long profileId, string? businessName, string username)
     {
         HttpContext.Session.SetString("SupabaseAccessToken", result.AccessToken!);
+        if (!string.IsNullOrWhiteSpace(result.RefreshToken))
+            HttpContext.Session.SetString("SupabaseRefreshToken", result.RefreshToken);
+        else
+            HttpContext.Session.Remove("SupabaseRefreshToken");
+
         HttpContext.Session.SetString("SupabaseUserId", result.UserId!);
         HttpContext.Session.SetString("ProfileId", profileId.ToString());
         HttpContext.Session.SetString("Username", username);
