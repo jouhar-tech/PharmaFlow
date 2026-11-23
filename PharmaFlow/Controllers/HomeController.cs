@@ -369,7 +369,7 @@ namespace PharmaFlow.Controllers
             var objectPath = Uri.UnescapeDataString(publicImageUrl[publicPrefix.Length..]);
             if (string.IsNullOrWhiteSpace(objectPath) ||
                 objectPath.Contains("..", StringComparison.Ordinal) ||
-                objectPath.StartsWith('/', StringComparison.Ordinal))
+                objectPath.StartsWith("/", StringComparison.Ordinal))
                 return;
 
             try
