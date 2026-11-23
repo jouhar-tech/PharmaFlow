@@ -24,7 +24,11 @@
 @await Html.PartialAsync("_InvoiceCapture")
 
 <div class="home-mobile-dashboard">
-    <header class="home-mobile-hero">
+    <header class="home-mobile-hero @(string.IsNullOrWhiteSpace(Model.DashboardBackgroundUrl) ? string.Empty : "has-dashboard-background")">
+        @if (!string.IsNullOrWhiteSpace(Model.DashboardBackgroundUrl))
+        {
+            <img class="home-mobile-hero-background" src="@Model.DashboardBackgroundUrl" alt="" aria-hidden="true" />
+        }
         <div class="home-mobile-topline">
             <div class="home-mobile-greeting">
                 <a asp-controller="Profile" asp-action="Account"
@@ -47,14 +51,55 @@
                     <strong>@displayName</strong>
                 </div>
             </div>
-            <a asp-controller="Notifications" asp-action="Index"
-               class="home-mobile-notification"
-               data-notification-button
-               aria-label="Open notifications"
-               title="Open notifications">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>
-                <span></span>
-            </a>
+            <div class="home-mobile-hero-actions">
+                <form asp-controller="Home"
+                      asp-action="UploadDashboardBackground"
+                      method="post"
+                      enctype="multipart/form-data"
+                      class="home-mobile-background-upload-form">
+                    @Html.AntiForgeryToken()
+                    <input type="file"
+                           id="dashboardBackgroundFile"
+                           name="backgroundImage"
+                           accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                           class="home-mobile-background-input" />
+                    <label for="dashboardBackgroundFile"
+                           class="home-mobile-background-button"
+                           aria-label="@(string.IsNullOrWhiteSpace(Model.DashboardBackgroundUrl) ? "Add shop background photo" : "Change shop background photo")"
+                           title="@(string.IsNullOrWhiteSpace(Model.DashboardBackgroundUrl) ? "Add shop background photo" : "Change shop background photo")">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M4 7h3l1.5-2h7L17 7h3v12H4z" />
+                            <circle cx="12" cy="13" r="3.5" />
+                        </svg>
+                        <span>Photo</span>
+                    </label>
+                </form>
+                @if (!string.IsNullOrWhiteSpace(Model.DashboardBackgroundUrl))
+                {
+                    <form asp-controller="Home"
+                          asp-action="RemoveDashboardBackground"
+                          method="post"
+                          class="home-mobile-background-remove-form">
+                        @Html.AntiForgeryToken()
+                        <button type="submit"
+                                class="home-mobile-background-remove"
+                                aria-label="Remove shop background photo"
+                                title="Restore default background">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="m7 7 10 10M17 7 7 17" />
+                            </svg>
+                        </button>
+                    </form>
+                }
+                <a asp-controller="Notifications" asp-action="Index"
+                   class="home-mobile-notification"
+                   data-notification-button
+                   aria-label="Open notifications"
+                   title="Open notifications">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>
+                    <span></span>
+                </a>
+            </div>
         </div>
 
         <div class="home-mobile-business">
@@ -64,6 +109,15 @@
     </header>
 
     <main class="home-mobile-content">
+        @if (TempData["DashboardBackgroundMessage"] is string backgroundMessage)
+        {
+            <p class="home-mobile-background-status" role="status">@backgroundMessage</p>
+        }
+        @if (TempData["DashboardBackgroundError"] is string backgroundError)
+        {
+            <p class="home-mobile-background-status is-error" role="alert">@backgroundError</p>
+        }
+
         <a asp-controller="Bills" asp-action="Index" asp-route-period="Last 7 Days"
            class="home-mobile-sales-card home-mobile-sales-card-link"
            aria-label="View bills from the last 7 days">
@@ -372,4 +426,13 @@
 
 @section Scripts {
     <script src="~/js/invoice-capture.js" asp-append-version="true"></script>
+    <script>
+        (() => {
+            const input = document.getElementById("dashboardBackgroundFile");
+            input?.addEventListener("change", () => {
+                if (input.files && input.files.length > 0)
+                    input.form?.submit();
+            });
+        })();
+    </script>
 }
