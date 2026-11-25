@@ -97,7 +97,7 @@
                     <label class="inventory-details-v2-field">
                         <span>Manufacturer</span>
                         <input type="text"
-                               value="@Model.Manufacturer"
+                               value="@(!string.IsNullOrWhiteSpace(Model.Manufacturer) ? Model.Manufacturer : Model.DistributorName)"
                                placeholder="Manufacturer not recorded"
                                readonly
                                aria-readonly="true" />
