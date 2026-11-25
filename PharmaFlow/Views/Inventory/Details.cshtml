@@ -236,15 +236,22 @@
     <section class="inventory-remove-panel"
              role="dialog"
              aria-modal="true"
-             aria-labelledby="inventoryRemoveTitle">
-        <h2 id="inventoryRemoveTitle">Remove from stock?</h2>
+             aria-labelledby="inventoryRemoveTitle"
+             aria-describedby="inventoryRemoveDescription"
+             tabindex="-1">
+        <div class="inventory-remove-heading">
+            <span class="inventory-remove-warning-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M12 3 2.8 19h18.4L12 3Z"></path><path d="M12 9v4M12 16.5h.01"></path></svg>
+            </span>
+            <h2 id="inventoryRemoveTitle">Remove from stock?</h2>
+        </div>
         @if (Model.IsBatchContext && batch is not null)
         {
-            <p>This will remove only batch <strong>@batch.BatchNumber</strong> from active stock. Existing sales history remains preserved.</p>
+            <p id="inventoryRemoveDescription">This will remove only batch <strong>@batch.BatchNumber</strong> from active stock. Existing sales history remains preserved.</p>
         }
         else
         {
-            <p>This will remove the product and all of its batches from active stock. Existing sales history remains preserved.</p>
+            <p id="inventoryRemoveDescription">This will remove the product and all of its batches from active stock. Existing sales history remains preserved.</p>
         }
 
         <form asp-controller="Inventory" asp-action="RemoveProduct" method="post">
@@ -308,8 +315,19 @@
     customGstInput?.addEventListener("input", syncGstRate);
     syncGstRate();
 
-    const close = () => modal?.setAttribute("hidden", "");
-    const open = () => modal?.removeAttribute("hidden");
+    const close = () => {
+        if (!modal || modal.hasAttribute("hidden")) return;
+        modal.setAttribute("hidden", "");
+        document.body.classList.remove("inventory-remove-modal-open");
+        openButton?.focus();
+    };
+
+    const open = () => {
+        if (!modal) return;
+        modal.removeAttribute("hidden");
+        document.body.classList.add("inventory-remove-modal-open");
+        modal.querySelector(".inventory-remove-cancel")?.focus();
+    };
 
     openButton?.addEventListener("click", open);
     backdrop?.addEventListener("click", close);
