@@ -1,6 +1,6 @@
 # PharmaHex Android Home-Screen Widget — Implementation Plan
 
-Status: **Design approved for implementation planning; native integration not yet implemented.**
+Status: **Web/backend implementation committed; native Android source patch prepared. Android Gradle build and physical-device validation are still pending.**
 
 ## Goal
 
@@ -101,7 +101,7 @@ A real widget therefore requires one of these before the user-facing Add option 
 1. A Median custom Android plugin that exposes a bridge method (proposed name: median.pharmahexWidget.requestPin()), handles the Android AppWidgetManager pin flow, provides widget provider/resources/manifest entries, stores widget credentials securely, and implements widget refresh/actions; or
 2. The Android source package downloaded from Median, modified to add the same native components, then rebuilt and republished as a new PharmaHex APK.
 
-The proposed bridge method name is a contract for a future custom plugin; it is **not** an existing Median JavaScript Bridge API and must not be called until the native plugin is actually added.
+The native source patch adds two commands to the existing Median custom bridge: `pharmahexWidget.requestPin` and `pharmahexWidget.refresh`. The More page invokes the first command, while dashboard lifecycle/bill/stock events invoke the second.
 
 The native implementation needs, at minimum:
 - AppWidgetProvider and provider metadata XML,
@@ -180,3 +180,33 @@ The Android widget endpoint must be authenticated by the existing ASP.NET sessio
 
 The ASP.NET web repository currently has no Android module. Keep web changes in the existing PharmaFlow project and maintain the Median Android changes in the supplied Android project until an agreed Android source directory/repository is established. The ASP.NET GitHub Actions build cannot validate Android Gradle changes. Run `./gradlew assembleDebug` from the Android project with JDK 21 and Android SDK 36, then test on a physical Android device/launcher. A successful web build is not evidence that the native widget works.
 
+
+
+## Implementation status (2026-11-25)
+
+### ASP.NET repository changes committed
+
+- More page: **Add to Home screen** entry, app-only fallback hint, and native bridge callback.
+- `GET /api/widget/summary`: profile-scoped using the existing ASP.NET session; it accepts no profile ID from the caller.
+- The summary returns business name, today's completed-bill sales total, today's completed-bill count, actionable alert count, and updated timestamp. Sales calculations use the same India Standard Time day boundaries as the Home dashboard.
+- Widget refresh is requested after the app resumes, after a bill is generated, after a successful stock entry, and by the Android periodic worker.
+- The latest ASP.NET workflow run for commit `ca2f5609f7a905fa60c33413b2c33bec48f67cb5` passed: https://github.com/jouhar-tech/PharmaFlow/actions/runs/45603256939
+
+### Android source patch prepared locally
+
+The modified Median source archive contains:
+- `PharmaHexWidgetProvider`, `PharmaHexWidgetManager`, `PharmaHexWidgetScheduler`, and `PharmaHexWidgetWorker`.
+- App widget manifest receiver, provider metadata, RemoteViews layout and launcher preview.
+- Real Android launcher pin request; the launcher controls Add/Cancel. If pinning isn't supported, More shows the manual Widgets-picker instructions.
+- Widget actions open the existing app through Median's `targetUrl` intent extra.
+- WorkManager performs a best-effort refresh every 30 minutes, plus immediate refreshes after pin/update/app resume.
+- The worker uses Median's existing `WebkitCookieManagerProxy` to send the signed-in WebView session cookie to the profile-scoped summary endpoint. It stores only the last successful display summary locally, not Supabase service-role credentials or a new long-lived widget token.
+- On unauthorized response the widget clears its private cached data; on temporary network failure it keeps the last successful summary and timestamp.
+- Launcher long-press Remove is the Android removal UX; the provider stops periodic work and clears cached data when its final widget is removed.
+
+### Validation limits / release blockers
+
+- All Android XML resources and manifest files passed XML parsing; the source wiring, routes, required resources and cookie-proxy references were checked statically.
+- The Android Gradle build could not be run in this environment because the Gradle 9.5.1 distribution could not be downloaded (network DNS unavailable), and no Android SDK is installed here. This is **not** a successful Android compilation result.
+- The uploaded archive does not include the original release/upload keystore files. Do not sign and distribute an update with a newly generated key: it will not update the currently installed PharmaHex app. Obtain the same release signing identity used for the existing app before making a production APK/AAB.
+- The native source patch must be opened/synced in Android Studio with JDK 21 and Android SDK 36, then built and tested on a physical Samsung Android device. Verify launcher Add/Cancel, widget refresh/offline state, deep actions, and long-press Remove before release.
