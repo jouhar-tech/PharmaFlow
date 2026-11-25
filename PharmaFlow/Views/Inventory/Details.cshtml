@@ -5,45 +5,40 @@
     var batch = Model.SelectedBatch;
 }
 
-<div class="inventory-details-page">
-    <header class="inventory-details-header">
+<div class="inventory-details-page inventory-details-page-v2">
+    <header class="inventory-details-v2-header">
         @if (Model.ReturnTo == "expiry")
         {
-            <a asp-controller="ExpiryProducts" asp-action="Index" class="inventory-details-back" aria-label="Back to Expiring Products">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M19 12H5"></path>
-                    <path d="m11 18-6-6 6-6"></path>
-                </svg>
+            <a asp-controller="ExpiryProducts" asp-action="Index" class="inventory-details-v2-back" aria-label="Back to Expiring Products">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5"></path><path d="m11 18-6-6 6-6"></path></svg>
             </a>
         }
         else if (Model.ReturnTo == "low-stock")
         {
-            <a asp-controller="LowStock" asp-action="Index" class="inventory-details-back" aria-label="Back to Low Stock">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M19 12H5"></path>
-                    <path d="m11 18-6-6 6-6"></path>
-                </svg>
+            <a asp-controller="LowStock" asp-action="Index" class="inventory-details-v2-back" aria-label="Back to Low Stock">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5"></path><path d="m11 18-6-6 6-6"></path></svg>
             </a>
         }
         else
         {
-            <a asp-controller="Inventory" asp-action="Index" class="inventory-details-back" aria-label="Back to Inventory">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M19 12H5"></path>
-                <path d="m11 18-6-6 6-6"></path>
-            </svg>
-        </a>
+            <a asp-controller="Inventory" asp-action="Index" class="inventory-details-v2-back" aria-label="Back to Inventory">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5"></path><path d="m11 18-6-6 6-6"></path></svg>
+            </a>
         }
 
-        <div class="inventory-details-header-copy">
+        <div class="inventory-details-v2-title">
             <span>Inventory</span>
             <h1>Product Details</h1>
         </div>
 
         <button type="button"
-                class="inventory-details-delete-top"
-                id="inventoryRemoveProductButton">
-            <span data-i18n="removeFromStock">Remove from Stock</span>
+                class="inventory-details-v2-remove"
+                id="inventoryRemoveProductButton"
+                aria-label="Remove from stock"
+                title="Remove from stock">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5"></path>
+            </svg>
         </button>
     </header>
 
@@ -57,129 +52,182 @@
         <div class="inventory-details-alert error" role="alert">@errorMessage</div>
     }
 
-    <main class="inventory-details-content inventory-details-content-simple">
-        <section class="inventory-details-card inventory-details-main-card">
-            <div class="inventory-details-section-heading">
-                <div>
-                    <span class="section-kicker">Inventory</span>
-                    <h2>Product Details</h2>
-                </div>
-            </div>
-
-            @if (batch is null)
-            {
+    <main class="inventory-details-v2-content">
+        @if (batch is null)
+        {
+            <section class="inventory-details-v2-card">
                 <div class="inventory-details-empty">
                     No active stock batch is available for this product.
                 </div>
-            }
-            else
-            {
-                <form asp-controller="Inventory"
-                      asp-action="UpdateDetails"
-                      method="post"
-                      class="inventory-details-form">
-                    @Html.AntiForgeryToken()
+            </section>
+        }
+        else
+        {
+            <form asp-controller="Inventory"
+                  asp-action="UpdateDetails"
+                  method="post"
+                  class="inventory-details-v2-form"
+                  id="inventoryProductDetailsForm">
+                @Html.AntiForgeryToken()
 
-                    <input type="hidden" name="productId" value="@Model.ProductId" />
-                    <input type="hidden" name="batchId" value="@batch.BatchId" />
-                    <input type="hidden" name="returnTo" value="@Model.ReturnTo" />
-                    @* Preserve the actual product manufacturer and barcode when saving other fields. *@
-                    <input type="hidden" name="manufacturer" value="@Model.Manufacturer" />
-                    <input type="hidden" name="barcode" value="@Model.Barcode" />
+                <input type="hidden" name="productId" value="@Model.ProductId" />
+                <input type="hidden" name="batchId" value="@batch.BatchId" />
+                <input type="hidden" name="returnTo" value="@Model.ReturnTo" />
+                @* Preserve the saved manufacturer and barcode. These remain read-only on this screen. *@
+                <input type="hidden" name="manufacturer" value="@Model.Manufacturer" />
+                <input type="hidden" name="barcode" value="@Model.Barcode" />
+                <input type="hidden"
+                       name="gstRate"
+                       id="inventoryDetailsGstRateValue"
+                       value="@(Model.GstRate?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "")" />
 
-                    <div class="inventory-details-form-grid inventory-details-simple-grid">
-                        <label>
-                            <span>Product Name</span>
-                            <input type="text"
-                                   name="productName"
-                                   value="@Model.ProductName"
-                                   maxlength="200"
-                                   required />
-                        </label>
+                <section class="inventory-details-v2-card" aria-labelledby="inventoryGeneralInfoHeading">
+                    <h2 id="inventoryGeneralInfoHeading">General Info</h2>
 
-                        <label>
+                    <label class="inventory-details-v2-field">
+                        <span>Product Name</span>
+                        <input type="text"
+                               name="productName"
+                               value="@Model.ProductName"
+                               maxlength="200"
+                               autocomplete="off"
+                               required />
+                    </label>
+
+                    <label class="inventory-details-v2-field">
+                        <span>Manufacturer</span>
+                        <input type="text"
+                               value="@Model.Manufacturer"
+                               placeholder="Manufacturer not recorded"
+                               readonly
+                               aria-readonly="true" />
+                    </label>
+                </section>
+
+                <section class="inventory-details-v2-card" aria-labelledby="inventoryStockBatchHeading">
+                    <h2 id="inventoryStockBatchHeading">Stock &amp; Batch</h2>
+                    <div class="inventory-details-v2-grid">
+                        <label class="inventory-details-v2-field">
                             <span>Batch Number</span>
                             <input type="text"
                                    name="batchNumber"
                                    value="@batch.BatchNumber"
                                    maxlength="100"
+                                   autocomplete="off"
                                    required />
                         </label>
 
-                        <label>
-                            <span>Quantity</span>
-                            <input type="number"
-                                   name="quantityOnHand"
-                                   value="@batch.QuantityOnHand.ToString(System.Globalization.CultureInfo.InvariantCulture)"
-                                   min="0"
-                                   max="999999999"
-                                   step="0.01"
-                                   inputmode="decimal"
-                                   required />
-                        </label>
-
-                        <label>
-                            <span>Purchase Price</span>
-                            <input type="number"
-                                   name="purchaseUnitPrice"
-                                   value="@batch.PurchaseUnitPrice.ToString(System.Globalization.CultureInfo.InvariantCulture)"
-                                   min="0"
-                                   max="999999999"
-                                   step="0.01"
-                                   inputmode="decimal"
-                                   required />
-                        </label>
-
-                        <label>
-                            <span>MRP</span>
-                            <input type="number"
-                                   name="sellingUnitPrice"
-                                   value="@batch.SellingUnitPrice.ToString(System.Globalization.CultureInfo.InvariantCulture)"
-                                   min="0"
-                                   max="999999999"
-                                   step="0.01"
-                                   inputmode="decimal"
-                                   required />
-                        </label>
-
-                        <label>
+                        <label class="inventory-details-v2-field">
                             <span>Expiry Date</span>
                             <input type="date"
                                    name="expiryDate"
                                    value="@batch.ExpiryDate.ToString("yyyy-MM-dd")"
                                    required />
                         </label>
-
-                        <label>
-                            <span>Manufacturer</span>
-                            <input type="text"
-                                   value="@Model.DistributorName"
-                                   placeholder="Distributor not recorded for this batch"
-                                   readonly
-                                   aria-readonly="true" />
-                        </label>
-
-                        <label>
-                            <span>GST Rate</span>
-                            <input type="number"
-                                   name="gstRate"
-                                   value="@(Model.GstRate?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "")"
-                                   min="0"
-                                   max="100"
-                                   step="0.01"
-                                   inputmode="decimal" />
-                        </label>
-
                     </div>
+                </section>
 
-                    <div class="inventory-details-form-actions">
-                        <button type="submit" class="inventory-details-primary-button">
+                <section class="inventory-details-v2-card" aria-labelledby="inventoryPricingHeading">
+                    <h2 id="inventoryPricingHeading">Pricing &amp; Quantity</h2>
+
+                    <label class="inventory-details-v2-field">
+                        <span>Quantity</span>
+                        <input type="number"
+                               name="quantityOnHand"
+                               value="@batch.QuantityOnHand.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                               min="0"
+                               max="999999999"
+                               step="0.01"
+                               inputmode="decimal"
+                               required />
+                    </label>
+
+                    <div class="inventory-details-v2-grid">
+                        <label class="inventory-details-v2-field inventory-details-v2-money-field">
+                            <span>Purchase Price</span>
+                            <span class="inventory-details-v2-input-wrap">
+                                <span aria-hidden="true">₹</span>
+                                <input type="number"
+                                       name="purchaseUnitPrice"
+                                       value="@batch.PurchaseUnitPrice.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                                       min="0"
+                                       max="999999999"
+                                       step="0.01"
+                                       inputmode="decimal"
+                                       required />
+                            </span>
+                        </label>
+
+                        <label class="inventory-details-v2-field inventory-details-v2-money-field">
+                            <span>MRP</span>
+                            <span class="inventory-details-v2-input-wrap">
+                                <span aria-hidden="true">₹</span>
+                                <input type="number"
+                                       name="sellingUnitPrice"
+                                       value="@batch.SellingUnitPrice.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                                       min="0"
+                                       max="999999999"
+                                       step="0.01"
+                                       inputmode="decimal"
+                                       required />
+                            </span>
+                        </label>
+                    </div>
+                </section>
+
+                <section class="inventory-details-v2-card inventory-details-v2-tax-card" aria-labelledby="inventoryTaxHeading">
+                    <h2 id="inventoryTaxHeading">Tax &amp; Rates</h2>
+                    @{
+                        var commonGstRates = new[] { 0m, 5m, 12m, 18m, 28m };
+                        var currentGstIsCommon = Model.GstRate.HasValue && commonGstRates.Contains(Model.GstRate.Value);
+                    }
+                    <label class="inventory-details-v2-field">
+                        <span>GST Rate</span>
+                        <span class="inventory-details-v2-select-wrap">
+                            <select id="inventoryDetailsGstRateSelect" aria-label="GST Rate">
+                                <option value="">Select GST rate</option>
+                                @foreach (var gst in commonGstRates)
+                                {
+                                    <option value="@gst.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                                            selected="@(Model.GstRate == gst)">
+                                        @gst.ToString("0.##")%
+                                    </option>
+                                }
+                                @if (Model.GstRate.HasValue && !currentGstIsCommon)
+                                {
+                                    <option value="custom" selected>Custom (@Model.GstRate.Value.ToString("0.##")%)</option>
+                                }
+                                else
+                                {
+                                    <option value="custom">Custom rate</option>
+                                }
+                            </select>
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+                        </span>
+                    </label>
+
+                    <label class="inventory-details-v2-field inventory-details-v2-custom-gst"
+                           id="inventoryDetailsCustomGstWrap"
+                           hidden>
+                        <span>Custom GST Rate (%)</span>
+                        <input type="number"
+                               id="inventoryDetailsCustomGst"
+                               value="@(!currentGstIsCommon && Model.GstRate.HasValue ? Model.GstRate.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "")"
+                               min="0"
+                               max="100"
+                               step="0.01"
+                               inputmode="decimal"
+                               disabled />
+                    </label>
+
+                    <div class="inventory-details-v2-actions">
+                        <button type="submit" class="inventory-details-v2-save">
                             Save Changes
                         </button>
                     </div>
-                </form>
-            }
-        </section>
+                </section>
+            </form>
+        }
     </main>
 </div>
 
