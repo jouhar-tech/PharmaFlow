@@ -325,7 +325,12 @@
             };
 
             window.pharmaHexWidgetPinResult = response => {
-                if (!response || response.supported !== true) {
+                if (!response || response.nativeWidgetAvailable !== true) {
+                    showHint('Update the PharmaHex Android app to a widget-enabled version before adding this home-screen widget.');
+                    return;
+                }
+
+                if (response.supported !== true) {
                     showHint('This launcher cannot open the add-widget preview automatically. Long-press your Android home screen, open Widgets, find PharmaHex, then drag it onto the screen.');
                     return;
                 }
