@@ -397,4 +397,12 @@
         });
     })();
 </script>
+<script>
+    (() => {
+        const refreshWidget = () => {
+            window.median?.nativebridge?.custom?.({ action: "pharmahexWidget.refresh" });
+        };
+        refreshWidget();
+    })();
+</script>
 }
