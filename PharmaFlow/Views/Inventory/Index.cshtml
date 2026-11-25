@@ -8,6 +8,11 @@
     @if (TempData["InventoryMessage"] is string inventoryMessage)
     {
         <div class="inventory-action-success" role="status">@inventoryMessage</div>
+        <script>
+            window.addEventListener("load", () => {
+                window.median?.nativebridge?.custom?.({ action: "pharmahexWidget.refresh" });
+            }, { once: true });
+        </script>
     }
     <header class="inventory-modern-header">
         <a asp-controller="Home" asp-action="Index" class="inventory-modern-back" aria-label="Back">
