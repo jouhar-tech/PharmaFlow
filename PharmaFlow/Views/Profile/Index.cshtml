@@ -315,6 +315,46 @@
     </script>
     <script>
         (() => {
+            const button = document.getElementById('moreMobileAddWidget');
+            const hint = document.getElementById('moreMobileWidgetHint');
+            if (!button || !hint) return;
+
+            const showHint = message => {
+                hint.textContent = message;
+                hint.hidden = false;
+            };
+
+            window.pharmaHexWidgetPinResult = response => {
+                if (!response || response.supported !== true) {
+                    showHint('This launcher cannot open the add-widget preview automatically. Long-press your Android home screen, open Widgets, find PharmaHex, then drag it onto the screen.');
+                    return;
+                }
+
+                if (response.requestSubmitted === true) {
+                    showHint('Android has opened the PharmaHex widget preview. Choose Add to place it, or Cancel to leave your home screen unchanged.');
+                    return;
+                }
+
+                showHint(response.message || 'The widget preview could not be opened. Use the Android Widgets picker instead.');
+            };
+
+            button.addEventListener('click', () => {
+                const nativeBridge = window.median?.nativebridge;
+                if (!nativeBridge || typeof nativeBridge.custom !== 'function') {
+                    showHint('Add to Home screen is available in the PharmaHex Android app. Open this page in the app, then try again.');
+                    return;
+                }
+
+                hint.hidden = true;
+                nativeBridge.custom({
+                    action: 'pharmahexWidget.requestPin',
+                    callback: 'pharmaHexWidgetPinResult'
+                });
+            });
+        })();
+    </script>
+    <script>
+        (() => {
             const trigger = document.getElementById('moreMobileSupportTrigger');
             const modal = document.getElementById('moreMobileSupportModal');
             if (!trigger || !modal) return;
