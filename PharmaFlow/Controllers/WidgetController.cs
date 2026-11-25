@@ -37,7 +37,7 @@ public sealed class WidgetController : ControllerBase
 
         var profile = await _dbContext.Profiles
             .AsNoTracking()
-            .Where(item => item.Id == profileId && item.ActiveStatus == 1)
+            .Where(item => item.Id == profileId)
             .Select(item => new { item.BusinessName })
             .SingleOrDefaultAsync(cancellationToken);
 
