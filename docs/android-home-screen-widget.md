@@ -136,3 +136,47 @@ The existing ASP.NET GitHub Actions workflow cannot build or install this native
 - Median native functionality and plugins: https://docs.median.co/docs/native-functionality
 - Median custom plugin overview: https://docs.median.co/docs/native-plugins-overview
 - Median app architecture and Android source customization: https://docs.median.co/docs/architecture
+
+
+## Reviewed Median Android source archive (2026-11-25)
+
+The supplied `android_source.tar.gz` was inspected. It is a full Median Android project and contains the native source needed to implement the widget. It is not currently committed as an Android project in this ASP.NET repository.
+
+Verified source details (no credentials reproduced here):
+- Android application ID: `co.median.android.odezkww`.
+- Firebase project ID in the Android app configuration and Google Services configuration: `pharmahex`; the configured Android package ID matches the Google Services client.
+- Minimum SDK 26; target SDK 36; compile SDK 36.
+- Java and Kotlin toolchain: 21.
+- Gradle wrapper: 9.5.1.
+- Median dependencies: `co.median.android:core:2.7.41` and `co.median:median-core:4.2.1`.
+- Compiled Median plugins: Firebase Messaging 2.1.0 and Social Login 2.0.0.
+- The Firebase Messaging service is active in appConfig; automatic registration is disabled.
+- There is no existing AppWidgetProvider, widget metadata XML, widget layout, or widget refresh worker.
+- `MainActivity` already routes intent extra `targetUrl` into the WebView. Use this existing path for widget deep actions; do not invent a second deep-link mechanism.
+- `GoNativeJSBridgeLibrary.js` exposes `median.nativebridge.custom()`. `MainActivity.runCustomNativeBridge()` dispatches it through `JsCustomCodeExecutor`, whose default handler currently echoes parameters. Add a narrowly scoped widget action there (or through an equivalent native bridge module), preserving the default behavior for all other custom commands.
+- The project has a `WebkitCookieManagerProxy` which synchronizes Java networking with Android WebView cookies. A WorkManager worker can use this existing cookie path to call the authenticated widget summary endpoint, rather than embedding database/service-role credentials or issuing a separate long-lived widget secret.
+- The archive contains app configuration and Google Services client configuration, but no release/upload keystore file. Gradle refers to `release.keystore` and `upload.keystore` outside the Android project directory. A local debug build can be tested without the production signing key; a production update must use the same signing identity as the installed app. Median's current source-build guide says a Median-provided signing key requires a license and contact with Median support; confirm the signing arrangement before attempting a release build.
+
+### Source-specific native implementation path
+
+1. Add `PharmaHexWidgetProvider` as an `AppWidgetProvider`, provider metadata in `res/xml`, RemoteViews layouts, and a launcher preview image/layout.
+2. Add `PharmaHexWidgetManager.requestPin(Activity)` using `AppWidgetManager.isRequestPinAppWidgetSupported()` and `requestPinAppWidget()`. Invoke it only from a foreground Activity, via the existing `median.nativebridge.custom()` command.
+3. Keep the Android launcher confirmation authoritative. A successful pin callback is the only reliable confirmation that a widget was added. When the launcher has no pin support, show the manual Widgets-picker instructions in the web UI.
+4. Use the existing MainActivity `targetUrl` extra in PendingIntents for `/Home/Index`, `/Billing/Create`, and `/Inventory/AddItem`.
+5. Add WorkManager (minimum periodic interval is launcher/OS constrained) to refresh the native RemoteViews. Trigger an immediate refresh on widget creation and app resume; schedule periodic best-effort refresh.
+6. Set the existing `WebkitCookieManagerProxy` as the Java CookieHandler inside the worker before calling the authenticated widget summary endpoint. On 401/unauthorized, clear cached business data; on transient network errors, retain the last successful values and show the last-updated timestamp.
+7. Implement `onDeleted()` / `onDisabled()` lifecycle handling. Android launcher long-press Remove remains the removal UX; no artificial in-app widget-removal state.
+8. Do not change the existing FCM plugin, notification routing, app ID, Firebase project configuration, or package identity as part of this feature.
+
+### Backend summary semantics
+
+The Android widget endpoint must be authenticated by the existing ASP.NET session, derive the profile ID only from that session, and return no user-supplied profile selector.
+
+- Sales amount and bill count use the existing dashboard's completed-bill filter and India Standard Time date boundaries.
+- Alert count is the sum of the same actionable counts currently displayed by the dashboard: expiring batches, low-stock batches, customers with outstanding balances, slow-moving products, and reminders due. Keep the label **Alerts** and document that it counts actionable records, not simply the number of non-empty sections.
+- Return the business name and an ISO-8601 updated timestamp. On native offline refresh failure, preserve the previous successful summary instead of showing zeros.
+
+### Repository/build boundary
+
+The ASP.NET web repository currently has no Android module. Keep web changes in the existing PharmaFlow project and maintain the Median Android changes in the supplied Android project until an agreed Android source directory/repository is established. The ASP.NET GitHub Actions build cannot validate Android Gradle changes. Run `./gradlew assembleDebug` from the Android project with JDK 21 and Android SDK 36, then test on a physical Android device/launcher. A successful web build is not evidence that the native widget works.
+
