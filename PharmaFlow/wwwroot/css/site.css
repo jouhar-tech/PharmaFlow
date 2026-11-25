@@ -18252,3 +18252,63 @@ body.theme-dark .purchase-invoice-preview-dialog-panel > header button {
     color: #b42332;
   }
 }
+
+
+/* PharmaHex Android home-screen widget entry on More */
+.more-mobile-row.more-mobile-widget-trigger {
+    width: 100%;
+    border-top: 0;
+    border-left: 0;
+    border-right: 0;
+    background: transparent;
+    text-align: left;
+    font: inherit;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.more-mobile-widget-trigger .more-mobile-row-icon svg {
+    width: 24px;
+    height: 24px;
+}
+
+.more-mobile-widget-trigger .more-mobile-row-label {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: .2rem;
+}
+
+.more-mobile-widget-trigger .more-mobile-row-label strong {
+    color: inherit;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.more-mobile-widget-trigger .more-mobile-row-label small {
+    color: #77827e;
+    font-size: .76rem;
+    font-weight: 450;
+    line-height: 1.35;
+}
+
+.more-mobile-widget-hint {
+    margin: .35rem .9rem .85rem 4.4rem;
+    padding: .7rem .8rem;
+    border: 1px solid #cfe7de;
+    border-radius: .75rem;
+    background: #eef8f4;
+    color: #176354;
+    font-size: .82rem;
+    line-height: 1.4;
+}
+
+body.theme-dark.more-page .more-mobile-widget-trigger .more-mobile-row-label small {
+    color: #b9c7c2;
+}
+
+body.theme-dark.more-page .more-mobile-widget-hint {
+    border-color: #315b51;
+    background: #183b35;
+    color: #c4e8dc;
+}
