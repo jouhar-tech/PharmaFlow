@@ -294,6 +294,18 @@
     document.addEventListener("keydown", event => {
         if (event.key === "Escape" && !modal.hidden) setOpen(false);
     });
+
+    // The native PharmaHex widget opens this page with ?openAddStock=1.
+    // Reuse the same add-stock options sheet as the in-app Stocks button.
+    const pageUrl = new URL(window.location.href);
+    if (pageUrl.searchParams.get("openAddStock") === "1") {
+        pageUrl.searchParams.delete("openAddStock");
+        window.history.replaceState(
+            {},
+            document.title,
+            pageUrl.pathname + pageUrl.search + pageUrl.hash);
+        setOpen(true);
+    }
 })();
 </script>
 <script>
