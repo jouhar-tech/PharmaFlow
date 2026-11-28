@@ -56,13 +56,7 @@ public sealed class WidgetController : ControllerBase
         var indiaEndUtc = TimeZoneInfo.ConvertTimeToUtc(
             today.AddDays(1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified),
             indiaTimeZone);
-        var slowMovingCutoffDate = today.AddMonths(-1);
-        var slowMovingCutoffUtc = TimeZoneInfo.ConvertTimeToUtc(
-            slowMovingCutoffDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified),
-            indiaTimeZone);
-
-        // Keep the widget's expiring, low-stock and slow-moving counts identical
-        // to the dashboard's current business rules.
+        // The widget only needs the two requested stock-alert categories.
         var stockMetrics = await _dbContext.ProductBatches
             .AsNoTracking()
             .Where(batch =>
@@ -87,8 +81,6 @@ public sealed class WidgetController : ControllerBase
 
         var expiringSoonCount = stockMetrics?.ExpiringSoonCount ?? 0;
         var lowStockCount = stockMetrics?.LowStockCount ?? 0;
-        var slowMovingStockCount = stockMetrics?.SlowMovingStockCount ?? 0;
-
         var todaySalesQuery = _dbContext.SalesBills
             .AsNoTracking()
             .Where(bill =>
