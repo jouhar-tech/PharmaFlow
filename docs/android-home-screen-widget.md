@@ -4,7 +4,7 @@ Status: **Web/backend implementation committed; native Android source patch prep
 
 ## Goal
 
-Provide an Android home-screen widget similar to the supplied MedCity reference. A pharmacy owner should be able to see today's sales and outstanding attention items at a glance, then open PharmaHex directly to create a bill or add stock.
+Provide an original PharmaHex Android home-screen widget. Do not copy another pharmacy app's widget design. A pharmacy owner should be able to see today's sales and key operational metrics at a glance, then open PharmaHex directly to create a bill or add stock.
 
 This is a real Android App Widget, not a browser bookmark, PWA shortcut, or a card rendered inside the app.
 
@@ -23,20 +23,19 @@ Do not imitate Android's confirmation dialog with an HTML modal and claim that a
 
 ### Widget layout
 
-The first supported size should be a resizable, wide/medium card:
+The first supported size is a resizable, wide/medium card with an original PharmaHex composition:
 
-- Header: PharmaHex mark, shop/business name, and last-updated time.
-- Main metric: **Today's Sales** amount.
-- Secondary metrics: bill count and an **Alerts** count.
-- Primary action: **New bill**.
-- Secondary action: **Add stock**.
+- Deep-teal outer shell with a PharmaHex “P” mark, wordmark, shop name, and update time.
+- A light metric board with Today's Sales as the primary value.
+- Separate compact tiles for bill count and active alerts.
+- Two clear footer actions: **New bill** and **Add stock**.
 
-The widget should use the existing PharmaHex visual language: white card, deep teal primary action, pale teal secondary action, rounded corners, and clear contrast. Provide a compact layout for smaller widget widths and a wider layout for the reference-style card.
+This deliberately avoids the flat white-card composition from the reference app. Keep the existing PharmaHex teal/mint/neutral palette, strong contrast, rounded shapes, and readable metric hierarchy. Preserve the current RemoteViews IDs so data binding and action wiring remain stable.
 
 ### Actions
 
 - **New bill** opens the installed PharmaHex app at /Billing/Create.
-- **Add stock** opens the installed PharmaHex app at /Inventory/AddItem.
+- **Add stock** opens /Inventory/Index?openAddStock=1; the Inventory page then opens its existing Add Stock options bottom sheet (Add Custom Product, Search Product, Scan Invoice, Upload Invoice).
 - Tapping the non-action body opens /Home/Index.
 - These actions must use native PendingIntent/deep-link handling and must not attempt to perform billing or inventory writes directly from RemoteViews.
 
@@ -101,7 +100,7 @@ A real widget therefore requires one of these before the user-facing Add option 
 1. A Median custom Android plugin that exposes a bridge method (proposed name: median.pharmahexWidget.requestPin()), handles the Android AppWidgetManager pin flow, provides widget provider/resources/manifest entries, stores widget credentials securely, and implements widget refresh/actions; or
 2. The Android source package downloaded from Median, modified to add the same native components, then rebuilt and republished as a new PharmaHex APK.
 
-The native source patch adds two commands to the existing Median custom bridge: `pharmahexWidget.requestPin` and `pharmahexWidget.refresh`. The More page invokes the first command, while dashboard lifecycle/bill/stock events invoke the second.
+The native source patch adds two commands to the existing Median custom bridge: `pharmahexWidget.requestPin` and `pharmahexWidget.refresh`. The More page invokes the first command on Android's main/UI thread, while dashboard lifecycle/bill/stock events invoke the second.
 
 The native implementation needs, at minimum:
 - AppWidgetProvider and provider metadata XML,
@@ -173,7 +172,7 @@ Verified source details (no credentials reproduced here):
 The Android widget endpoint must be authenticated by the existing ASP.NET session, derive the profile ID only from that session, and return no user-supplied profile selector.
 
 - Sales amount and bill count use the existing dashboard's completed-bill filter and India Standard Time date boundaries.
-- Alert count is the sum of the same actionable counts currently displayed by the dashboard: expiring batches, low-stock batches, customers with outstanding balances, slow-moving products, and reminders due. Keep the label **Alerts** and document that it counts actionable records, not simply the number of non-empty sections.
+- The current widget endpoint's `alertCount` is the sum of affected records across five dashboard categories: expiring-soon batches, low-stock batches, customers with outstanding balances, slow-moving products, and reminders due. It is not the Notification Center's alert-card count, and one product/batch may be represented in more than one category. Keep this distinction explicit until the metric is aligned with the exact in-app count users are comparing.
 - Return the business name and an ISO-8601 updated timestamp. On native offline refresh failure, preserve the previous successful summary instead of showing zeros.
 
 ### Repository/build boundary
