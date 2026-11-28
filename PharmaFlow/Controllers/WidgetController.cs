@@ -74,21 +74,14 @@ public sealed class WidgetController : ControllerBase
             .GroupBy(_ => 1)
             .Select(group => new
             {
+                // The widget's Alerts metric intentionally includes only these
+                // two inventory conditions: expiry within the next 90 days
+                // (including today) and low-stock batches.
                 ExpiringSoonCount = group.Count(batch =>
                     batch.ExpiryDate >= today &&
                     batch.ExpiryDate <= ninetyDaysFromToday),
                 LowStockCount = group.Count(batch =>
-                    batch.QuantityOnHand < 3m),
-                SlowMovingStockCount = group
-                    .Where(batch =>
-                        !_dbContext.SalesBillItems.Any(item =>
-                            item.ProductId == batch.ProductId &&
-                            item.Bill.ProfileId == profileId &&
-                            item.Bill.Status == "Completed" &&
-                            item.Bill.CreatedAt > slowMovingCutoffUtc))
-                    .Select(batch => batch.ProductId)
-                    .Distinct()
-                    .Count()
+                    batch.QuantityOnHand < 3m)
             })
             .SingleOrDefaultAsync(cancellationToken);
 
@@ -109,32 +102,9 @@ public sealed class WidgetController : ControllerBase
         var todaySalesBillCount = await todaySalesQuery
             .CountAsync(cancellationToken);
 
-        var customerBalances = await _dbContext.CustomerLedgerEntries
-            .AsNoTracking()
-            .Where(entry => entry.ProfileId == profileId)
-            .GroupBy(entry => entry.CustomerId)
-            .Select(group => group.Sum(entry => entry.BalanceChange))
-            .ToListAsync(cancellationToken);
-
-        var customersWithOutstanding = customerBalances.Count(balance => balance > 0m);
-
-        var remindersDueCount = await _dbContext.CustomerReminders
-            .AsNoTracking()
-            .CountAsync(reminder =>
-                reminder.ProfileId == profileId &&
-                (reminder.Status == "Pending" || reminder.Status == "Ordered") &&
-                reminder.ReminderDate.HasValue &&
-                reminder.ReminderDate.Value <= today,
-                cancellationToken);
-
-        // Alerts represent actionable records, using the same counts displayed
-        // in the dashboard's What Needs Your Attention section.
-        var alertCount =
-            expiringSoonCount +
-            lowStockCount +
-            customersWithOutstanding +
-            slowMovingStockCount +
-            remindersDueCount;
+        // Keep the widget Alerts count aligned with the two requested categories only.
+        // This is a count of affected active batches, not notification-card count.
+        var alertCount = expiringSoonCount + lowStockCount;
 
         return Ok(new
         {
