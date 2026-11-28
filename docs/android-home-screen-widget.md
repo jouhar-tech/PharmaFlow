@@ -172,7 +172,7 @@ Verified source details (no credentials reproduced here):
 The Android widget endpoint must be authenticated by the existing ASP.NET session, derive the profile ID only from that session, and return no user-supplied profile selector.
 
 - Sales amount and bill count use the existing dashboard's completed-bill filter and India Standard Time date boundaries.
-- The current widget endpoint's `alertCount` is the sum of affected records across five dashboard categories: expiring-soon batches, low-stock batches, customers with outstanding balances, slow-moving products, and reminders due. It is not the Notification Center's alert-card count, and one product/batch may be represented in more than one category. Keep this distinction explicit until the metric is aligned with the exact in-app count users are comparing.
+- The widget endpoint's `alertCount` includes only two requested inventory categories: active sellable batches expiring today through the next 90 days (inclusive), plus active sellable low-stock batches with quantity below 3. Customer balances, slow-moving products, reminders, and supplier invoice drafts are excluded. It is a count of affected batches; if a batch qualifies for both categories, it contributes once to each category.
 - Return the business name and an ISO-8601 updated timestamp. On native offline refresh failure, preserve the previous successful summary instead of showing zeros.
 
 ### Repository/build boundary
